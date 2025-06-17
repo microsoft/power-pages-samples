@@ -1,0 +1,20 @@
+adx_accountrelationship: 
+adx_append: false
+adx_appendto: false
+adx_childTablePermissions: []
+adx_contactrelationship: 
+adx_create: false
+adx_delete: false
+adx_entitylogicalname: sample_creditcard
+adx_entityname: Credit Card Table Permission
+adx_entitypermission_webrole:
+- 18c1fdce-684b-f011-877a-7c1e520c8613
+- 7a0835e9-b1ab-4f32-bcb2-bd04a9017323
+- a4f542e4-9963-433b-9f79-8ec001a99500
+- af48d3e8-0de6-4081-8380-6b38021afb4c
+adx_entitypermissionid: 1be8a6cd-aa6d-479a-aac5-dbdd452164b1
+adx_parententitypermission: 
+adx_parentrelationship: 
+adx_read: true
+adx_scope: 756150000
+adx_write: false

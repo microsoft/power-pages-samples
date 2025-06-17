@@ -2,6 +2,12 @@
 
 Welcome to the samples repo for Power Pages. The repo contains sample code for Power Pages websites. There are sample specific readme files present under each sample folder.
 
+## Samples
+
+The following samples are available:
+
+- [Bring Your Own Code Samples](/samples/bring-your-own-code/)
+
 ## Resources
 
 - [Get started with Power Pages tutorials](https://learn.microsoft.com/en-us/power-pages/getting-started/tutorial-overview)

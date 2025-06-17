@@ -1,0 +1,258 @@
+[
+  {
+    "id": "card1",
+    "type": "Credit Card",
+    "name": "Travel Rewards Credit Card",
+    "features": [
+      "Earn 2x points on travel purchases",
+      "No foreign transaction fees",
+      "Complimentary lounge access"
+    ],
+    "category": ["Travel", "Rewards"],
+    "image": "assets/card_image_1.png",
+    "eligibility": {
+      "minimumIncome": 30000,
+      "creditScore": 750
+    }
+  },
+  {
+    "id": "card2",
+    "type": "Credit Card",
+    "name": "Student Credit Card",
+    "features": [
+      "Low interest rates",
+      "$0 annual fees",
+      "Build your credit score"
+    ],
+    "category": ["Student"],
+    "image": "assets/card_image_2.png",
+    "eligibility": {
+      "minimumIncome": 12000,
+      "creditScore": 650
+    }
+  },
+  {
+    "id": "card3",
+    "type": "Credit Card",
+    "name": "Luxury Perks Credit Card",
+    "features": [
+      "Lounge access and concierge service",
+      "Priority boarding on flights",
+      "Exclusive bonuses for high spending"
+    ],
+    "category": ["Luxury", "Rewards"],
+    "image": "assets/card_image_3.png",
+    "eligibility": {
+      "minimumIncome": 100000,
+      "creditScore": 800
+    }
+  },
+  {
+    "id": "card4",
+    "type": "Credit Card",
+    "name": "Online Shopping Credit Card",
+    "features": [
+      "Extra rewards for e-commerce sites",
+      "Fraud protection policy",
+      "Easy returns guarantee protection"
+    ],
+    "category": ["Shopping"],
+    "image": "assets/card_image_4.png",
+    "eligibility": {
+      "minimumIncome": 15000,
+      "creditScore": 680
+    }
+  },
+  {
+    "id": "card5",
+    "type": "Debit Card",
+    "name": "Cashback Debit Card",
+    "features": [
+      "Earn 3% cashback on groceries",
+      "Free ATM withdrawals",
+      "Daily spending insights"
+    ],
+    "category": ["Cashback"],
+    "image": "assets/card_image_5.png",
+    "eligibility": {
+      "minimumIncome": 0,
+      "creditScore": 0
+    }
+  },
+  {
+    "id": "card6",
+    "type": "Debit Card",
+    "name": "Simple Budget Debit Card",
+    "features": [
+      "Track your spending in real-time",
+      "Set a monthly budget",
+      "Send money easily"
+    ],
+    "category": ["Budget"],
+    "image": "assets/card_image_6.png",
+    "eligibility": {
+      "minimumIncome": 0,
+      "creditScore": 0
+    }
+  },
+  {
+    "id": "card7",
+    "type": "Debit Card",
+    "name": "Travel Debit Card",
+    "features": [
+      "Free international ATM withdrawals",
+      "Load multiple currencies",
+      "Get travel assistance"
+    ],
+    "category": ["Travel"],
+    "image": "assets/card_image_7.png",
+    "eligibility": {
+      "minimumIncome": 0,
+      "creditScore": 0
+    }
+  },
+  {
+    "id": "card8",
+    "type": "Debit Card",
+    "name": "Senior Citizen Debit Card",
+    "features": [
+      "Higher ATM withdrawal limit",
+      "Discounts at pharmacies",
+      "24x7 customer service assistance"
+    ],
+    "category": ["Senior Citizens"],
+    "image": "assets/card_image_8.png",
+    "eligibility": {
+      "minimumIncome": 0,
+      "creditScore": 0
+    }
+  },
+  {
+    "id": "card9",
+    "type": "Prepaid Card",
+    "name": "Everyday Prepaid Card",
+    "features": [
+      "No credit check required",
+      "Reloadable with direct deposit",
+      "Set spending limits for budgeting"
+    ],
+    "category": ["Prepaid", "Budget"],
+    "image": "assets/card_image_9.png",
+    "eligibility": {
+      "minimumIncome": 0,
+      "creditScore": 0
+    }
+  },
+  {
+    "id": "card10",
+    "type": "Prepaid Card",
+    "name": "Gift Prepaid Card",
+    "features": [
+      "Perfect for gifting",
+      "No reload required",
+      "Available in multiple denominations"
+    ],
+    "category": ["Gift"],
+    "image": "assets/card_image_10.png",
+    "eligibility": {
+      "minimumIncome": 0,
+      "creditScore": 0
+    }
+  },
+  {
+    "id": "card11",
+    "type": "Prepaid Card",
+    "name": "Travel Prepaid Card",
+    "features": [
+      "Preloaded with multiple currencies",
+      "Accepted worldwide",
+      "No international transaction fees"
+    ],
+    "category": ["Travel"],
+    "image": "assets/card_image_11.png",
+    "eligibility": {
+      "minimumIncome": 0,
+      "creditScore": 0
+    }
+  },
+  {
+    "id": "card12",
+    "type": "Prepaid Card",
+    "name": "Virtual Prepaid Card",
+    "features": [
+      "Instantly generated for online use",
+      "Extra fraud protection",
+      "No physical card required"
+    ],
+    "category": ["Virtual"],
+    "image": "assets/card_image_12.png",
+    "eligibility": {
+      "minimumIncome": 0,
+      "creditScore": 0
+    }
+  },
+  {
+    "id": "card13",
+    "type": "Secured Credit Card",
+    "name": "Basic Secured Credit Card",
+    "features": [
+      "Requires a refundable security deposit",
+      "Helps build or repair credit",
+      "Reports to all major credit bureaus"
+    ],
+    "category": ["Credit Building"],
+    "image": "assets/card_image_13.png",
+    "eligibility": {
+      "minimumIncome": 10000,
+      "creditScore": 600
+    }
+  },
+  {
+    "id": "card14",
+    "type": "Secured Credit Card",
+    "name": "Secured Rewards Card",
+    "features": [
+      "Earn cashback while building credit",
+      "Upgrade option to an unsecured card",
+      "No foreign transaction fees"
+    ],
+    "category": ["Rewards"],
+    "image": "assets/card_image_14.png",
+    "eligibility": {
+      "minimumIncome": 12000,
+      "creditScore": 620
+    }
+  },
+  {
+    "id": "card15",
+    "type": "Corporate Expense Card",
+    "name": "Startup Corporate Card",
+    "features": [
+      "Low annual fees",
+      "Instant expense tracking",
+      "Flexible spending limits"
+    ],
+    "category": ["Business"],
+    "image": "assets/card_image_15.png",
+    "eligibility": {
+      "minimumIncome": 75000,
+      "creditScore": 750
+    }
+  },
+  {
+    "id": "card16",
+    "type": "Corporate Expense Card",
+    "name": "Enterprise Corporate Card",
+    "features": [
+      "Comprehensive financial reporting",
+      "Dedicated account manager",
+      "High credit limits"
+    ],
+    "category": ["Enterprise"],
+    "image": "assets/card_image_16.png",
+    "eligibility": {
+      "minimumIncome": 100000,
+      "creditScore": 800
+    }
+  }
+]

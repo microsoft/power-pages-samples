@@ -1,0 +1,17 @@
+adx_accountrelationship: 
+adx_append: false
+adx_appendto: false
+adx_childTablePermissions: []
+adx_contactrelationship: 
+adx_create: true
+adx_delete: false
+adx_entitylogicalname: sample_creditcardapplication
+adx_entityname: Credit Card Application Table Permission - Authenticated
+adx_entitypermission_webrole:
+- a4f542e4-9963-433b-9f79-8ec001a99500
+adx_entitypermissionid: f18d3981-479f-4179-b8d7-4b1d1658423c
+adx_parententitypermission: 
+adx_parentrelationship: 
+adx_read: true
+adx_scope: 756150000
+adx_write: false
