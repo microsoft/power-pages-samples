@@ -12,8 +12,9 @@ This is a modern credit card web application for a fictitious bank with the foll
 ## Features
 
 - Authentication using Microsoft Entra Id (see [AuthButton.tsx](src/components/AuthButton.tsx) for implementation)
-- Authorization using Power Pages web roles (see [Layout.tsx:45-49](src/components/Layout.tsx#L45-L49) for implementation)
-- Fetching data from external data sources through [virtual tables](https://learn.microsoft.com/power-pages/configure/virtual-tables) and web apis (see [SalesLeads.tsx](src/pages/SalesLeads.tsx#L30-L63) for implementation)
+- Authorization using Power Pages web roles (see [Header.tsx:9-17](src/components/Header.tsx#L9-L17) for implementation)
+- Fetching data from using web apis (see [ApplicationStatus.tsx](src/pages/ApplicationStatus.tsx#L54-L64) for implementation)
+- Updating data using web apis (see [Applications.tsx:115-129](src/pages/Applications.tsx#L115-L129) for implementation)
 
 ## Prerequisites
 
@@ -78,7 +79,7 @@ Below steps will help you run this app in Power Pages.
 1. Once the site is activated, click on **Preview** to see it running on Power Pages.
 1. Additionally, install [Power Platform Tools VS Code extension](https://aka.ms/power-platform-vscode) to easily upload the site in future iterations with a single click from within VS Code.
 
-**Note:** Please login to the site to see **Sales Leads** page.
+**Note:** Please login assign **Credit Cards Application Reviewer** role and login with that role to see **Review Applications** tab.
 
 ## Project Structure
 
