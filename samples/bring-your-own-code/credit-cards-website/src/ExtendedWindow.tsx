@@ -11,6 +11,7 @@ export default interface ExtendedWindow extends Window {
           firstName?: string;
           lastName?: string;
           email?: string;
+          userRoles?: string[];
         };
         tenant?: string;
       };

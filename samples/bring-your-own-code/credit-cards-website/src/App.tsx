@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import CardComparison from './pages/CardComparison';
 import Application from './pages/Application';
 import ApplicationStatus from './pages/ApplicationStatus';
+import Applications from './pages/Applications';
 import FAQs from './pages/FAQs';
 import Contact from './pages/Contact';
 import EligibilityCheck from './pages/EligibilityCheck';
@@ -18,9 +19,10 @@ const App: React.FC = () => {
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={ <Home /> } />
-          <Route path="/comparison" element={ <CardComparison /> } />
-          <Route path="/application" element={ <Application /> } />
-          <Route path="/application-status" element={ <ApplicationStatus /> } />            <Route path="/eligibility-check" element={ <EligibilityCheck /> } />
+          <Route path="/comparison" element={ <CardComparison /> } />          <Route path="/application" element={ <Application /> } />
+          <Route path="/application-status" element={ <ApplicationStatus /> } />
+          <Route path="/applications" element={ <Applications /> } />
+          <Route path="/eligibility-check" element={ <EligibilityCheck /> } />
           <Route path="/faqs" element={ <FAQs /> } />
           <Route path="/contact" element={ <Contact /> } />
         </Routes>

@@ -160,7 +160,7 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
                 const text = await detailsResponse.text();
                 if (text) {
                   const applicationDetails = JSON.parse(text);
-                  setApplicationId(applicationDetails.sample_cardid);
+                  setApplicationId(applicationDetails.sample_id);
                 } else {
                   console.warn("Details response body was empty");
                 }
