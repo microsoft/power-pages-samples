@@ -27,7 +27,7 @@ This is a modern credit card web application for a fictitious bank with the foll
 
     ```powershell
     git clone https://github.com/microsoft/power-pages-samples
-    cd samples/bring-your-own-code-samples\credit-cards-website\
+    cd samples\bring-your-own-code\credit-cards-website\
     ```
 
 1. Install dependencies:
@@ -67,7 +67,8 @@ Below steps will help you run this app in Power Pages.
 1. Open a terminal and cd into `credit-cards-website` folder.
 1. Run `pac auth create --environment <Environment URL>` to login to your environment.
 1. Run `pac solution import --path .\solutions\CodeSiteSample_1_0_0_1_managed.zip` to import the sample managed solution in your environment.
-1. **CreditCard** and **CreditCardApplication** tables will be created after the solution is imported. Please add some sample data to **CreditCard** table.
+1. **CreditCard** and **CreditCardApplication** tables will be created after the solution is imported.
+1. Import data from `sample_creditcards.csv` to **CreditCard** table.
 
 ### Uploading site to Power Pages
 
@@ -79,7 +80,7 @@ Below steps will help you run this app in Power Pages.
 1. Once the site is activated, click on **Preview** to see it running on Power Pages.
 1. Additionally, install [Power Platform Tools VS Code extension](https://aka.ms/power-platform-vscode) to easily upload the site in future iterations with a single click from within VS Code.
 
-**Note:** Please login assign **Credit Cards Application Reviewer** role and login with that role to see **Review Applications** tab.
+**Note:** Please assign **Credit Cards Application Reviewer** role and login with that role to see **Review Applications** tab.
 
 ## Project Structure
 
