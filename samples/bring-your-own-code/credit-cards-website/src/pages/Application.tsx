@@ -46,22 +46,19 @@ const Application: React.FC = () => {
     getToken();
   }, []);
 
-  return (
-    <div className="max-w-screen-lg mx-auto p-6">
-      <h1 className="text-4xl font-extrabold text-center mb-8 text-gray-900">
-        Apply for a Card
-      </h1>      {/* Application Form - Enhanced Styling */ }
-      <section className="bg-gray-100 p-10 rounded-xl shadow-lg max-w-3xl mx-auto w-full mb-8">
-        <h2 className="text-2xl font-bold text-center mb-4 text-gray-900">
-          Application Form
-        </h2>
-
-        { isAuthenticated ? (
-          <ApplicationForm userData={ userData } />
-        ) : (
-          <div className="text-center py-6">
-            <p className="text-lg mb-4">Please sign in to access the application form.</p>
-            <form action="/Account/Login/ExternalLogin" method="post" className="flex justify-center">
+  return (<div className="max-w-screen-lg mx-auto p-6">
+    <h1 className="text-4xl font-extrabold text-center mb-8 text-gray-900 dark:text-gray-100">
+      Apply for a Card
+    </h1>      {/* Application Form - Enhanced Styling */ }
+    <section className="bg-gray-100 dark:bg-gray-800 p-10 rounded-xl shadow-lg dark:shadow-gray-900/50 max-w-3xl mx-auto w-full mb-8 border dark:border-gray-700">
+      <h2 className="text-2xl font-bold text-center mb-4 text-gray-900 dark:text-gray-100">
+        Application Form
+      </h2>        { isAuthenticated ? (
+        <ApplicationForm userData={ userData } />
+      ) : (
+        <div className="text-center py-6">
+          <p className="text-lg mb-4 text-gray-800 dark:text-gray-200">Please sign in to access the application form.</p>
+          {/* <form action="/Account/Login/ExternalLogin" method="post" className="flex justify-center">
               <input name="__RequestVerificationToken" type="hidden" value={ token } />
               <button
                 name="provider"
@@ -71,21 +68,19 @@ const Application: React.FC = () => {
               >
                 Sign In
               </button>
-            </form>
-          </div>
-        ) }
+            </form> */}
+        </div>
+      ) }
+    </section>      {/* Side by side sections for eligibility info and benefits */ }
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <section className="">
+        <EligibilityInfo />
       </section>
-
-      {/* Side by side sections for eligibility info and benefits */ }
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <section>
-          <EligibilityInfo />
-        </section>
-        <section>
-          <ApplyCardBenefits />
-        </section>
-      </div>
+      <section className="dark:bg-gray-800 dark:border dark:border-gray-700 rounded-xl">
+        <ApplyCardBenefits />
+      </section>
     </div>
+  </div>
   );
 };
 

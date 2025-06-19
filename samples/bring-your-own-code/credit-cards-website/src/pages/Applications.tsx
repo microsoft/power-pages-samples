@@ -4,6 +4,7 @@ import ExtendedWindow from '../ExtendedWindow';
 import { Tab } from '@headlessui/react';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
+import { useTheme } from '../context/useTheme';
 
 interface Application {
     sample_creditcardapplicationid: string;
@@ -27,6 +28,7 @@ const Applications: React.FC = () => {
     const extWindow = window as unknown as ExtendedWindow;
     const userRoles = extWindow.Microsoft?.Dynamic365?.Portal?.User?.userRoles || [];
     const isReviewer = Array.isArray(userRoles) && userRoles.includes("Credit Card Application Reviewer");
+    const { theme } = useTheme();
 
     // Status code constants
     const STATUS_CODES = {
@@ -50,9 +52,7 @@ const Applications: React.FC = () => {
         { name: 'In Progress', status: 'In Progress' },
         { name: 'Approved', status: 'Approved' },
         { name: 'Rejected', status: 'Rejected' }
-    ];
-
-    useEffect(() => {
+    ]; useEffect(() => {
         fetchApplications();
 
         // Get verification token
@@ -67,7 +67,7 @@ const Applications: React.FC = () => {
             }
         };
         getToken();
-    }, []);
+    }, [extWindow.shell]);
 
     const fetchApplications = async () => {
         setLoading(true);
@@ -201,16 +201,14 @@ const Applications: React.FC = () => {
 
     if (!isReviewer) {
         return <Navigate to="/" replace />;
-    }
-
-    return (
-        <div className="container mx-auto p-6">
+    } return (
+        <div className={ `container mx-auto p-6 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}` }>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-semibold">Credit Card Applications</h1>
+                <h1 className="text-3xl font-semibold dark:text-white">Credit Card Applications</h1>
                 <button
                     type='button'
                     onClick={ fetchApplications }
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors dark:bg-indigo-700 dark:hover:bg-indigo-800"
                     disabled={ loading }
                 >
                     { loading ? 'Refreshing...' : 'Refresh' }
@@ -218,27 +216,27 @@ const Applications: React.FC = () => {
             </div>
 
             { error && (
-                <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-md">
+                <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-md dark:!bg-red-900/30 dark:text-red-300">
                     { error }
                 </div>
             ) }
 
-            <div className="bg-white shadow rounded-md">
+            <div className="bg-white shadow rounded-md dark:!bg-gray-800">
                 <Tab.Group
                     selectedIndex={ selectedTab }
                     onChange={ setSelectedTab }
                 >
-                    <Tab.List className="flex rounded-t-md bg-gray-100 p-1">
+                    <Tab.List className="flex rounded-t-md bg-gray-100 p-1 dark:!bg-gray-700">
                         { tabs.map((tab) => (
                             <Tab
                                 key={ tab.name }
                                 className={ ({ selected }) =>
                                     classNames(
-                                        'w-full py-2.5 text-sm font-medium leading-5 text-indigo-700 rounded-md',
-                                        'focus:outline-none focus:ring-2 ring-offset-2 ring-offset-indigo-400 ring-white ring-opacity-60',
+                                        'w-full py-2.5 text-sm font-medium leading-5 rounded-md',
+                                        'focus:outline-none focus:ring-2 ring-offset-2 ring-opacity-60',
                                         selected
-                                            ? 'bg-white shadow'
-                                            : 'text-gray-700 hover:bg-white/[0.12] hover:text-indigo-600'
+                                            ? 'bg-white shadow text-indigo-700 dark:!bg-gray-900 dark:text-indigo-400 dark:ring-offset-gray-800 dark:ring-white'
+                                            : 'text-gray-700 hover:bg-white/[0.12] hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400'
                                     )
                                 }
                             >
@@ -254,59 +252,59 @@ const Applications: React.FC = () => {
                                 <Tab.Panel
                                     key={ idx }
                                     className={ classNames(
-                                        'rounded-b-md bg-white p-3',
+                                        'rounded-b-md bg-white p-3 dark:!bg-gray-800',
                                         'focus:outline-none'
                                     ) }
                                 >
                                     { loading ? (
                                         <div className="flex justify-center items-center h-40">
-                                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-700"></div>
+                                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-700 dark:border-indigo-400"></div>
                                         </div>
                                     ) : filteredApplications.length === 0 ? (
-                                        <div className="text-center py-10 text-gray-500">
+                                        <div className="text-center py-10 text-gray-500 dark:text-gray-400">
                                             No { tab.status.toLowerCase() } applications found
                                         </div>
                                     ) : (
                                         <div className="overflow-x-auto">
-                                            <table className="min-w-full divide-y divide-gray-200">
-                                                <thead className="bg-gray-50">
+                                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                                        <thead className="bg-gray-50 dark:!bg-gray-700">
                                                     <tr>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                             ID
                                                         </th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                             Name
                                                         </th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                             Email
                                                         </th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                             Card Type
                                                         </th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                             Date
                                                         </th>
                                                         { tab.status === 'Rejected' && (
-                                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                                 Comments
                                                             </th>
                                                         ) }
                                                         { (tab.status === 'Submitted' || tab.status === 'In Progress') && (
-                                                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                            <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                                 Actions
                                                             </th>
                                                         ) }
                                                     </tr>
                                                 </thead>
-                                                <tbody className="bg-white divide-y divide-gray-200">
+                                                <tbody className="bg-white divide-y divide-gray-200 dark:!bg-gray-800 dark:divide-gray-700">
                                                     { filteredApplications.map((application) => (
-                                                        <tr key={ application.sample_id }>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                        <tr key={ application.sample_id } className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                                                 <div className="flex items-center">
                                                                     { application.sample_id }
                                                                     <button
                                                                         onClick={ () => copyToClipboard(application.sample_id) }
-                                                                        className="ml-2 text-gray-400 hover:text-gray-600"
+                                                                        className="ml-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                                                                         title="Copy ID to clipboard"
                                                                     >
                                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -315,20 +313,20 @@ const Applications: React.FC = () => {
                                                                     </button>
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                                                 { `${application.sample_firstname} ${application.sample_lastname}` }
                                                             </td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                                                 { application.sample_email }
                                                             </td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                                                 { application["sample_cardtype"] || 'N/A' }
                                                             </td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                                                 { formatDate(application.createdon) }
                                                             </td>
                                                             { tab.status === 'Rejected' && (
-                                                                <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                                                <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate dark:text-gray-300">
                                                                     { application.sample_comments || 'No comments' }
                                                                 </td>
                                                             ) }
@@ -338,7 +336,7 @@ const Applications: React.FC = () => {
                                                                         <button
                                                                             onClick={ () => handleMoveToInProgress(application) }
                                                                             disabled={ updating }
-                                                                            className="text-indigo-600 hover:text-indigo-900 bg-white border border-indigo-600 px-3 py-1 rounded-md hover:bg-indigo-50 transition"
+                                                                            className="text-indigo-600 hover:text-indigo-900 bg-white border border-indigo-600 px-3 py-1 rounded-md hover:bg-indigo-50 transition dark:!bg-gray-800 dark:text-indigo-400 dark:border-indigo-500 dark:hover:text-indigo-300 dark:hover:bg-gray-700"
                                                                         >
                                                                             Move to In Progress
                                                                         </button>
@@ -348,14 +346,14 @@ const Applications: React.FC = () => {
                                                                             <button
                                                                                 onClick={ () => handleApprove(application) }
                                                                                 disabled={ updating }
-                                                                                className="text-green-600 hover:text-green-900 bg-white border border-green-600 px-3 py-1 rounded-md hover:bg-green-50 transition"
+                                                                                className="text-green-600 hover:text-green-900 bg-white border border-green-600 px-3 py-1 rounded-md hover:bg-green-50 transition dark:!bg-gray-800 dark:text-green-400 dark:border-green-500 dark:hover:text-green-300 dark:hover:bg-gray-700"
                                                                             >
                                                                                 Approve
                                                                             </button>
                                                                             <button
                                                                                 onClick={ () => openRejectModal(application) }
                                                                                 disabled={ updating }
-                                                                                className="text-red-600 hover:text-red-900 bg-white border border-red-600 px-3 py-1 rounded-md hover:bg-red-50 transition"
+                                                                                className="text-red-600 hover:text-red-900 bg-white border border-red-600 px-3 py-1 rounded-md hover:bg-red-50 transition dark:!bg-gray-800 dark:text-red-400 dark:border-red-500 dark:hover:text-red-300 dark:hover:bg-gray-700"
                                                                             >
                                                                                 Reject
                                                                             </button>
@@ -379,17 +377,17 @@ const Applications: React.FC = () => {
             {/* Rejection Modal */ }
             { showRejectModal && (
                 <div className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="bg-white rounded-lg p-8 max-w-md w-full">
+                    <div className="bg-white rounded-lg p-8 max-w-md w-full dark:!bg-gray-800 dark:text-white">
                         <h3 className="text-lg font-semibold mb-4">Reject Application</h3>
                         <div className="mb-4">
-                            <label htmlFor="rejectComments" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="rejectComments" className="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">
                                 Rejection Comments (Required)
                             </label>
                             <textarea
                                 id="rejectComments"
                                 value={ rejectComments }
                                 onChange={ (e) => setRejectComments(e.target.value) }
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:!bg-gray-700 dark:!border-gray-600 dark:text-white dark:focus:ring-indigo-400 dark:focus:border-indigo-400"
                                 rows={ 4 }
                                 placeholder="Explain why this application is being rejected..."
                                 required
@@ -403,7 +401,7 @@ const Applications: React.FC = () => {
                                     setRejectComments('');
                                     setSelectedApplication(null);
                                 } }
-                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
+                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                                 disabled={ updating }
                             >
                                 Cancel
@@ -411,7 +409,7 @@ const Applications: React.FC = () => {
                             <button
                                 type='button'
                                 onClick={ handleReject }
-                                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
                                 disabled={ updating || !rejectComments.trim() }
                             >
                                 { updating ? 'Rejecting...' : 'Reject Application' }

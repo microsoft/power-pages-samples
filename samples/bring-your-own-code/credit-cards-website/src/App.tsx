@@ -11,26 +11,30 @@ import Contact from './pages/Contact';
 import EligibilityCheck from './pages/EligibilityCheck';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import { ThemeProvider } from './context/ThemeContext';
 
 const App: React.FC = () => {
-  return (<Router>
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="flex-grow">
-        <Routes>
-          <Route path="/" element={ <Home /> } />
-          <Route path="/comparison" element={ <CardComparison /> } />          <Route path="/application" element={ <Application /> } />
-          <Route path="/application-status" element={ <ApplicationStatus /> } />
-          <Route path="/applications" element={ <Applications /> } />
-          <Route path="/eligibility-check" element={ <EligibilityCheck /> } />
-          <Route path="/faqs" element={ <FAQs /> } />
-          <Route path="/contact" element={ <Contact /> } />
-        </Routes>
-      </main>
-      <Footer />
-      <Toaster position="top-right" richColors closeButton />
-    </div>
-  </Router>
+  return (
+    <ThemeProvider>
+      <Router>
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={ <Home /> } />
+              <Route path="/comparison" element={ <CardComparison /> } />          <Route path="/application" element={ <Application /> } />
+              <Route path="/application-status" element={ <ApplicationStatus /> } />
+              <Route path="/applications" element={ <Applications /> } />
+              <Route path="/eligibility-check" element={ <EligibilityCheck /> } />
+              <Route path="/faqs" element={ <FAQs /> } />
+              <Route path="/contact" element={ <Contact /> } />
+            </Routes>
+          </main>
+          <Footer />
+          <Toaster position="top-right" richColors closeButton />
+        </div>
+      </Router>
+    </ThemeProvider>
   );
 };
 

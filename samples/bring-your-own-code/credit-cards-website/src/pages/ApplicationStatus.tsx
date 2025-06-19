@@ -85,17 +85,15 @@ const ApplicationStatus: React.FC = () => {
     }
   };
 
-  return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-semibold text-center mb-6">Application Status</h1>
+  return (    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-semibold text-center mb-6 text-gray-900 dark:text-gray-100">Application Status</h1>
 
-      <div className="max-w-lg mx-auto bg-white shadow rounded-md p-6">
-        { !showStatus ? (<form onSubmit={ handleCheckStatus }>
-          <h2 className="text-xl font-semibold mb-4">Check Your Application Status</h2>
+      <div className="max-w-lg mx-auto bg-white dark:!bg-gray-800 shadow dark:shadow-gray-900/50 rounded-md p-6 border dark:border-gray-700">
+        { !showStatus ? (<form onSubmit={ handleCheckStatus }>          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Check Your Application Status</h2>
           <div className="mb-4">
-            <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
+            <label htmlFor="email" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">
               Email Address
-              { isAuthenticated && <span className="ml-2 text-sm text-green-600">(Auto-filled from your account)</span> }
+              { isAuthenticated && <span className="ml-2 text-sm text-green-600 dark:text-green-400">(Auto-filled from your account)</span> }
             </label>
             <input
               type="email"
@@ -103,26 +101,24 @@ const ApplicationStatus: React.FC = () => {
               value={ email }
               onChange={ (e) => setEmail(e.target.value) }
               placeholder="Enter your email"
-              className={ `w-full border border-gray-300 rounded p-2 focus:ring focus:ring-indigo-500 ${isAuthenticated ? 'bg-gray-50' : ''}` }
+              className={ `w-full border border-gray-300 dark:border-gray-600 rounded p-2 focus:ring focus:ring-indigo-500 dark:focus:ring-indigo-400 dark:!bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 ${isAuthenticated ? 'bg-gray-50 dark:!bg-gray-700' : ''}` }
               required
             />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="applicationId" className="block text-gray-700 font-medium mb-2">Application ID</label>
+          </div>          <div className="mb-4">
+            <label htmlFor="applicationId" className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Application ID</label>
             <input
               type="text"
               id="applicationId"
               value={ applicationId }
               onChange={ (e) => setApplicationId(e.target.value) }
               placeholder="Enter your application ID"
-              className="w-full border border-gray-300 rounded p-2 focus:ring focus:ring-indigo-500"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded p-2 focus:ring focus:ring-indigo-500 dark:focus:ring-indigo-400 dark:!bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
               required
             />
           </div>
-          { error && <p className="text-red-500 text-sm mb-4">{ error }</p> }
-          <button
+          { error && <p className="text-red-500 text-sm mb-4">{ error }</p> }          <button
             type="submit"
-            className="w-full bg-indigo-500 text-white py-2 px-4 rounded hover:bg-indigo-600 disabled:bg-indigo-400"
+            className="w-full bg-indigo-500 dark:!bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-600 dark:hover:bg-indigo-700 disabled:bg-indigo-400 dark:disabled:bg-indigo-500"
             disabled={ loading }
           >
             { loading ? (
@@ -137,12 +133,11 @@ const ApplicationStatus: React.FC = () => {
           </button>
         </form>
         ) : (
-          <div>
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-4">Application Status</h2>
-              <p className={ `text-lg font-semibold ${status?.toLowerCase() === 'approved' ? 'text-green-600' :
-                status?.toLowerCase() === 'rejected' ? 'text-red-600' :
-                  'text-yellow-600'
+          <div>            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Application Status</h2>
+              <p className={ `text-lg font-semibold ${status?.toLowerCase() === 'approved' ? 'text-green-600 dark:text-green-400' :
+                status?.toLowerCase() === 'rejected' ? 'text-red-600 dark:text-red-400' :
+                  'text-yellow-600 dark:text-yellow-400'
                 }` }>
                 Application Status: { status }
               </p>              <button
@@ -156,7 +151,7 @@ const ApplicationStatus: React.FC = () => {
                   setStatus(null);
                   setComments(null);
                 } }
-                className="w-full bg-indigo-500 text-white py-2 px-4 rounded hover:bg-indigo-600 mt-4"
+                className="w-full bg-indigo-500 dark:!bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-600 dark:hover:bg-indigo-700 mt-4"
               >
                 Check Another Application
               </button>
