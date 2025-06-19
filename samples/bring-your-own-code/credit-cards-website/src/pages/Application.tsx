@@ -58,7 +58,7 @@ const Application: React.FC = () => {
       ) : (
         <div className="text-center py-6">
           <p className="text-lg mb-4 text-gray-800 dark:text-gray-200">Please sign in to access the application form.</p>
-          {/* <form action="/Account/Login/ExternalLogin" method="post" className="flex justify-center">
+          <form action="/Account/Login/ExternalLogin" method="post" className="flex justify-center">
               <input name="__RequestVerificationToken" type="hidden" value={ token } />
               <button
                 name="provider"
@@ -68,7 +68,7 @@ const Application: React.FC = () => {
               >
                 Sign In
               </button>
-            </form> */}
+            </form>
         </div>
       ) }
     </section>      {/* Side by side sections for eligibility info and benefits */ }
