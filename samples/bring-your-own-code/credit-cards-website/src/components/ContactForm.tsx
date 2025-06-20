@@ -40,10 +40,9 @@ const ContactForm: React.FC = () => {
       selectedDate: null,
     });
   };
-
   return (
-    <div className="relative max-w-lg mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl text-gray-800 font-semibold text-center mb-6">Contact Us</h2>
+    <div className="relative max-w-lg mx-auto p-6 bg-gray-100 dark:bg-gray-900 rounded-lg shadow-lg dark:shadow-blue-900/20">
+      <h2 className="text-2xl text-gray-800 dark:text-gray-200 font-semibold text-center mb-6">Contact Us</h2>
 
       {/* Success Message */ }
       { isSubmitted && (
@@ -53,9 +52,8 @@ const ContactForm: React.FC = () => {
       ) }
 
       <form onSubmit={ handleSubmit }>
-        {/* Name Field */ }
-        <div className="mb-6">
-          <label htmlFor="name" className="block text-gray-800 font-medium mb-2">
+        {/* Name Field */ }        <div className="mb-6">
+          <label htmlFor="name" className="block text-gray-800 dark:text-gray-200 font-medium mb-2">
             Full Name
           </label>
           <input
@@ -65,14 +63,13 @@ const ContactForm: React.FC = () => {
             value={ contactData.name }
             onChange={ handleChange }
             required
-            className="w-full p-3 rounded-lg border border-gray-300 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 dark:bg-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Your name"
           />
         </div>
 
-        {/* Email Field */ }
-        <div className="mb-6">
-          <label htmlFor="email" className="block text-gray-800 font-medium mb-2">
+        {/* Email Field */ }        <div className="mb-6">
+          <label htmlFor="email" className="block text-gray-800 dark:text-gray-200 font-medium mb-2">
             Email
           </label>
           <input
@@ -82,14 +79,13 @@ const ContactForm: React.FC = () => {
             value={ contactData.email }
             onChange={ handleChange }
             required
-            className="w-full p-3 rounded-lg border border-gray-300 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 dark:bg-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="your.email@example.com"
           />
         </div>
 
-        {/* Message Field */ }
-        <div className="mb-6">
-          <label htmlFor="message" className="block text-gray-800 font-medium mb-2">
+        {/* Message Field */ }        <div className="mb-6">
+          <label htmlFor="message" className="block text-gray-800 dark:text-gray-200 font-medium mb-2">
             Message
           </label>
           <textarea
@@ -98,15 +94,14 @@ const ContactForm: React.FC = () => {
             value={ contactData.message }
             onChange={ handleChange }
             required
-            className="w-full p-3 rounded-lg border border-gray-300 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 h-36"
+            className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 dark:bg-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 h-36"
             placeholder="How can we help you?"
           />
         </div>
 
-        {/* Submit Button */ }
-        <button
+        {/* Submit Button */ }        <button
           type="submit"
-          className="w-full p-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300"
+          className="w-full p-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md dark:shadow-blue-900/20 transition duration-300"
         >
           Send Message
         </button>

@@ -49,47 +49,49 @@ const HeroSection: React.FC = () => {
   const handleNext = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
   };
-
   return (
-    <section className="bg-blue-50 py-16 relative">
+    <section className="bg-blue-50 dark:bg-gray-800 py-16 relative">
       <div className="container mx-auto px-4">
-        <h2 className="text-center text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-900 text-transparent bg-clip-text mb-8">
+        <h2 className="text-center text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-900 dark:from-blue-400 dark:to-indigo-600 text-transparent bg-clip-text mb-8">
           Hear From Our Happy Users
         </h2>
         <div className="relative max-w-xl mx-auto">
           <button
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-indigo-600 text-white p-2 rounded-full shadow-md"
-            onClick={handlePrev}
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white p-2 rounded-full shadow-md"
+            onClick={ handlePrev }
           >
             &#8592;
           </button>
-          <div className="p-6 bg-white rounded-lg shadow-lg text-center">
+          <div className="p-6 bg-white dark:!bg-gray-700 rounded-lg shadow-lg text-center">
             <div className="flex justify-center mb-4">
               <img
-                src={testimonials[currentIndex].img}
-                alt={`${testimonials[currentIndex].name}'s testimonial`}
+                src={ testimonials[currentIndex].img }
+                alt={ `${testimonials[currentIndex].name}'s testimonial` }
                 className="rounded-full h-16 w-16"
               />
             </div>
-            <p className="text-gray-700 mb-4">{testimonials[currentIndex].text}</p>
-            <p className="text-sm text-indigo-500 font-semibold">- {testimonials[currentIndex].name}</p>
+            <p className="text-gray-700 dark:text-gray-200 mb-4">{ testimonials[currentIndex].text }</p>
+            <p className="text-sm text-indigo-500 dark:text-indigo-300 font-semibold">- { testimonials[currentIndex].name }</p>
           </div>
           <button
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-indigo-600 text-white p-2 rounded-full shadow-md"
-            onClick={handleNext}
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white p-2 rounded-full shadow-md"
+            onClick={ handleNext }
           >
             &#8594;
           </button>
         </div>
         <div className="flex justify-center mt-4 space-x-2">
-          {testimonials.map((_, index) => (
+          { testimonials.map((_, index) => (
             <button
               title="Next"
-              key={index}
-              className={`w-3 h-3 rounded-full ${currentIndex === index ? 'bg-indigo-600' : 'bg-gray-300'}`}
-              onClick={() => setCurrentIndex(index)}
+              key={ index }
+              className={ `w-3 h-3 rounded-full ${currentIndex === index
+                  ? 'bg-indigo-600 dark:bg-indigo-400'
+                  : 'bg-gray-300 dark:bg-gray-500'
+                }` }
+              onClick={ () => setCurrentIndex(index) }
             ></button>
-          ))}
+          )) }
         </div>
       </div>
     </section>

@@ -19,18 +19,17 @@ const ApplicationStatusDetails: React.FC<ApplicationStatusDetailsProps> = ({ sta
 
   const statusDetail = statusDetails[status] || 'Status information is currently unavailable.';
 
-  return (
-    <div className="mt-6 bg-gray-100 p-4 rounded-md shadow-inner">
-      <h3 className="text-lg font-semibold mb-2">Status Details</h3>
-      <p className="text-gray-700">{ statusDetail }</p>
+  return (<div className="mt-6 bg-gray-100 dark:!bg-gray-700 p-4 rounded-md shadow-inner dark:shadow-gray-900/50">
+    <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Status Details</h3>
+    <p className="text-gray-700 dark:text-gray-300">{ statusDetail }</p>
 
-      { (status.toLowerCase() === 'rejected' || status === 'rejected') && comments && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <h4 className="text-md font-semibold text-red-700 mb-1">Reason for Rejection:</h4>
-          <p className="text-gray-800">{ comments }</p>
-        </div>
-      ) }
-    </div>
+    { (status.toLowerCase() === 'rejected' || status === 'rejected') && comments && (
+      <div className="mt-4 p-3 bg-red-50 dark:!bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md">
+        <h4 className="text-md font-semibold text-red-700 dark:text-red-400 mb-1">Reason for Rejection:</h4>
+        <p className="text-gray-800 dark:text-gray-300">{ comments }</p>
+      </div>
+    ) }
+  </div>
   );
 };
 

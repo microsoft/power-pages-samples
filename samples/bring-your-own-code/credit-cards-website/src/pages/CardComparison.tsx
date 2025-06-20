@@ -44,24 +44,21 @@ const CardComparison: React.FC = () => {
         </p>
 
         {/* Search & Category Filter */ }
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">
-          <input
-            type="text"
-            placeholder="Search cards..."
-            value={ searchQuery }
-            onChange={ (e) => setSearchQuery(e.target.value) }
-            className="border px-4 py-2 rounded-lg shadow-sm w-full sm:w-1/3 focus:ring-2 focus:ring-blue-500"
-            aria-label="Search for cards"
-          />
-          <select
-            value={ selectedCategory }
-            onChange={ (e) => setSelectedCategory(e.target.value) }
-            className="border px-4 py-2 rounded-lg shadow-sm w-full sm:w-1/3 focus:ring-2 focus:ring-blue-500"
-            aria-label="Filter by primary category"
-          >
-            <option value="">All Categories</option>
+        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-6">          <input
+          type="text"
+          placeholder="Search cards..."
+          value={ searchQuery }
+          onChange={ (e) => setSearchQuery(e.target.value) }
+          className="border px-4 py-2 rounded-lg shadow-sm w-full sm:w-1/3 focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
+          aria-label="Search for cards"
+        />          <select
+          value={ selectedCategory }
+          onChange={ (e) => setSelectedCategory(e.target.value) }
+          className="border px-4 py-2 rounded-lg shadow-sm w-full sm:w-1/3 focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+          aria-label="Filter by primary category"
+        >            <option value="" className="dark:bg-gray-700">All Categories</option>
             { primaryCategories.map((category) => (
-              <option key={ category } value={ category }>
+              <option key={ category } value={ category } className="dark:bg-gray-700">
                 { category }
               </option>
             )) }
@@ -76,21 +73,21 @@ const CardComparison: React.FC = () => {
               Explore different options to find the best card suited to your needs.
             </p>
           </div>
-        ) }
-
-        {/* Cards Grid */ }
+        ) }        {/* Cards Grid */ }
         { selectedCategory ? (          // Standard grid layout when a category is selected
           <div className="card-grid-container">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
               { filteredCards.map((card) => (
                 <div
                   key={ card.id }
-                  className={ `border p-4 rounded-lg shadow-md transition-all duration-300 cursor-pointer ${selectedCards.includes(card.id) ? "bg-blue-100 ring-2 ring-blue-500" : "hover:shadow-lg bg-white"
+                  className={ `border dark:!border-gray-700 p-4 rounded-lg shadow-md transition-all duration-300 cursor-pointer ${selectedCards.includes(card.id)
+                    ? "bg-blue-100 dark:!bg-blue-900 ring-2 ring-blue-500 dark:ring-blue-400"
+                    : "hover:shadow-lg bg-white dark:!bg-gray-800"
                     }` }
                   onClick={ () => toggleCardSelection(card.id) }
                   tabIndex={ 0 }
                   role="button"
-                  aria-pressed={ selectedCards.includes(card.id).toString() }
+                  aria-pressed={ selectedCards.includes(card.id) }
                   onKeyDown={ (e) => e.key === "Enter" && toggleCardSelection(card.id) }
                 >
                   <img
@@ -98,9 +95,9 @@ const CardComparison: React.FC = () => {
                     alt={ card.name }
                     className="w-full h-40 object-cover rounded-lg mb-2"
                   />
-                  <h2 className="text-xl font-semibold text-gray-800">{ card.name }</h2>
-                  <p className="text-gray-500 text-sm">{ card.type }</p>
-                  <p className="text-gray-600 text-sm mt-2">
+                  <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">{ card.name }</h2>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">{ card.type }</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
                     { card.features?.join(', ') || 'Features not specified' }
                   </p>
                 </div>
@@ -123,13 +120,14 @@ const CardComparison: React.FC = () => {
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     { categoryCards.map((card) => (<div
-                      key={ card.id }
-                      className={ `border p-4 rounded-lg shadow-md transition-all duration-300 cursor-pointer ${selectedCards.includes(card.id) ? "bg-blue-100 ring-2 ring-blue-500" : "hover:shadow-lg bg-white"
+                      key={ card.id } className={ `border dark:!border-gray-700 p-4 rounded-lg shadow-md transition-all duration-300 cursor-pointer ${selectedCards.includes(card.id)
+                        ? "bg-blue-100 dark:bg-blue-900 ring-2 ring-blue-500 dark:ring-blue-400"
+                        : "hover:shadow-lg bg-white dark:!bg-gray-800"
                         }` }
                       onClick={ () => toggleCardSelection(card.id) }
                       tabIndex={ 0 }
                       role="button"
-                      aria-pressed={ selectedCards.includes(card.id).toString() }
+                      aria-pressed={ selectedCards.includes(card.id) }
                       onKeyDown={ (e) => e.key === "Enter" && toggleCardSelection(card.id) }
                     >
                       <img
@@ -137,9 +135,9 @@ const CardComparison: React.FC = () => {
                         alt={ card.name }
                         className="w-full h-40 object-cover rounded-lg mb-2"
                       />
-                      <h2 className="text-xl font-semibold text-gray-800">{ card.name }</h2>
-                      <p className="text-gray-500 text-sm">{ card.type }</p>
-                      <p className="text-gray-600 text-sm mt-2">
+                      <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">{ card.name }</h2>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">{ card.type }</p>
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
                         { card.features?.join(', ') || 'Features not specified' }
                       </p>
                     </div>

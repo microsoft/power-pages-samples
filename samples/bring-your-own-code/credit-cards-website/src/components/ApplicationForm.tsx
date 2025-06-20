@@ -220,16 +220,15 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
       toast.error("Failed to copy application ID");
     }
   };
-
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white shadow-lg rounded-lg relative overflow-hidden">
+    <div className="max-w-xl mx-auto p-6 bg-white dark:!bg-gray-800 shadow-lg dark:shadow-gray-900/50 rounded-lg relative overflow-hidden border dark:!border-gray-700">
       { submitted ? (
         <div className="text-center relative">
           <motion.h2
             initial={ { scale: 0, opacity: 0 } }
             animate={ { scale: 1.2, opacity: 1 } }
             transition={ { duration: 0.5 } }
-            className="text-3xl font-bold text-blue-500"
+            className="text-3xl font-bold text-blue-500 dark:text-blue-400"
           >
             🎉 Congratulations! 🎉
           </motion.h2>
@@ -237,7 +236,7 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
             initial={ { opacity: 0 } }
             animate={ { opacity: 1 } }
             transition={ { delay: 0.3, duration: 1 } }
-            className="text-lg text-green-700 mt-2"
+            className="text-lg text-green-700 dark:text-green-400 mt-2"
           >
             Your application has been successfully submitted!
           </motion.p>
@@ -246,19 +245,17 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
               initial={ { opacity: 0 } }
               animate={ { opacity: 1 } }
               transition={ { delay: 0.6, duration: 1 } }
-              className="mt-4 p-4 bg-gray-100 rounded-lg"
-            >
-              <p className="text-md">Your application ID is:</p>
-              <p className="text-xl font-bold text-blue-700 mt-2">{ applicationId }</p>
-              <p className="text-sm text-gray-600 mt-2">
+              className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"
+            >              <p className="text-md dark:text-gray-200">Your application ID is:</p>
+              <p className="text-xl font-bold text-blue-700 dark:text-blue-400 mt-2">{ applicationId }</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
                 Please save this ID to check your application status later.
               </p>
               <motion.button
                 initial={ { opacity: 0, y: 10 } }
                 animate={ { opacity: 1, y: 0 } }
-                transition={ { delay: 0.9, duration: 0.5 } }
-                onClick={ () => applicationId && copyToClipboard(applicationId) }
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 flex items-center mx-auto"
+                transition={ { delay: 0.9, duration: 0.5 } } onClick={ () => applicationId && copyToClipboard(applicationId) }
+                className="mt-4 px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition duration-200 flex items-center mx-auto"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -278,7 +275,7 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
               </motion.button>
             </motion.div>
           ) }        </div>) : step < stepSchemas.length ? (<>            <div className="relative mb-6">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gray-300 rounded-full">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gray-300 dark:!bg-gray-600 rounded-full">
               <div className={ `h-2 bg-blue-600 rounded-full transition-all ${step === 0 ? 'w-1/3' : step === 1 ? 'w-2/3' : 'w-full'
                 }` }></div>
             </div>
@@ -287,18 +284,17 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
             <form className="space-y-6" onSubmit={ handleSubmit(onSubmit) }>
               { Object.keys(stepSchemas[step].shape).map((key) => (
                 <div key={ key } className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700">{ key.replace(/([A-Z])/g, " $1").trim() }</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{ key.replace(/([A-Z])/g, " $1").trim() }</label>
                   { key === "CardType" ? (
-                    <select { ...register(key) } className={ `w-full px-4 py-2 border rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out ${errors[key] ? 'border-red-500' : 'border-gray-300'}` }>
-                      <option value="">Select a card type</option>
+                    <select { ...register(key) } className={ `w-full px-4 py-2 border rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out ${errors[key] ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-gray-100` }>                      <option value="" className="dark:bg-gray-800">Select a card type</option>
                       { cardTypes.map((card) => (
-                        <option key={ card } value={ card }>{ card }</option>
+                        <option key={ card } value={ card } className="dark:bg-gray-800">{ card }</option>
                       )) }
                     </select>
                   ) : (
                     <input
                       { ...register(key) }
-                      className={ `w-full px-4 py-2 border rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out ${errors[key] ? 'border-red-500' : 'border-gray-300'}` }
+                      className={ `w-full px-4 py-2 border rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out ${errors[key] ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-gray-100` }
                     />
                   ) }
                   { errors[key] && <span className="text-sm text-red-500 mt-1">{ errors[key]?.message as string }</span> }
@@ -309,16 +305,15 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
                 { step > 0 && (
                   <button
                     type="button"
-                    className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-200"
+                    className="px-6 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition duration-200"
                     onClick={ () => setStep(step - 1) }
                     disabled={ loading }
                   >
                     Previous
                   </button>
-                ) }
-                <button
+                ) }                <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 disabled:bg-blue-400"
+                  className="px-6 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition duration-200 disabled:bg-blue-400 dark:disabled:bg-blue-500"
                   disabled={ loading }
                 >
                   { loading ? (
