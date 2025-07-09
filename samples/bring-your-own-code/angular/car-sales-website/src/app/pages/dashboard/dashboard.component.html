@@ -1,0 +1,109 @@
+<div class="dashboard-container">
+  <h1>Dashboard</h1>
+
+  <div class="metrics-cards"> <!-- Inventory Metric Card -->
+    <mat-card class="metric-card inventory-card">
+      <mat-card-header>
+        <mat-card-title>{{ (inventoryMetric$ | async)?.label }}</mat-card-title>
+        <div class="metric-icon car-icon">
+          <mat-icon>directions_car</mat-icon>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="metric-value">{{ formatValue((inventoryMetric$ | async)?.value || 0, 'Total Inventory') }}</div>
+        <div class="target-percentage">{{ (inventoryMetric$ | async)?.percentage }}% of target</div>
+        <mat-progress-bar [color]="getProgressColor('Total Inventory')" mode="determinate"
+          [value]="(inventoryMetric$ | async)?.percentage || 0">
+        </mat-progress-bar>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Monthly Sales Metric Card -->
+    <mat-card class="metric-card sales-card">
+      <mat-card-header>
+        <mat-card-title>{{ (monthlySalesMetric$ | async)?.label }}</mat-card-title>
+        <div class="metric-icon sales-icon">
+          <mat-icon>attach_money</mat-icon>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="metric-value">{{ formatValue((monthlySalesMetric$ | async)?.value || 0, 'Monthly Sales') }}</div>
+        <div class="target-percentage">{{ (monthlySalesMetric$ | async)?.percentage }}% of target</div>
+        <mat-progress-bar [color]="getProgressColor('Monthly Sales')" mode="determinate"
+          [value]="(monthlySalesMetric$ | async)?.percentage || 0">
+        </mat-progress-bar>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Total Customers Metric Card -->
+    <mat-card class="metric-card customers-card">
+      <mat-card-header>
+        <mat-card-title>{{ (totalCustomersMetric$ | async)?.label }}</mat-card-title>
+        <div class="metric-icon customers-icon">
+          <mat-icon>people</mat-icon>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="metric-value">{{ formatValue((totalCustomersMetric$ | async)?.value || 0, 'Total Customers') }}
+        </div>
+        <div class="target-percentage">{{ (totalCustomersMetric$ | async)?.percentage }}% of target</div>
+        <mat-progress-bar [color]="getProgressColor('Total Customers')" mode="determinate"
+          [value]="(totalCustomersMetric$ | async)?.percentage || 0">
+        </mat-progress-bar>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Growth Rate Metric Card -->
+    <mat-card class="metric-card growth-card">
+      <mat-card-header>
+        <mat-card-title>{{ (growthRateMetric$ | async)?.label }}</mat-card-title>
+        <div class="metric-icon growth-icon">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="metric-value">{{ formatValue((growthRateMetric$ | async)?.value || 0, 'Growth Rate') }}</div>
+        <div class="target-percentage">{{ (growthRateMetric$ | async)?.percentage }}% of target</div>
+        <mat-progress-bar class="orange-progress" [color]="getProgressColor('Growth Rate')" mode="determinate"
+          [value]="(growthRateMetric$ | async)?.percentage || 0">
+        </mat-progress-bar>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <h2>Recent Sales</h2>
+  <table mat-table [dataSource]="(recentSales$ | async) || []" class="mat-elevation-z2">
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef>ID</th>
+      <td mat-cell *matCellDef="let sale">{{ sale.id }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="car_id">
+      <th mat-header-cell *matHeaderCellDef>Car ID</th>
+      <td mat-cell *matCellDef="let sale">{{ sale.car_id }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="customer_id">
+      <th mat-header-cell *matHeaderCellDef>Customer ID</th>
+      <td mat-cell *matCellDef="let sale">{{ sale.customer_id }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="date">
+      <th mat-header-cell *matHeaderCellDef>Date</th>
+      <td mat-cell *matCellDef="let sale">{{ sale.date }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="price">
+      <th mat-header-cell *matHeaderCellDef>Price</th>
+      <td mat-cell *matCellDef="let sale">${{ sale.price | number:'1.2-2' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="salesperson">
+      <th mat-header-cell *matHeaderCellDef>Salesperson</th>
+      <td mat-cell *matCellDef="let sale">{{ sale.salesperson }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="['id', 'car_id', 'customer_id', 'date', 'price', 'salesperson']"></tr>
+    <tr mat-row *matRowDef="let row; columns: ['id', 'car_id', 'customer_id', 'date', 'price', 'salesperson'];"></tr>
+  </table>
+</div>
