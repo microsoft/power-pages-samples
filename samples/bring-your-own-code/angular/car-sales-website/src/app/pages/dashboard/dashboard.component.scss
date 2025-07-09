@@ -1,0 +1,136 @@
+.dashboard-container {
+  padding: 20px;
+}
+
+.metrics-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.metric-card {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  mat-card-header {
+    background-color: #f5f5f5;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    mat-card-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .metric-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      mat-icon {
+        font-size: 24px;
+        height: 24px;
+        width: 24px;
+        color: white;
+      }
+    }
+
+    .car-icon {
+      background-color: #3f51b5; // Blue
+    }
+
+    .sales-icon {
+      background-color: #f44336; // Red
+    }
+
+    .customers-icon {
+      background-color: #4caf50; // Green
+    }
+
+    .growth-icon {
+      background-color: #ff9800; // Orange
+    }
+  }
+
+  mat-card-content {
+    padding: 20px 16px;
+  }
+}
+
+.inventory-card mat-card-header {
+  background-color: rgba(63, 81, 181, 0.1);
+}
+
+.sales-card mat-card-header {
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
+.customers-card mat-card-header {
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.growth-card mat-card-header {
+  background-color: rgba(255, 152, 0, 0.1);
+}
+
+.metric-value {
+  font-size: 36px;
+  font-weight: 500;
+  padding: 8px 0 16px;
+  text-align: center;
+}
+
+.target-percentage {
+  font-size: 14px;
+  text-align: right;
+  margin-bottom: 8px;
+  color: #757575;
+}
+
+mat-progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+// Custom orange progress bar
+:host ::ng-deep .orange-progress .mat-progress-bar-fill::after {
+  background-color: #ff9800;
+}
+
+h2 {
+  margin-top: 32px;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.mat-table {
+  width: 100%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .metrics-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-value {
+    font-size: 28px;
+  }
+}
