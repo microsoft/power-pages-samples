@@ -16,7 +16,7 @@ Run `npm install -g @angular/cli` to install Angular CLI.
 
     ```bash
     git clone https://github.com/microsoft/power-pages-samples
-    cd samples/bring-your-own-code-samples\angular\car-sales-website\
+    cd samples/bring-your-own-code\angular\car-sales-website\
     ```
 
 1. Install dependencies:
@@ -99,6 +99,42 @@ Below steps will help you run this app in Power Pages.
 1. Additionally, install [Power Platform Tools VS Code extension](https://aka.ms/power-platform-vscode) to easily upload the site in future iterations with a single click from within VS Code.
 
 **Note:** Please login to the site to see **Sales Leads** page.
+
+## Project Structure
+
+```plaintext
+car-sales-website/
+├── .powerpages-site/       # Power Pages specific configuration
+├── public/                 # Public assets
+│   └── favicon.ico
+├── src/                    # Main source code
+│   ├── app/                # Angular application code
+│   │   ├── components/     # Reusable UI components
+│   │   │   ├── auth-button/
+│   │   │   ├── layout/
+│   │   │   └── theme-toggle/
+│   │   ├── guards/         # Route guards for authentication
+│   │   ├── pages/          # Application pages/routes
+│   │   │   ├── customers/
+│   │   │   ├── dashboard/
+│   │   │   ├── inventory/
+│   │   │   ├── sales/
+│   │   │   └── sales-leads/
+│   │   ├── services/       # Data and authentication services
+│   │   │   └── auth/
+│   │   ├── app.component.ts
+│   │   └── app.routes.ts
+│   ├── assets/             # Static assets
+│   ├── favicon.ico
+│   ├── index.html          # Main HTML template
+│   ├── main.ts             # Application entry point
+│   └── styles.scss         # Global styles
+├── angular.json            # Angular CLI configuration
+├── package.json            # Dependencies and scripts
+├── powerpages.config.json  # Power Pages configuration
+├── tsconfig.json           # TypeScript configuration
+└── README.md               # Project documentation
+```
 
 ## Additional Resources
 
