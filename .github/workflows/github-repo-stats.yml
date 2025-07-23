@@ -1,3 +1,5 @@
+name: "GitHub Repo Stats"
+
 on:
   schedule:
     # Run this once per day, towards the end of the day for keeping the most
@@ -15,3 +17,5 @@ jobs:
         with:
           repository: microsoft/power-pages-samples
           ghtoken: ${{ secrets.ghrs_github_api_token }}
+          databranch: github-repo-stats
+          ghpagesprefix: https://microsoft.github.io/power-pages-samples
