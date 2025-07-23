@@ -1,6 +1,0 @@
-{
-    "$schema": "https://json.schemastore.org/powerpages.config.json",
-    "siteName": "Car Sales Management",
-    "defaultLandingPage": "index.html",
-    "compiledPath": "dist/app/browser"
-}
