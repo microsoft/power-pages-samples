@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 interface ContactMessage {
   name: string;
@@ -16,16 +16,6 @@ const ContactForm: React.FC = () => {
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [userMessage, setUserMessage] = useState('');
-
-  // XSS vulnerability: Reading URL parameter and displaying it without sanitization
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const messageParam = urlParams.get('message');
-    if (messageParam) {
-      setUserMessage(messageParam);
-    }
-  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -53,13 +43,6 @@ const ContactForm: React.FC = () => {
   return (
     <div className="relative max-w-lg mx-auto p-6 bg-gray-100 dark:bg-gray-900 rounded-lg shadow-lg dark:shadow-blue-900/20">
       <h2 className="text-2xl text-gray-800 dark:text-gray-200 font-semibold text-center mb-6">Contact Us</h2>
-
-      {/* XSS Vulnerability Fixed: Displaying sanitized user input from URL parameter */}
-      {userMessage && (
-        <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded-lg">
-          <div>{userMessage}</div>
-        </div>
-      )}
 
       {/* Success Message */ }
       { isSubmitted && (
