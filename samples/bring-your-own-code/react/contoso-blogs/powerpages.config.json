@@ -1,0 +1,6 @@
+{
+    "compiledPath": "dist",
+    "siteName": "Contoso Blogs",
+    "defaultLandingPage": "index.html",
+    "$schema": "https://json.schemastore.org/powerpages.config.json"
+}

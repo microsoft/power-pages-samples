@@ -1,4 +1,4 @@
-# Power Pages - Bring Your Own Code - BYOC Blogs
+# Power Pages - Bring Your Own Code - Contoso Blogs
 
 This is a React-based sample application demonstrating how a multilingual blog website can be hosted on Power Pages with full internationalization (i18n) support using react-i18next. This sample showcases modern React development practices with a focus on localization across multiple languages.
 
@@ -99,7 +99,7 @@ const LanguageSelector = () => {
 
    ```powershell
    git clone https://github.com/microsoft/power-pages-samples
-   cd samples/bring-your-own-code/react/byoc-blogs/
+   cd samples/bring-your-own-code/react/contoso-blogs/
    ```
 
 2. Install dependencies:
@@ -136,16 +136,16 @@ Below steps will help you run this localized blog app in Power Pages.
 
 1. Install [Microsoft Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction?tabs=windows#install-microsoft-power-platform-cli). (Version should be >= 1.43.6)
 2. Allow `*.js` files by removing it from `Blocked Attachments` in `Privacy + Security` settings for your environment from Power Pages Admin Center.
-3. Open a terminal and cd into `byoc-blogs` folder.
+3. Open a terminal and cd into `contoso-blogs` folder.
 4. Run `pac auth create --environment <Environment URL>` to login to your environment.
 
 ### Uploading site to Power Pages
 
-1. Open a terminal and cd into `byoc-blogs` folder.
+1. Open a terminal and cd into `contoso-blogs` folder.
 2. Run `npm run build` to build the code.
 3. Run `pac pages upload-code-site --rootPath .` to upload the site to Power Pages.
 4. Go to Power Pages home and click on **Inactive sites**.
-5. You should see **BYOC Blogs** site listed there. Click on **Reactivate** to proceed.
+5. You should see **Contoso Blogs** site listed there. Click on **Reactivate** to proceed.
 6. Once the site is activated, click on **Preview** to see it running on Power Pages.
 7. Additionally, install [Power Platform Tools VS Code extension](https://aka.ms/power-platform-vscode) to easily upload the site in future iterations with a single click from within VS Code.
 
@@ -154,7 +154,7 @@ Below steps will help you run this localized blog app in Power Pages.
 ## Project Structure
 
 ```text
-byoc-blogs/
+contoso-blogs/
 ├── public/
 │   └── blog-icon.svg
 ├── src/

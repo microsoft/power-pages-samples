@@ -5,11 +5,11 @@
     "blog": "Blog"
   },
   "header": {
-    "title": "BYOC Blogs",
-    "subtitle": "Bring Your Own Code - Gedanken und Erfahrungen teilen"
+    "title": "Contoso Blogs",
+    "subtitle": "Technische Einblicke und Entwicklungserfahrungen"
   },
   "home": {
-    "welcome": "Willkommen zu BYOC Blogs",
+    "welcome": "Willkommen zu Contoso Blogs",
     "description": "Dies ist eine Demonstration der React-Lokalisierung mit i18next. Entdecken Sie die Blog-Beiträge und wechseln Sie zwischen den Sprachen, um die Lokalisierung in Aktion zu sehen.",
     "latestPosts": "Neueste Beiträge",
     "readMore": "Mehr Lesen",
@@ -36,7 +36,7 @@
     "category": "Kategorie"
   },
   "footer": {
-    "copyright": "© 2025 BYOC Blogs. Alle Rechte vorbehalten."
+    "copyright": "© 2025 Contoso Blogs. Alle Rechte vorbehalten."
   },
   "language": {
     "select": "Sprache"

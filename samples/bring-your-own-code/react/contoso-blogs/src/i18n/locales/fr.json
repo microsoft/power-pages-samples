@@ -5,11 +5,11 @@
     "blog": "Blog"
   },
   "header": {
-    "title": "BYOC Blogs",
-    "subtitle": "Bring Your Own Code - Partager des pensées et des expériences"
+    "title": "Contoso Blogs",
+    "subtitle": "Perspectives technologiques et expériences de développement"
   },
   "home": {
-    "welcome": "Bienvenue sur BYOC Blogs",
+    "welcome": "Bienvenue sur Contoso Blogs",
     "description": "Ceci est une démonstration de la localisation React utilisant i18next. Explorez les articles du blog et basculez entre les langues pour voir la localisation en action.",
     "latestPosts": "Derniers Articles",
     "readMore": "Lire Plus",
@@ -36,7 +36,7 @@
     "category": "Catégorie"
   },
   "footer": {
-    "copyright": "© 2025 BYOC Blogs. Tous droits réservés."
+    "copyright": "© 2025 Contoso Blogs. Tous droits réservés."
   },
   "language": {
     "select": "Langue"
