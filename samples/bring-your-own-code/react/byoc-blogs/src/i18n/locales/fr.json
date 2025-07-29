@@ -1,0 +1,49 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "about": "À propos",
+    "blog": "Blog"
+  },
+  "header": {
+    "title": "BYOC Blogs",
+    "subtitle": "Bring Your Own Code - Partager des pensées et des expériences"
+  },
+  "home": {
+    "welcome": "Bienvenue sur BYOC Blogs",
+    "description": "Ceci est une démonstration de la localisation React utilisant i18next. Explorez les articles du blog et basculez entre les langues pour voir la localisation en action.",
+    "latestPosts": "Derniers Articles",
+    "readMore": "Lire Plus",
+    "publishedOn": "Publié le"
+  },
+  "about": {
+    "title": "À Propos de Moi",
+    "description": "Bonjour ! Je suis un développeur passionné qui aime partager des connaissances et des expériences par l'écriture. Ce blog sert de plateforme pour discuter de divers sujets incluant la technologie, les pratiques de développement et les idées personnelles.",
+    "skills": "Compétences et Intérêts",
+    "skillsList": [
+      "Développement Web",
+      "React et TypeScript",
+      "Internationalisation",
+      "Conception d'Expérience Utilisateur",
+      "Rédaction Technique"
+    ],
+    "contact": "Entrer en Contact",
+    "contactDescription": "N'hésitez pas à me contacter si vous souhaitez vous connecter ou discuter de l'un des sujets abordés dans ce blog."
+  },
+  "blog": {
+    "title": "Articles de Blog",
+    "readingTime": "{{minutes}} min de lecture",
+    "backToBlog": "← Retour au Blog",
+    "category": "Catégorie"
+  },
+  "footer": {
+    "copyright": "© 2025 BYOC Blogs. Tous droits réservés."
+  },
+  "language": {
+    "select": "Langue"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur s'est produite",
+    "notFound": "Page non trouvée"
+  }
+}
