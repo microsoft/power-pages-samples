@@ -1,0 +1,49 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "about": "Über mich",
+    "blog": "Blog"
+  },
+  "header": {
+    "title": "Contoso Blogs",
+    "subtitle": "Technische Einblicke und Entwicklungserfahrungen"
+  },
+  "home": {
+    "welcome": "Willkommen zu Contoso Blogs",
+    "description": "Dies ist eine Demonstration der React-Lokalisierung mit i18next. Entdecken Sie die Blog-Beiträge und wechseln Sie zwischen den Sprachen, um die Lokalisierung in Aktion zu sehen.",
+    "latestPosts": "Neueste Beiträge",
+    "readMore": "Mehr Lesen",
+    "publishedOn": "Veröffentlicht am"
+  },
+  "about": {
+    "title": "Über Mich",
+    "description": "Hallo! Ich bin ein leidenschaftlicher Entwickler, der gerne Wissen und Erfahrungen durch das Schreiben teilt. Dieser Blog dient als Plattform, um verschiedene Themen zu diskutieren, einschließlich Technologie, Entwicklungspraktiken und persönliche Einsichten.",
+    "skills": "Fähigkeiten und Interessen",
+    "skillsList": [
+      "Webentwicklung",
+      "React und TypeScript",
+      "Internationalisierung",
+      "Benutzererfahrung Design",
+      "Technisches Schreiben"
+    ],
+    "contact": "Kontakt Aufnehmen",
+    "contactDescription": "Zögern Sie nicht, mich zu kontaktieren, wenn Sie sich verbinden oder über eines der in diesem Blog behandelten Themen diskutieren möchten."
+  },
+  "blog": {
+    "title": "Blog-Beiträge",
+    "readingTime": "{{minutes}} Min Lesezeit",
+    "backToBlog": "← Zurück zum Blog",
+    "category": "Kategorie"
+  },
+  "footer": {
+    "copyright": "© 2025 Contoso Blogs. Alle Rechte vorbehalten."
+  },
+  "language": {
+    "select": "Sprache"
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Ein Fehler ist aufgetreten",
+    "notFound": "Seite nicht gefunden"
+  }
+}

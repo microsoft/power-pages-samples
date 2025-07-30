@@ -1,0 +1,49 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "blog": "Blog"
+  },
+  "header": {
+    "title": "Contoso Blogs",
+    "subtitle": "Technology insights and development experiences"
+  },
+  "home": {
+    "welcome": "Welcome to Contoso Blogs",
+    "description": "This is a demonstration of React localization using i18next. Explore the blog posts and switch between languages to see the localization in action.",
+    "latestPosts": "Latest Posts",
+    "readMore": "Read More",
+    "publishedOn": "Published on"
+  },
+  "about": {
+    "title": "About Me",
+    "description": "Hello! I'm a passionate developer who loves sharing knowledge and experiences through writing. This blog serves as a platform to discuss various topics including technology, development practices, and personal insights.",
+    "skills": "Skills & Interests",
+    "skillsList": [
+      "Web Development",
+      "React & TypeScript",
+      "Internationalization",
+      "User Experience Design",
+      "Technical Writing"
+    ],
+    "contact": "Get in Touch",
+    "contactDescription": "Feel free to reach out if you'd like to connect or discuss any of the topics covered in this blog."
+  },
+  "blog": {
+    "title": "Blog Posts",
+    "readingTime": "{{minutes}} min read",
+    "backToBlog": "← Back to Blog",
+    "category": "Category"
+  },
+  "footer": {
+    "copyright": "© 2025 Contoso Blogs. All rights reserved."
+  },
+  "language": {
+    "select": "Language"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "notFound": "Page not found"
+  }
+}
