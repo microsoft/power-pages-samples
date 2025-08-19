@@ -1,0 +1,4 @@
+id: bf988286-b572-f011-b4cb-000d3a4ecbcb
+name: HTTP/Access-Control-Allow-Headers
+source: 0
+value: Authorization,Accept,OData-MaxVersion,OData-Version,Content-Type

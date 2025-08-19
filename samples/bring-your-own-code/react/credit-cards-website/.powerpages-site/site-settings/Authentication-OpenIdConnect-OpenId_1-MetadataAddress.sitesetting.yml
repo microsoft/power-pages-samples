@@ -1,0 +1,3 @@
+id: 8d03d74e-da26-424a-9196-65df86ac0de1
+name: Authentication/OpenIdConnect/OpenId_1/MetadataAddress
+value: https://accounts.google.com/.well-known/openid-configuration

@@ -1,0 +1,4 @@
+id: e62da433-5e77-f011-b4cc-000d3a4ecbcb
+name: Authentication/BearerAuthentication/Protocol
+source: 0
+value: OpenIdConnect

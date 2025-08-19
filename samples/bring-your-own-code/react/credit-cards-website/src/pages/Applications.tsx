@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import ExtendedWindow from '../ExtendedWindow';
 import { Tab } from '@headlessui/react';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
 import { useTheme } from '../context/useTheme';
+import { useAuth } from '../context/AuthContext';
 
 interface Application {
     sample_creditcardapplicationid: string;
@@ -29,6 +30,7 @@ const Applications: React.FC = () => {
     const userRoles = extWindow.Microsoft?.Dynamic365?.Portal?.User?.userRoles || [];
     const isReviewer = Array.isArray(userRoles) && userRoles.includes("Credit Card Application Reviewer");
     const { theme } = useTheme();
+    const { getIdToken } = useAuth();
 
     // Status code constants
     const STATUS_CODES = {
@@ -52,27 +54,13 @@ const Applications: React.FC = () => {
         { name: 'In Progress', status: 'In Progress' },
         { name: 'Approved', status: 'Approved' },
         { name: 'Rejected', status: 'Rejected' }
-    ]; useEffect(() => {
-        fetchApplications();
+    ];
 
-        // Get verification token
-        const getToken = async () => {
-            try {
-                if (typeof window !== "undefined" && extWindow.shell?.getTokenDeferred) {
-                    const token = await extWindow.shell.getTokenDeferred();
-                    setToken(token);
-                }
-            } catch (error) {
-                console.error('Error fetching token:', error);
-            }
-        };
-        getToken();
-    }, [extWindow.shell]);
-
-    const fetchApplications = async () => {
+    const fetchApplications = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
+            const idToken = await getIdToken();
             const response = await fetch(
                 `/_api/sample_creditcardapplications?$select=sample_creditcardapplicationid,sample_id,sample_email,sample_firstname,sample_lastname,sample_status,sample_comments,sample_cardtype,createdon`,
                 {
@@ -80,7 +68,8 @@ const Applications: React.FC = () => {
                     headers: {
                         'Accept': 'application/json',
                         'OData-MaxVersion': '4.0',
-                        'OData-Version': '4.0'
+                        'OData-Version': '4.0',
+                        ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
                     }
                 }
             );
@@ -97,7 +86,24 @@ const Applications: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [getIdToken]);
+
+    useEffect(() => {
+        fetchApplications();
+
+        // Get verification token
+        const getToken = async () => {
+            try {
+                if (typeof window !== "undefined" && extWindow.shell?.getTokenDeferred) {
+                    const token = await extWindow.shell.getTokenDeferred();
+                    setToken(token);
+                }
+            } catch (error) {
+                console.error('Error fetching token:', error);
+            }
+        };
+        getToken();
+    }, [extWindow.shell, fetchApplications]);
     const updateApplicationStatus = async (applicationId: string, status: number, statusLabel: string, comments?: string) => {
         setUpdating(true);
         try {
@@ -112,6 +118,7 @@ const Applications: React.FC = () => {
                 payload.sample_comments = comments;
             }
 
+            const idToken = await getIdToken();
             const response = await fetch(
                 `/_api/sample_creditcardapplications(${applicationId})`,
                 {
@@ -122,7 +129,8 @@ const Applications: React.FC = () => {
                         'OData-MaxVersion': '4.0',
                         'OData-Version': '4.0',
                         'If-Match': '*',
-                        '__RequestVerificationToken': token
+                        '__RequestVerificationToken': token,
+                        ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
                     },
                     body: JSON.stringify(payload)
                 }
@@ -267,7 +275,7 @@ const Applications: React.FC = () => {
                                     ) : (
                                         <div className="overflow-x-auto">
                                             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                                        <thead className="bg-gray-50 dark:!bg-gray-700">
+                                                <thead className="bg-gray-50 dark:!bg-gray-700">
                                                     <tr>
                                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300">
                                                             ID

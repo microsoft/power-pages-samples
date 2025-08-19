@@ -11,8 +11,6 @@
         "preview": "vite preview"
     },
     "dependencies": {
-        "@azure/msal-browser": "^4.11.0",
-        "@azure/msal-react": "^3.0.10",
         "@headlessui/react": "^2.2.4",
         "@hookform/resolvers": "^3.9.0",
         "@radix-ui/react-accordion": "^1.2.0",

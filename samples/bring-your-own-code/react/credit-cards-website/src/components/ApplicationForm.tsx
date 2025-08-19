@@ -1,10 +1,11 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import ExtendedWindow from "@/ExtendedWindow";
+import { useAuth } from "../context/AuthContext";
 
 interface UserData {
   firstName?: string;
@@ -74,6 +75,7 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
   const [, setErrorMessage] = useState<string | null>(null);
   const [token, setToken] = useState<string>("");
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
+  const { getIdToken } = useAuth();
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(stepSchemas[Math.min(step, stepSchemas.length - 1)]),
@@ -118,12 +120,14 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
         console.log("Submitting application with data:", apiData);
 
         // Make the API call
+        const idToken = await getIdToken();
         const response = await fetch('/_api/sample_creditcardapplications', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             '__RequestVerificationToken': token,
+            ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
           },
           body: JSON.stringify(apiData)
         });
@@ -143,10 +147,12 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
 
             try {
               // Call the API to get the application details
+              const followUpIdToken = await getIdToken();
               const detailsResponse = await fetch(locationPath, {
                 headers: {
                   'Accept': 'application/json',
                   '__RequestVerificationToken': token,
+                  ...(followUpIdToken ? { 'Authorization': `Bearer ${followUpIdToken}` } : {})
                 }
               });
 
