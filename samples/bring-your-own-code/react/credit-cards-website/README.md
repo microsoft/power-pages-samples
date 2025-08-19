@@ -46,6 +46,16 @@ npm run dev
 
 The application will be available at `http://localhost:5173`
 
+To enable local authentication:
+
+1. Go to <https://portal.azure.com> and enable SPA authentication for the Entra app created for your portal.
+
+To enable Power Pages Web API integration in local:
+
+1. Set site visibility to "Public".
+1. Set the value of `VITE_AAD_CLIENT_ID` in [.env](.env) with your Entra application client id.
+1. Replace `https://your-site-domain.powerappsportals.com` with your portal domain in [vite.config.ts:10](vite.config.ts#L10)
+
 ## Building for Production
 
 To create a production build:
@@ -62,7 +72,7 @@ Below steps will help you run this app in Power Pages.
 
 ### Setup
 
-1. Install [Microsoft Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction?tabs=windows#install-microsoft-power-platform-cli). (Version should be >= 1.43.6)
+1. Install [Microsoft Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction?tabs=windows#install-microsoft-power-platform-cli). (Version should be >= 1.47.1)
 1. Allow `*.js` files by removing it from `Blocked Attachments` in `Privacy + Security` settings for your environment from Power Pages Admin Center.
 1. Open a terminal and cd into `credit-cards-website` folder.
 1. Run `pac auth create --environment <Environment URL>` to login to your environment.

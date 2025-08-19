@@ -1,0 +1,4 @@
+id: c302cd25-5e77-f011-b4cc-000d3a4ecbcb
+name: Authentication/BearerAuthentication/Provider
+source: 0
+value: AzureAD

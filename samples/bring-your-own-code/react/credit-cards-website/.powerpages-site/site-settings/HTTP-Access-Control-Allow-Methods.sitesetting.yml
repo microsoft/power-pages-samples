@@ -1,0 +1,4 @@
+id: 37e45361-b572-f011-b4cb-000d3a4ecbcb
+name: HTTP/Access-Control-Allow-Methods
+source: 0
+value: GET, OPTIONS

@@ -1,0 +1,3 @@
+id: 03b484ef-350c-4d0d-a40d-55fdabff0125
+name: Authentication/OpenIdConnect/OpenId_1/ResponseType
+value: id_token

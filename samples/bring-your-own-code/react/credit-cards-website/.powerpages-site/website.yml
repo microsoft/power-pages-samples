@@ -1,7 +1,7 @@
-adx_defaultbotconsumerid: 6c8c05c6-0e6a-4b7c-84c8-355a568e2199
-adx_defaultlanguage: f200a7d9-fbea-4e46-bf8f-dfdf5f8a6ee2
-adx_footerwebtemplateid: 7b4b0593-142d-41bf-878b-1dece5fb4ee1
-adx_headerwebtemplateid: 6b6d6511-f66c-40e4-ae8e-bcad6f24024b
-adx_name: WoodGrove Bank Credit Cards
-adx_website_language: 1033
-adx_websiteid: 7bdf86fe-cab1-4d1e-a087-88a6ec8def44
+defaultbotconsumerid: 6c8c05c6-0e6a-4b7c-84c8-355a568e2199
+defaultlanguage: f200a7d9-fbea-4e46-bf8f-dfdf5f8a6ee2
+footerwebtemplateid: 7b4b0593-142d-41bf-878b-1dece5fb4ee1
+headerwebtemplateid: 6b6d6511-f66c-40e4-ae8e-bcad6f24024b
+id: 7bdf86fe-cab1-4d1e-a087-88a6ec8def44
+name: Test
+website_language: 1033
