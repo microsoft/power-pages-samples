@@ -68,11 +68,11 @@ t('about.skillsList', { returnObjects: true })
 ```typescript
 const LanguageSelector = () => {
   const { i18n } = useTranslation();
-  
+
   const handleLanguageChange = (event) => {
     i18n.changeLanguage(event.target.value);
   };
-  
+
   return (
     <select value={i18n.language} onChange={handleLanguageChange}>
       {SUPPORTED_LANGUAGES.map((lang) => (
@@ -99,7 +99,7 @@ const LanguageSelector = () => {
 
    ```powershell
    git clone https://github.com/microsoft/power-pages-samples
-   cd samples/bring-your-own-code/react/contoso-blogs/
+   cd samples/bring-your-own-code/react/localization-sample/
    ```
 
 2. Install dependencies:
@@ -136,12 +136,12 @@ Below steps will help you run this localized blog app in Power Pages.
 
 1. Install [Microsoft Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction?tabs=windows#install-microsoft-power-platform-cli). (Version should be >= 1.43.6)
 2. Allow `*.js` files by removing it from `Blocked Attachments` in `Privacy + Security` settings for your environment from Power Pages Admin Center.
-3. Open a terminal and cd into `contoso-blogs` folder.
+3. Open a terminal and cd into `localization-sample` folder.
 4. Run `pac auth create --environment <Environment URL>` to login to your environment.
 
 ### Uploading site to Power Pages
 
-1. Open a terminal and cd into `contoso-blogs` folder.
+1. Open a terminal and cd into `localization-sample` folder.
 2. Run `npm run build` to build the code.
 3. Run `pac pages upload-code-site --rootPath .` to upload the site to Power Pages.
 4. Go to Power Pages home and click on **Inactive sites**.
@@ -154,7 +154,7 @@ Below steps will help you run this localized blog app in Power Pages.
 ## Project Structure
 
 ```text
-contoso-blogs/
+localization-sample/
 ├── public/
 │   └── blog-icon.svg
 ├── src/
@@ -274,7 +274,7 @@ This sample demonstrates comprehensive internationalization capabilities:
    ```typescript
    // src/i18n/index.ts
    import itTranslation from './locales/it.json';
-   
+
    const resources = {
      // ... existing languages
      it: { translation: itTranslation }
