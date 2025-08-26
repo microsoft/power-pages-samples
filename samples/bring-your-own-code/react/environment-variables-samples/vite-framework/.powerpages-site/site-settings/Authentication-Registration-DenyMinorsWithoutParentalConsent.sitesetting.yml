@@ -1,0 +1,4 @@
+description: Denies use of the portal to minors without parental consent. By default, it is set to false.
+id: cf66762a-e7d7-4524-841a-eb12f59c0941
+name: Authentication/Registration/DenyMinorsWithoutParentalConsent
+value: false
