@@ -1,0 +1,4 @@
+description: A true or false value. If set to true, the local account will be marked as deprecated. The portal user will be required to migrate to a non-deprecated account.
+id: b527485d-a5dc-4dee-befb-fd5ab66d886c
+name: Authentication/Registration/LocalLoginDeprecated
+value: False
