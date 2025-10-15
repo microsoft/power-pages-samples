@@ -2,5 +2,6 @@
     "$schema": "https://json.schemastore.org/powerpages.config.json",
     "compiledPath": "dist",
     "defaultLandingPage": "index.html",
-    "siteName": "WoodGrove Bank Credit Cards"
+    "siteName": "WoodGrove Bank Credit Cards",
+    "includeSource": true
 }

@@ -1,0 +1,4 @@
+description: Used to group a set of entities under an entry in the record type facet view.
+id: 6f730222-d8aa-4913-9b2a-fa52d817ed9e
+name: Search/RecordTypeFacetsEntities
+value: Downloads:annotation,adx_webfile

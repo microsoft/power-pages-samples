@@ -2,5 +2,6 @@
   "$schema": "https://json.schemastore.org/powerpages.config.json",
   "siteName": "Vue Admin Template",
   "defaultLandingPage": "index.html",
-  "compiledPath": "dist"
+  "compiledPath": "dist" ,
+  "includeSource": true
 }

@@ -2,5 +2,6 @@
     "$schema": "https://json.schemastore.org/powerpages.config.json",
     "compiledPath": "dist",
     "defaultLandingPage": "index.html",
-    "siteName": "Vite - React Env Vars Sample"
+    "siteName": "Vite - React Env Vars Sample",
+    "includeSource": true
 }
