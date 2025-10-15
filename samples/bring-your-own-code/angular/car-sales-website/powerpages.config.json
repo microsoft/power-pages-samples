@@ -1,6 +1,7 @@
 {
     "$schema": "https://json.schemastore.org/powerpages.config.json",
-    "siteName": "Car Sales Management",
+    "siteName": "Car Sales Management - Angular",
     "defaultLandingPage": "index.html",
-    "compiledPath": "dist/app/browser"
+    "compiledPath": "dist/app/browser",
+    "includeSource": true
 }

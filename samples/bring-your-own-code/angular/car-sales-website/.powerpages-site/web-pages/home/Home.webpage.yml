@@ -1,14 +1,16 @@
-adx_displayorder: 1
-adx_enablerating: false
-adx_enabletracking: false
-adx_excludefromsearch: false
-adx_feedbackpolicy: 756150005
-adx_hiddenfromsitemap: false
-adx_isroot: true
-adx_name: Home
-adx_pagetemplateid: 02888847-c5d9-4976-a07a-c9b8286729a4
-adx_partialurl: /
-adx_publishingstateid: 746cb73a-5608-4a3d-9244-d5d1728e586b
-adx_sharedpageconfiguration: false
-adx_title: Home
-adx_webpageid: eff4b904-3f4b-4213-acd9-74ba139ee245
+displayorder: 1
+enablerating: false
+enabletracking: false
+excludefromsearch: false
+feedbackpolicy: 756150005
+filecontent: 
+hiddenfromsitemap: false
+id: b1ff11e8-8aa9-4ef3-a57a-eebe1814c94d
+isroot: true
+name: Home
+pagetemplateid: 77a5b452-fa0a-40bf-83c8-4b80be9f4aa6
+parentpageid: 
+partialurl: /
+publishingstateid: 84efa9d3-59d1-4fcd-88b0-9d1ffe4c0412
+sharedpageconfiguration: false
+title: Home

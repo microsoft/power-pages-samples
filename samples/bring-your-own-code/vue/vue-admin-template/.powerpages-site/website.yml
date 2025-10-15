@@ -1,7 +1,7 @@
-adx_defaultbotconsumerid: 0db9671f-eb21-480c-bc1b-fed198ac79b2
-adx_defaultlanguage: 8d0dbb85-a78e-4ed5-9dad-bc31849bc334
-adx_footerwebtemplateid: 034607c5-31d4-4722-93a0-0f214af2c4ea
-adx_headerwebtemplateid: f2b50a6b-fbf9-4977-9bce-a8da6bda4bba
-adx_name: Vue App
-adx_website_language: 1033
-adx_websiteid: 65a508d7-18a0-48d6-b479-ac1851c7f18f
+defaultbotconsumerid: 0db9671f-eb21-480c-bc1b-fed198ac79b2
+defaultlanguage: 8d0dbb85-a78e-4ed5-9dad-bc31849bc334
+footerwebtemplateid: 034607c5-31d4-4722-93a0-0f214af2c4ea
+headerwebtemplateid: f2b50a6b-fbf9-4977-9bce-a8da6bda4bba
+id: 65a508d7-18a0-48d6-b479-ac1851c7f18f
+name: Vue Admin Template
+website_language: 1033

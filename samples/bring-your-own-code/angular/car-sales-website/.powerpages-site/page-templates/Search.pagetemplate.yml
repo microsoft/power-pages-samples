@@ -1,7 +1,7 @@
-adx_entityname: adx_webpage
-adx_isdefault: false
-adx_name: Search
-adx_pagetemplateid: a3d36dfe-e66b-41ac-82ea-d1ec04346ea7
-adx_rewriteurl: ~/Pages/Search.aspx
-adx_usewebsiteheaderandfooter: true
-adx_webtemplateid: f2e948e6-b55e-4633-8564-98abe332b309
+entityname: adx_webpage
+id: e4a48ee5-1f24-4b02-8370-5ba75cc8d09c
+isdefault: false
+name: Search
+rewriteurl: ~/Pages/Search.aspx
+usewebsiteheaderandfooter: true
+webtemplateid: 4837ddf6-4621-4fa0-b749-f5010ec86d8f

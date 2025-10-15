@@ -1,8 +1,8 @@
-adx_description: Blank Template
-adx_entityname: adx_webpage
-adx_isdefault: false
-adx_name: Default studio template
-adx_pagetemplateid: 02888847-c5d9-4976-a07a-c9b8286729a4
-adx_type: 756150001
-adx_usewebsiteheaderandfooter: true
-adx_webtemplateid: c1951456-2265-4aa2-8f15-8d04d7e775ee
+description: Blank Template
+entityname: adx_webpage
+id: 77a5b452-fa0a-40bf-83c8-4b80be9f4aa6
+isdefault: false
+name: Default studio template
+type: 756150001
+usewebsiteheaderandfooter: true
+webtemplateid: 84a56aab-c0a1-4ed0-80fd-c764d9fc68b5

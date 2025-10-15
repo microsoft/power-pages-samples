@@ -1,12 +1,12 @@
-adx_enablerating: false
-adx_enabletracking: false
-adx_excludefromsearch: true
-adx_hiddenfromsitemap: true
-adx_isroot: true
-adx_name: Page Not Found
-adx_pagetemplateid: 456d4634-4d07-4766-ba95-a03876cefb07
-adx_parentpageid: 92d0a52b-0e66-45ca-a756-326cc7cc16a7
-adx_partialurl: page-not-found
-adx_publishingstateid: f05978f2-bd11-48c3-bfe6-b4f552fa3086
-adx_sharedpageconfiguration: false
-adx_webpageid: 4b56f55f-d71a-4804-ae51-fe3ef757d36a
+enablerating: false
+enabletracking: false
+excludefromsearch: true
+hiddenfromsitemap: true
+id: 4b56f55f-d71a-4804-ae51-fe3ef757d36a
+isroot: true
+name: Page Not Found
+pagetemplateid: 456d4634-4d07-4766-ba95-a03876cefb07
+parentpageid: 92d0a52b-0e66-45ca-a756-326cc7cc16a7
+partialurl: page-not-found
+publishingstateid: f05978f2-bd11-48c3-bfe6-b4f552fa3086
+sharedpageconfiguration: false
