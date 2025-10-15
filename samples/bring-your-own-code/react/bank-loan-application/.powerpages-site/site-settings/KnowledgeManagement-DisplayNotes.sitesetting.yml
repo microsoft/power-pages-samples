@@ -1,0 +1,4 @@
+description: Setting controls whether attachments will be displayed on Knowledge articles
+id: 0a158d40-6d55-46c9-b577-26f33d4b14f2
+name: KnowledgeManagement/DisplayNotes
+value: false
