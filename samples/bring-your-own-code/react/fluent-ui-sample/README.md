@@ -181,14 +181,26 @@ const loanTerms: { value: LoanTerm; label: string }[] = [
 
 The application uses Fluent UI's `makeStyles` hook for styling. Customize styles in individual components or modify the theme in `App.tsx`.
 
-## Power Pages Integration
+## Running on Power Pages
 
-This sample is designed to work with Microsoft Power Pages. The `powerpages.config.json` file contains the configuration for deployment.
+Below steps will help you run this app in Power Pages.
 
-To deploy to Power Pages:
-1. Build the application using `npm run build`
-2. Follow Power Pages documentation for deploying custom code
-3. Configure the necessary table permissions and security settings
+### Setup
+
+1. Install [Microsoft Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction?tabs=windows#install-microsoft-power-platform-cli). (Version should be >= 1.47.1)
+1. Allow `*.js` files by removing it from `Blocked Attachments` in `Privacy + Security` settings for your environment from Power Pages Admin Center.
+1. Open a terminal and cd into `fluent-ui-sample` folder.
+1. Run `pac auth create --environment <Environment URL>` to login to your environment.
+
+### Uploading site to Power Pages
+
+1. Open a terminal and cd into `fluent-ui-sample` folder.
+1. Run `npm run build` to build the code.
+1. Run `pac pages upload-code-site --rootPath .` to upload the site to Power Pages.
+1. Go to Power Pages home and click on **Inactive sites**.
+1. You should see **Bank Loan Application** site listed there. Click on **Reactivate** to proceed.
+1. Once the site is activated, click on **Preview** to see it running on Power Pages.
+1. Additionally, install [Power Platform Tools VS Code extension](https://aka.ms/power-platform-vscode) to easily upload the site in future iterations with a single click from within VS Code.
 
 ## Browser Support
 
