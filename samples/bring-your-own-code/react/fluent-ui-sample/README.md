@@ -40,7 +40,7 @@ This sample demonstrates how to create a modern loan application portal with:
 ## Project Structure
 
 ```
-bank-loan-application/
+fluent-ui-sample/
 ├── src/
 │   ├── components/
 │   │   ├── LoanApplicationForm.tsx    # Loan application form component
@@ -72,7 +72,7 @@ bank-loan-application/
 
 1. Navigate to the project directory:
    ```bash
-   cd samples/bring-your-own-code/react/bank-loan-application
+   cd samples/bring-your-own-code/react/fluent-ui-sample
    ```
 
 2. Install dependencies:
