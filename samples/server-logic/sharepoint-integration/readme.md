@@ -38,10 +38,8 @@ You need an **App Registration** to allow your Server Logic code to authenticate
 1. In the newly created app, go to **API Permissions** → **Add a permission**. 
 1. Select **Microsoft Graph** → **Application permissions**. 
 1. Add the following permissions: 
-
-- Sites.ReadWrite.All (for SharePoint file operations) 
-- Mail.Send *(optional – only needed if you plan to enable the email section)* 
-
+   - Sites.ReadWrite.All (for SharePoint file operations) 
+   - Mail.Send *(optional – only needed if you plan to enable the email section)* 
 1. Select **Grant admin consent** for your tenant. 
 
 ### Create a client secret 
@@ -65,11 +63,11 @@ The script uploads generated event tickets to a SharePoint site.
 
 1. Identify your **SharePoint hostname** and **site path**: 
 
-> Example: 
->
-> HOSTNAME = contoso.sharepoint.com 
->
-> SITE_PATH = /sites/EventSite 
+   > Example: 
+   >
+   > HOSTNAME = contoso.sharepoint.com 
+   >
+   > SITE_PATH = /sites/EventSite 
 
 1. Ensure a document library called **Documents** exists (default). 
 
@@ -78,11 +76,11 @@ The script uploads generated event tickets to a SharePoint site.
 1. Create a new site by importing recently downloaded site from GitHub. Refer this document to import the site, [power-pages-solutions](https://learn.microsoft.com/power-pages/configure/power-pages-solutions#import-the-solution-into-the-target-environment)  
 1. During the site upgrade you'll be asked to update the values for environment variables. Update below values captured in previous steps 
 
-1. **Client ID**  
-1. **Tenant ID** 
-1. **Client Secret** (It prefers to keep it in a key vault and use in environments variable. For testing you can keep directly in environment variable) 
-1. HOSTNAME  
-1. SITE_PATH  
+   1. **Client ID**  
+   1. **Tenant ID** 
+   1. **Client Secret** (It prefers to keep it in a key vault and use in environments variable. For testing you can keep directly in environment variable) 
+   1. HOSTNAME  
+   1. SITE_PATH  
 
 ### Script Highlight: Configuration Section
 
