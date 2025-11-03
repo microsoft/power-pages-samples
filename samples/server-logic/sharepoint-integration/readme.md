@@ -75,7 +75,7 @@ The script uploads generated event tickets to a SharePoint site.
 
 ## Step 5: Deploy the package 
 
-1. Create a new site by importing recently downloaded site from GitHub. Refer this document to import the site, [power-pages-solutions](/power-pages/configure/power-pages-solutions)  
+1. Create a new site by importing recently downloaded site from GitHub. Refer this document to import the site, [power-pages-solutions](https://learn.microsoft.com/power-pages/configure/power-pages-solutions#import-the-solution-into-the-target-environment)  
 1. During the site upgrade you'll be asked to update the values for environment variables. Update below values captured in previous steps 
 
 1. **Client ID**  
