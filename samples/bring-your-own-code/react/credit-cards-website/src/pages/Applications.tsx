@@ -92,18 +92,48 @@ const Applications: React.FC = () => {
         fetchApplications();
 
         // Get verification token
+        const fetchAntiForgeryToken = async (): Promise<string> => {
+            try {
+                const tokenEndpoint = "/_layout/tokenhtml";
+
+                const response = await fetch(tokenEndpoint, {});
+
+                if (response.status !== 200) {
+                    throw new Error(`Failed to fetch token: ${response.status}`);
+                }
+
+                const tokenResponse = await response.text();
+                console.log(`Token Response = ${tokenResponse}`);
+                const valueString = 'value="';
+                const terminalString = '" />';
+                const valueIndex = tokenResponse.indexOf(valueString);
+
+                if (valueIndex === -1) {
+                    throw new Error('Token not found in response');
+                }
+
+                const requestVerificationToken = tokenResponse.substring(
+                    valueIndex + valueString.length,
+                    tokenResponse.indexOf(terminalString, valueIndex)
+                );
+
+                return requestVerificationToken || '';
+            } catch (error) {
+                console.warn('[Impersonation] Failed to fetch anti-forgery token:', error);
+                return '';
+            }
+        };
+
         const getToken = async () => {
             try {
-                if (typeof window !== "undefined" && extWindow.shell?.getTokenDeferred) {
-                    const token = await extWindow.shell.getTokenDeferred();
-                    setToken(token);
-                }
+                const token = await fetchAntiForgeryToken();
+                setToken(token);
             } catch (error) {
                 console.error('Error fetching token:', error);
             }
         };
         getToken();
-    }, [extWindow.shell, fetchApplications]);
+    }, [fetchApplications]);
     const updateApplicationStatus = async (applicationId: string, status: number, statusLabel: string, comments?: string) => {
         setUpdating(true);
         try {

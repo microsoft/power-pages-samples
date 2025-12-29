@@ -35,13 +35,45 @@ export class AuthService {
 
   private async getTokenDeferred(): Promise<void> {
     try {
-      const token = await (window as any).shell.getTokenDeferred();
+      const token = await this.fetchAntiForgeryToken();
       if (token) {
         this.tokenSubject.next(token);
         return;
       }
     } catch (e) {
       console.error('Error retrieving token:', e);
+    }
+  }
+
+  private async fetchAntiForgeryToken(): Promise<string> {
+    try {
+      const tokenEndpoint = "/_layout/tokenhtml";
+
+      const response = await fetch(tokenEndpoint, {});
+
+      if (response.status !== 200) {
+        throw new Error(`Failed to fetch token: ${response.status}`);
+      }
+
+      const tokenResponse = await response.text();
+      console.log(`Token Response = ${tokenResponse}`);
+      const valueString = 'value="';
+      const terminalString = '" />';
+      const valueIndex = tokenResponse.indexOf(valueString);
+
+      if (valueIndex === -1) {
+        throw new Error('Token not found in response');
+      }
+
+      const requestVerificationToken = tokenResponse.substring(
+        valueIndex + valueString.length,
+        tokenResponse.indexOf(terminalString, valueIndex)
+      );
+
+      return requestVerificationToken || '';
+    } catch (error) {
+      console.warn('[Impersonation] Failed to fetch anti-forgery token:', error);
+      return '';
     }
   }
 
