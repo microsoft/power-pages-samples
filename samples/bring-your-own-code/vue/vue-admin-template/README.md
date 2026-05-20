@@ -1,6 +1,6 @@
 # Vue Admin Template
 
-This is a sample admin template in Vuejs. This is a copy of [Vue Admin Template](https://github.com/fatihunlu/vue-admin-template?) running on Power Pages. If you like this template please consider starring the original repo.
+This is a sample admin template in Vue.js running on Power Pages. It is based on the original [Vue Admin Template](https://github.com/fatihunlu/vue-admin-template); if you like this sample, consider starring the original repo.
 
 ## Build Setup
 
@@ -8,17 +8,14 @@ This is a sample admin template in Vuejs. This is a copy of [Vue Admin Template]
 # install dependencies
 npm install
 
-# serve with hot reload at localhost:8080
+# serve with hot reload
 npm run dev
 
 # build for production with minification
 npm run build
-
-# build for production and view the bundle analyzer report
-npm run build --report
 ```
 
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+The sample uses Vue 3 and Vite.
 
 ## Uploading to Power Pages
 
@@ -31,18 +28,9 @@ For a detailed explanation on how things work, check out the [guide](http://vuej
 ```plaintext
 vue-admin-template/
 ├── build/
-│   ├── build.js
-│   ├── check-versions.js
-│   ├── logo.png
-│   ├── utils.js
-│   ├── vue-loader.conf.js
-│   ├── webpack.base.conf.js
-│   ├── webpack.dev.conf.js
-│   └── webpack.prod.conf.js
+│   └── legacy webpack configuration files
 ├── config/
-│   ├── dev.env.js
-│   ├── index.js
-│   └── prod.env.js
+│   └── legacy webpack configuration files
 ├── src/
 │   ├── assets/
 │   ├── components/
@@ -60,15 +48,13 @@ vue-admin-template/
 ├── index.html
 ├── package.json
 ├── powerpages.config.json
+├── vite.config.js
 ```
 
 ### Reference
 
 - [Vue.js](https://vuejs.org/)
-- [Vuetifyjs](https://vuetifyjs.com/)
-- [VueChartKick](https://github.com/ankane/vue-chartkick)
-- [vue-fullcalendar](https://github.com/Wanderxx/vue-fullcalendar)
-- [vue-swatches](https://saintplay.github.io/vue-swatches/#sub-using-a-preset)
+- [Vite](https://vite.dev/)
 
 ## License
 

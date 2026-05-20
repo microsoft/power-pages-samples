@@ -1,113 +1,65 @@
-import Vue from 'vue';
-import Router from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 
-import Dashboard from '../pages/Dashboard.vue';
-import Social from '../pages/Social.vue';
-import Media from '../pages/Media.vue';
-import Snackbar from '../pages/Snackbar.vue';
-import Chart from '../pages/Chart.vue';
-import Mailbox from '../pages/Mailbox.vue';
-import Calendar from '../pages/Calendar.vue';
-import Login from '../pages/core/Login.vue';
-import Error from '../pages/core/Error.vue';
+export const adminSections = [
+  {
+    path: '/',
+    name: 'Dashboard',
+    title: 'Dashboard',
+    description: 'Track visits, revenue, and support activity for the portal.'
+  },
+  {
+    path: '/mailbox',
+    name: 'Mailbox',
+    title: 'Mailbox',
+    description: 'Review customer messages and triage follow-up work.'
+  },
+  {
+    path: '/calendar',
+    name: 'Calendar',
+    title: 'Calendar',
+    description: 'Coordinate launches, appointments, and content updates.'
+  },
+  {
+    path: '/media',
+    name: 'Media',
+    title: 'Media',
+    description: 'Organize reusable portal assets for authors and makers.'
+  },
+  {
+    path: '/social',
+    name: 'Social',
+    title: 'Social',
+    description: 'Monitor campaign engagement across social channels.'
+  },
+  {
+    path: '/reports',
+    name: 'Reports',
+    title: 'Reports',
+    description: 'Summarize sample metrics in a Power Pages-ready Vue app.'
+  }
+];
 
+function createSectionView(section) {
+  return {
+    name: `${section.name}View`,
+    template: `
+      <section class="panel">
+        <p class="eyebrow">{{ section.name }}</p>
+        <h2>{{ section.title }}</h2>
+        <p>{{ section.description }}</p>
+      </section>
+    `,
+    data() {
+      return { section };
+    }
+  };
+}
 
-
-Vue.use(Router);
-
-export default new Router({
-  routes: [
-    {
-      path: '/',
-      name: 'Dashboard',
-      component: Dashboard,
-      meta: {
-        breadcrumb: [
-          { name: 'dashboard' }
-        ]
-      }
-    },
-    {
-      path: '/mailbox',
-      name: 'Mailbox',
-      component: Mailbox,
-      meta: {
-        breadcrumb: [
-          { name: 'dashboard', href: 'Dashboard' },
-          { name: 'mailbox' }
-        ]
-      }
-    },
-    {
-      path: '/snackbar',
-      name: 'Snackbar',
-      component: Snackbar,
-      meta: {
-        breadcrumb: [
-          { name: 'dashboard', href: 'Dashboard' },
-          { name: 'snackbar' }
-        ]
-      }
-    },
-    {
-      path: '/calendar',
-      name: 'Calendar',
-      component: Calendar,
-      meta: {
-        breadcrumb: [
-          { name: 'dashboard', href: 'Dashboard' },
-          { name: 'calendar' }
-        ]
-      }
-    },
-    {
-      path: '/social',
-      name: 'Social',
-      component: Social,
-      meta: {
-        breadcrumb: [
-          { name: 'dashboard', href: 'Dashboard' },
-          { name: 'social' }
-        ]
-      }
-    },
-    {
-      path: '/media',
-      name: 'Media',
-      component: Media,
-      meta: {
-        breadcrumb: [
-          { name: 'dashboard', href: 'Dashboard' },
-          { name: 'media' }
-        ]
-      }
-    },
-    {
-      path: '/chart',
-      name: 'Chart',
-      component: Chart,
-      meta: {
-        breadcrumb: [
-          { name: 'dashboard', href: 'Dashboard' },
-          { name: 'charts' }
-        ]
-      }
-    },
-    {
-      path: '/login',
-      name: 'Login',
-      component: Login,
-      meta: {
-        allowAnonymous: true
-      }
-    },
-    {
-      path: '/error',
-      name: 'Error',
-      component: Error,
-      meta: {
-        allowAnonymous: true
-      }
-    },
-  ]
+export default createRouter({
+  history: createWebHashHistory(),
+  routes: adminSections.map((section) => ({
+    path: section.path,
+    name: section.name,
+    component: createSectionView(section)
+  }))
 });
