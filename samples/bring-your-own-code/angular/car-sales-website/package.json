@@ -41,6 +41,8 @@
     "serialize-javascript": "7.0.5",
     "sockjs": "0.3.24",
     "uuid": "9.0.1",
-    "tar": "7.5.11"
+    "tar": "7.5.11",
+    "postcss": "8.5.15",
+    "webpack-dev-server": "5.2.4"
   }
 }
