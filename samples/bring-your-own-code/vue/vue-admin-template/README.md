@@ -1,6 +1,6 @@
 # Vue Admin Template
 
-This is a sample admin template in Vue.js running on Power Pages.
+This is a sample admin template in Vue.js running on Power Pages. It is based on the original [Vue Admin Template](https://github.com/fatihunlu/vue-admin-template); if you like this sample, consider starring the original repo.
 
 ## Build Setup
 
