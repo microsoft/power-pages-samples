@@ -62,6 +62,13 @@ const MOCK_USER: PowerPagesUser = {
 
 const DEV_SIGNEDOUT_KEY = '__pp_dev_signedout__'
 
+function getSafeReturnPath(value?: string): string {
+  if (!value) return '/'
+  const url = new URL(value, window.location.origin)
+  if (url.origin !== window.location.origin) return '/'
+  return `${url.pathname}${url.search}${url.hash}` || '/'
+}
+
 export function getAuthProvider(): AuthProviderConfig {
   return LOCAL_PROVIDER ?? AUTH_PROVIDERS[0]
 }
@@ -572,8 +579,9 @@ export class TermsRequiredError extends Error {
 }
 
 export async function acceptTerms(returnUrl?: string): Promise<void> {
+  const safeReturnUrl = getSafeReturnPath(returnUrl)
   if (isDevelopment) {
-    window.location.href = returnUrl || '/'
+    window.location.href = safeReturnUrl
     return
   }
 
@@ -618,10 +626,10 @@ export async function acceptTerms(returnUrl?: string): Promise<void> {
     redirect: 'follow',
   })
 
-  const finalReturn = returnUrl ?? queryReturnUrl
+  const finalReturn = getSafeReturnPath(returnUrl ?? queryReturnUrl)
 
   if (response.redirected || response.ok) {
-    window.location.href = finalReturn || '/'
+    window.location.href = finalReturn
     return
   }
 
