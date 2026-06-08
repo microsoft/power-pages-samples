@@ -4,7 +4,7 @@ This React sample demonstrates authentication flows for a Power Pages code site,
 
 ## Secret and environment placeholders
 
-This sample intentionally replaces tenant- and site-specific values with placeholders. Update these before deploying to your own Power Pages environment. The local Claude settings folder and `.powerpages-site/.portalconfig` are excluded because they are machine/environment specific and should not be checked in.
+This sample intentionally replaces tenant- and site-specific values with placeholders. Update these before deploying to your own Power Pages environment.
 
 Generated bundles under `.powerpages-site/web-files/index-*.js` are not listed below because they are refreshed by the build and upload process.
 
