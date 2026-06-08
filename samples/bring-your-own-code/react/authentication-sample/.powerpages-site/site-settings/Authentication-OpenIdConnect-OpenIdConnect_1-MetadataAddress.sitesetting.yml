@@ -1,0 +1,4 @@
+description: OIDC metadata document URL
+id: 3feb554c-61f7-4ef3-8542-ea12fde67897
+name: Authentication/OpenIdConnect/OpenIdConnect_1/MetadataAddress
+value: "https://<your-tenant-name>.ciamlogin.com/<your-tenant-id>/v2.0/.well-known/openid-configuration"

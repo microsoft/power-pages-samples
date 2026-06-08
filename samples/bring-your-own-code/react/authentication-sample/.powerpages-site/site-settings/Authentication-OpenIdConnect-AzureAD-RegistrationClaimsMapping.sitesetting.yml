@@ -1,0 +1,4 @@
+description: Map workforce Entra ID claims to contact fields on first sign-in
+id: e2969516-e005-4c32-aca6-de9a6283472c
+name: Authentication/OpenIdConnect/AzureAD/RegistrationClaimsMapping
+value: "firstname=given_name,lastname=family_name,emailaddress1=email"

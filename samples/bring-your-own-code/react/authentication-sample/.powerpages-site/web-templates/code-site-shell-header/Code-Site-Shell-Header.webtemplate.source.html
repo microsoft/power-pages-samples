@@ -1,0 +1,29 @@
+<div/>
+<script>
+  // Code Site Shell Header — Server-to-SPA redirect for auth pages.
+  // Uses a separate template because pac pages upload-code-site wipes the original Header.
+  (function () {
+    var path = window.location.pathname.toLowerCase();
+    var search = window.location.search;
+    var spaBase = window.location.origin;
+    var redirects = {
+      '/account/login/resetpassword': '/reset-password',
+      '/account/login/redeeminvitation': '/redeem-invitation',
+      '/register': '/redeem-invitation',
+      '/account/login/register': '/registration',
+      '/account/login/externallogincallback': '/external-login-confirmation',
+      '/account/login/termsandconditions': '/terms',
+      '/account/login/externalauthenticationfailed': '/login'
+    };
+    if (path === '/account/login/externalauthenticationfailed' && !search) {
+      window.location.replace(spaBase + '/login?message=external_auth_failed');
+      return;
+    }
+    for (var serverPath in redirects) {
+      if (path === serverPath) {
+        window.location.replace(spaBase + redirects[serverPath] + search);
+        return;
+      }
+    }
+  })();
+</script>

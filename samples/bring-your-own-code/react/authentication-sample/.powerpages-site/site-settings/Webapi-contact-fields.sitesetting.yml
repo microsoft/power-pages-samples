@@ -1,0 +1,4 @@
+description: Contact fields exposed via Web API (used by profile page)
+id: f1295b7b-303f-41d6-b955-19b9c2880d8a
+name: Webapi/contact/fields
+value: "firstname,lastname,emailaddress1,mobilephone,address1_line1,address1_line2,address1_city,address1_stateorprovince,address1_postalcode,address1_country"

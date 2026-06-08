@@ -1,0 +1,4 @@
+description: RP-initiated logout via end_session_endpoint
+id: 87121522-c26d-4a42-9a7c-2e43cda72d20
+name: Authentication/OpenIdConnect/OpenIdConnect_1/RPInitiatedLogout
+value: true

@@ -1,0 +1,4 @@
+description: Legacy logout disabled (RPInitiatedLogout used instead)
+id: 75cd3fb9-f500-42f7-b701-06408238b6c0
+name: Authentication/OpenIdConnect/OpenIdConnect_1/ExternalLogoutEnabled
+value: false

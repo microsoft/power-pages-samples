@@ -1,0 +1,4 @@
+description: Provider identifier for ExternalLogin POST
+id: db00624f-e4f5-4fee-a3c1-20c073031af9
+name: Authentication/OpenIdConnect/OpenIdConnect_1/AuthenticationType
+value: "https://<your-tenant-name>.ciamlogin.com/<your-tenant-id>"

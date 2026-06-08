@@ -1,0 +1,4 @@
+description: Allow new staff users to register via workforce Entra ID
+id: 5d7115e0-8856-4d7a-9d69-6abd8b5684aa
+name: Authentication/OpenIdConnect/AzureAD/RegistrationEnabled
+value: true

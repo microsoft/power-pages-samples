@@ -1,0 +1,4 @@
+description: Map IdP claims to contact fields on first sign-in
+id: 5ab54d69-4a8c-4724-9594-584653d5b7bf
+name: Authentication/OpenIdConnect/OpenIdConnect_1/RegistrationClaimsMapping
+value: "firstname=given_name,lastname=family_name,emailaddress1=email"

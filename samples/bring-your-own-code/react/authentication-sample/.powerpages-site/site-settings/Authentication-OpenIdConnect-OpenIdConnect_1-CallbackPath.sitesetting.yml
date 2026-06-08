@@ -1,0 +1,4 @@
+description: OWIN callback path (derived from RedirectUri)
+id: 8a5f902d-b44c-446b-80b0-4d499895427e
+name: Authentication/OpenIdConnect/OpenIdConnect_1/CallbackPath
+value: "C:/Program Files/Git/signin-openidconnect_1"
