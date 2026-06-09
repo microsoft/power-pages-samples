@@ -2,6 +2,10 @@
 
 This is a React-based sample application demonstrating how a multilingual blog website can be hosted on Power Pages with full internationalization (i18n) support using react-i18next. This sample showcases modern React development practices with a focus on localization across multiple languages.
 
+## Screenshot
+
+![Contoso Blogs localization sample screenshot](screenshot.png)
+
 ## Features
 
 ### 🌍 Multi-language Support

@@ -2,6 +2,10 @@
 
 This React sample demonstrates authentication flows for a Power Pages code site, including local sign-in, registration, password reset, invitation redemption, external sign-in, terms acceptance, and role-protected profile content.
 
+## Screenshot
+
+![Authentication sample burger website screenshot](screenshot.png)
+
 ## Secret and environment placeholders
 
 This sample intentionally replaces tenant- and site-specific values with placeholders. Update these before deploying to your own Power Pages environment.

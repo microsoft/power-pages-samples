@@ -4,6 +4,10 @@ This is a react based sample application to demonstrate how a react website can 
 
 This is a modern web application for managing car sales, inventory, and customer information.
 
+## Screenshot
+
+![React car sales dashboard screenshot](screenshot.png)
+
 ## Features
 
 - Authentication using Microsoft Entra Id (see [AuthButton.tsx](src/components/AuthButton.tsx) for implementation)

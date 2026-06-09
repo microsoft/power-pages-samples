@@ -2,7 +2,9 @@
 
 This sample shows how to use environment variables in a Vite-powered React app.
 
-![home.png](home.png)
+## Screenshot
+
+![Vite React environment variables sample screenshot](screenshot.png)
 
 Key points:
 

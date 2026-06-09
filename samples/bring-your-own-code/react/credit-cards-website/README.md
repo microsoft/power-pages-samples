@@ -9,6 +9,10 @@ This is a modern credit card web application for a fictitious bank with the foll
 1. Customers can view their application status.
 1. Credit Card Reviewers can see and approve/reject the application.
 
+## Screenshot
+
+![Woodgrove Bank credit cards website screenshot](screenshot.png)
+
 ## Features
 
 - Authentication using Microsoft Entra Id (see [AuthButton.tsx](src/components/AuthButton.tsx) for implementation)
