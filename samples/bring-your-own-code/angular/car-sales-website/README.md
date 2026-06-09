@@ -6,6 +6,10 @@ This is an angular implementation of [car-sales-website](../../react/car-sales-w
 
 This is a modern web application for managing car sales, inventory, and customer information.
 
+## Screenshot
+
+![Angular car sales dashboard screenshot](screenshot.png)
+
 ## Pre-requisites
 
 Run `npm install -g @angular/cli` to install Angular CLI.

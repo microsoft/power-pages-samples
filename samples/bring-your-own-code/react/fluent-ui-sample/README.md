@@ -2,6 +2,10 @@
 
 A comprehensive bank loan application sample built with React, TypeScript, and Fluent UI v9 controls for Microsoft Power Pages.
 
+## Screenshot
+
+![Bank loan application portal screenshot](screenshot.png)
+
 ## Overview
 
 This sample demonstrates how to create a modern loan application portal with:
