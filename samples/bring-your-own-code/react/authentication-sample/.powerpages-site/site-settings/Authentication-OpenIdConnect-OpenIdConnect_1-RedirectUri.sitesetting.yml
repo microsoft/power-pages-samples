@@ -1,0 +1,4 @@
+description: OAuth callback URL (matches app registration)
+id: 67046d01-f15a-4f74-b59f-9dedece0c0a7
+name: Authentication/OpenIdConnect/OpenIdConnect_1/RedirectUri
+value: "https://<your-power-pages-site>.powerappsportals.com/signin-openid_1"

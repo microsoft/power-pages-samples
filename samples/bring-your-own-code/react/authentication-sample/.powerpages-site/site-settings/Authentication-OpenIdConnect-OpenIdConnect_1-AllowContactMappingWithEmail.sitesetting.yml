@@ -1,0 +1,4 @@
+description: Auto-link external sign-in to existing contact by email match (single-tenant)
+id: 20837645-6b6e-4588-a2e4-d2dd8567dec4
+name: Authentication/OpenIdConnect/OpenIdConnect_1/AllowContactMappingWithEmail
+value: true

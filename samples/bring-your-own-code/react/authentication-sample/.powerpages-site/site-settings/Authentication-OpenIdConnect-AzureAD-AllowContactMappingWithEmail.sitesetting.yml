@@ -1,0 +1,4 @@
+description: Auto-link workforce Entra sign-in to existing contact by email match
+id: 4916400b-0da7-4025-b581-695220f09e84
+name: Authentication/OpenIdConnect/AzureAD/AllowContactMappingWithEmail
+value: true

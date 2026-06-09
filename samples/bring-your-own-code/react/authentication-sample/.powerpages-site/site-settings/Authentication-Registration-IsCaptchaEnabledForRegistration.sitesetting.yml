@@ -1,0 +1,4 @@
+description: Disable server-rendered CAPTCHA on registration form
+id: bfd0984b-6eaa-4b50-87d5-9e7f1e7413d5
+name: Authentication/Registration/IsCaptchaEnabledForRegistration
+value: false

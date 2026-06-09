@@ -1,0 +1,4 @@
+description: Local login uses email (not username)
+id: 07ec34f9-dff0-4b6f-a8b8-6d334314de43
+name: Authentication/Registration/LocalLoginByEmail
+value: true

@@ -1,0 +1,4 @@
+description: Enable Web API for the contact table (used by profile page)
+id: 91f2beda-c58d-4c2e-adae-21b83ea577ed
+name: Webapi/contact/enabled
+value: true

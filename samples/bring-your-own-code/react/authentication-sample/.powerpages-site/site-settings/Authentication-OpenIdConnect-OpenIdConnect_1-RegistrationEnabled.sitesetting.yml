@@ -1,0 +1,4 @@
+description: Allow new users to register via this provider
+id: 4de7a0a4-056c-4cf8-b1d8-63178cd38467
+name: Authentication/OpenIdConnect/OpenIdConnect_1/RegistrationEnabled
+value: true

@@ -1,0 +1,4 @@
+description: Entra External ID authority URL
+id: 69777cf9-63b2-4cf4-83d2-330ed1c6397c
+name: Authentication/OpenIdConnect/OpenIdConnect_1/Authority
+value: "https://<your-tenant-name>.ciamlogin.com/<your-tenant-id>"
