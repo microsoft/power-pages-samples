@@ -1,4 +1,4 @@
-# Power Pages - Bring Your Own Code - Car Sales Website
+# Power Pages - SPA - Car Sales Website
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.14.
 
@@ -20,7 +20,7 @@ Run `npm install -g @angular/cli` to install Angular CLI.
 
     ```bash
     git clone https://github.com/microsoft/power-pages-samples
-    cd samples/bring-your-own-code\angular\car-sales-website\
+    cd samples/spa\angular\car-sales-website\
     ```
 
 1. Install dependencies:
