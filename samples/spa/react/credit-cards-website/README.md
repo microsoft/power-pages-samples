@@ -1,4 +1,4 @@
-# Power Pages - Bring Your Own Code - Credit Cards Website
+# Power Pages - SPA - Credit Cards Website
 
 This is a react based sample application to demonstrate how a react website can be hosted on Power Pages and integrated with features like authentication, authorization, web apis etc.
 
@@ -31,7 +31,7 @@ This is a modern credit card web application for a fictitious bank with the foll
 
     ```powershell
     git clone https://github.com/microsoft/power-pages-samples
-    cd samples\bring-your-own-code\react\credit-cards-website\
+    cd samples\spa\react\credit-cards-website\
     ```
 
 1. Install dependencies:

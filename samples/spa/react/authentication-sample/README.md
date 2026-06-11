@@ -1,4 +1,4 @@
-# Power Pages - Bring Your Own Code - Authentication Sample
+# Power Pages - SPA - Authentication Sample
 
 This React sample demonstrates authentication flows for a Power Pages code site, including local sign-in, registration, password reset, invitation redemption, external sign-in, terms acceptance, and role-protected profile content.
 

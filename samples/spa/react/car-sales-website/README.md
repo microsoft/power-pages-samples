@@ -1,4 +1,4 @@
-# Power Pages - Bring Your Own Code - Car Sales Website
+# Power Pages - SPA - Car Sales Website
 
 This is a react based sample application to demonstrate how a react website can be hosted on Power Pages and integrated with features like authentication, authorization, web apis etc.
 
@@ -25,7 +25,7 @@ This is a modern web application for managing car sales, inventory, and customer
 
     ```powershell
     git clone https://github.com/microsoft/power-pages-samples
-    cd samples/bring-your-own-code-samples\react\car-sales-website\
+    cd samples/spa\react\car-sales-website\
     ```
 
 1. Install dependencies:

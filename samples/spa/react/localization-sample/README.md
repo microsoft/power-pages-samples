@@ -1,4 +1,4 @@
-# Power Pages - Bring Your Own Code - Contoso Blogs
+# Power Pages - SPA - Contoso Blogs
 
 This is a React-based sample application demonstrating how a multilingual blog website can be hosted on Power Pages with full internationalization (i18n) support using react-i18next. This sample showcases modern React development practices with a focus on localization across multiple languages.
 
@@ -103,7 +103,7 @@ const LanguageSelector = () => {
 
    ```powershell
    git clone https://github.com/microsoft/power-pages-samples
-   cd samples/bring-your-own-code/react/localization-sample/
+   cd samples/spa/react/localization-sample/
    ```
 
 2. Install dependencies:
