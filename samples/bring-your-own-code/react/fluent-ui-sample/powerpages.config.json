@@ -3,5 +3,9 @@
     "compiledPath": "dist",
     "defaultLandingPage": "index.html",
     "siteName": "Bank Loan Application",
+    "bundleFilePatterns": [
+        "index.js",
+        "index.css"
+    ],
     "includeSource": true
 }

@@ -3,5 +3,11 @@
     "siteName": "Car Sales Management - Angular",
     "defaultLandingPage": "index.html",
     "compiledPath": "dist/app/browser",
+    "bundleFilePatterns": [
+        "main-*.js",
+        "polyfills-*.js",
+        "chunk-*.js",
+        "styles-*.css"
+    ],
     "includeSource": true
 }

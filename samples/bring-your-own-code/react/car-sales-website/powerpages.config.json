@@ -2,5 +2,9 @@
     "compiledPath": "dist",
     "siteName": "Car Sales Management",
     "defaultLandingPage": "index.html",
+    "bundleFilePatterns": [
+        "index-*.js",
+        "index-*.css"
+    ],
     "includeSource": true
 }

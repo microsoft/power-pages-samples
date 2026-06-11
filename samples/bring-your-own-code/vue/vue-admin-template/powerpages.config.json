@@ -3,5 +3,9 @@
   "siteName": "Vue Admin Template",
   "defaultLandingPage": "index.html",
   "compiledPath": "dist" ,
+  "bundleFilePatterns": [
+    "index-*.js",
+    "index-*.css"
+  ],
   "includeSource": true
 }
