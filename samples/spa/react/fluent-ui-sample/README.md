@@ -76,7 +76,7 @@ fluent-ui-sample/
 
 1. Navigate to the project directory:
    ```bash
-   cd samples/bring-your-own-code/react/fluent-ui-sample
+   cd samples/spa/react/fluent-ui-sample
    ```
 
 2. Install dependencies:

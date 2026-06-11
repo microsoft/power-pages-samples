@@ -1,6 +1,6 @@
-# Power Pages Bring Your Own Code Samples
+# Power Pages SPA Samples
 
-Bring Your Own Code (BYOC) samples show how to build Power Pages code sites with familiar frontend frameworks, run them locally, and upload them with the Power Platform CLI.
+SPA samples show how to build Power Pages code sites with familiar frontend frameworks, run them locally, and upload them with the Power Platform CLI.
 
 Use this index to choose the sample that best matches the framework or scenario you want to explore.
 
