@@ -1,0 +1,11 @@
+url_path,views_total,views_unique
+/microsoft/power-pages-samples,80,59
+/microsoft/power-pages-samples/tree/main/samples,24,17
+/microsoft/power-pages-samples/tree/main/samples/bring-your-own-code/react,22,13
+/microsoft/power-pages-samples/tree/main/samples/bring-your-own-code,16,12
+/microsoft/power-pages-samples/tree/main/samples/bring-your-own-code/react/fluent-ui-sample,16,7
+/microsoft/power-pages-samples/tree/main/samples/bring-your-own-code/react/car-sales-website,13,9
+/microsoft/power-pages-samples/blob/main/samples/bring-your-own-code/react/fluent-ui-sample/src/context/LoanContext.tsx,12,2
+/microsoft/power-pages-samples/tree/main/samples/server-logic/sharepoint-integration,10,9
+/microsoft/power-pages-samples/blob/main/samples/bring-your-own-code/react/fluent-ui-sample/src/components/ApplicationsList.tsx,10,1
+/microsoft/power-pages-samples/tree/main/samples/bring-your-own-code/vue/vue-admin-template,9,3
