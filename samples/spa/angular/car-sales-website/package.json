@@ -44,8 +44,9 @@
     "tar": "7.5.11",
     "postcss": "8.5.15",
     "webpack-dev-server": "5.2.4",
-    "tmp": "0.2.6",
+    "tmp": "0.2.7",
     "qs": "6.15.2",
-    "shell-quote": "1.8.4"
+    "shell-quote": "1.8.4",
+    "esbuild": "0.28.1"
   }
 }
