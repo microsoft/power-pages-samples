@@ -26,12 +26,12 @@
     "@types/react-dom": "^18.2.0",
     "@typescript-eslint/eslint-plugin": "^8.59.0",
     "@typescript-eslint/parser": "^8.59.0",
-    "@vitejs/plugin-react": "^4.0.0",
+    "@vitejs/plugin-react": "^6.0.2",
     "eslint": "^8.0.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.0",
     "typescript": "^5.0.0",
-    "vite": "^6.4.2"
+    "vite": "^8.0.16"
   },
   "overrides": {
     "esbuild": "0.28.1"
