@@ -14,5 +14,12 @@ export default defineConfig({
         assetFileNames: 'assets/[name].[ext]'
       }
     }
-  }
+  },
+  // esbuild 0.28.1 (security patch) regressed destructuring lowering for Vite's
+  // default browser targets; mark it supported so the production build succeeds.
+  esbuild: {
+    supported: {
+      destructuring: true,
+    },
+  },
 })
