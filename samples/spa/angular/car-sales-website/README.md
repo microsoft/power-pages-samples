@@ -1,6 +1,6 @@
 # Power Pages - SPA - Car Sales Website
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.14.
+This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.29.
 
 This is an angular implementation of [car-sales-website](../../react/car-sales-website/) converted using GitHub Copilot.
 
