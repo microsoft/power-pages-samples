@@ -41,12 +41,14 @@
     "serialize-javascript": "7.0.5",
     "sockjs": "0.3.24",
     "uuid": "11.1.1",
-    "tar": "7.5.11",
+    "tar": "7.5.16",
     "postcss": "8.5.15",
     "webpack-dev-server": "5.2.4",
     "tmp": "0.2.7",
     "qs": "6.15.2",
     "shell-quote": "1.8.4",
-    "esbuild": "0.28.1"
+    "esbuild": "0.28.1",
+    "@babel/core": "7.29.6",
+    "vite": "6.4.3"
   }
 }
