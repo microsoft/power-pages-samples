@@ -15,11 +15,14 @@ Each sample includes its own README with setup steps, deployment notes, and a sc
 | <img src="samples/spa/react/fluent-ui-sample/screenshot.png" alt="Bank loan application portal screenshot" width="180" /> | [Fluent UI Bank Loan Application](samples/spa/react/fluent-ui-sample/) | React + Fluent UI | Build a form-driven portal using Fluent UI v9 controls, state management, and a dashboard-style data grid. |
 | <img src="samples/spa/react/localization-sample/screenshot.png" alt="Contoso Blogs localization sample screenshot" width="180" /> | [Localization Sample](samples/spa/react/localization-sample/) | React + i18next | Add multilingual content, language switching, and localization patterns to a Power Pages code site. |
 | <img src="samples/spa/react/authentication-sample/screenshot.png" alt="Authentication sample burger website screenshot" width="180" /> | [Authentication Sample](samples/spa/react/authentication-sample/) | React + Vite | Explore local sign-in, registration, password reset, invitation redemption, external sign-in, terms acceptance, and role-protected content. |
+| <img src="samples/spa/react/web-api-create-record/screenshot.png" alt="Web API create record feedback form screenshot" width="180" /> | [Web API: Create a Record](samples/spa/react/web-api-create-record/) | React + Vite | Learn one focused task: create a Dataverse record from a code site with the Web API (POST), including the anti-forgery token and table permission. |
 | <img src="samples/spa/vue/vue-admin-template/screenshot.png" alt="Vue admin template screenshot" width="180" /> | [Vue Admin Template](samples/spa/vue/vue-admin-template/) | Vue + Vite | Start from a Vue 3 admin-style template that can be uploaded as a Power Pages code site. |
+| _(no preview)_ | [SharePoint Integration](samples/server-logic/sharepoint-integration/) | Server logic (JavaScript) | Call Microsoft Graph and SharePoint Online from server-side logic to upload files and create Dataverse records. |
 
 ## Sample categories
 
 - [SPA Samples](samples/spa/) - code-site samples that use popular frontend frameworks and can be uploaded to Power Pages with the Power Platform CLI.
+- [Server Logic Samples](samples/server-logic/) - server-side logic samples that run business logic on the Power Pages server, including external service integrations.
 
 ## Resources
 
