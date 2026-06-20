@@ -1,0 +1,11 @@
+url_path,views_total,views_unique
+/microsoft/power-pages-samples,100,80
+/microsoft/power-pages-samples/tree/main/samples,25,21
+/microsoft/power-pages-samples/pulls,14,5
+/microsoft/power-pages-samples/tree/main/samples/spa,13,10
+/microsoft/power-pages-samples/blob/main/samples/spa/angular/car-sales-website,12,7
+/microsoft/power-pages-samples/tree/main,11,7
+/microsoft/power-pages-samples/blob/main/samples/spa/react/car-sales-website,9,9
+/microsoft/power-pages-samples/tree/main/samples/spa/react,9,7
+/microsoft/power-pages-samples/tree/main/samples/spa/react/authentication-sample,9,7
+/microsoft/power-pages-samples/blob/main/samples/bring-your-own-code/react/fluent-ui-sample/src/components/ApplicationsList.tsx,9,1
