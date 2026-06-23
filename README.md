@@ -16,6 +16,9 @@ Each sample includes its own README with setup steps, deployment notes, and a sc
 | <img src="samples/spa/react/localization-sample/screenshot.png" alt="Contoso Blogs localization sample screenshot" width="180" /> | [Localization Sample](samples/spa/react/localization-sample/) | React + i18next | Add multilingual content, language switching, and localization patterns to a Power Pages code site. |
 | <img src="samples/spa/react/authentication-sample/screenshot.png" alt="Authentication sample burger website screenshot" width="180" /> | [Authentication Sample](samples/spa/react/authentication-sample/) | React + Vite | Explore local sign-in, registration, password reset, invitation redemption, external sign-in, terms acceptance, and role-protected content. |
 | <img src="samples/spa/vue/vue-admin-template/screenshot.png" alt="Vue admin template screenshot" width="180" /> | [Vue Admin Template](samples/spa/vue/vue-admin-template/) | Vue + Vite | Start from a Vue 3 admin-style template that can be uploaded as a Power Pages code site. |
+| <img src="samples/spa/react/file-upload-sample/screenshot.png" alt="File upload sample screenshot" width="180" /> | [File Upload Sample](samples/spa/react/file-upload-sample/) | React · Angular · Vue | Upload, list, download, and delete files via the Web API, stored as Dataverse notes (annotations). |
+
+> The File Upload sample ships in three framework variants (React, Angular, Vue) — see the [SPA samples index](samples/spa/) for direct links.
 
 ## Sample categories
 

@@ -1,0 +1,4 @@
+description: Enable the Web API for the annotation (note) table used to store files
+id: 35fc21bf-2f08-4fcc-a591-99ed2d33498d
+name: Webapi/annotation/enabled
+value: true

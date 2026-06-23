@@ -1,0 +1,11 @@
+{
+    "$schema": "https://json.schemastore.org/powerpages.config.json",
+    "compiledPath": "dist",
+    "defaultLandingPage": "index.html",
+    "siteName": "File Upload Sample (Vue)",
+    "bundleFilePatterns": [
+        "index-*.js",
+        "index-*.css"
+    ],
+    "includeSource": true
+}

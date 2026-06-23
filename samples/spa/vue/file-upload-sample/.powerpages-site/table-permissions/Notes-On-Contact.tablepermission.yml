@@ -1,0 +1,13 @@
+append: true
+appendto: true
+create: true
+delete: true
+entitylogicalname: annotation
+entityname: Notes on contact
+entitypermission_webrole:
+- d60cc079-8a51-4a72-9bf7-19cadf71f157
+id: 465e0b5f-a08a-49dc-ac8c-d8ad7bce93fa
+parententitypermission: 16f2981b-68e0-457b-b863-3f6b75245502
+read: true
+scope: 756150003
+write: true

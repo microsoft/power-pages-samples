@@ -16,6 +16,9 @@ Use this index to choose the sample that best matches the framework or scenario 
 | <img src="react/localization-sample/screenshot.png" alt="Contoso Blogs localization sample screenshot" width="220" /> | [Localization Sample](react/localization-sample/) | React + i18next | Multilingual blog site | Language switching, translated content, persistent locale selection, and i18next patterns. |
 | <img src="react/authentication-sample/screenshot.png" alt="Authentication sample burger website screenshot" width="220" /> | [Authentication Sample](react/authentication-sample/) | React + Vite | Authentication flows | Local sign-in, registration, password reset, invitation redemption, external sign-in, terms acceptance, and protected profile content. |
 | <img src="vue/vue-admin-template/screenshot.png" alt="Vue admin template screenshot" width="220" /> | [Vue Admin Template](vue/vue-admin-template/) | Vue + Vite | Admin template | Vue 3 app structure, Vite build workflow, and Power Pages upload flow. |
+| <img src="react/file-upload-sample/screenshot.png" alt="File upload sample screenshot" width="220" /> | [File Upload Sample](react/file-upload-sample/) | React + Vite | Upload and download files via the Web API | Store files as Dataverse notes (annotations), with base64 `documentbody`, CSRF, and size/type guards. |
+| <img src="angular/file-upload-sample/screenshot.png" alt="Angular file upload sample screenshot" width="220" /> | [File Upload Sample](angular/file-upload-sample/) | Angular | Angular port of the file recipe | Same upload/download/delete scenario translated to Angular standalone components. |
+| <img src="vue/file-upload-sample/screenshot.png" alt="Vue file upload sample screenshot" width="220" /> | [File Upload Sample](vue/file-upload-sample/) | Vue + Vite | Vue port of the file recipe | Same upload/download/delete scenario translated to Vue 3. |
 
 ## Common workflow
 
