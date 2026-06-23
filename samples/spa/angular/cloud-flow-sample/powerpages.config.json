@@ -1,0 +1,13 @@
+{
+    "$schema": "https://json.schemastore.org/powerpages.config.json",
+    "compiledPath": "dist/cloud-flow-sample/browser",
+    "defaultLandingPage": "index.html",
+    "siteName": "Cloud Flow Sample (Angular)",
+    "bundleFilePatterns": [
+        "main-*.js",
+        "polyfills-*.js",
+        "chunk-*.js",
+        "styles-*.css"
+    ],
+    "includeSource": true
+}
