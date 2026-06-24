@@ -24,8 +24,9 @@ rest of the app is just UI to trigger it and render the result.
   Every call must include the `__RequestVerificationToken` (CSRF) header.
 - The request body keys (`name`, `topic`) must match the input parameters you
   define on the **When Power Pages calls a flow** trigger.
-- The flow's `FLOW_ID` is set in [`src/config.ts`](src/config.ts). It is unique
-  per environment, so update it whenever you register the flow somewhere new.
+- The flow's `FLOW_ID` is set in [`src/config.ts`](src/config.ts) — the last
+  segment of the flow's trigger URL. Import the bundled flow (Option A below) and
+  it's already filled in; author your own (Option B) and you paste your own GUID.
 - Running locally (`npm run dev`) returns a **mocked** response so you can work
   on the UI offline. The real call only runs on a deployed site.
 
@@ -35,25 +36,75 @@ rest of the app is just UI to trigger it and render the result.
 - `npm run build` – Type-check and build for production into `dist/`.
 - `npm run preview` – Preview the production build locally.
 
-## Create and register the flow
+## Set up the flow
 
-This sample expects a flow that takes two text inputs (`name`, `topic`) and
-returns three text outputs (`ticketNumber`, `message`, `estimatedCallback`).
+The client calls a flow with two text inputs (`name`, `topic`) that returns three
+text outputs (`ticketNumber`, `message`, `estimatedCallback`). Create it one of
+two ways.
 
-1. In the Power Pages design studio, open **Set up → Cloud flows → + Create new flow**.
-1. Choose the **When Power Pages calls a flow** trigger and add two **Text**
-   inputs named `name` and `topic`.
-1. Add your logic (for this demo, a **Compose**/expression is enough), then add a
-   **Respond to Power Pages** action returning `ticketNumber`, `message`, and
-   `estimatedCallback` as Text.
-1. Save the flow, then **Set up → Cloud flows → + Add cloud flow**, pick the flow,
-   add the web role(s) that may call it, and **copy the trigger URL**.
+### Option A — import the bundled flow (fastest)
+
+This folder ships the flow as an unmanaged solution:
+[`flow/CloudFlowSample_1_0_0_0.zip`](flow/CloudFlowSample_1_0_0_0.zip).
+
+1. At [make.powerautomate.com](https://make.powerautomate.com), open **Solutions →
+   Import solution** and import `flow/CloudFlowSample_1_0_0_0.zip`.
+1. Open the imported **Cloud Flow Sample - Request Callback** flow and turn it **On**.
+1. Register it to your site: **Set up → Cloud flows → + Add cloud flow**, pick the
+   flow, and add the web role(s) that may call it (see *Authorization* below).
+1. An unmanaged import preserves the flow's GUID, so `FLOW_ID` in
+   [`src/config.ts`](src/config.ts) **already matches** — no edit needed.
+
+### Option B — author the flow yourself
+
+1. In the design studio: **Set up → Cloud flows → + Create new flow**.
+1. Trigger: **When Power Pages calls a flow**. Add two **Text** inputs, titled
+   exactly:
+   - `name`
+   - `topic`
+1. Action: **Respond to Power Pages** (listed as *Return value(s) to Power Pages*).
+   Add three **Text** outputs, titled exactly:
+   - `ticketNumber`
+   - `message`
+   - `estimatedCallback`
+1. Save, then **Set up → Cloud flows → + Add cloud flow**, pick the flow, add web
+   role(s), and **copy the trigger URL**.
 1. Paste the GUID at the end of that URL into `FLOW_ID` in `src/config.ts`.
 
-> When you promote the site to another environment, the flow must be
-> **registered** there too (Set up → Cloud flows → register), and `FLOW_ID`
-> updated. See
+> ⚠️ The input/output **titles must match exactly (case-sensitive)** the keys in
+> [`src/cloudFlowClient.ts`](src/cloudFlowClient.ts) — `CallbackRequest`
+> (`name`, `topic`) and `CallbackResponse` (`ticketNumber`, `message`,
+> `estimatedCallback`). A typo or different casing breaks the round-trip silently.
+
+> When you promote the site to another environment, the flow must be **registered**
+> there too. Option A keeps the same GUID; Option B produces a new one, so update
+> `FLOW_ID`. See
 > [Configure Power Automate cloud flows in Power Pages](https://learn.microsoft.com/power-pages/configure/cloud-flow-integration).
+
+## Authorization (who can call the flow)
+
+Power Pages authorizes the call against **web roles**, and web roles attach to a
+**contact**:
+
+- When you register the flow you choose which web roles may call it.
+- An **authenticated** visitor must be a registered **contact** holding one of
+  those roles (the built-in **Authenticated Users** role covers every signed-in
+  contact).
+- For a quick public test, grant the **Anonymous Users** role and call it from a
+  **public** site. Private/trial sites force sign-in, so anonymous requests can't
+  reach the flow.
+
+## Troubleshooting
+
+**The call returns `500`.** It's almost always authorization or registration:
+
+1. Confirm the flow is **On** and **registered** to this site (Set up → Cloud flows).
+1. Check the signed-in user's **web role**. An authenticated user with **no
+   contact** holds no web role and is rejected — sign in as a registered contact,
+   or grant the role the caller actually has.
+1. Open the flow's **run history** in Power Automate: **zero runs** means the call
+   never reached the flow (a site registration/authorization issue); a **failed
+   run** points at the flow's own logic.
 
 ## Running on Power Pages
 
@@ -66,7 +117,7 @@ returns three text outputs (`ticketNumber`, `message`, `estimatedCallback`).
 
 ### Uploading the site
 
-1. Set `FLOW_ID` in `src/config.ts` (see above).
+1. Set up the flow and `FLOW_ID` (see **Set up the flow** above — Option A needs no edit).
 1. Run `npm install` then `npm run build`.
 1. Run `pac pages upload-code-site --rootPath .` to upload the site.
 1. Go to Power Pages home and click **Inactive sites**. Find **Cloud Flow Sample**

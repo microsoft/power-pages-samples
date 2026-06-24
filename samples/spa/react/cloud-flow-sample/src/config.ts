@@ -1,15 +1,16 @@
 // ---------------------------------------------------------------------------
-// config.ts — the one value you must change per environment.
+// config.ts — the cloud flow's ID (the last segment of its trigger URL):
 //
-// When you add a cloud flow to a Power Pages site (Set up > Cloud flows >
-// Add cloud flow) the site generates a unique trigger URL that ends with the
-// flow's GUID:
+//     https://<your-site>.powerappsportals.com/_api/cloudflow/v1.0/trigger/<FLOW_ID>
 //
-//     https://<your-site>.powerappsportals.com/_api/cloudflow/v1.0/trigger/4d22a1a2-8a67-...
-//                                                                          ^^^^^^^^^^^^^^^^
-//                                                                          this is FLOW_ID
+// Two ways to get this value:
 //
-// Paste that GUID here. Flows are registered per environment, so this value
-// changes when you promote the site to another environment.
+//   A) Import the bundled flow (flow/CloudFlowSample_1_0_0_0.zip — see the
+//      README "Option A"). An unmanaged-solution import preserves the flow's
+//      GUID, so the value below already matches — no change needed.
+//
+//   B) Author your own flow (README "Option B"): register it under
+//      Set up > Cloud flows, copy the trigger URL, and paste its last GUID
+//      segment here. It differs per flow and per environment.
 // ---------------------------------------------------------------------------
-export const FLOW_ID = '00000000-0000-0000-0000-000000000000'
+export const FLOW_ID = '49563951-9a6f-f111-ab0d-000d3a3b829d'

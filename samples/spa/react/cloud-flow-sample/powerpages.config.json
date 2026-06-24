@@ -4,8 +4,8 @@
     "defaultLandingPage": "index.html",
     "siteName": "Cloud Flow Sample",
     "bundleFilePatterns": [
-        "index.js",
-        "index.css"
+        "index-*.js",
+        "index-*.css"
     ],
     "includeSource": true
 }

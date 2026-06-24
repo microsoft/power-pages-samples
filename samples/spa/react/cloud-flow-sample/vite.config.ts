@@ -9,9 +9,13 @@ export default defineConfig({
     assetsDir: 'assets',
     rollupOptions: {
       output: {
-        entryFileNames: 'assets/[name].js',
-        chunkFileNames: 'assets/[name].js',
-        assetFileNames: 'assets/[name].[ext]'
+        // Content-hashed filenames (e.g. index-a1b2c3d4.js). Each build produces
+        // a new URL, so re-uploading after changing FLOW_ID never serves a stale
+        // cached bundle. `bundleFilePatterns` in powerpages.config.json matches
+        // these with index-*.js / index-*.css.
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     }
   }
