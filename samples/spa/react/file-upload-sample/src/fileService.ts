@@ -211,7 +211,8 @@ export async function deleteFile(annotationid: string): Promise<void> {
   const token = await getCsrfToken()
   const response = await fetch(`/_api/annotations(${annotationid})`, {
     method: 'DELETE',
-    headers: { __RequestVerificationToken: token },
+    // Accept is recommended on every Web API request, even when no body is expected.
+    headers: { __RequestVerificationToken: token, Accept: 'application/json' },
     credentials: 'same-origin',
   })
   if (!response.ok) {
