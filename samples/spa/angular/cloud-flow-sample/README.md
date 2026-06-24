@@ -15,6 +15,10 @@ the app is just UI to trigger it and render the result.
 - Matching the request body keys to the flow trigger's input parameter names.
 - Reading the JSON returned by a **Respond to Power Pages** action.
 
+## Screenshot
+
+![Cloud flow sample screenshot](screenshot.png)
+
 ## Key points
 
 - You do **not** send an auth token — the site session handles authentication.
