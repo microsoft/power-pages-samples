@@ -84,6 +84,9 @@ export async function requestCallback(input: CallbackRequest): Promise<CallbackR
       'Content-Type': 'application/json',
       // The CSRF token is what makes this an authenticated, allowed call.
       __RequestVerificationToken: token,
+      // REQUIRED: the cloud flow endpoint only accepts AJAX requests. Without
+      // this header the call is rejected with HTTP 500 before the flow runs.
+      'X-Requested-With': 'XMLHttpRequest',
     },
     // Keys here must match the flow trigger's input parameter names.
     body: JSON.stringify({
@@ -108,5 +111,12 @@ export async function requestCallback(input: CallbackRequest): Promise<CallbackR
       'The flow returned no content. Add a "Respond to Power Pages" action to return data.',
     )
   }
-  return JSON.parse(text) as CallbackResponse
+  // Power Pages lowercases the Respond action's output property names on the
+  // wire (ticketNumber -> ticketnumber), so map them back to our shape.
+  const raw = JSON.parse(text) as Record<string, string>
+  return {
+    ticketNumber: raw.ticketNumber ?? raw.ticketnumber,
+    message: raw.message,
+    estimatedCallback: raw.estimatedCallback ?? raw.estimatedcallback,
+  }
 }

@@ -17,7 +17,9 @@ rest of the app is just UI to trigger it and render the result.
 ## Key points
 
 - You do **not** send an auth token — the site session handles authentication.
-  Every call must include the `__RequestVerificationToken` (CSRF) header.
+  Every call must include the `__RequestVerificationToken` (CSRF) header **and**
+  the `X-Requested-With: XMLHttpRequest` header (the endpoint only accepts AJAX
+  requests; without it the call fails with a masked `500`).
 - The request body keys (`name`, `topic`) must match the input parameters you
   define on the **When Power Pages calls a flow** trigger.
 - The flow's `FLOW_ID` is set in [`src/config.ts`](src/config.ts) — the last
@@ -92,15 +94,26 @@ Power Pages authorizes the call against **web roles**, and web roles attach to a
 
 ## Troubleshooting
 
-**The call returns `500`.** It's almost always authorization or registration:
+**The call returns `500` with `0` flow runs.** The most common cause is a missing
+**`X-Requested-With: XMLHttpRequest`** header — the cloud flow endpoint only
+accepts AJAX requests and rejects anything else with a *masked* 500 (an internal
+"view 'Error' not found" page) **before the flow runs**. This sample sends that
+header in [`src/cloudFlowClient.ts`](src/cloudFlowClient.ts); if you write your
+own caller, include it alongside the CSRF token.
+
+Other things to check:
 
 1. Confirm the flow is **On** and **registered** to this site (Set up → Cloud flows).
-1. Check the signed-in user's **web role**. An authenticated user with **no
-   contact** holds no web role and is rejected — sign in as a registered contact,
-   or grant the role the caller actually has.
+1. Check the signed-in user holds a **web role** the flow grants (web roles bind
+   to a contact; an authenticated user with no contact holds none).
 1. Open the flow's **run history** in Power Automate: **zero runs** means the call
-   never reached the flow (a site registration/authorization issue); a **failed
+   never reached the flow (header / registration / authorization); a **failed
    run** points at the flow's own logic.
+
+**The response fields come back blank.** Power Pages returns the Respond action's
+output property names **lowercased** (`ticketNumber` → `ticketnumber`). The client
+maps them back to its typed shape — account for the lowercase keys if you add
+fields.
 
 ## Running on Power Pages
 
