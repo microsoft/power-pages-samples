@@ -118,12 +118,13 @@ export class CloudFlowService {
       );
     }
     // Power Pages lowercases the Respond action's output property names on the
-    // wire (ticketNumber -> ticketnumber), so map them back to our shape.
+    // wire (ticketNumber -> ticketnumber), so read each field case-insensitively.
     const raw = JSON.parse(text) as Record<string, string>;
+    const field = (key: string) => raw[key] ?? raw[key.toLowerCase()];
     return {
-      ticketNumber: raw['ticketNumber'] ?? raw['ticketnumber'],
-      message: raw['message'],
-      estimatedCallback: raw['estimatedCallback'] ?? raw['estimatedcallback'],
+      ticketNumber: field('ticketNumber'),
+      message: field('message'),
+      estimatedCallback: field('estimatedCallback'),
     };
   }
 }
