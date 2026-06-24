@@ -1,0 +1,8 @@
+adx_CloudFlowConsumer_adx_webrole:
+- d60cc079-8a51-4a72-9bf7-19cadf71f157
+flowapiurl: /_api/cloudflow/v1.0/trigger/49563951-9a6f-f111-ab0d-000d3a3b829d
+flowtriggerurl: ''
+id: d3cfb02e-ceb7-4f36-b155-aad47a243280
+metadata: ''
+name: Cloud Flow Sample - Request Callback
+processid: 49563951-9a6f-f111-ab0d-000d3a3b829d

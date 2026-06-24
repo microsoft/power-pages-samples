@@ -42,16 +42,25 @@ two ways.
 
 ### Option A — import the bundled flow (fastest)
 
-This folder ships the flow as an unmanaged solution:
-[`flow/CloudFlowSample_1_0_0_0.zip`](flow/CloudFlowSample_1_0_0_0.zip).
+This folder ships the flow as an unmanaged solution
+([`flow/CloudFlowSample_1_0_0_0.zip`](flow/CloudFlowSample_1_0_0_0.zip)) **and** its
+site registration ([`.powerpages-site/cloud-flow-consumer/`](.powerpages-site/cloud-flow-consumer)),
+so a normal deploy wires everything up — no manual studio step.
 
 1. At [make.powerautomate.com](https://make.powerautomate.com), open **Solutions →
-   Import solution** and import `flow/CloudFlowSample_1_0_0_0.zip`.
-1. Open the imported **Cloud Flow Sample - Request Callback** flow and turn it **On**.
-1. Register it to your site: **Set up → Cloud flows → + Add cloud flow**, pick the
-   flow, and add the web role(s) that may call it (see *Authorization* below).
+   Import solution** and import `flow/CloudFlowSample_1_0_0_0.zip`. Open the
+   imported **Cloud Flow Sample - Request Callback** flow and turn it **On**.
+1. Build and upload the site (see *Running on Power Pages* below). The bundled
+   `cloud-flow-consumer` metadata registers the flow and grants the **Authenticated
+   Users** role automatically — `pac pages upload-code-site` deploys it, so no
+   **Set up → Cloud flows → Add cloud flow** step is needed.
 1. An unmanaged import preserves the flow's GUID, so `FLOW_ID` in
    [`src/config.ts`](src/config.ts) **already matches** — no edit needed.
+
+> The shipped registration grants only **Authenticated Users**. To let anonymous
+> visitors call it (e.g. a public site), add the Anonymous Users role id to
+> `adx_CloudFlowConsumer_adx_webrole` in
+> `.powerpages-site/cloud-flow-consumer/cloud-flow-sample-request-callback.cloudflowconsumer.yml`.
 
 ### Option B — author the flow yourself
 
