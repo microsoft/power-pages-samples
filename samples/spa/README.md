@@ -17,8 +17,6 @@ Use this index to choose the sample that best matches the framework or scenario 
 | <img src="react/authentication-sample/screenshot.png" alt="Authentication sample burger website screenshot" width="220" /> | [Authentication Sample](react/authentication-sample/) | React + Vite | Authentication flows | Local sign-in, registration, password reset, invitation redemption, external sign-in, terms acceptance, and protected profile content. |
 | <img src="vue/vue-admin-template/screenshot.png" alt="Vue admin template screenshot" width="220" /> | [Vue Admin Template](vue/vue-admin-template/) | Vue + Vite | Admin template | Vue 3 app structure, Vite build workflow, and Power Pages upload flow. |
 | <img src="react/cloud-flow-sample/screenshot.png" alt="Cloud flow sample screenshot" width="220" /> | [Cloud Flow Sample](react/cloud-flow-sample/) | React + Vite | Call a Power Automate cloud flow | Invoke a registered flow with `/_api/cloudflow/v1.0/trigger/<id>`, CSRF token, and render the response. |
-| <img src="angular/cloud-flow-sample/screenshot.png" alt="Angular cloud flow sample screenshot" width="220" /> | [Cloud Flow Sample](angular/cloud-flow-sample/) | Angular | Angular port of the cloud flow recipe | Same flow-invocation scenario translated to Angular standalone components. |
-| <img src="vue/cloud-flow-sample/screenshot.png" alt="Vue cloud flow sample screenshot" width="220" /> | [Cloud Flow Sample](vue/cloud-flow-sample/) | Vue + Vite | Vue port of the cloud flow recipe | Same flow-invocation scenario translated to Vue 3. |
 
 ## Common workflow
 
