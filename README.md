@@ -16,6 +16,7 @@ Each sample includes its own README with setup steps, deployment notes, and a sc
 | <img src="samples/spa/react/localization-sample/screenshot.png" alt="Contoso Blogs localization sample screenshot" width="180" /> | [Localization Sample](samples/spa/react/localization-sample/) | React + i18next | Add multilingual content, language switching, and localization patterns to a Power Pages code site. |
 | <img src="samples/spa/react/authentication-sample/screenshot.png" alt="Authentication sample burger website screenshot" width="180" /> | [Authentication Sample](samples/spa/react/authentication-sample/) | React + Vite | Explore local sign-in, registration, password reset, invitation redemption, external sign-in, terms acceptance, and role-protected content. |
 | <img src="samples/spa/vue/vue-admin-template/screenshot.png" alt="Vue admin template screenshot" width="180" /> | [Vue Admin Template](samples/spa/vue/vue-admin-template/) | Vue + Vite | Start from a Vue 3 admin-style template that can be uploaded as a Power Pages code site. |
+| <img src="samples/spa/react/cloud-flow-sample/screenshot.png" alt="Cloud flow sample screenshot" width="180" /> | [Cloud Flow Sample](samples/spa/react/cloud-flow-sample/) | React + Vite | Invoke a registered Power Automate cloud flow from a code site with the CSRF token, and render its response. |
 
 ## Sample categories
 
