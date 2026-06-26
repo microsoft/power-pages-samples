@@ -6,6 +6,8 @@ import {
   deleteFile,
   validateFile,
   formatSize,
+  isSignedIn,
+  SIGN_IN_URL,
   type UploadedFile,
 } from './fileService'
 
@@ -17,6 +19,10 @@ export default function App() {
   const [error, setError] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Files are stored against the signed-in user's contact, so everything here
+  // requires authentication. Gate the UI on it and offer a way to sign in.
+  const signedIn = isSignedIn()
+
   async function refresh() {
     try {
       setFiles(await listFiles())
@@ -26,8 +32,8 @@ export default function App() {
   }
 
   useEffect(() => {
-    refresh()
-  }, [])
+    if (signedIn) refresh()
+  }, [signedIn])
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -65,6 +71,21 @@ export default function App() {
     } finally {
       setBusy(false)
     }
+  }
+
+  if (!signedIn) {
+    return (
+      <main className="card">
+        <h1>My documents</h1>
+        <p className="subtitle">
+          Files are stored as Dataverse notes on your contact record. Sign in to
+          upload and manage your files.
+        </p>
+        <a className="upload" href={SIGN_IN_URL}>
+          Sign in
+        </a>
+      </main>
+    )
   }
 
   return (

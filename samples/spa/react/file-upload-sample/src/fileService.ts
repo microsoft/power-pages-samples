@@ -83,6 +83,16 @@ function getContactId(): string {
   return contactId
 }
 
+// Power Pages sign-in entry point. `returnUrl` brings the visitor back here
+// after they authenticate with the configured identity provider.
+export const SIGN_IN_URL = '/SignIn?returnUrl=%2F'
+
+/** Whether the visitor is signed in (has a contact record). Always true in dev. */
+export function isSignedIn(): boolean {
+  if (isDevelopment) return true
+  return Boolean(window.Microsoft?.Dynamic365?.Portal?.User?.contactId)
+}
+
 export function validateFile(file: File): string | null {
   if (file.size > MAX_FILE_BYTES) {
     return `"${file.name}" is too large. Maximum size is 3.5 MB.`
