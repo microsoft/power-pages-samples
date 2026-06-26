@@ -1,8 +1,10 @@
-# File Upload Sample (React + Vite)
+# File Upload (Notes) Sample (React + Vite)
 
 This sample shows how to **upload, list, download, and delete files with the
-Power Pages Web API**. Files are stored as Dataverse **notes (annotations)**
-attached to the signed-in user's own contact record.
+Power Pages Web API**, storing each file as a Dataverse **note (annotation)**
+attached to the signed-in user's own contact record. This is the **notes**
+approach — best for small files; for larger/binary-clean files stored in a native
+Dataverse **File column**, see the companion *File Upload (File Column)* sample.
 
 The entire lesson is in [`src/fileService.ts`](src/fileService.ts) — the rest of
 the app is just UI around it.

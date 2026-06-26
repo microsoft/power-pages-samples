@@ -17,7 +17,7 @@ Use this index to choose the sample that best matches the framework or scenario 
 | <img src="react/authentication-sample/screenshot.png" alt="Authentication sample burger website screenshot" width="220" /> | [Authentication Sample](react/authentication-sample/) | React + Vite | Authentication flows | Local sign-in, registration, password reset, invitation redemption, external sign-in, terms acceptance, and protected profile content. |
 | <img src="vue/vue-admin-template/screenshot.png" alt="Vue admin template screenshot" width="220" /> | [Vue Admin Template](vue/vue-admin-template/) | Vue + Vite | Admin template | Vue 3 app structure, Vite build workflow, and Power Pages upload flow. |
 | <img src="react/cloud-flow-sample/screenshot.png" alt="Cloud flow sample screenshot" width="220" /> | [Cloud Flow Sample](react/cloud-flow-sample/) | React + Vite | Call a Power Automate cloud flow | Invoke a registered flow with `/_api/cloudflow/v1.0/trigger/<id>`, CSRF token, and render the response. |
-| <img src="react/file-upload-sample/screenshot.png" alt="File upload sample screenshot" width="220" /> | [File Upload Sample](react/file-upload-sample/) | React + Vite | Upload and download files via the Web API | Store files as Dataverse notes (annotations), with base64 `documentbody`, CSRF, and size/type guards. |
+| <img src="react/file-upload-sample/screenshot.png" alt="File upload sample screenshot" width="220" /> | [File Upload (Notes) Sample](react/file-upload-sample/) | React + Vite | Upload and download files via the Web API | Store files as Dataverse notes (annotations), with base64 `documentbody`, CSRF, and size/type guards. |
 
 ## Common workflow
 
