@@ -105,6 +105,14 @@ Power Pages authorizes the call against **web roles**, and web roles attach to a
   **public** site. Private/trial sites force sign-in, so anonymous requests can't
   reach the flow.
 
+> ⚠️ **Testing gotcha (trial sites):** to test as an *authenticated* user you need a
+> real signed-in **contact**. Previewing a brand-new **trial** site *as its owner*
+> gives a **contactless "previewer" session** (no contact → no web role), so the call
+> won't authorize even though you appear signed in. Sign in as an actual authenticated
+> user instead — on a trial site that can require making the site public, which means
+> **converting the trial site to production**. This is only a *testing* note: on a
+> normal production site an authenticated sign-in creates the contact automatically.
+
 ## Troubleshooting
 
 **The call returns `500` with `0` flow runs.** The most common cause is a missing
