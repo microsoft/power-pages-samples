@@ -1,0 +1,4 @@
+description: Enable the Web API for the contact table so notes can be bound to the signed-in user's contact (objectid_contact@odata.bind)
+id: 6f3a1c52-9d44-4e18-b1a7-2c8f0e7a4b01
+name: Webapi/contact/enabled
+value: true
