@@ -1,0 +1,13 @@
+append: true
+appendto: true
+create: false
+delete: false
+entitylogicalname: contact
+entityname: Contact Self
+adx_entitypermission_webrole:
+- d60cc079-8a51-4a72-9bf7-19cadf71f157
+id: 67f9f03a-788b-4735-8fd0-dad2b6fd4e9d
+parententitypermission:
+read: true
+scope: 756150004
+write: false

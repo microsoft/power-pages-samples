@@ -1,0 +1,4 @@
+description: Expose all sample_filerecord columns to the Web API. MUST include the file column (sample_file) so it can be PATCHed/GET. Use '*' or an explicit list that includes sample_file.
+id: 1ce81916-d19a-4a6b-b885-a07dd4659586
+name: Webapi/sample_filerecord/fields
+value: '*'

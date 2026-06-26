@@ -1,0 +1,22 @@
+append: true
+appendto: true
+create: true
+delete: true
+entitylogicalname: sample_filerecord
+entityname: File Records
+# Web-role binding MUST use the prefixed field name. The unprefixed
+# `entitypermission_webrole` is silently dropped on deploy and the permission
+# then grants nothing. Bound here to the Authenticated Users web role.
+adx_entitypermission_webrole:
+- d60cc079-8a51-4a72-9bf7-19cadf71f157
+id: 44269418-a402-433d-9f00-c74e1beb044a
+# Contact scope (756150001): each user sees only the file records whose
+# sample_contact lookup points at their own contact. A Contact-scoped
+# permission MUST set `contactrelationship` to the schema name of the N:1
+# relationship between sample_filerecord and contact (NOT `parentrelationship`,
+# which is for Parent scope). Replace the placeholder below with your real
+# relationship schema name if it differs.
+contactrelationship: sample_contact_filerecord
+read: true
+scope: 756150001
+write: true

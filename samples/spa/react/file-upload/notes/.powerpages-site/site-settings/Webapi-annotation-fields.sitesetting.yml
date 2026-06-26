@@ -1,0 +1,4 @@
+description: Expose all annotation columns to the Web API (filename, mimetype, documentbody, etc.)
+id: 87a38877-44ba-49b7-873f-a308991e5d19
+name: Webapi/annotation/fields
+value: '*'
