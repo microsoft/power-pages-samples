@@ -10,7 +10,7 @@ config-driven in [`src/config.ts`](src/config.ts) so you can point it at your
 own table.
 
 > **Notes vs File column.** The sibling
-> [`file-upload-sample`](../file-upload-sample) stores files as Dataverse **notes
+> [the notes sample](../notes) stores files as Dataverse **notes
 > (annotations)** — base64 in `documentbody`, no schema work, best for many small
 > attachments on an existing record. This sample stores files in a native
 > **File column** — raw binary (no base64 inflation), a larger practical size,
@@ -167,7 +167,7 @@ each user only ever sees their own files). So:
    your own publisher prefix, and update `src/config.ts` + the site settings +
    the table permission's `contactrelationship` to match).
 1. Allow `*.js` files by removing it from **Blocked Attachments** in **Privacy + Security** settings for your environment in the Power Pages Admin Center.
-1. Open a terminal and `cd` into this `file-upload-file-column-sample` folder.
+1. Open a terminal and `cd` into this `file-column` folder.
 1. Run `pac auth create --environment <Environment URL>` to log in to your environment.
 
 ### Uploading the site

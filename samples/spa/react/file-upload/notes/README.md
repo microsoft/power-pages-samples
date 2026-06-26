@@ -99,7 +99,7 @@ ever sees their own files). So:
 
 1. Install [Microsoft Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction?tabs=windows#install-microsoft-power-platform-cli) (version >= 1.47.1).
 1. Allow `*.js` files by removing it from **Blocked Attachments** in **Privacy + Security** settings for your environment in the Power Pages Admin Center.
-1. Open a terminal and `cd` into this `file-upload-sample` folder.
+1. Open a terminal and `cd` into this `notes` folder.
 1. Run `pac auth create --environment <Environment URL>` to log in to your environment.
 
 ### Uploading the site
