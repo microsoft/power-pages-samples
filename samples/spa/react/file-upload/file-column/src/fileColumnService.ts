@@ -91,6 +91,10 @@ export function validateFile(file: File): string | null {
   if (file.size > MAX_FILE_BYTES) {
     return `"${file.name}" is too large. Maximum size is 10 MB.`
   }
+  // `file.type` is the browser-provided MIME type, which can be empty for some
+  // files (e.g. certain .txt or uncommon types) — a valid file would then be
+  // rejected here. Fine for a sample; a production app might also fall back to the
+  // file extension.
   if (!ALLOWED_TYPES.includes(file.type)) {
     return `"${file.name}" is not an allowed type. Allowed: PDF, PNG, JPEG, TXT.`
   }

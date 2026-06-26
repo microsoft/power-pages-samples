@@ -97,6 +97,10 @@ export function validateFile(file: File): string | null {
   if (file.size > MAX_FILE_BYTES) {
     return `"${file.name}" is too large. Maximum size is 3.5 MB.`
   }
+  // `file.type` is the browser-provided MIME type, which can be empty for some
+  // files (e.g. certain .txt or uncommon types) — a valid file would then be
+  // rejected here. Fine for a sample; a production app might also fall back to the
+  // file extension.
   if (!ALLOWED_TYPES.includes(file.type)) {
     return `"${file.name}" is not an allowed type. Allowed: PDF, PNG, JPEG, TXT.`
   }
@@ -138,7 +142,11 @@ export async function uploadFile(file: File): Promise<void> {
       mimetype: file.type,
       documentbody, // base64 file content
       isdocument: true,
-      // Bind the note to the signed-in user's contact record.
+      // Bind the note to the signed-in user's contact record. `objectid_contact`
+      // is lowercase on purpose: `objectid` is annotation's *polymorphic* regarding
+      // lookup, and its contact-typed navigation property is the lowercase logical
+      // name. (Custom single-table lookups instead use the PascalCase schema name —
+      // see the File Column sample's `@odata.bind`.)
       'objectid_contact@odata.bind': `/contacts(${contactId})`,
     }),
     credentials: 'same-origin',

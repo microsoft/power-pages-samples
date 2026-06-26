@@ -1,5 +1,5 @@
 {
-  "name": "file-upload-sample",
+  "name": "file-upload-notes-sample",
   "version": "1.0.0",
   "description": "Minimal Power Pages code site that uploads and downloads files via the Dataverse Web API",
   "type": "module",
