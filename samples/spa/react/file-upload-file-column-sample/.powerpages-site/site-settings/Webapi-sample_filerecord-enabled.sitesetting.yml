@@ -1,0 +1,4 @@
+description: Enable the Web API for the custom sample_filerecord table that holds the File column
+id: 481d0575-a6d3-4afb-a2ed-9a203290a9b2
+name: Webapi/sample_filerecord/enabled
+value: true
