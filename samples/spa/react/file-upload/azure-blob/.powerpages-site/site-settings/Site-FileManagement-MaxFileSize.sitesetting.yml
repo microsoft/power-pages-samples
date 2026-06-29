@@ -1,0 +1,4 @@
+description: Maximum single-file size in KB accepted by the file-management Web API. Default is 1048576 (1 GB); this sample caps it at 10 MB (10240 KB) to match the client-side guard. Larger files are chunked client-side via UploadBlock regardless.
+id: 82fea785-d105-47db-9e95-3c700c98d925
+name: Site/FileManagement/MaxFileSize
+value: 10240

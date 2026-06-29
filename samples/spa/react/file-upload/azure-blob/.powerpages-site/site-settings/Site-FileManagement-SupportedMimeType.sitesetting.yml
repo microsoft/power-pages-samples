@@ -1,0 +1,4 @@
+description: Semicolon-separated list of MIME types the file-management Web API will accept. Uploads of other types are rejected (error FU00005). Keep in sync with SupportedFileType and src/config.ts.
+id: 2a761e07-d201-466a-aca7-26e317c3f6cd
+name: Site/FileManagement/SupportedMimeType
+value: application/pdf;image/png;image/jpeg;text/plain
