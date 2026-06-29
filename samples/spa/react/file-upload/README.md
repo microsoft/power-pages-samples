@@ -1,8 +1,8 @@
 # File Upload Samples
 
 Power Pages offers several ways to let users upload and manage files. This folder
-groups the file-upload **code-site (SPA)** samples by storage approach, plus
-pointers to the two options that are configuration-based rather than Web-API-based.
+groups the file-upload **code-site (SPA)** samples by storage approach, plus a
+pointer to Azure Blob (a storage backend you configure rather than code against).
 
 ## Choosing an approach
 
@@ -10,15 +10,17 @@ pointers to the two options that are configuration-based rather than Web-API-bas
 | --- | --- | --- | --- | --- |
 | **Notes (annotations)** | Dataverse, base64 in `annotation.documentbody` | small (~5 MB default) | Quick attach-to-a-record; the classic pattern | [`notes/`](notes/) ✅ built |
 | **File / Image column** | native Dataverse file storage (binary) | 32 MB default → 10 GB (16 MB per portal call) | Larger, binary-clean files; the modern native type | [`file-column/`](file-column/) ✅ built |
+| **SharePoint** | SharePoint document library (via a cloud flow) | small (cloud-flow payload limit) | Document management / collaboration; reusing SharePoint | [`sharepoint/`](sharepoint/) ✅ built |
 | **Azure Blob Storage** | Azure Blob | 10 GB | Large files / offloading Dataverse | [docs](https://learn.microsoft.com/power-pages/configure/enable-azure-storage) |
-| **SharePoint** | SharePoint document library | large | Document management / collaboration | [docs](https://learn.microsoft.com/power-pages/configure/manage-sharepoint-documents) |
 
-The **Notes** and **File column** approaches are built here as runnable React + Vite
-samples that call the portal Web API. **Azure Blob** is a storage backend you layer
-under notes/forms, and **SharePoint** is a document-integration feature — both are
-configured rather than coded against the Web API, so they're linked to the docs.
+**Notes**, **File column**, and **SharePoint** are built here as runnable React + Vite
+samples. Notes and File column call the portal Web API directly; **SharePoint** can't
+(the Web API has no SharePoint surface and code sites can't host the native
+Liquid/form subgrid), so it reaches SharePoint through a **Power Automate cloud
+flow**. **Azure Blob** is a storage backend you configure under the file APIs — linked
+to the docs.
 
-## The two built samples
+## The built samples
 
 - **[File Upload (Notes)](notes/)** — each file is a Dataverse **note (annotation)**
   with the bytes base64-encoded, attached to the signed-in user's own contact.
@@ -28,11 +30,16 @@ configured rather than coded against the Web API, so they're linked to the docs.
   Dataverse **File column** on a per-user custom table (raw bytes, no base64;
   two-step create then `$value` download). The modern approach for larger or
   binary-clean files.
+- **[File Upload (SharePoint)](sharepoint/)** — each file lives in a **SharePoint
+  document library**, reached from the code site through a **Power Automate cloud
+  flow** (the SPA calls the flow; the flow does the SharePoint work). Use it for
+  document management / collaboration, or when files must live in SharePoint.
 
-## Shared lessons (apply to both)
+## Shared lessons (Notes & File column)
 
-Both samples were validated live on an Enhanced Data Model site. Two things are easy
-to miss and they break the *secure, per-user* configuration specifically:
+The Notes and File column samples were validated live on an Enhanced Data Model
+site. Two things are easy to miss and they break the *secure, per-user*
+configuration specifically:
 
 - **A scoped table permission must declare its relationship.** A `Parent`-scoped
   permission needs `parentrelationship`; a `Contact`-scoped permission needs

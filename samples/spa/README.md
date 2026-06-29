@@ -19,6 +19,7 @@ Use this index to choose the sample that best matches the framework or scenario 
 | <img src="react/cloud-flow-sample/screenshot.png" alt="Cloud flow sample screenshot" width="220" /> | [Cloud Flow Sample](react/cloud-flow-sample/) | React + Vite | Call a Power Automate cloud flow | Invoke a registered flow with `/_api/cloudflow/v1.0/trigger/<id>`, CSRF token, and render the response. |
 | <img src="react/file-upload/notes/screenshot.png" alt="File upload sample screenshot" width="220" /> | [File Upload (Notes) Sample](react/file-upload/notes/) | React + Vite | Upload and download files via the Web API | Store files as Dataverse notes (annotations), with base64 `documentbody`, CSRF, and size/type guards. |
 | <img src="react/file-upload/file-column/screenshot.png" alt="File upload file column sample screenshot" width="220" /> | [File Upload (File Column) Sample](react/file-upload/file-column/) | React + Vite | Upload files to a native File column | Store files in a Dataverse **File column** (`PATCH` raw bytes + `$value` download, no base64), with companion columns, CSRF, and size/type guards. |
+| <img src="react/file-upload/sharepoint/screenshot.png" alt="SharePoint file upload sample screenshot" width="220" /> | [File Upload (SharePoint) Sample](react/file-upload/sharepoint/) | React + Vite | Upload files to SharePoint via a cloud flow | Reach a SharePoint document library from a code site through a Power Automate cloud flow (`/_api/cloudflow/v1.0/trigger`), with CSRF, per-user folders, and base64 transport. |
 
 ## Common workflow
 
