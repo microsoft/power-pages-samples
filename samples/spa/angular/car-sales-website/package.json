@@ -43,12 +43,14 @@
     "uuid": "11.1.1",
     "tar": "7.5.16",
     "postcss": "8.5.15",
-    "webpack-dev-server": "5.2.4",
+    "webpack-dev-server": "5.2.5",
     "tmp": "0.2.7",
     "qs": "6.15.2",
     "shell-quote": "1.8.4",
     "esbuild": "0.28.1",
     "@babel/core": "7.29.6",
+    "piscina": "5.2.0",
+    "http-proxy-middleware": "3.0.7",
     "vite": "7.3.5"
   }
 }
