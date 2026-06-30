@@ -9,11 +9,11 @@ import {
   isSignedIn,
   SIGN_IN_URL,
   type UploadedFile,
-} from './sharePointFlowService'
+} from './sharePointService'
 
-// One screen: pick a file, upload it (to SharePoint, via the cloud flow), see
-// your files, download or delete them. All the flow work lives in
-// sharePointFlowService.ts.
+// One screen: pick a file, upload it (to SharePoint, via server logic), see
+// your files, download or delete them. All the server-logic calls live in
+// sharePointService.ts.
 export default function App() {
   const [files, setFiles] = useState<UploadedFile[]>([])
   const [busy, setBusy] = useState(false)
@@ -93,7 +93,7 @@ export default function App() {
       <h1>My documents</h1>
       <p className="subtitle">
         Files are stored in a <strong>SharePoint</strong> document library, reached
-        from this code site through a Power Automate cloud flow.
+        from this code site through <strong>server logic</strong> + Microsoft Graph.
       </p>
 
       <label className={`upload ${busy ? 'disabled' : ''}`}>
@@ -101,13 +101,13 @@ export default function App() {
         <input
           ref={inputRef}
           type="file"
-          accept=".pdf,.png,.jpg,.jpeg,.txt"
+          accept=".txt,.csv,.json,.md,.html,.xml"
           onChange={handleFile}
           disabled={busy}
           hidden
         />
       </label>
-      <p className="hint">PDF, PNG, JPEG, or TXT · up to 3.5 MB</p>
+      <p className="hint">Text documents: TXT, CSV, JSON, MD, HTML, XML · up to 5 MB</p>
 
       {error && <p className="error">⚠️ {error}</p>}
 

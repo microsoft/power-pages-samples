@@ -10,15 +10,15 @@ pointer to Azure Blob (a storage backend you configure rather than code against)
 | --- | --- | --- | --- | --- |
 | **Notes (annotations)** | Dataverse, base64 in `annotation.documentbody` | small (~5 MB default) | Quick attach-to-a-record; the classic pattern | [`notes/`](notes/) ✅ built |
 | **File / Image column** | native Dataverse file storage (binary) | 32 MB default → 10 GB (16 MB per portal call) | Larger, binary-clean files; the modern native type | [`file-column/`](file-column/) ✅ built |
-| **SharePoint** | SharePoint document library (via a cloud flow) | small (cloud-flow payload limit) | Document management / collaboration; reusing SharePoint | [`sharepoint/`](sharepoint/) ✅ built |
+| **SharePoint** | SharePoint document library (via **server logic** + Graph) | text documents (see note) | Document management / collaboration; reusing SharePoint | [`sharepoint/`](sharepoint/) ✅ built |
 | **Azure Blob Storage** | Azure Blob | 10 GB | Large files / offloading Dataverse | [docs](https://learn.microsoft.com/power-pages/configure/enable-azure-storage) |
 
 **Notes**, **File column**, and **SharePoint** are built here as runnable React + Vite
 samples. Notes and File column call the portal Web API directly; **SharePoint** can't
 (the Web API has no SharePoint surface and code sites can't host the native
-Liquid/form subgrid), so it reaches SharePoint through a **Power Automate cloud
-flow**. **Azure Blob** is a storage backend you configure under the file APIs — linked
-to the docs.
+Liquid/form subgrid), so it uses **server logic** (server-side JS) + Microsoft Graph.
+**Azure Blob** is a storage backend you configure under the file APIs — linked to the
+docs.
 
 ## The built samples
 
@@ -31,9 +31,11 @@ to the docs.
   two-step create then `$value` download). The modern approach for larger or
   binary-clean files.
 - **[File Upload (SharePoint)](sharepoint/)** — each file lives in a **SharePoint
-  document library**, reached from the code site through a **Power Automate cloud
-  flow** (the SPA calls the flow; the flow does the SharePoint work). Use it for
-  document management / collaboration, or when files must live in SharePoint.
+  document library**, reached from the code site through **server logic** (server-side
+  JavaScript) that holds an Entra app and calls **Microsoft Graph**. Use it for
+  document management / collaboration, or when files must live in SharePoint. *(Server
+  logic's HttpClient is text-only, so this sample handles text documents — see its
+  README for the binary caveat.)*
 
 ## Shared lessons (Notes & File column)
 

@@ -1,147 +1,140 @@
 # File Upload to SharePoint Sample (React + Vite)
 
 This sample shows how to **upload, list, download, and delete files in a
-SharePoint document library** from a Power Pages **code site (SPA)** — using a
-**Power Automate cloud flow** as the bridge.
+SharePoint document library** from a Power Pages **code site (SPA)** — using
+**server logic** + **Microsoft Graph**.
 
-The entire lesson is in
-[`src/sharePointFlowService.ts`](src/sharePointFlowService.ts) — the rest of the
-app is just UI around it.
+Two halves:
+- **The SPA** (`src/`) — a file manager that calls the server logic. The key file
+  is [`src/sharePointService.ts`](src/sharePointService.ts).
+- **The server logic** ([`server-logic/sharepointDocuments.js`](server-logic/sharepointDocuments.js))
+  — server-side JavaScript that holds an Entra app (client-credentials) and calls
+  Microsoft Graph to do the SharePoint work.
 
-## Why a cloud flow (and not `/_api`)?
+## Why server logic (and not `/_api` or a cloud flow)?
 
-Unlike the other three file-upload samples, SharePoint **cannot** be reached from
-a code site with the portal Web API:
+SharePoint can't be reached from a code site with the portal Web API (`/_api` is
+Dataverse-only), and code sites can't host the native Liquid/basic-form subgrid
+([code sites don't support Liquid, lists, or forms](https://learn.microsoft.com/power-pages/configure/create-code-sites#differences-from-existing-power-pages-sites)).
+A Power Automate cloud flow can bridge it, but the flow trigger caps payloads at a
+small size. **Server logic** runs server-side, keeps the Graph secret off the
+client, and gives a clean SPA-callable API — a better fit than the cloud-flow
+bridge for this scenario.
 
-- The portal Web API (`/_api`) is **Dataverse-data only** — it has no SharePoint
-  document-library surface, and it doesn't support actions/functions.
-- Power Pages' built-in SharePoint document management renders **only** inside a
-  server-side **Liquid / basic-form subgrid**. A code site can't host one:
-  [code sites don't support Liquid, the page workspace, or out-of-the-box lists
-  and forms](https://learn.microsoft.com/power-pages/configure/create-code-sites#differences-from-existing-power-pages-sites),
-  and every server-side route falls back to the SPA root.
+## How it works
 
-So the supported, SPA-friendly path is a **Power Automate cloud flow** that holds
-the SharePoint connection. The SPA calls the flow (the same
-`/_api/cloudflow/v1.0/trigger/<id>` mechanism as the
-[cloud-flow sample](../../cloud-flow-sample/)); the flow does the SharePoint work.
+```
+SPA  --(CSRF)-->  <METHOD> /_api/serverlogics/sharepointdocuments
+                    GET  (no id)        -> list the user's files
+                    GET  (?id=...)      -> download one file
+                    POST {fileName,fileContent} -> upload
+                    DELETE (?id=...)    -> delete
+Server logic  -->  Microsoft Graph (client-credentials, Sites.ReadWrite.All)
+              -->  SharePoint document library  (folder per signed-in user)
+```
 
-> **Trade-offs.** This bypasses the native `sharepointdocumentlocation` /
-> table-permission model — authorization lives in the **flow** instead (here, a
-> per-user folder keyed by the contact id). Files travel as **base64 through the
-> flow trigger**, which has a request-size ceiling, so this pattern is for **small
-> files** (the sample caps at ~3.5 MB).
+- Every call carries the `__RequestVerificationToken` (CSRF) header; the server
+  logic is protected by web roles + table permissions (Authenticated Users here).
+- The server logic returns a `{ Success, Data, Error }` envelope — the payload is
+  in `Data`.
+- Each user is fenced **server-side** to their own folder (`user-<id>`), derived
+  from the authenticated `Server.User` — never a client-supplied id.
 
-## How it works (the flow contract)
+## ⚠️ Important limitation: text documents only
 
-One flow handles all four operations, switching on an `operation` input. The SPA
-calls it with these inputs and reads these outputs:
+Power Pages server logic's `HttpClient` accepts **only** `application/json`,
+`text/html`, and `application/x-www-form-urlencoded` request bodies — there is **no
+`application/octet-stream`**. So this sample handles **text-based documents**
+(`.txt`, `.csv`, `.json`, `.md`, `.html`, `.xml`): they upload as real,
+natively-usable SharePoint files and round-trip cleanly.
 
-| Operation | Inputs sent | Outputs read |
-| --- | --- | --- |
-| `list` | `operation`, `contactId` | `files` (JSON string array of `{id,name,size,modified}`) |
-| `upload` | `operation`, `fileName`, `fileContent` (base64), `contactId` | `fileId` |
-| `download` | `operation`, `fileId`, `contactId` | `fileName`, `fileContent` (base64), `mimeType` |
-| `delete` | `operation`, `fileId`, `contactId` | `status` |
+**Binary files (PDF, PNG, Office docs) can't be streamed as raw bytes through this
+path today.** Options if you need binary: store the content base64-encoded (the
+SharePoint file then holds base64 text, not the native file), or use a different
+upload transport. This is a current platform constraint, not a sample choice — call
+it out when you evaluate the approach.
 
-- Every call sends the `__RequestVerificationToken` (CSRF) header **and**
-  `X-Requested-With: XMLHttpRequest` (the cloud flow endpoint only accepts AJAX
-  requests; without it the call fails with a masked `500` before the flow runs).
-- Power Pages **lowercases** the "Respond to Power Pages" output names on the wire
-  (`fileName` → `filename`), so the client reads each field case-insensitively.
-- `contactId` (from `window.Microsoft.Dynamic365.Portal.User.contactId`) lets the
-  flow fence each user to **their own folder** — the SPA can't be trusted to
-  enforce that, so the flow must.
+> **File size.** Moving the work server-side lifts the tight cloud-flow trigger
+> ceiling; this sample caps at 5 MB as a safe default. For large files, Graph
+> supports [upload sessions](https://learn.microsoft.com/graph/api/driveitem-createuploadsession)
+> (chunked) from the server logic — out of scope here.
 
 ## Screenshot
 
 ![SharePoint file upload sample screenshot](screenshot.png)
 
-## Set up the flow
+## Set up
 
-Create one flow named **SharePoint Documents** in the same environment as the site.
+### 1. Register an Entra app for Microsoft Graph
 
-1. In the design studio: **Set up → Cloud flows → + Create new flow** (or build it
-   at [make.powerautomate.com](https://make.powerautomate.com)).
-1. **Trigger: When Power Pages calls a flow.** Add these **Text** inputs (titles
-   must match exactly): `operation`, `fileName`, `fileContent`, `fileId`,
-   `contactId`.
-1. Add a **Switch** on `operation` with a case per operation, using the
-   **SharePoint** connector against your site + document library:
-   - **list** → *List folder* (or *Get files (properties only)*) on the folder
-     `/<library>/{contactId}` → build an array of `{id, name, size, modified}` →
-     compose it as JSON text.
-   - **upload** → *Create file*: folder path `/<library>/{contactId}`, file name
-     `fileName`, file content `base64ToBinary(fileContent)`. Return the new
-     `fileId`.
-   - **download** → *Get file content* by `fileId` → return `fileName`,
-     `fileContent` = `base64(...)` of the content, and `mimeType`.
-   - **delete** → *Delete file* by `fileId`.
-   - (Create the `/<library>/{contactId}` folder on first upload if it doesn't
-     exist — *Create new folder* — so each user gets an isolated folder.)
-1. End each branch with **Respond to Power Pages** (*Return value(s) to Power
-   Pages*), adding the **Text** outputs that operation returns (see the table
-   above). Titles must match exactly.
-1. **Save**, then **Set up → Cloud flows → + Add cloud flow**, pick the flow, grant
-   the **Authenticated Users** web role, and **copy the trigger URL**.
-1. Paste the GUID at the end of that URL into:
-   - `FLOW_ID` in [`src/config.ts`](src/config.ts), and
-   - `processid` / `flowapiurl` in
-     [`.powerpages-site/cloud-flow-consumer/sharepoint-documents.cloudflowconsumer.yml`](.powerpages-site/cloud-flow-consumer/sharepoint-documents.cloudflowconsumer.yml).
+1. In the [Azure portal](https://portal.azure.com) → **App registrations** →
+   **+ New registration**. Name it (e.g. `PowerPages-Graph-SharePoint`), single
+   tenant, no redirect URI. **Register**.
+2. **API permissions** → **Add a permission** → **Microsoft Graph** →
+   **Application permissions** → add **`Sites.ReadWrite.All`** → **Grant admin
+   consent**.
+3. **Certificates & secrets** → **+ New client secret** → copy the value.
+4. Collect **Client ID**, **Tenant ID**, **Client secret**.
 
-> ⚠️ The input/output **titles must match exactly (case-sensitive)** the keys the
-> client sends/reads in
-> [`src/sharePointFlowService.ts`](src/sharePointFlowService.ts). A typo or
-> different casing breaks the round-trip silently.
+### 2. Identify your SharePoint site
 
-> The shipped `cloud-flow-consumer` metadata registers the flow and grants
-> **Authenticated Users** automatically when you `pac pages upload-code-site`, so
-> no manual **Add cloud flow** step is needed once `processid` matches your flow.
+- **Hostname** (e.g. `contoso.sharepoint.com`) and **site path** (e.g.
+  `/sites/Documents`). The site's default **Documents** library is used.
 
-## Authorization & per-user fencing
+### 3. Set the site settings
 
-- Power Pages authorizes the **call** against web roles bound to the signed-in
-  **contact** (the shipped registration grants **Authenticated Users**).
-- The flow runs under **its own SharePoint connection**, not the user's — so the
-  flow, not Power Pages, must fence data. This sample scopes each user to the
-  folder named by their `contactId`. Harden this in the flow for production
-  (validate `contactId`, prevent path traversal in `fileId`, etc.).
+Edit the placeholder values shipped under `.powerpages-site/site-settings/`:
+
+| Site setting | Value |
+| --- | --- |
+| `SharePoint/ClientId` | your app's client ID |
+| `SharePoint/TenantId` | your tenant ID |
+| `SharePoint/ClientSecret` | your client secret *(see security note)* |
+| `SharePoint/Hostname` | e.g. `contoso.sharepoint.com` |
+| `SharePoint/SitePath` | e.g. `/sites/Documents` |
+| `ServerLogic/Enabled` | `true` (shipped) |
+
+> 🔐 **Security:** don't commit a real secret. For production, keep
+> `SharePoint/ClientSecret` in **Azure Key Vault**, surface it through an
+> **environment variable**, and reference that from the site setting. The shipped
+> `SharePoint/ClientSecret` value is intentionally empty.
+
+### 4. Create the server logic
+
+Server logic is authored in the design studio (it isn't part of the SPA bundle):
+
+1. **Set up → Server logic → + New server logic**, name it **`sharepointdocuments`**
+   (must match `SERVER_LOGIC_NAME` in [`src/config.ts`](src/config.ts)).
+2. **+ Add roles** → assign **Authenticated Users**.
+3. **… → Edit code → Open Visual Studio Code**, and paste the contents of
+   [`server-logic/sharepointDocuments.js`](server-logic/sharepointDocuments.js).
+   Save/publish.
 
 ## Sign-in is required
 
-Every operation runs as the signed-in user's contact (its id selects the
-SharePoint folder). Anonymous visitors see a **Sign in** button.
+Every operation runs as the signed-in user (the server logic derives their folder
+from `Server.User`). Anonymous visitors see a **Sign in** button.
 
-- ⚠️ **Testing gotcha:** previewing a brand-new **trial** site *as its owner* gives
-  a **contactless "previewer" session** (`contactId` is empty), so the flow can't
-  resolve a folder. Sign in as a real authenticated user — on a trial site that can
-  require making the site public, which means converting the trial site to
-  production. On a normal production site an authenticated sign-in creates the
-  contact automatically.
+- ⚠️ **Testing gotcha:** previewing a brand-new **trial** site *as its owner* gives a
+  contactless "previewer" session, so the server logic can't resolve a user. Sign in
+  as a real authenticated user — on a trial site that can require converting it to
+  production. On a production site, an authenticated sign-in creates the contact
+  automatically.
 
 ## Scripts
 
-- `npm run dev` – Start the local dev server (uses an in-memory mock — no flow needed).
+- `npm run dev` – Start the local dev server (in-memory mock — no server logic needed).
 - `npm run build` – Type-check and build for production into `dist/`.
 - `npm run preview` – Preview the production build locally.
 
 ## Running on Power Pages
 
-### Setup
-
-1. Install [Microsoft Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction?tabs=windows#install-microsoft-power-platform-cli) (version >= 1.47.1).
-1. Create the **SharePoint Documents** flow and set `FLOW_ID` + the consumer YAML
-   (see [Set up the flow](#set-up-the-flow)). You also need a SharePoint site +
-   document library the flow's connection can reach.
-1. Allow `*.js` files by removing it from **Blocked Attachments** in **Privacy + Security** settings for your environment in the Power Pages Admin Center.
-1. Open a terminal and `cd` into this `sharepoint` folder.
-1. Run `pac auth create --environment <Environment URL>` to log in to your environment.
-
-### Uploading the site
-
-1. Run `npm install` then `npm run build`.
-1. Run `pac pages upload-code-site --rootPath .` to upload the site.
-1. Go to Power Pages home and click **Inactive sites**. Find
-   **File Upload (SharePoint) Sample** and click **Reactivate**.
-1. Confirm the flow is **On** and registered to this site, then click **Preview**,
-   **sign in as an authenticated user**, and upload a file and download/delete it.
+1. Install [Microsoft Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction?tabs=windows#install-microsoft-power-platform-cli) (>= 1.47.1).
+1. Complete **Set up** above (Entra app, SharePoint, site settings, server logic).
+1. Allow `*.js` files by removing it from **Blocked Attachments** in **Privacy + Security** for your environment.
+1. `cd` into this `sharepoint` folder and run `pac auth create --environment <Environment URL>`.
+1. Run `npm install` then `npm run build`, then `pac pages upload-code-site --rootPath .`.
+1. In Power Pages, **Inactive sites → Reactivate** **File Upload (SharePoint) Sample**.
+1. Confirm the server logic is published with the **Authenticated Users** role and the
+   site settings point at your app + SharePoint site. **Preview**, **sign in as an
+   authenticated user**, then upload a text document and download/delete it.

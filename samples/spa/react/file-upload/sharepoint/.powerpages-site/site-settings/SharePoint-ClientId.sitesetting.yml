@@ -1,0 +1,4 @@
+description: Application (client) ID of the Entra app registration the server logic uses to authenticate to Microsoft Graph. REPLACE with your own.
+id: f7aba590-b2fc-42dc-af70-49abb92bff32
+name: SharePoint/ClientId
+value: 00000000-0000-0000-0000-000000000000
