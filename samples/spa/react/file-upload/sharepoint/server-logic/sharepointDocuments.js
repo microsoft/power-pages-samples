@@ -7,11 +7,18 @@
 // role, and paste this code (Edit code -> Open Visual Studio Code). See README.
 //
 // The SPA calls it at /_api/serverlogics/sharepointdocuments (with the CSRF
-// token). Each HTTP verb maps to a function below:
+// token). The runtime dispatches each HTTP verb to a function of a FIXED name
+// (GET->get, POST->post, PUT->put, PATCH->patch, DELETE->del — see
+// server-logic-overview "Supported HTTP methods"):
 //   GET    (no id)      -> list the signed-in user's files
 //   GET    (?id=...)    -> download one file's content
 //   POST   {fileName,fileContent} -> upload a file
 //   DELETE (?id=...)    -> delete a file
+//
+// RETURN CONTRACT: each handler returns a STRING (use JSON.stringify). The
+// runtime wraps it in the response envelope { Success, Data, Error, ... } and
+// the handler's string becomes `Data`, so the SPA does JSON.parse(Data). See
+// author-server-logic "Example: Response".
 //
 // The logic holds an Entra app (client-credentials) and calls Microsoft Graph to
 // reach a SharePoint document library, so the SPA never sees the secret and the
@@ -47,15 +54,20 @@ function jsonBody(resp) {
 }
 
 async function getAccessToken() {
-  const form =
-    "client_id=" + encodeURIComponent(CLIENT_ID) +
-    "&client_secret=" + encodeURIComponent(CLIENT_SECRET) +
-    "&scope=" + encodeURIComponent("https://graph.microsoft.com/.default") +
-    "&grant_type=client_credentials";
+  // Body shape and content type follow the repo's verified server-logic sample
+  // (samples/server-logic/sharepoint-integration): a JSON-stringified object
+  // sent with the application/x-www-form-urlencoded content type. The runtime's
+  // HttpClient serializes it into the form fields the token endpoint expects.
+  const body = {
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    scope: "https://graph.microsoft.com/.default",
+    grant_type: "client_credentials",
+  };
   const resp = await Server.Connector.HttpClient.PostAsync(
     "https://login.microsoftonline.com/" + TENANT_ID + "/oauth2/v2.0/token",
-    form,
-    {},
+    JSON.stringify(body),
+    { "Content-Type": "application/x-www-form-urlencoded" },
     "application/x-www-form-urlencoded"
   );
   return jsonBody(resp).access_token;
@@ -73,14 +85,21 @@ async function getDriveId(token) {
 }
 
 // Each user is fenced to their own folder, derived SERVER-SIDE from the
-// authenticated user (never a client-supplied id). Adjust the id property to
-// your runtime if needed (Server.User exposes the signed-in user).
+// authenticated user (never a client-supplied id). Only `Server.User.fullname`
+// is documented (see server-objects "User"); the unique-id property is a
+// live-verify item, so we try a couple of likely ones and fall back to
+// fullname. The Logger line below prints what the runtime actually exposes —
+// inspect it in the DevTools add-on during validation and pin the right
+// property (a stable GUID like contactid is preferred over a display name).
 function userFolder() {
   const user = Server.User;
   if (!user) {
     throw new Error("You must be signed in.");
   }
-  return "user-" + (user.Id || user.contactid || user.fullname);
+  Server.Logger.Log("Server.User keys: " + Object.keys(user).join(","));
+  const id = user.Id || user.id || user.contactid || user.fullname;
+  // Sanitize: folder segments can't contain SharePoint-illegal characters.
+  return "user-" + String(id).replace(/[\\/:*?"<>|#%]/g, "_");
 }
 
 // --- HTTP verb handlers ---------------------------------------------------
@@ -100,12 +119,12 @@ async function get() {
     const meta = jsonBody(metaResp);
     const contentResp = await Server.Connector.HttpClient.GetAsync(
       GRAPH + "/drives/" + driveId + "/items/" + id + "/content", auth);
-    return {
+    return JSON.stringify({
       fileName: meta.name,
       mimeType: (meta.file && meta.file.mimeType) || "text/plain",
       // Content is returned as text (see the binary limitation in the header).
       fileContent: envelope(contentResp).Body
-    };
+    });
   }
 
   // List: the user's folder children (empty if the folder doesn't exist yet).
@@ -113,11 +132,11 @@ async function get() {
     GRAPH + "/drives/" + driveId + "/root:/" + folder +
       ":/children?$select=id,name,size,lastModifiedDateTime", auth);
   const env = envelope(listResp);
-  if (env.StatusCode === 404) return [];
+  if (env.StatusCode === 404) return JSON.stringify([]);
   const items = JSON.parse(env.Body).value || [];
-  return items.map(function (i) {
+  return JSON.stringify(items.map(function (i) {
     return { id: i.id, name: i.name, size: i.size, modified: i.lastModifiedDateTime };
-  });
+  }));
 }
 
 // POST: upload a text document. Body: { fileName, fileContent }.
@@ -141,7 +160,7 @@ async function post() {
   if (!env.IsSuccessStatusCode) {
     throw new Error("Upload failed (Graph status " + env.StatusCode + ").");
   }
-  return { fileId: JSON.parse(env.Body).id };
+  return JSON.stringify({ fileId: JSON.parse(env.Body).id });
 }
 
 // DELETE: remove a file by id (?id=...).
@@ -157,5 +176,5 @@ async function del() {
   if (!env.IsSuccessStatusCode) {
     throw new Error("Delete failed (Graph status " + env.StatusCode + ").");
   }
-  return { status: "deleted" };
+  return JSON.stringify({ status: "deleted" });
 }

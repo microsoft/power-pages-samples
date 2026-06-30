@@ -111,6 +111,13 @@ async function callServerLogic(
   }
   const env = (await response.json()) as { Success: boolean; Data: unknown; Error?: string }
   if (!env.Success) throw new Error(env.Error || 'Server logic reported a failure.')
+  // The server logic returns its payload as a JSON STRING, which the runtime
+  // places in `Data` (see author-server-logic "Example: Response"). Parse it
+  // back to an object/array. Guard for the case where the runtime hands back an
+  // already-parsed value or an empty body.
+  if (typeof env.Data === 'string') {
+    return env.Data ? JSON.parse(env.Data) : null
+  }
   return env.Data
 }
 
