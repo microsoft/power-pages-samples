@@ -56,7 +56,10 @@ Delete   DELETE /_api/file/delete/annotation(<annotationId>)/blob/$value
 ```
 
 - **Initialize** sends `x-ms-file-name` and `x-ms-file-size` headers and returns
-  an opaque upload token used by every `UploadBlock` call.
+  an opaque upload token used by every `UploadBlock` call. It also needs the
+  anti-forgery token as a **form field** in the request body (not just the
+  header) — the file-management endpoints use the classic ASP.NET anti-forgery
+  validator, which only reads the token from a form field.
 - **UploadBlock** streams raw bytes (`application/octet-stream`) for one slice;
   `offset`/`fileSize`/`chunkSize`/`token` are query-string parameters.
 - **List** finds the placeholder notes the API created (their file name ends in
@@ -70,8 +73,9 @@ Delete   DELETE /_api/file/delete/annotation(<annotationId>)/blob/$value
 - Each file is attached to the user's contact, so the contact id from
   `window.Microsoft.Dynamic365.Portal.User.contactId` is required — the user
   must be signed in.
-- Writes (`POST`, `PUT`, `DELETE`) require the `__RequestVerificationToken`
-  header. Reads (`GET`) do not.
+- Writes (`POST`, `PUT`, `DELETE`) require the `__RequestVerificationToken`.
+  Most send it as a header; `InitializeUpload` additionally requires it as a
+  urlencoded **form field** in the body (see above). Reads (`GET`) need neither.
 - Running locally (`npm run dev`) uses an in-memory mock that simulates the
   chunked upload (so the progress bar works) and holds the raw bytes, so you can
   exercise the whole UI offline.
@@ -147,25 +151,40 @@ each user only ever sees their own files). So:
   requirement of the feature: on a normal production site an authenticated sign-in
   creates the contact automatically.
 
-## Not yet validated live
+## Validated live
 
-The notes and file-column samples were each validated end-to-end against a live
-Enhanced Data Model site, which surfaced real-world surprises that were then
-fixed. **This blob sample has not yet had that live round.** The code follows the
-official documentation, but these specifics should be confirmed on a live site
-and corrected if reality differs:
+This sample was validated end-to-end against a live Enhanced Data Model site
+(upload → list → download → delete, signed in as an authenticated user). A few
+real-world specifics were confirmed, and one surprise was fixed in the code:
 
-- That the final `UploadBlock` truly finalizes the file with no commit call
-  (verify with a multi-chunk file).
-- The exact placeholder behavior: the `.azure.txt` filename suffix, and whether
-  real name/type/size come from the placeholder's JSON `documentbody` (as this
-  sample assumes) or from the annotation columns.
-- That the annotation **Parent** scope + `Contact_Annotation` relationship works
-  for the blob placeholders the same way it does for ordinary notes (vs. needing
-  Global access as the Microsoft sample uses).
-- Whether `FileStorage/CloudStorageAccount` is also required alongside the
-  `Site/FileManagement/*` settings, or whether the latter fully self-configure.
-- The error-code table (`FU00001`–`FU00022`) is the troubleshooting reference.
+- **`InitializeUpload` needs the anti-forgery token as a form field, not (only) a
+  header.** Sending it solely as the `__RequestVerificationToken` header returns
+  HTTP 500 (`The required anti-forgery form field ... is not present`) — the
+  file-management endpoints use the classic ASP.NET anti-forgery validator, which
+  reads a form field. This sample sends it both ways (see the note in
+  [`blobFileService.ts`](src/blobFileService.ts) and [Troubleshooting](#troubleshooting)).
+  Note this contradicts the official MS Learn sample, which uses a header.
+- The final `UploadBlock` finalizes the file with **no commit call**.
+- Listing by the **`.azure.txt`** placeholder suffix works, and the real
+  name/type/size come from the placeholder's JSON `documentbody`.
+- The annotation **Parent** scope + **`Contact_Annotation`** relationship is
+  sufficient for blob placeholders — Global access (as the Microsoft sample uses)
+  is **not** required.
+- Only the **`Site/FileManagement/*`** settings are needed — the unrelated
+  `FileStorage/CloudStorageAccount` keys are **not** required.
+
+The error-code table (`FU00001`–`FU00022`) in the official docs is the reference
+for storage/permission errors.
+
+## Troubleshooting
+
+| Symptom | Cause / fix |
+|---|---|
+| **`InitializeUpload failed (status 500)`**, and the server detail mentions *"anti-forgery form field `__RequestVerificationToken` is not present"* | The file-management endpoints validate the CSRF token as a **form field**, not the header the rest of the Web API uses. This sample already sends it as a urlencoded body field on `InitializeUpload`; if you adapt the code, keep that. |
+| **Uploaded code changes don't show up** — the site still serves the old JS bundle after `pac pages upload-code-site` (the `no-store` `index.html` still references the previous hashed bundle, and the new bundle 404s) | The runtime serves a cached copy. **Purge the cache**: Power Platform admin center → **Manage** → **Power Pages** → your site → **More portal actions** → **Purge Cache** (takes a few minutes). |
+| **`FU00018`** on upload | The `Portals-<site>` Enterprise app is missing a role assignment — grant **Storage Blob Data Contributor** on the storage account and **Reader** on its resource group (see [Required Azure setup](#required-azure-setup)). |
+| **Uploads succeed but no files appear in the list** | The **Notes on contact** permission is missing its **`parentrelationship: Contact_Annotation`**, or a table permission isn't bound to the **Authenticated Users** web role (see [Required configuration](#required-configuration)). |
+| **`contactId` is empty / "You must be signed in"** even though you appear signed in | A contactless owner-**preview** session on a trial site. Sign in as a real authenticated user — see [Sign-in is required](#sign-in-is-required). |
 
 ## Scripts
 
@@ -191,6 +210,11 @@ and corrected if reality differs:
 
 1. Run `npm install` then `npm run build`.
 1. Run `pac pages upload-code-site --rootPath .` to upload the site.
+1. **Re-deploying an existing site?** Power Pages caches the compiled bundle, so a
+   fresh `upload-code-site` can keep serving the old code. After re-uploading,
+   **Purge Cache** (Power Platform admin center → **Manage** → **Power Pages** →
+   your site → **More portal actions** → **Purge Cache**) — see
+   [Troubleshooting](#troubleshooting).
 1. Go to Power Pages home and click **Inactive sites**. Find
    **File Upload (Azure Blob) Sample** and click **Reactivate**.
 1. Configure authentication and confirm the site settings and table permissions

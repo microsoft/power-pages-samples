@@ -18,7 +18,9 @@
 //   Download  GET  /_api/file/download/annotation(<annotationId>)/blob/$value
 //   Delete    DELETE /_api/file/delete/annotation(<annotationId>)/blob/$value
 //
-// Every write (POST/PUT/DELETE) must carry the CSRF token header. Reads do not.
+// Every write (POST/PUT/DELETE) must carry the CSRF token. Reads do not.
+// One exception: InitializeUpload validates the token as a FORM FIELD, not a
+// header (see the detailed note on that call below) — so it goes in the body.
 //
 // Compared with file-column's two-step create, the blob API is "initialize then
 // stream blocks" and chunking is first-class (no 16 MB single-call ceiling — a
@@ -151,6 +153,16 @@ export async function uploadFile(
   const token = await getCsrfToken()
 
   // Step 1: initialize the upload against the parent record (the user's contact).
+  //
+  // CSRF gotcha: unlike the rest of the Power Pages Web API (which reads the
+  // anti-forgery token from the `__RequestVerificationToken` *header*), the
+  // file-management endpoints validate it with the classic ASP.NET
+  // `System.Web.Helpers.AntiXsrf` validator, which only reads the token from a
+  // *form field*. Sending it as a header alone makes InitializeUpload fail with
+  // HTTP 500 ("The required anti-forgery form field ... is not present"). So we
+  // send the token in a urlencoded body field AND keep the header for parity
+  // with the standard filter. The file bytes are streamed later by UploadBlock,
+  // so an empty-payload (token-only) body here is correct.
   const initResponse = await fetch(
     `/_api/file/InitializeUpload/${config.parentTable}(${contactId})/blob`,
     {
@@ -159,9 +171,9 @@ export async function uploadFile(
         __RequestVerificationToken: token,
         'x-ms-file-name': file.name,
         'x-ms-file-size': String(file.size),
-        'Content-Type': 'application/octet-stream',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: '',
+      body: `__RequestVerificationToken=${encodeURIComponent(token)}`,
       credentials: 'same-origin',
     },
   )
