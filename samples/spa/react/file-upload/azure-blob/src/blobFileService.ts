@@ -46,6 +46,12 @@ export interface UploadedFile {
 // Re-exported so the UI can show the same cap it enforces.
 export const MAX_FILE_BYTES = config.maxFileBytes
 export const ALLOWED_TYPES = config.allowedTypes
+// Derived from config so the UI hint, the `accept` attribute, and the
+// validation error messages all stay in sync with the single source of truth.
+export const ALLOWED_LABEL = config.allowedExtensions
+  .map(ext => ext.replace('.', '').toUpperCase())
+  .join(', ')
+export const ACCEPT_ATTR = config.allowedExtensions.join(',')
 
 const isDevelopment =
   typeof window !== 'undefined' &&
@@ -97,9 +103,19 @@ function stripSuffix(name: string): string {
     : name
 }
 
+/**
+ * Decode a base64 string as UTF-8. `atob` alone returns a binary ("Latin-1")
+ * string, so any multibyte UTF-8 in the placeholder JSON (e.g. an accented
+ * file name) would be corrupted — round-trip the bytes through TextDecoder.
+ */
+function decodeBase64Utf8(b64: string): string {
+  const bytes = Uint8Array.from(atob(b64), char => char.charCodeAt(0))
+  return new TextDecoder().decode(bytes)
+}
+
 export function validateFile(file: File): string | null {
   if (file.size > MAX_FILE_BYTES) {
-    return `"${file.name}" is too large. Maximum size is 10 MB.`
+    return `"${file.name}" is too large. Maximum size is ${formatSize(MAX_FILE_BYTES)}.`
   }
   // `file.type` is the browser-provided MIME type, which can be empty for some
   // files (e.g. certain .txt or uncommon types). Fall back to the extension so a
@@ -108,7 +124,7 @@ export function validateFile(file: File): string | null {
   const typeOk = file.type && (ALLOWED_TYPES as readonly string[]).includes(file.type)
   const extOk = (config.allowedExtensions as readonly string[]).includes(ext)
   if (!typeOk && !extOk) {
-    return `"${file.name}" is not an allowed type. Allowed: PDF, PNG, JPEG, TXT.`
+    return `"${file.name}" is not an allowed type. Allowed: ${ALLOWED_LABEL}.`
   }
   return null
 }
@@ -253,7 +269,7 @@ export async function listFiles(): Promise<UploadedFile[]> {
     // Prefer the real metadata stored in the placeholder's JSON body.
     try {
       if (row.documentbody) {
-        const meta = JSON.parse(atob(row.documentbody as string))
+        const meta = JSON.parse(decodeBase64Utf8(row.documentbody as string))
         name = meta.Name ?? name
         mimetype = meta.Type ?? mimetype
         filesize = Number(meta.Size ?? filesize)

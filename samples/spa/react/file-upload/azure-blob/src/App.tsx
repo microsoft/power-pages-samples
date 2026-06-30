@@ -8,6 +8,9 @@ import {
   formatSize,
   isSignedIn,
   SIGN_IN_URL,
+  MAX_FILE_BYTES,
+  ALLOWED_LABEL,
+  ACCEPT_ATTR,
   type UploadedFile,
 } from './blobFileService'
 
@@ -104,13 +107,13 @@ export default function App() {
         <input
           ref={inputRef}
           type="file"
-          accept=".pdf,.png,.jpg,.jpeg,.txt"
+          accept={ACCEPT_ATTR}
           onChange={handleFile}
           disabled={busy}
           hidden
         />
       </label>
-      <p className="hint">PDF, PNG, JPEG, or TXT · up to 10 MB</p>
+      <p className="hint">{ALLOWED_LABEL} · up to {formatSize(MAX_FILE_BYTES)}</p>
 
       {progress !== null && (
         <div className="progress" role="progressbar" aria-valuenow={Math.round(progress * 100)}>

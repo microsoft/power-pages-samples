@@ -163,7 +163,8 @@ real-world specifics were confirmed, and one surprise was fixed in the code:
   file-management endpoints use the classic ASP.NET anti-forgery validator, which
   reads a form field. This sample sends it both ways (see the note in
   [`blobFileService.ts`](src/blobFileService.ts) and [Troubleshooting](#troubleshooting)).
-  Note this contradicts the official MS Learn sample, which uses a header.
+  Note this contradicts the official [MS Learn sample](https://learn.microsoft.com/power-pages/configure/webapi-azure-blob),
+  which uses a header.
 - The final `UploadBlock` finalizes the file with **no commit call**.
 - Listing by the **`.azure.txt`** placeholder suffix works, and the real
   name/type/size come from the placeholder's JSON `documentbody`.
