@@ -32,3 +32,6 @@ pnpm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Power Pages env-specific download manifest (keep the generic manifest.yml)
+.powerpages-site/.portalconfig/*-manifest.yml

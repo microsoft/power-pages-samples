@@ -82,7 +82,7 @@ export function validateFile(file: File): string | null {
 }
 
 /**
- * Call the server logic and unwrap its `{ Success, Data, Error }` envelope.
+ * Call the server logic and unwrap its `{ success, data, error }` envelope.
  * `query` appends to the URL; `body` (when present) is sent as JSON.
  */
 async function callServerLogic(
@@ -109,16 +109,23 @@ async function callServerLogic(
         'Check that the server logic is published, your web role can call it, and the SharePoint settings are set.',
     )
   }
-  const env = (await response.json()) as { Success: boolean; Data: unknown; Error?: string }
-  if (!env.Success) throw new Error(env.Error || 'Server logic reported a failure.')
+  const env = (await response.json()) as Record<string, unknown>
+  // The runtime wraps the handler's return value in an envelope. Its key casing
+  // has varied across versions: the live runtime returns lowercase keys
+  // (success/data/error), while the docs show capitalized ones — so accept
+  // either.
+  const success = (env.success ?? env.Success) as boolean | undefined
+  const error = (env.error ?? env.Error) as string | undefined
+  const data = env.data ?? env.Data
+  if (!success) throw new Error((error as string) || 'Server logic reported a failure.')
   // The server logic returns its payload as a JSON STRING, which the runtime
-  // places in `Data` (see author-server-logic "Example: Response"). Parse it
+  // places in `data` (see author-server-logic "Example: Response"). Parse it
   // back to an object/array. Guard for the case where the runtime hands back an
   // already-parsed value or an empty body.
-  if (typeof env.Data === 'string') {
-    return env.Data ? JSON.parse(env.Data) : null
+  if (typeof data === 'string') {
+    return data ? JSON.parse(data) : null
   }
-  return env.Data
+  return data
 }
 
 /** Trigger a browser download for the given text content. */
