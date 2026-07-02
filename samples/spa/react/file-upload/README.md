@@ -10,7 +10,7 @@ pointer to Azure Blob (a storage backend you configure rather than code against)
 | --- | --- | --- | --- | --- |
 | **Notes (annotations)** | Dataverse, base64 in `annotation.documentbody` | small (~5 MB default) | Quick attach-to-a-record; the classic pattern | [`notes/`](notes/) ✅ built |
 | **File / Image column** | native Dataverse file storage (binary) | 32 MB default → 10 GB (16 MB per portal call) | Larger, binary-clean files; the modern native type | [`file-column/`](file-column/) ✅ built |
-| **SharePoint** | SharePoint document library (via **server logic** + Graph) | text documents (see note) | Document management / collaboration; reusing SharePoint | [`sharepoint/`](sharepoint/) ✅ built |
+| **SharePoint** | SharePoint document library (via **server logic** + Graph) | text documents, ~2 MB (see note) | Document management / collaboration; reusing SharePoint | [`sharepoint/`](sharepoint/) ✅ built |
 | **Azure Blob Storage** | Azure Blob | 10 GB | Large files / offloading Dataverse | [docs](https://learn.microsoft.com/power-pages/configure/enable-azure-storage) |
 
 **Notes**, **File column**, and **SharePoint** are built here as runnable React + Vite
