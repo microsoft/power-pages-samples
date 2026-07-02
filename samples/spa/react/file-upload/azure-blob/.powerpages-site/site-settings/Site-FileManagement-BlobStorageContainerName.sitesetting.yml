@@ -1,0 +1,4 @@
+description: The blob container (inside the storage account above) that uploaded files are written to. REPLACE this placeholder with your own container name.
+id: d504e704-9fe3-4808-850d-27c84369fa98
+name: Site/FileManagement/BlobStorageContainerName
+value: your-container-name

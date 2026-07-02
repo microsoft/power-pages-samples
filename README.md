@@ -20,6 +20,7 @@ Each sample includes its own README with setup steps, deployment notes, and a sc
 | <img src="samples/spa/react/file-upload/notes/screenshot.png" alt="File upload sample screenshot" width="180" /> | [File Upload (Notes) Sample](samples/spa/react/file-upload/notes/) | React + Vite | Upload, list, download, and delete files via the Web API, stored as Dataverse notes (annotations). |
 | <img src="samples/spa/react/file-upload/file-column/screenshot.png" alt="File upload file column sample screenshot" width="180" /> | [File Upload (File Column) Sample](samples/spa/react/file-upload/file-column/) | React + Vite | Upload, list, download, and delete files via the Web API, stored in a native Dataverse File column (binary, no base64). |
 | <img src="samples/spa/react/file-upload/sharepoint/screenshot.png" alt="SharePoint file upload sample screenshot" width="180" /> | [File Upload (SharePoint) Sample](samples/spa/react/file-upload/sharepoint/) | React + Vite | Upload, list, download, and delete files in a SharePoint document library, reached from a code site through server logic and Microsoft Graph. |
+| <img src="samples/spa/react/file-upload/azure-blob/screenshot.png" alt="Azure Blob file upload sample screenshot" width="180" /> | [File Upload (Azure Blob) Sample](samples/spa/react/file-upload/azure-blob/) | React + Vite | Upload, list, download, and delete files via the Web API, stored in your own Azure Blob container (chunked uploads, up to 10 GB). |
 
 ## Sample categories
 

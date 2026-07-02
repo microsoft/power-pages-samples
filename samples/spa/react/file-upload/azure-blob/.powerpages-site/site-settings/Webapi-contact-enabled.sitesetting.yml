@@ -1,0 +1,4 @@
+description: Enable the Web API for the contact table so each file record can be bound to the signed-in user's contact (sample_contact@odata.bind)
+id: 6cea66fb-9bfa-4075-8701-333399e99318
+name: Webapi/contact/enabled
+value: true

@@ -1,0 +1,4 @@
+description: Columns of the contact table exposed to the Web API (Contact-Self table permission still restricts access to the user's own record)
+id: 4c1a360a-9dcf-4a6d-add9-f0ac6f3b560a
+name: Webapi/contact/fields
+value: '*'

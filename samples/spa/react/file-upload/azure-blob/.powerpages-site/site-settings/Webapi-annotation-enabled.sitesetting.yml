@@ -1,0 +1,4 @@
+description: Enable the Web API for the annotation (notes) table. Required so the SPA can list the blob placeholder records (one .azure.txt annotation is created per uploaded blob).
+id: d8c253a8-540a-4e26-8f1c-506e507a746c
+name: Webapi/annotation/enabled
+value: true

@@ -1,0 +1,4 @@
+description: The Azure Storage account that holds the blob container. REPLACE this placeholder with your own storage account name. The portal's Portals-<site> Enterprise application must have Storage Blob Data Contributor on this account (and Reader on its resource group).
+id: 10131286-307a-4c59-9511-465e645c60f8
+name: Site/FileManagement/BlobStorageAccountName
+value: your-storage-account-name

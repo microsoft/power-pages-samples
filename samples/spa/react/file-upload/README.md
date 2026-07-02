@@ -1,8 +1,7 @@
 # File Upload Samples
 
 Power Pages offers several ways to let users upload and manage files. This folder
-groups the file-upload **code-site (SPA)** samples by storage approach, plus a
-pointer to Azure Blob (a storage backend you configure rather than code against).
+groups the file-upload **code-site (SPA)** samples by storage approach.
 
 ## Choosing an approach
 
@@ -11,14 +10,14 @@ pointer to Azure Blob (a storage backend you configure rather than code against)
 | **Notes (annotations)** | Dataverse, base64 in `annotation.documentbody` | small (~5 MB default) | Quick attach-to-a-record; the classic pattern | [`notes/`](notes/) ✅ built |
 | **File / Image column** | native Dataverse file storage (binary) | 32 MB default → 10 GB (16 MB per portal call) | Larger, binary-clean files; the modern native type | [`file-column/`](file-column/) ✅ built |
 | **SharePoint** | SharePoint document library (via **server logic** + Graph) | text documents, ~2 MB (see note) | Document management / collaboration; reusing SharePoint | [`sharepoint/`](sharepoint/) ✅ built |
-| **Azure Blob Storage** | Azure Blob | 10 GB | Large files / offloading Dataverse | [docs](https://learn.microsoft.com/power-pages/configure/enable-azure-storage) |
+| **Azure Blob Storage** | your Azure Blob container | 10 GB | Large files / offloading Dataverse | [`azure-blob/`](azure-blob/) ✅ built |
 
-**Notes**, **File column**, and **SharePoint** are built here as runnable React + Vite
-samples. Notes and File column call the portal Web API directly; **SharePoint** can't
-(the Web API has no SharePoint surface and code sites can't host the native
-Liquid/form subgrid), so it uses **server logic** (server-side JS) + Microsoft Graph.
-**Azure Blob** is a storage backend you configure under the file APIs — linked to the
-docs.
+**Notes**, **File column**, **SharePoint**, and **Azure Blob** are all built here as
+runnable React + Vite samples. Notes and File column call the portal Web API directly,
+and Azure Blob uses the dedicated file-management Web API (`/_api/file/...`).
+**SharePoint** can't use the Web API (it has no SharePoint surface, and code sites
+can't host the native Liquid/form subgrid), so it uses **server logic** (server-side
+JS) + Microsoft Graph.
 
 ## The built samples
 
@@ -36,12 +35,18 @@ docs.
   document management / collaboration, or when files must live in SharePoint. *(Server
   logic's HttpClient is text-only, so this sample handles text documents — see its
   README for the binary caveat.)*
+- **[File Upload (Azure Blob)](azure-blob/)** — the bytes go to **your Azure Blob
+  container** via the dedicated file-management Web API (`/_api/file/...`:
+  initialize → stream blocks → download/delete), tracked by an annotation
+  placeholder on the user's contact. Best for large files and keeping binaries out
+  of Dataverse. *(Needs manual Azure storage + IAM setup; not yet validated live.)*
 
-## Shared lessons (Notes & File column)
+## Shared lessons
 
 The Notes and File column samples were validated live on an Enhanced Data Model
-site. Two things are easy to miss and they break the *secure, per-user*
-configuration specifically:
+site; the Azure Blob sample stores its placeholders as annotations on the contact,
+so the **same per-user permission lessons apply to it**. Two things are easy to miss
+and they break the *secure, per-user* configuration specifically:
 
 - **A scoped table permission must declare its relationship.** A `Parent`-scoped
   permission needs `parentrelationship`; a `Contact`-scoped permission needs

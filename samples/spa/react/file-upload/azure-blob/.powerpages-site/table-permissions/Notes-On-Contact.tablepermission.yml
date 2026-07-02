@@ -1,0 +1,23 @@
+append: true
+appendto: true
+create: true
+delete: true
+entitylogicalname: annotation
+entityname: Notes on contact
+adx_entitypermission_webrole:
+- d60cc079-8a51-4a72-9bf7-19cadf71f157
+id: fbfe5c13-0b67-426d-ac86-dfc9f87b3132
+# Parent scope (756150003): each user sees only the notes whose regarding
+# (objectid) points at their own contact. A Parent-scoped permission MUST set
+# BOTH `parententitypermission` (the parent Contact-Self permission below) AND
+# `parentrelationship` (the schema name of the N:1 relationship linking the
+# annotation to its parent contact — `Contact_Annotation`). Omitting
+# `parentrelationship` builds a malformed scope query and every read fails with
+# a CDS/500 error while creates still succeed (the "uploads work but nothing
+# shows up" symptom). This is the same hard-won lesson as the notes sample —
+# the blob placeholder records ARE annotations, so the model is identical.
+parententitypermission: 9a64ee34-1b12-40bb-8bb2-b55bf366290f
+parentrelationship: Contact_Annotation
+read: true
+scope: 756150003
+write: true
