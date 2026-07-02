@@ -9,7 +9,7 @@ The entire lesson is in [`src/blobFileService.ts`](src/blobFileService.ts) — t
 rest of the app is just UI around it. Settings are config-driven in
 [`src/config.ts`](src/config.ts).
 
-> **How the three file-storage samples differ.** All three are sibling samples
+> **How the four file-storage samples differ.** All four are sibling samples
 > under [`file-upload/`](../):
 >
 > | Sample | Where the bytes live | API | Custom table? |
@@ -17,6 +17,7 @@ rest of the app is just UI around it. Settings are config-driven in
 > | [notes](../notes) | Dataverse (annotation `documentbody`, base64) | `/_api/annotations` | No |
 > | [file-column](../file-column) | Dataverse file storage | `/_api/<table>(<id>)/<filecolumn>` | Yes |
 > | **azure-blob** (this) | **Your Azure Blob container** | **`/_api/file/...`** | **No** |
+> | [sharepoint](../sharepoint) | A SharePoint document library | Server logic → Microsoft Graph | No |
 >
 > Azure Blob is the right choice for **large files** (up to 10 GB) and for
 > keeping bulky binaries out of Dataverse capacity. Like the notes sample, it

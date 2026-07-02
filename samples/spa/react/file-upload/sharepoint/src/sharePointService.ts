@@ -72,6 +72,12 @@ export function validateFile(file: File): string | null {
   if (file.size > MAX_FILE_BYTES) {
     return `"${file.name}" is too large. Maximum size is 2 MB.`
   }
+  // Reject SharePoint-illegal filename characters (and ".." / path separators)
+  // up front, with a clear message — otherwise the upload fails server-side with
+  // an opaque Graph 400. The server logic enforces the same rule (trust boundary).
+  if (/[\\/:*?"<>|#%]/.test(file.name) || file.name.includes('..')) {
+    return `"${file.name}" has invalid characters. Avoid \\ / : * ? " < > | # % and "..".`
+  }
   const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
   const typeOk = file.type && (ALLOWED_TYPES as readonly string[]).includes(file.type)
   const extOk = (config.allowedExtensions as readonly string[]).includes(ext)
@@ -186,6 +192,20 @@ export async function uploadFile(file: File): Promise<void> {
       mimetype: file.type || 'text/plain',
     })
     return
+  }
+
+  // The whole file is sent inline as a JSON string, and JSON escaping (of quotes,
+  // backslashes, control chars) can inflate the payload well beyond file.size. The
+  // guard above is on the raw bytes; this one checks the ACTUAL serialized body
+  // against the runtime's overall request cap (~2.5 MB observed) so an escaping-
+  // heavy file gives a clear message instead of an opaque HTTP 500.
+  const payload = JSON.stringify({ fileName: file.name, fileContent: content })
+  const REQUEST_LIMIT = 2.5 * 1024 * 1024
+  if (new Blob([payload]).size > REQUEST_LIMIT) {
+    throw new Error(
+      `"${file.name}" is too large to send once encoded. Try a smaller file ` +
+        `(text with many quotes/newlines expands when JSON-encoded).`,
+    )
   }
 
   await callServerLogic('POST', { body: { fileName: file.name, fileContent: content } })

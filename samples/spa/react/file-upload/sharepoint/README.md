@@ -34,11 +34,16 @@ Server logic  -->  Microsoft Graph (client-credentials, Sites.ReadWrite.All)
 ```
 
 - Every call carries the `__RequestVerificationToken` (CSRF) header; the server
-  logic is protected by web roles + table permissions (Authenticated Users here).
+  logic is invoke-protected by its assigned **web role** (Authenticated Users
+  here). There are **no table permissions** — nothing is stored in Dataverse, so
+  the SharePoint document library (via Graph) is the only backing store.
 - The server logic returns a `{ Success, Data, Error }` envelope — the payload is
   in `Data`.
 - Each user is fenced **server-side** to their own folder (`user-<id>`), derived
-  from the authenticated `Server.User` — never a client-supplied id.
+  from the authenticated `Server.User` — never a client-supplied id. Item ids are
+  not a trust boundary, so download/delete **re-verify server-side** that the
+  target item lives in the caller's own folder (blocks IDOR); the server logic
+  also validates the file name, type, and size independently of the SPA.
 
 ## ⚠️ Important limitation: text documents only
 
@@ -111,14 +116,28 @@ Edit the placeholder values shipped under `.powerpages-site/site-settings/`:
 
 ### 4. Create the server logic
 
-Server logic is authored in the design studio (it isn't part of the SPA bundle):
+The server logic is authored in JavaScript and runs server-side (it isn't part of
+the SPA bundle). The **canonical, readable source** is
+[`server-logic/sharepointDocuments.js`](server-logic/sharepointDocuments.js).
 
-1. **Set up → Server logic → + New server logic**, name it **`sharepointdocuments`**
-   (must match `SERVER_LOGIC_NAME` in [`src/config.ts`](src/config.ts)).
-2. **+ Add roles** → assign **Authenticated Users**.
-3. **… → Edit code → Open Visual Studio Code**, and paste the contents of
-   [`server-logic/sharepointDocuments.js`](server-logic/sharepointDocuments.js).
-   Save/publish.
+You get it onto the site one of two ways:
+
+- **Declarative deploy (recommended).** A copy of the same code ships in the site
+  snapshot at
+  `.powerpages-site/server-logic/sharepointdocuments/sharepointdocuments.js`, so
+  `pac pages upload-code-site` (see **Running on Power Pages** below) deploys the
+  server logic **for you** — no manual paste. If you edit the source, re-copy it
+  into that snapshot file so the two stay in sync (they are kept byte-identical).
+- **Manual, in the design studio.** If you'd rather create it by hand: **Set up →
+  Server logic → + New server logic**, name it **`sharepointdocuments`** (must
+  match `SERVER_LOGIC_NAME` in [`src/config.ts`](src/config.ts)); **+ Add roles →
+  Authenticated Users**; then **… → Edit code → Open Visual Studio Code** and paste
+  the contents of
+  [`server-logic/sharepointDocuments.js`](server-logic/sharepointDocuments.js).
+  Save/publish.
+
+Either way, confirm the published server logic has the **Authenticated Users** role
+assigned before you test.
 
 ## Sign-in is required
 
@@ -133,7 +152,10 @@ from `Server.User`). Anonymous visitors see a **Sign in** button.
 
 ## Scripts
 
-- `npm run dev` – Start the local dev server (in-memory mock — no server logic needed).
+- `npm run dev` – Start the local dev server (in-memory mock — no server logic
+  needed). The mock covers the CRUD UI only; it does **not** exercise the server
+  logic's Graph calls, the base64 download decode, CSRF, or authentication — test
+  those on a deployed site.
 - `npm run build` – Type-check and build for production into `dist/`.
 - `npm run preview` – Preview the production build locally.
 
