@@ -1,0 +1,4 @@
+description: Comma-separated list of file extensions the file-management Web API will accept. Uploads of other types are rejected (error FU00004). Keep this in sync with the client-side allow-list in src/config.ts.
+id: 773b1da6-9f8b-452d-919d-cf1e14b2c17d
+name: Site/FileManagement/SupportedFileType
+value: .pdf,.png,.jpg,.jpeg,.txt

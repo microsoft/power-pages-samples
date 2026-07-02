@@ -1,0 +1,4 @@
+description: Expose annotation columns to the Web API so the SPA can read filename/subject/filesize/mimetype/createdon when listing blob placeholder notes.
+id: 64b56f50-3ba8-45c2-a23a-545c522a3a81
+name: Webapi/annotation/fields
+value: '*'

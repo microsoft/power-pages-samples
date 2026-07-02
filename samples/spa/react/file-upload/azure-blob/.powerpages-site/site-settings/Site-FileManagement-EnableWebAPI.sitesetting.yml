@@ -1,0 +1,4 @@
+description: Turn on the Power Pages file-management Web API (the /_api/file/* blob endpoints). Required for InitializeUpload / UploadBlock / download / delete to work.
+id: 8aa65452-bc56-4c80-b1b1-46b512f43928
+name: Site/FileManagement/EnableWebAPI
+value: true
