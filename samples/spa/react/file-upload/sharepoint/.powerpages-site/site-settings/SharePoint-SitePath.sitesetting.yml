@@ -1,0 +1,4 @@
+description: Server-relative path of the SharePoint site, e.g. /sites/Documents. REPLACE with your own.
+id: d5fe574c-6327-41dc-be48-4068a14c4792
+name: SharePoint/SitePath
+value: /sites/Documents

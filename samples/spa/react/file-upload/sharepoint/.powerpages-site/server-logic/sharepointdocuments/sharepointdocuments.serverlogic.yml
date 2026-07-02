@@ -1,0 +1,6 @@
+adx_serverlogic_adx_webrole:
+  - d60cc079-8a51-4a72-9bf7-19cadf71f157
+description: 'Upload, list, download, and delete text documents in a SharePoint library via Microsoft Graph, fenced per signed-in user.'
+display_name: 'SharePoint Documents'
+id: 5c2cd034-3d15-459b-a00e-ca4fb2f30d15
+name: sharepointdocuments

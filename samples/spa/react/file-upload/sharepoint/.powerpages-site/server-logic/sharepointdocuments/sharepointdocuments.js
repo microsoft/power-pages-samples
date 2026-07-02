@@ -1,0 +1,288 @@
+// ===========================================================================
+// sharepointDocuments — Power Pages SERVER LOGIC
+//
+// This is the server-side half of the SharePoint sample. It is NOT bundled with
+// the SPA — create it in the design studio (Set up -> Server logic -> + New
+// server logic, named "sharepointDocuments"), assign the Authenticated Users web
+// role, and paste this code (Edit code -> Open Visual Studio Code). See README.
+//
+// The SPA calls it at /_api/serverlogics/sharepointdocuments (with the CSRF
+// token). The runtime dispatches each HTTP verb to a function of a FIXED name
+// (GET->get, POST->post, PUT->put, PATCH->patch, DELETE->del — see
+// server-logic-overview "Supported HTTP methods"):
+//   GET    (no id)      -> list the signed-in user's files
+//   GET    (?id=...)    -> download one file's content
+//   POST   {fileName,fileContent} -> upload a file
+//   DELETE (?id=...)    -> remove a file
+//
+// RETURN CONTRACT: each handler returns a STRING (use JSON.stringify). The
+// runtime wraps it in the response envelope { success, data, error, ... } and
+// the handler's string becomes `data`, so the SPA does JSON.parse(data). See
+// author-server-logic "Example: Response".
+//
+// The logic holds an Entra app (client-credentials) and calls Microsoft Graph to
+// reach a SharePoint document library, so the SPA never sees the secret and the
+// browser never talks to Graph directly.
+//
+// ⚠️ IMPORTANT LIMITATION: server logic's HttpClient only accepts
+// application/json, text/html and application/x-www-form-urlencoded request
+// bodies — there is NO application/octet-stream. So this sample handles
+// **text-based documents** (.txt, .csv, .json, .md, .html, .xml): they upload as
+// real, natively-usable SharePoint files. Binary files (PDF, PNG, …) can't be
+// streamed as raw bytes through this path today — see the README for the caveat.
+//
+// Docs: https://learn.microsoft.com/power-pages/configure/server-logic-graph-sharepoint
+// ===========================================================================
+
+const CLIENT_ID = Server.SiteSetting.Get("SharePoint/ClientId");
+const CLIENT_SECRET = Server.SiteSetting.Get("SharePoint/ClientSecret");
+const TENANT_ID = Server.SiteSetting.Get("SharePoint/TenantId");
+const HOSTNAME = Server.SiteSetting.Get("SharePoint/Hostname");
+const SITE_PATH = Server.SiteSetting.Get("SharePoint/SitePath");
+
+const GRAPH = "https://graph.microsoft.com/v1.0";
+
+// Server-side guards. The browser SPA validates too, but a client can call
+// /_api/serverlogics/... directly, so the SERVER is the real trust boundary.
+const MAX_CONTENT_LENGTH = 2 * 1024 * 1024; // ~2 MB (matches config.ts)
+const ALLOWED_EXTENSIONS = [".txt", ".csv", ".json", ".md", ".html", ".xml"];
+
+// --- Helpers --------------------------------------------------------------
+
+// HttpClient returns a JSON string describing the response; its `Body` is itself
+// a JSON (or text) string. Parse the envelope, then the body when it's JSON.
+function envelope(resp) {
+  return JSON.parse(resp);
+}
+
+// Read a response header case-insensitively (the runtime preserves the server's
+// original header casing, which varies).
+function header(env, name) {
+  const h = env.Headers || {};
+  const lc = name.toLowerCase();
+  for (const k in h) {
+    if (k.toLowerCase() === lc) return h[k];
+  }
+  return "";
+}
+
+async function getAccessToken() {
+  // App-only (client-credentials) token from Microsoft Entra. IMPORTANT: pass the
+  // body as a JSON OBJECT (via JSON.stringify) — NOT a pre-encoded "a=b&c=d"
+  // string. The server-logic HttpClient parses the content as JSON and then
+  // form-encodes the key/value pairs itself for the
+  // application/x-www-form-urlencoded request. A raw urlencoded string fails with
+  // "'c' is an invalid start of a value" (the runtime can't JSON-parse it).
+  const body = JSON.stringify({
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    scope: "https://graph.microsoft.com/.default",
+    grant_type: "client_credentials"
+  });
+  const resp = await Server.Connector.HttpClient.PostAsync(
+    "https://login.microsoftonline.com/" + TENANT_ID + "/oauth2/v2.0/token",
+    body,
+    { "Content-Type": "application/x-www-form-urlencoded" },
+    "application/x-www-form-urlencoded"
+  );
+  const env = envelope(resp);
+  const parsed = env.Body ? JSON.parse(env.Body) : null;
+  if (!parsed || !parsed.access_token) {
+    throw new Error("Failed to acquire access token (status " + env.StatusCode + ").");
+  }
+  return parsed.access_token;
+}
+
+// Resolve the document library's drive id from the host + site path.
+async function getDriveId(token) {
+  const auth = { Authorization: "Bearer " + token };
+  const siteResp = await Server.Connector.HttpClient.GetAsync(
+    GRAPH + "/sites/" + HOSTNAME + ":" + SITE_PATH, auth);
+  const siteEnv = envelope(siteResp);
+  if (!siteEnv.IsSuccessStatusCode) {
+    throw new Error(
+      "Could not resolve SharePoint site '" + HOSTNAME + SITE_PATH +
+        "' (status " + siteEnv.StatusCode +
+        "). Check SharePoint/Hostname, SharePoint/SitePath, and Graph admin consent.");
+  }
+  const siteId = JSON.parse(siteEnv.Body).id;
+  const driveResp = await Server.Connector.HttpClient.GetAsync(
+    GRAPH + "/sites/" + siteId + "/drive", auth);
+  const driveEnv = envelope(driveResp);
+  if (!driveEnv.IsSuccessStatusCode) {
+    throw new Error(
+      "Could not resolve the document library drive (status " +
+        driveEnv.StatusCode + ").");
+  }
+  return JSON.parse(driveEnv.Body).id;
+}
+
+// Each user is fenced to their own folder, derived SERVER-SIDE from the
+// authenticated user (never a client-supplied id). We require a STABLE, UNIQUE
+// id (a GUID) and fail closed if none is present — falling back to a display
+// name (e.g. fullname) is unsafe because two users can share a name and would
+// then share a folder. If this ever throws, the error lists the actual
+// Server.User keys so you can pin the correct id property for your runtime.
+function userFolder() {
+  const user = Server.User;
+  if (!user) {
+    throw new Error("You must be signed in.");
+  }
+  const id = user.Id || user.id || user.contactid;
+  if (!id) {
+    throw new Error(
+      "Could not resolve a stable user id. Server.User keys: " +
+        Object.keys(user).join(","));
+  }
+  // Sanitize: folder segments can't contain SharePoint-illegal characters.
+  return "user-" + String(id).replace(/[\\/:*?"<>|#%]/g, "_");
+}
+
+// Validate a client-supplied file name SERVER-SIDE: reject empty/whitespace,
+// path separators, "..", SharePoint-illegal characters, and disallowed
+// extensions. The SPA's validateFile() is UX only and is trivially bypassed by
+// calling this endpoint directly, so the server must enforce its own rules.
+function validateFileName(name) {
+  if (!name || !String(name).trim()) {
+    throw new Error("fileName is required.");
+  }
+  if (/[\\/:*?"<>|#%]/.test(name) || name.indexOf("..") !== -1) {
+    throw new Error("fileName contains invalid characters.");
+  }
+  const dot = name.lastIndexOf(".");
+  const ext = dot >= 0 ? name.substring(dot).toLowerCase() : "";
+  if (ALLOWED_EXTENSIONS.indexOf(ext) === -1) {
+    throw new Error("File type not allowed: '" + ext + "'.");
+  }
+}
+
+// Verify a client-supplied drive item id belongs to the caller's own folder
+// BEFORE reading or deleting it. Item ids are opaque but not secret — they are
+// returned in the list response and leak via logs/sharing — so they are NOT a
+// trust boundary. Without this check any signed-in user could read or delete
+// another user's files by passing their item id (IDOR). Returns the item
+// metadata so the caller can reuse it. Throws if the item isn't in the folder.
+async function assertInUserFolder(driveId, id, folder, auth) {
+  const metaResp = await Server.Connector.HttpClient.GetAsync(
+    GRAPH + "/drives/" + driveId + "/items/" + id +
+      "?$select=name,file,parentReference", auth);
+  const env = envelope(metaResp);
+  if (!env.IsSuccessStatusCode) {
+    throw new Error("File not found (status " + env.StatusCode + ").");
+  }
+  const meta = JSON.parse(env.Body);
+  // parentReference.path looks like "/drives/<driveId>/root:/user-<uid>". Take
+  // the part after "root:" and require an EXACT match to "/<folder>" (so
+  // user-abc can't match user-abcd, and root-level items are rejected).
+  const parentPath = (meta.parentReference && meta.parentReference.path) || "";
+  const marker = "root:";
+  const idx = parentPath.indexOf(marker);
+  const rel = idx >= 0 ? parentPath.substring(idx + marker.length) : "";
+  if (rel !== "/" + folder) {
+    throw new Error("Not authorized to access this file.");
+  }
+  return meta;
+}
+
+// --- HTTP verb handlers ---------------------------------------------------
+
+// GET: list (no id) or download one file (?id=...)
+async function get() {
+  const token = await getAccessToken();
+  const driveId = await getDriveId(token);
+  const auth = { Authorization: "Bearer " + token };
+  const folder = userFolder();
+  const id = Server.Context.QueryParameters["id"];
+
+  if (id) {
+    // Download: verify the item is in the caller's own folder (IDOR guard), then
+    // fetch its content. assertInUserFolder returns the metadata (name, file).
+    const meta = await assertInUserFolder(driveId, id, folder, auth);
+    const contentResp = await Server.Connector.HttpClient.GetAsync(
+      GRAPH + "/drives/" + driveId + "/items/" + id + "/content", auth);
+    const cenv = envelope(contentResp);
+    if (!cenv.IsSuccessStatusCode) {
+      throw new Error("Could not download the file (status " + cenv.StatusCode + ").");
+    }
+
+    // ENCODING QUIRK: the server-logic HttpClient returns the response `Body` as a
+    // plain string ONLY when the response Content-Type is text-like (text/*,
+    // application/json, *xml*); for anything else — notably the
+    // application/octet-stream that Graph serves for .md, .csv, etc. — it
+    // base64-encodes the Body. We can't assume the file's stored mime type here
+    // (Graph downloads .md as octet-stream), so we key off the ACTUAL download
+    // response Content-Type (the same signal the runtime uses) and tell the SPA
+    // whether it must base64-decode.
+    const responseType = header(cenv, "Content-Type");
+    const isText = /^text\//i.test(responseType) || /json|xml/i.test(responseType);
+    return JSON.stringify({
+      fileName: meta.name,
+      mimeType: (meta.file && meta.file.mimeType) || "text/plain",
+      encoding: isText ? "text" : "base64",
+      fileContent: cenv.Body
+    });
+  }
+
+  // List: the user's folder children (empty if the folder doesn't exist yet).
+  const listResp = await Server.Connector.HttpClient.GetAsync(
+    GRAPH + "/drives/" + driveId + "/root:/" + folder +
+      ":/children?$select=id,name,size,lastModifiedDateTime", auth);
+  const env = envelope(listResp);
+  if (env.StatusCode === 404) return JSON.stringify([]);
+  if (!env.IsSuccessStatusCode) {
+    throw new Error("Could not list files (status " + env.StatusCode + ").");
+  }
+  const items = JSON.parse(env.Body).value || [];
+  return JSON.stringify(items.map((i) => {
+    return { id: i.id, name: i.name, size: i.size, modified: i.lastModifiedDateTime };
+  }));
+}
+
+// POST: upload a text document. Body: { fileName, fileContent }.
+async function post() {
+  const input = JSON.parse(Server.Context.Body);
+  if (!input || !input.fileName) {
+    throw new Error("fileName and fileContent are required.");
+  }
+  // Server-side validation (the SPA guard is UX only and can be bypassed).
+  validateFileName(input.fileName);
+  const content = input.fileContent || "";
+  if (content.length > MAX_CONTENT_LENGTH) {
+    throw new Error("File is too large (max " + MAX_CONTENT_LENGTH + " bytes).");
+  }
+  const token = await getAccessToken();
+  const driveId = await getDriveId(token);
+  const auth = { Authorization: "Bearer " + token };
+  const folder = userFolder();
+
+  // PUT the content to <folder>/<fileName>. Graph creates the folder path as
+  // needed. Content type must be text/html (octet-stream isn't allowed here).
+  const uploadUrl = GRAPH + "/drives/" + driveId + "/root:/" +
+    folder + "/" + encodeURIComponent(input.fileName) + ":/content";
+  const resp = await Server.Connector.HttpClient.PutAsync(
+    uploadUrl, content, auth, "text/html");
+  const env = envelope(resp);
+  if (!env.IsSuccessStatusCode) {
+    throw new Error("Upload failed (Graph status " + env.StatusCode + ").");
+  }
+  return JSON.stringify({ fileId: JSON.parse(env.Body).id });
+}
+
+// DELETE: remove a file by id (?id=...).
+async function del() {
+  const id = Server.Context.QueryParameters["id"];
+  if (!id) throw new Error("id is required.");
+  const token = await getAccessToken();
+  const driveId = await getDriveId(token);
+  const auth = { Authorization: "Bearer " + token };
+  // IDOR guard: only allow deleting items inside the caller's own folder.
+  const folder = userFolder();
+  await assertInUserFolder(driveId, id, folder, auth);
+  const resp = await Server.Connector.HttpClient.DeleteAsync(
+    GRAPH + "/drives/" + driveId + "/items/" + id, auth);
+  const env = envelope(resp);
+  if (!env.IsSuccessStatusCode) {
+    throw new Error("Deletion failed (Graph status " + env.StatusCode + ").");
+  }
+  return JSON.stringify({ status: "deleted" });
+}

@@ -1,0 +1,4 @@
+description: SharePoint Online hostname, e.g. contoso.sharepoint.com. REPLACE with your own.
+id: 8981641b-a99b-47d1-939a-698c9325d84e
+name: SharePoint/Hostname
+value: contoso.sharepoint.com

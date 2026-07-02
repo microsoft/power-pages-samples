@@ -1,0 +1,4 @@
+description: Directory (tenant) ID of the Entra app registration. REPLACE with your own.
+id: 1f2d0c00-02c9-4f08-b1bb-8694d70d7be5
+name: SharePoint/TenantId
+value: 00000000-0000-0000-0000-000000000000

@@ -1,0 +1,4 @@
+description: Enable Power Pages server logic (the /_api/serverlogics/* endpoints this sample's SPA calls).
+id: fde7f777-31d3-402a-920b-d5c1b730f7b7
+name: ServerLogic/Enabled
+value: true
