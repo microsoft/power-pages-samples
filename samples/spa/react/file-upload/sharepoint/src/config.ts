@@ -14,8 +14,13 @@ export const config = {
    * content types (no application/octet-stream), this sample handles **text-based
    * documents** — they upload as real, usable SharePoint files. Binary types
    * (PDF/PNG) are a known limitation of this transport (see README).
+   *
+   * SIZE LIMIT: the whole file is sent inline (as a JSON string) in a single
+   * server-logic request, so it is bounded by the runtime's request-body cap
+   * (~2.5 MB observed). We cap at 2 MB to leave headroom for JSON escaping. Larger
+   * files would need a chunked Graph upload session, which is out of scope here.
    */
-  maxFileBytes: 5 * 1024 * 1024,
+  maxFileBytes: 2 * 1024 * 1024,
   allowedTypes: [
     'text/plain',
     'text/csv',

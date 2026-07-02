@@ -54,9 +54,19 @@ SharePoint file then holds base64 text, not the native file), or use a different
 upload transport. This is a current platform constraint, not a sample choice — call
 it out when you evaluate the approach.
 
-> **File size.** Moving the work server-side lifts the tight cloud-flow trigger
-> ceiling; this sample caps at 5 MB as a safe default. For large files, Graph
-> supports [upload sessions](https://learn.microsoft.com/graph/api/driveitem-createuploadsession)
+> **File size — cap at 2 MB.** The whole file is sent inline (as a JSON string) in a
+> single server-logic request, so it is bounded by the runtime's request-body cap
+> (~2.5 MB observed). Two runtime details make this work:
+> - **Uploads use a `text/plain` request content type, not `application/json`.** The
+>   runtime enforces a ~2 MB limit when it validates an `application/json` request
+>   body, so larger JSON uploads fail with HTTP 500. `text/plain` passes the body
+>   through untouched (the server logic still `JSON.parse`s it).
+> - **Downloads carry an `encoding` flag.** `HttpClient` returns a response body as a
+>   plain string for text-like content types but **base64** for anything else (Graph
+>   serves `.md`, `.csv`, … as `application/octet-stream`). The server logic reports
+>   `encoding: "text" | "base64"` so the SPA decodes correctly.
+>
+> For larger files, Graph supports [upload sessions](https://learn.microsoft.com/graph/api/driveitem-createuploadsession)
 > (chunked) from the server logic — out of scope here.
 
 ## Screenshot

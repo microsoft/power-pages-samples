@@ -53,6 +53,17 @@ function jsonBody(resp) {
   return JSON.parse(envelope(resp).Body);
 }
 
+// Read a response header case-insensitively (the runtime preserves the server's
+// original header casing, which varies).
+function header(env, name) {
+  const h = env.Headers || {};
+  const lc = name.toLowerCase();
+  for (const k in h) {
+    if (k.toLowerCase() === lc) return h[k];
+  }
+  return "";
+}
+
 async function getAccessToken() {
   // App-only (client-credentials) token from Microsoft Entra. IMPORTANT: pass the
   // body as a JSON OBJECT (via JSON.stringify) — NOT a pre-encoded "a=b&c=d"
@@ -120,17 +131,29 @@ async function get() {
   const id = Server.Context.QueryParameters["id"];
 
   if (id) {
-    // Download: fetch the file's content (text) and its metadata.
+    // Download: fetch the file's content and its metadata.
     const metaResp = await Server.Connector.HttpClient.GetAsync(
       GRAPH + "/drives/" + driveId + "/items/" + id + "?$select=name,file", auth);
     const meta = jsonBody(metaResp);
     const contentResp = await Server.Connector.HttpClient.GetAsync(
       GRAPH + "/drives/" + driveId + "/items/" + id + "/content", auth);
+    const cenv = envelope(contentResp);
+
+    // ENCODING QUIRK: the server-logic HttpClient returns the response `Body` as a
+    // plain string ONLY when the response Content-Type is text-like (text/*,
+    // application/json, *xml*); for anything else — notably the
+    // application/octet-stream that Graph serves for .md, .csv, etc. — it
+    // base64-encodes the Body. We can't assume the file's stored mime type here
+    // (Graph downloads .md as octet-stream), so we key off the ACTUAL download
+    // response Content-Type (the same signal the runtime uses) and tell the SPA
+    // whether it must base64-decode.
+    const responseType = header(cenv, "Content-Type");
+    const isText = /^text\//i.test(responseType) || /json|xml/i.test(responseType);
     return JSON.stringify({
       fileName: meta.name,
       mimeType: (meta.file && meta.file.mimeType) || "text/plain",
-      // Content is returned as text (see the binary limitation in the header).
-      fileContent: envelope(contentResp).Body
+      encoding: isText ? "text" : "base64",
+      fileContent: cenv.Body
     });
   }
 

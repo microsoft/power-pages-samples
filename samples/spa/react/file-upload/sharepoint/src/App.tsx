@@ -107,7 +107,7 @@ export default function App() {
           hidden
         />
       </label>
-      <p className="hint">Text documents: TXT, CSV, JSON, MD, HTML, XML · up to 5 MB</p>
+      <p className="hint">Text documents: TXT, CSV, JSON, MD, HTML, XML · up to 2 MB</p>
 
       {error && <p className="error">⚠️ {error}</p>}
 

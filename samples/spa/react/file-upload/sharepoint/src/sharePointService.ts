@@ -70,7 +70,7 @@ export function isSignedIn(): boolean {
 
 export function validateFile(file: File): string | null {
   if (file.size > MAX_FILE_BYTES) {
-    return `"${file.name}" is too large. Maximum size is 5 MB.`
+    return `"${file.name}" is too large. Maximum size is 2 MB.`
   }
   const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
   const typeOk = file.type && (ALLOWED_TYPES as readonly string[]).includes(file.type)
@@ -95,7 +95,13 @@ async function callServerLogic(
     // Mark the request as AJAX (portal endpoints expect this).
     'X-Requested-With': 'XMLHttpRequest',
   }
-  if (opts.body !== undefined) headers['Content-Type'] = 'application/json'
+  // IMPORTANT: send the body as text/plain, NOT application/json. The body is
+  // still a JSON string and the server logic does JSON.parse(Server.Context.Body)
+  // regardless of content type — but the runtime enforces a ~2 MB size limit when
+  // it validates an application/json request body (larger JSON uploads fail with
+  // HTTP 500). text/plain passes the body straight through, so uploads work up to
+  // the runtime's overall request cap (see MAX_FILE_BYTES in config.ts).
+  if (opts.body !== undefined) headers['Content-Type'] = 'text/plain'
 
   const response = await fetch(BASE + (opts.query ?? ''), {
     method,
@@ -128,9 +134,32 @@ async function callServerLogic(
   return data
 }
 
-/** Trigger a browser download for the given text content. */
-function triggerDownload(filename: string, mimetype: string, content: string): void {
-  const blob = new Blob([content], { type: mimetype || 'text/plain' })
+/** Decode a base64 string into an ArrayBuffer (for non-text content). */
+function base64ToBuffer(base64: string): ArrayBuffer {
+  const binary = atob(base64)
+  const buffer = new ArrayBuffer(binary.length)
+  const bytes = new Uint8Array(buffer)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  return buffer
+}
+
+/**
+ * Trigger a browser download. `content` is either plain text or base64 depending
+ * on `encoding` — the server logic tells us which (see the encoding quirk in
+ * sharepointDocuments.js). We build the Blob from raw bytes for base64 so the
+ * saved file is byte-for-byte correct.
+ */
+function triggerDownload(
+  filename: string,
+  mimetype: string,
+  content: string,
+  encoding: 'text' | 'base64',
+): void {
+  const type = mimetype || 'text/plain'
+  const blob =
+    encoding === 'base64'
+      ? new Blob([base64ToBuffer(content)], { type })
+      : new Blob([content], { type })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
@@ -182,7 +211,7 @@ export async function downloadFile(id: string): Promise<void> {
   if (isDevelopment) {
     const found = mockFiles.find(f => f.id === id)
     if (!found) throw new Error('File not found.')
-    triggerDownload(found.filename, found.mimetype, found.content)
+    triggerDownload(found.filename, found.mimetype, found.content, 'text')
     return
   }
 
@@ -190,8 +219,14 @@ export async function downloadFile(id: string): Promise<void> {
     fileName: string
     mimeType: string
     fileContent: string
+    encoding?: 'text' | 'base64'
   }
-  triggerDownload(data.fileName ?? 'download', data.mimeType ?? 'text/plain', data.fileContent ?? '')
+  triggerDownload(
+    data.fileName ?? 'download',
+    data.mimeType ?? 'text/plain',
+    data.fileContent ?? '',
+    data.encoding === 'base64' ? 'base64' : 'text',
+  )
 }
 
 /** Delete a file by id. */
