@@ -2,9 +2,11 @@
 
 This guide walks you through setting up and testing the **Server Logic** sample that integrates Power Pages with **Microsoft Graph** and **SharePoint Online**. 
 
+> **Related sample:** for a full **code site (SPA)** that calls SharePoint through server logic (a file manager UI + companion server-logic file), see [File Upload (SharePoint)](../../spa/snippets/file-upload/sharepoint/).
+
 ## Step 1: Download the sample package 
 
-1. Go to the GitHub repository [https://github.com/microsoft/power-pages-samples/server-logic/sharepoint-integration](https://github.com/microsoft/power-pages-samples/server-logic/sharepoint-integration). 
+1. Go to the GitHub repository [https://github.com/microsoft/power-pages-samples/tree/main/samples/server-logic/sharepoint-integration](https://github.com/microsoft/power-pages-samples/tree/main/samples/server-logic/sharepoint-integration). 
 1. Select **Code \> Download ZIP** (or use git clone if you prefer). 
 
 ```bash

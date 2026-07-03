@@ -31,7 +31,7 @@ This is a modern credit card web application for a fictitious bank with the foll
 
     ```powershell
     git clone https://github.com/microsoft/power-pages-samples
-    cd samples\spa\react\credit-cards-website\
+    cd samples/spa/apps/credit-cards-website/react/
     ```
 
 1. Install dependencies:
@@ -78,7 +78,7 @@ Below steps will help you run this app in Power Pages.
 
 1. Install [Microsoft Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction?tabs=windows#install-microsoft-power-platform-cli). (Version should be >= 1.47.1)
 1. Allow `*.js` files by removing it from `Blocked Attachments` in `Privacy + Security` settings for your environment from Power Pages Admin Center.
-1. Open a terminal and cd into `credit-cards-website` folder.
+1. Open a terminal and cd into `credit-cards-website/react` folder.
 1. Run `pac auth create --environment <Environment URL>` to login to your environment.
 1. Run `pac solution import --path .\solutions\CodeSiteSample_1_0_0_1_managed.zip` to import the sample managed solution in your environment.
 1. **CreditCard** and **CreditCardApplication** tables will be created after the solution is imported.
@@ -86,7 +86,7 @@ Below steps will help you run this app in Power Pages.
 
 ### Uploading site to Power Pages
 
-1. Open a terminal and cd into `credit-cards-website` folder.
+1. Open a terminal and cd into `credit-cards-website/react` folder.
 1. Run `npm run build` to build the code.
 1. Run `pac pages upload-code-site --rootPath .` to upload the site to Power Pages.
 1. Go to Power Pages home and click on **Inactive sites**.
