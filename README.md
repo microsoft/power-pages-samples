@@ -4,6 +4,8 @@ This repository contains sample code sites for Microsoft Power Pages. Use the ta
 
 Each sample includes its own README with setup steps, deployment notes, and a screenshot so you can preview the experience before running it locally.
 
+> **Reorganized July 2026.** The `samples/` folder moved from a framework-first to a category-first layout. If you followed an older link, see [MIGRATION.md](MIGRATION.md) for old → new paths.
+
 ## Samples at a glance
 
 Samples are organized under `samples/`:

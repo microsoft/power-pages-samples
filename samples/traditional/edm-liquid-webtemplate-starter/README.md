@@ -26,5 +26,8 @@ sample categories relate.
 
 ## Contributing this sample
 
-Picking this up? Follow the structure and README conventions of an existing
-sample and see [CONTRIBUTING.md](../../../CONTRIBUTING.md) for the layout rules.
+Want to build this? Please open (or find) a tracking issue in the repository's
+[issues](https://github.com/microsoft/power-pages-samples/issues) so the
+placeholder has an owner, then follow the structure and README conventions of an
+existing sample and see [CONTRIBUTING.md](../../../CONTRIBUTING.md) for the layout
+rules.
