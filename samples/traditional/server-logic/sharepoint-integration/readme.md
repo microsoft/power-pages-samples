@@ -4,12 +4,12 @@ This guide walks you through setting up and testing the **Server Logic** sample 
 
 ## Step 1: Download the sample package 
 
-1. Go to the GitHub repository [https://github.com/microsoft/power-pages-samples/server-logic/sharepoint-integration](https://github.com/microsoft/power-pages-samples/server-logic/sharepoint-integration). 
+1. Go to the GitHub repository [https://github.com/microsoft/power-pages-samples/tree/main/samples/traditional/server-logic/sharepoint-integration](https://github.com/microsoft/power-pages-samples/tree/main/samples/traditional/server-logic/sharepoint-integration). 
 1. Select **Code \> Download ZIP** (or use git clone if you prefer). 
 
 ```bash
 git clone https://github.com/microsoft/power-pages-samples
-cd samples/server-logic/sharepoint-integration/
+cd samples/traditional/server-logic/sharepoint-integration/
 ```
 Extract event-registration.zip. 
 

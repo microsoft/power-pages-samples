@@ -44,7 +44,7 @@ This sample demonstrates how to create a modern loan application portal with:
 ## Project Structure
 
 ```
-fluent-ui-sample/
+fluent-ui/
 ├── src/
 │   ├── components/
 │   │   ├── LoanApplicationForm.tsx    # Loan application form component
@@ -76,7 +76,7 @@ fluent-ui-sample/
 
 1. Navigate to the project directory:
    ```bash
-   cd samples/spa/react/fluent-ui-sample
+   cd samples/spa/snippets/fluent-ui
    ```
 
 2. Install dependencies:
@@ -193,12 +193,12 @@ Below steps will help you run this app in Power Pages.
 
 1. Install [Microsoft Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction?tabs=windows#install-microsoft-power-platform-cli). (Version should be >= 1.47.1)
 1. Allow `*.js` files by removing it from `Blocked Attachments` in `Privacy + Security` settings for your environment from Power Pages Admin Center.
-1. Open a terminal and cd into `fluent-ui-sample` folder.
+1. Open a terminal and cd into `fluent-ui` folder.
 1. Run `pac auth create --environment <Environment URL>` to login to your environment.
 
 ### Uploading site to Power Pages
 
-1. Open a terminal and cd into `fluent-ui-sample` folder.
+1. Open a terminal and cd into `fluent-ui` folder.
 1. Run `npm run build` to build the code.
 1. Run `pac pages upload-code-site --rootPath .` to upload the site to Power Pages.
 1. Go to Power Pages home and click on **Inactive sites**.

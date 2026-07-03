@@ -71,7 +71,7 @@ The build output is written to `dist`.
 ## Project structure
 
 ```text
-authentication-sample/
+authentication/
 ├── .powerpages-site/
 ├── src/
 │   ├── components/

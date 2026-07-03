@@ -31,7 +31,7 @@ This is a modern credit card web application for a fictitious bank with the foll
 
     ```powershell
     git clone https://github.com/microsoft/power-pages-samples
-    cd samples\spa\react\credit-cards-website\
+    cd samples/spa/apps/credit-cards-website/react/
     ```
 
 1. Install dependencies:

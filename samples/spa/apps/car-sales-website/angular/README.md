@@ -2,7 +2,7 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.29.
 
-This is an angular implementation of [car-sales-website](../../react/car-sales-website/) converted using GitHub Copilot.
+This is an angular implementation of [car-sales-website](../react/) converted using GitHub Copilot.
 
 This is a modern web application for managing car sales, inventory, and customer information.
 
@@ -20,7 +20,7 @@ Run `npm install -g @angular/cli` to install Angular CLI.
 
     ```bash
     git clone https://github.com/microsoft/power-pages-samples
-    cd samples/spa\angular\car-sales-website\
+    cd samples/spa/apps/car-sales-website/angular/
     ```
 
 1. Install dependencies:

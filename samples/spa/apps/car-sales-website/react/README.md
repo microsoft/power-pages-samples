@@ -25,7 +25,7 @@ This is a modern web application for managing car sales, inventory, and customer
 
     ```powershell
     git clone https://github.com/microsoft/power-pages-samples
-    cd samples/spa\react\car-sales-website\
+    cd samples/spa/apps/car-sales-website/react/
     ```
 
 1. Install dependencies:
