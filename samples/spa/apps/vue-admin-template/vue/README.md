@@ -23,7 +23,7 @@ The sample uses Vue 3 and Vite.
 
 ## Uploading to Power Pages
 
-1. Open a terminal and cd into `vue-admin-template` folder.
+1. Open a terminal and cd into `vue-admin-template/vue` folder.
 1. Run `npm run build` to build the code.
 1. Run `pac pages upload-code-site --rootPath .` to upload the site to Power Pages.
 

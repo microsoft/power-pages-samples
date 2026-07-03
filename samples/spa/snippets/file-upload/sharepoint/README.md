@@ -11,6 +11,8 @@ Two halves:
   — server-side JavaScript that holds an Entra app (client-credentials) and calls
   Microsoft Graph to do the SharePoint work.
 
+> **Related sample:** for a standalone server-logic + Microsoft Graph walkthrough (no SPA), see [server-logic/sharepoint-integration](../../../../server-logic/sharepoint-integration/).
+
 ## Why server logic (and not `/_api` or a cloud flow)?
 
 SharePoint can't be reached from a code site with the portal Web API (`/_api` is

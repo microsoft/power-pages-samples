@@ -10,7 +10,8 @@ Samples are organized under `samples/`:
 
 - **`spa/apps/`** — full, multi-feature reference applications.
 - **`spa/snippets/`** — small, single-topic samples that each teach one capability.
-- **`traditional/`** — non-code sites (Liquid / web templates) and server-side logic.
+- **`traditional/`** — non-code sites built with Liquid and web templates on the enhanced data model.
+- **`server-logic/`** — server-side JavaScript that runs on the Power Pages runtime, callable from both code sites and traditional sites.
 
 ### Full applications (`samples/spa/apps/`)
 
@@ -35,10 +36,27 @@ Samples are organized under `samples/`:
 | <img src="samples/spa/snippets/file-upload/sharepoint/screenshot.png" alt="SharePoint file upload sample screenshot" width="180" /> | [File Upload (SharePoint) Sample](samples/spa/snippets/file-upload/sharepoint/) | React + Vite | Upload, list, download, and delete files in a SharePoint document library, reached from a code site through server logic and Microsoft Graph. |
 | <img src="samples/spa/snippets/file-upload/azure-blob/screenshot.png" alt="Azure Blob file upload sample screenshot" width="180" /> | [File Upload (Azure Blob) Sample](samples/spa/snippets/file-upload/azure-blob/) | React + Vite | Upload, list, download, and delete files via the Web API, stored in your own Azure Blob container (chunked uploads, up to 10 GB). |
 
+### Traditional sites (`samples/traditional/`)
+
+Non-code sites built with Liquid and web templates on the enhanced data model.
+
+| Sample | Type | Use this sample to learn |
+| --- | --- | --- |
+| [EDM Liquid Web Template Starter](samples/traditional/edm-liquid-webtemplate-starter/) _(planned — placeholder)_ | Liquid + web template | Render Dataverse data on a traditional (non-code) site with a web template and Liquid on the enhanced data model. |
+
+### Server logic (`samples/server-logic/`)
+
+Server-side JavaScript that runs on the Power Pages runtime, callable from both code sites and traditional sites.
+
+| Sample | Integrates | Use this sample to learn |
+| --- | --- | --- |
+| [SharePoint Integration](samples/server-logic/sharepoint-integration/) | Microsoft Graph + SharePoint | Call Microsoft Graph and SharePoint Online from server logic using an Entra client-credentials app. Pairs with the [File Upload (SharePoint)](samples/spa/snippets/file-upload/sharepoint/) code-site sample. |
+
 ## Sample categories
 
 - [SPA Samples](samples/spa/) - code-site samples built with popular frontend frameworks and uploaded to Power Pages with the Power Platform CLI. Split into [full applications](samples/spa/apps/) and [single-topic snippets](samples/spa/snippets/).
-- [Traditional Samples](samples/traditional/) - non-code sites (Liquid / web templates) and [server-side logic](samples/traditional/server-logic/) that runs on the Power Pages runtime.
+- [Traditional Samples](samples/traditional/) - non-code sites built with Liquid and web templates on the enhanced data model.
+- [Server Logic Samples](samples/server-logic/) - server-side JavaScript that runs on the Power Pages runtime.
 
 ## Resources
 
