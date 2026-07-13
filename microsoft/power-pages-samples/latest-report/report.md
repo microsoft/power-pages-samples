@@ -1,5 +1,5 @@
 % Statistics for microsoft/power-pages-samples
-% Generated for [microsoft/power-pages-samples](https://github.com/microsoft/power-pages-samples) with [jgehrcke/github-repo-stats](https://github.com/jgehrcke/github-repo-stats) at 2026-07-13 15:36 UTC.
+% Generated for [microsoft/power-pages-samples](https://github.com/microsoft/power-pages-samples) with [jgehrcke/github-repo-stats](https://github.com/jgehrcke/github-repo-stats) at 2026-07-13 23:22 UTC.
 
 
 ## Views
@@ -79,7 +79,7 @@ respond slowly to change (narrow peaks are smoothed out).
 
 <div id="chart_referrers_top_n_alltime" class="full-width-chart"></div>
 
-Top 15 referrers: 01: `learn.microsoft.com`, 02: `linkedin.com`, 03: `Bing`, 04: `Google`, 05: `github.com`, 06: `com.linkedin.android`, 07: `statics.teams.cdn.office.net`, 08: `teams.public.onecdn.static.microsoft`, 09: `lnkd.in`, 10: `m365.cloud.microsoft`, 11: `search.brave.com`, 12: `chatgpt.com`, 13: `copilot.microsoft.com`, 14: `repos.opensource.microsoft.com`, 15: `DuckDuckGo`
+Top 15 referrers: 01: `learn.microsoft.com`, 02: `linkedin.com`, 03: `Bing`, 04: `Google`, 05: `github.com`, 06: `com.linkedin.android`, 07: `statics.teams.cdn.office.net`, 08: `teams.public.onecdn.static.microsoft`, 09: `lnkd.in`, 10: `chatgpt.com`, 11: `search.brave.com`, 12: `m365.cloud.microsoft`, 13: `copilot.microsoft.com`, 14: `Yahoo`, 15: `repos.opensource.microsoft.com`
 
 
 
