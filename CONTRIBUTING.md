@@ -37,3 +37,35 @@ Samples live under `samples/`, grouped by how they are delivered to Power Pages:
 **Server logic → `extensions/` graduation:** `server-logic/` is currently a top-level category because it is the only runtime-feature sample. When a **second, different** runtime-feature category is needed (for example a non-server-logic runtime extension), introduce a shared parent `extensions/` and move `server-logic/` under it (`extensions/server-logic/`) at that point — do not add the new feature as another top-level peer.
 
 When adding a sample, follow the structure and README conventions of an existing sample in the same category (README with setup steps, deployment notes, and a `screenshot.png`).
+
+## Contributing a template
+
+Templates live under `templates/`.
+They are installable starting points, not learning examples.
+Use `samples/` when the contribution teaches a technique, pattern, or API.
+Use `templates/` when the contribution is meant to be imported as a reusable Power Pages site.
+
+The template catalog is `templates/manifest.json`.
+Each entry must match `templates/schemas/templates-manifest.schema.json`.
+SPA templates use a flat folder path: `templates/spa/<id>/`.
+The folder name must match the manifest `id`, and the `id` must be stable kebab-case.
+Traditional templates are reserved under `templates/traditional/`.
+
+To contribute a template:
+
+1. Build the SPA code site.
+2. Export the Power Pages site solution zip.
+3. Capture real PNG preview images.
+4. Optionally author seed-data JSON files using this shape: `{ "entitySetName": "<plural entity set>", "records": [...] }`.
+5. Create `templates/spa/<id>/` with a `solution/` subfolder and, when screenshots are ready, a `previews/` subfolder.
+6. Append the template entry to `templates/manifest.json`.
+7. Run `node templates/scripts/validate-templates.js`.
+8. Open a pull request and follow the existing CLA bot instructions.
+
+Preview images listed in the manifest must be `.png` files.
+Do not list placeholder screenshots.
+If screenshots or seed data are not ready, leave `previewImages` empty or omit `seedDataPath`, then add a short README in the template folder that explains what is missing.
+
+The validator checks that referenced paths resolve under `templates/`, that the solution zip is real and contains `solution.xml`, and that the solution managed state is readable.
+Managed solution zips are reported as warnings by default because the Supplier Invoice Portal starter zip supplied for the initial catalog entry is managed.
+If a consuming pipeline requires unmanaged solutions, run `node templates/scripts/validate-templates.js --enforce-unmanaged` and replace managed zips with unmanaged exports before release.

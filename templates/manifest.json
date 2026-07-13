@@ -1,0 +1,27 @@
+{
+  "$schema": "./schemas/templates-manifest.schema.json",
+  "templates": [
+    {
+      "id": "supplier-invoice-portal",
+      "displayName": "Supplier Invoice Portal",
+      "description": "A Power Pages SPA template for supplier onboarding, purchase orders, invoice submission, invoice review, and invoice tracking.",
+      "kind": "spa",
+      "framework": "react",
+      "keywords": [
+        "supplier",
+        "invoice",
+        "portal",
+        "purchase-order",
+        "approval"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "previewImages": [],
+      "solutionPath": "spa/supplier-invoice-portal/solution/supplier-invoice-portal-managed.zip",
+      "templateVersion": "1.0.0.1",
+      "author": "Microsoft"
+    }
+  ]
+}
