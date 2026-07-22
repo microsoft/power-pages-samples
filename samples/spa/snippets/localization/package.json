@@ -36,6 +36,6 @@
   "overrides": {
     "esbuild": "0.28.1",
     "@babel/core": "7.29.6",
-    "js-yaml": "4.2.0"
+    "js-yaml": "4.3.0"
   }
 }
