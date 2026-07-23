@@ -1,7 +1,7 @@
 # Preview images
 
-PNG preview images for the Supplier Invoice Portal template belong in this folder.
+This folder contains PNG previews for the Supplier Invoice Portal template.
 
-No preview images were supplied with the initial solution zip.
-Do not add mock or placeholder screenshots to the manifest.
-Only list real `.png` files in `previewImages`.
+The deployed preview URL redirects to Microsoft sign-in.
+These images were captured from the solution-bundled SPA assets served locally with mock data.
+The local capture hides AI summary panels because those panels call tenant APIs that are unavailable in a static preview server.

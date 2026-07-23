@@ -18,7 +18,14 @@
         "makers",
         "developers"
       ],
-      "previewImages": [],
+      "previewImages": [
+        "spa/supplier-invoice-portal/previews/home.png",
+        "spa/supplier-invoice-portal/previews/dashboard.png",
+        "spa/supplier-invoice-portal/previews/list.png",
+        "spa/supplier-invoice-portal/previews/form.png",
+        "spa/supplier-invoice-portal/previews/purchase-orders.png",
+        "spa/supplier-invoice-portal/previews/review.png"
+      ],
       "solutionPath": "spa/supplier-invoice-portal/solution/supplier-invoice-portal-managed.zip",
       "templateVersion": "1.0.0.1",
       "author": "Microsoft"
