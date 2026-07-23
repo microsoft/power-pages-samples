@@ -1,0 +1,36 @@
+name: Template validation
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/templates-validation.yml"
+      - "templates/**"
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/templates-validation.yml"
+      - "templates/**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate templates catalog
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run template validator tests
+        run: node --test templates/scripts/validate-templates.test.js
+
+      - name: Validate templates manifest
+        run: node templates/scripts/validate-templates.js
