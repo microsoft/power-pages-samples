@@ -9,3 +9,5 @@ If a downstream release gate requires unmanaged template solutions, replace `sol
 Preview PNGs and seed data are not included yet.
 Add PNG screenshots under `previews/` and list them in `templates/manifest.json` when they are available.
 If seed data is needed, add a JSON file whose shape is `{ "entitySetName": "<plural entity set>", "records": [...] }` and set `seedDataPath`.
+Seed-data records can include `fileAttachments` for local files.
+Attachment `filePath` values are relative to the seed-data JSON file and must stay inside that seed-data folder.

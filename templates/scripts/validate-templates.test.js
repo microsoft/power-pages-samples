@@ -6,6 +6,7 @@ const os = require("node:os");
 const path = require("node:path");
 const zlib = require("node:zlib");
 const test = require("node:test");
+const { spawnSync } = require("node:child_process");
 
 const { validateTemplates } = require("./validate-templates");
 
@@ -85,6 +86,77 @@ test("rejects missing solution.xml, Git LFS pointers, non-PNG previews, and malf
 
   const lfsResult = validateTemplates({ root: lfsRoot });
   assert(lfsResult.errors.some((error) => error.includes("Git LFS pointer")));
+});
+
+
+test("accepts seed data records with file attachments inside the seed data folder", () => {
+  const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed/accounts.json",
+    seedData: {
+      entitySetName: "accounts",
+      records: [
+        {
+          name: "Contoso",
+          fileAttachments: [
+            {
+              columnName: "sample_contract",
+              filePath: "files/contract.pdf",
+              fileName: "contract.pdf",
+              mimeType: "application/pdf"
+            }
+          ]
+        }
+      ]
+    }
+  });
+
+  fs.mkdirSync(path.join(root, "spa/test-template/seed/files"), { recursive: true });
+  fs.writeFileSync(path.join(root, "spa/test-template/seed/files/contract.pdf"), "pdf");
+
+  const result = validateTemplates({ root });
+  assert.deepEqual(result.errors, []);
+});
+
+test("rejects malformed seed data file attachments", () => {
+  const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed/accounts.json",
+    seedData: {
+      entitySetName: "accounts",
+      records: [
+        {
+          name: "Contoso",
+          fileAttachments: [
+            {
+              columnName: "sample_contract",
+              filePath: "../outside.pdf"
+            },
+            {
+              columnName: "sample_contract",
+              filePath: "/tmp/absolute.pdf"
+            },
+            {
+              columnName: "",
+              filePath: "files/missing.pdf",
+              mimeType: ""
+            }
+          ]
+        }
+      ]
+    }
+  });
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("record[0].fileAttachments[0] filePath must stay inside")));
+  assert(result.errors.some((error) => error.includes("record[0].fileAttachments[1] filePath must be relative")));
+  assert(result.errors.some((error) => error.includes("record[0].fileAttachments[2] file does not exist")));
+  assert(result.errors.some((error) => error.includes("record[0].fileAttachments[2] columnName must be a non-empty string")));
+  assert(result.errors.some((error) => error.includes("record[0].fileAttachments[2] mimeType must be a non-empty string")));
+
+  const cliResult = spawnSync(process.execPath, [path.join(__dirname, "validate-templates.js"), "--root", root], {
+    encoding: "utf8"
+  });
+  assert.notEqual(cliResult.status, 0);
+  assert.match(cliResult.stderr, /filePath must be relative/);
 });
 
 function createTemplateRoot(options = {}) {

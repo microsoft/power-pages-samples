@@ -317,7 +317,89 @@ function validateSeedDataPath(template, label, root, result) {
 
   if (!Array.isArray(seedData.records)) {
     result.errors.push(`Template "${label}" seed data records must be an array.`);
+    return;
   }
+
+  validateSeedDataFileAttachments(seedData.records, path.dirname(seedDataPath), label, result);
+}
+
+function validateSeedDataFileAttachments(records, seedDataDirectory, label, result) {
+  records.forEach((record, recordIndex) => {
+    if (!record || typeof record !== "object" || Array.isArray(record) || !Object.hasOwn(record, "fileAttachments")) {
+      return;
+    }
+
+    const attachments = record.fileAttachments;
+    const recordLocation = `record[${recordIndex}].fileAttachments`;
+    if (!Array.isArray(attachments)) {
+      result.errors.push(`Template "${label}" seed data ${recordLocation} must be an array.`);
+      return;
+    }
+
+    attachments.forEach((attachment, attachmentIndex) => {
+      validateSeedDataFileAttachment(attachment, `${recordLocation}[${attachmentIndex}]`, seedDataDirectory, label, result);
+    });
+  });
+}
+
+function validateSeedDataFileAttachment(attachment, location, seedDataDirectory, label, result) {
+  if (!attachment || typeof attachment !== "object" || Array.isArray(attachment)) {
+    result.errors.push(`Template "${label}" seed data ${location} must be an object.`);
+    return;
+  }
+
+  validateRequiredAttachmentString(attachment, "columnName", location, label, result);
+  validateOptionalAttachmentString(attachment, "fileName", location, label, result);
+  validateOptionalAttachmentString(attachment, "mimeType", location, label, result);
+
+  if (!validateRequiredAttachmentString(attachment, "filePath", location, label, result)) {
+    return;
+  }
+
+  const attachmentPath = resolveSeedDataAttachmentPath(seedDataDirectory, attachment.filePath, location, label, result);
+  if (!attachmentPath) {
+    return;
+  }
+
+  if (!fileExists(attachmentPath)) {
+    result.errors.push(`Template "${label}" seed data ${location} file does not exist: ${attachment.filePath}`);
+    return;
+  }
+
+  const stats = fs.statSync(attachmentPath);
+  if (stats.size === 0) {
+    result.errors.push(`Template "${label}" seed data ${location} file is empty: ${attachment.filePath}`);
+  }
+}
+
+function validateRequiredAttachmentString(attachment, propertyName, location, label, result) {
+  if (typeof attachment[propertyName] !== "string" || attachment[propertyName].length === 0) {
+    result.errors.push(`Template "${label}" seed data ${location} ${propertyName} must be a non-empty string.`);
+    return false;
+  }
+
+  return true;
+}
+
+function validateOptionalAttachmentString(attachment, propertyName, location, label, result) {
+  if (Object.hasOwn(attachment, propertyName) && (typeof attachment[propertyName] !== "string" || attachment[propertyName].length === 0)) {
+    result.errors.push(`Template "${label}" seed data ${location} ${propertyName} must be a non-empty string.`);
+  }
+}
+
+function resolveSeedDataAttachmentPath(seedDataDirectory, relativePath, location, label, result) {
+  if (path.isAbsolute(relativePath)) {
+    result.errors.push(`Template "${label}" seed data ${location} filePath must be relative to the seed data file: ${relativePath}`);
+    return null;
+  }
+
+  const resolvedPath = path.resolve(seedDataDirectory, relativePath);
+  if (!resolvedPath.startsWith(`${seedDataDirectory}${path.sep}`)) {
+    result.errors.push(`Template "${label}" seed data ${location} filePath must stay inside the seed data folder: ${relativePath}`);
+    return null;
+  }
+
+  return resolvedPath;
 }
 
 function resolveTemplatePath(root, relativePath, label, result) {

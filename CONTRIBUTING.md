@@ -66,6 +66,30 @@ Preview images listed in the manifest must be `.png` files.
 Do not list placeholder screenshots.
 If screenshots or seed data are not ready, leave `previewImages` empty or omit `seedDataPath`, then add a short README in the template folder that explains what is missing.
 
-The validator checks that referenced paths resolve under `templates/`, that the solution zip is real and contains `solution.xml`, and that the solution managed state is readable.
+Seed data can attach local files to a record with an optional `fileAttachments` array.
+Each attachment must include `columnName` and `filePath`, and may include `fileName` and `mimeType`.
+The `filePath` is relative to the seed-data JSON file and must stay inside that seed-data folder.
+For example:
+
+```json
+{
+  "entitySetName": "accounts",
+  "records": [
+    {
+      "name": "Contoso",
+      "fileAttachments": [
+        {
+          "columnName": "sample_contract",
+          "filePath": "files/contract.pdf",
+          "fileName": "contract.pdf",
+          "mimeType": "application/pdf"
+        }
+      ]
+    }
+  ]
+}
+```
+
+The validator checks that referenced paths resolve under `templates/`, that seed-data file attachments exist, that the solution zip is real and contains `solution.xml`, and that the solution managed state is readable.
 Managed solution zips are reported as warnings by default because the Supplier Invoice Portal starter zip supplied for the initial catalog entry is managed.
 If a consuming pipeline requires unmanaged solutions, run `node templates/scripts/validate-templates.js --enforce-unmanaged` and replace managed zips with unmanaged exports before release.
