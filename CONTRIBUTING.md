@@ -49,7 +49,7 @@ The template catalog is `templates/manifest.json`.
 Each entry must match `templates/schemas/templates-manifest.schema.json`.
 SPA templates use a flat folder path: `templates/spa/<id>/`.
 The folder name must match the manifest `id`, and the `id` must be stable kebab-case.
-Traditional templates are reserved under `templates/traditional/`.
+Create `templates/traditional/` when the first traditional installable template ships.
 
 To contribute a template:
 

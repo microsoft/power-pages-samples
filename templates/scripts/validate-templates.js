@@ -185,7 +185,7 @@ function trackIdByKind(template, idsByKind) {
 }
 
 function validateTemplateFolders(root, idsByKind, result) {
-  for (const kind of VALID_KINDS) {
+  for (const kind of idsByKind.keys()) {
     const kindRoot = path.join(root, kind);
     if (!directoryExists(kindRoot)) {
       result.errors.push(`templates/${kind}/ must exist.`);
