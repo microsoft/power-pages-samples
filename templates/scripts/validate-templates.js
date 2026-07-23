@@ -311,6 +311,11 @@ function validateSeedDataPath(template, label, root, result) {
     return;
   }
 
+  if (isDataverseExportSeedData(seedData)) {
+    validateDataverseExportSeedData(seedData, path.dirname(seedDataPath), label, result);
+    return;
+  }
+
   if (typeof seedData.entitySetName !== "string" || seedData.entitySetName.length === 0) {
     result.errors.push(`Template "${label}" seed data must include a non-empty entitySetName.`);
   }
@@ -321,6 +326,93 @@ function validateSeedDataPath(template, label, root, result) {
   }
 
   validateSeedDataFileAttachments(seedData.records, path.dirname(seedDataPath), label, result);
+}
+
+function isDataverseExportSeedData(seedData) {
+  return seedData && typeof seedData === "object" && !Array.isArray(seedData) && Object.hasOwn(seedData, "tables");
+}
+
+function validateDataverseExportSeedData(seedData, seedDataDirectory, label, result) {
+  if (!seedData.tables || typeof seedData.tables !== "object" || Array.isArray(seedData.tables)) {
+    result.errors.push(`Template "${label}" Dataverse seed data tables must be an object.`);
+    return;
+  }
+
+  for (const [tableName, table] of Object.entries(seedData.tables)) {
+    validateDataverseSeedTable(tableName, table, label, result);
+  }
+
+  if (Object.hasOwn(seedData, "fileExports")) {
+    validateDataverseFileExports(seedData.fileExports, seedDataDirectory, label, result);
+  }
+}
+
+function validateDataverseSeedTable(tableName, table, label, result) {
+  const location = `table ${tableName}`;
+  if (!table || typeof table !== "object" || Array.isArray(table)) {
+    result.errors.push(`Template "${label}" Dataverse seed data ${location} must be an object.`);
+    return;
+  }
+
+  validateNonEmptyString(table.logicalName, `${location} logicalName`, label, result);
+  validateNonEmptyString(table.entitySet, `${location} entitySet`, label, result);
+
+  if (!Array.isArray(table.records)) {
+    result.errors.push(`Template "${label}" Dataverse seed data ${location} records must be an array.`);
+  }
+}
+
+function validateDataverseFileExports(fileExports, seedDataDirectory, label, result) {
+  if (!Array.isArray(fileExports)) {
+    result.errors.push(`Template "${label}" Dataverse seed data fileExports must be an array.`);
+    return;
+  }
+
+  fileExports.forEach((fileExport, index) => {
+    validateDataverseFileExport(fileExport, `fileExports[${index}]`, seedDataDirectory, label, result);
+  });
+}
+
+function validateDataverseFileExport(fileExport, location, seedDataDirectory, label, result) {
+  if (!fileExport || typeof fileExport !== "object" || Array.isArray(fileExport)) {
+    result.errors.push(`Template "${label}" Dataverse seed data ${location} must be an object.`);
+    return;
+  }
+
+  validateNonEmptyString(fileExport.attachmentId, `${location} attachmentId`, label, result);
+  validateNonEmptyString(fileExport.fileColumn, `${location} fileColumn`, label, result);
+  validateNonEmptyString(fileExport.fileName, `${location} fileName`, label, result);
+
+  if (Object.hasOwn(fileExport, "contentType")) {
+    validateNonEmptyString(fileExport.contentType, `${location} contentType`, label, result);
+  }
+
+  if (Object.hasOwn(fileExport, "size") && (!Number.isFinite(fileExport.size) || fileExport.size < 0)) {
+    result.errors.push(`Template "${label}" Dataverse seed data ${location} size must be a non-negative number.`);
+  }
+
+  if (!validateNonEmptyString(fileExport.path, `${location} path`, label, result)) {
+    return;
+  }
+
+  const filePath = resolveSeedDataFilePath(seedDataDirectory, fileExport.path, `${location} path`, label, result);
+  if (!filePath) {
+    return;
+  }
+
+  if (!fileExists(filePath)) {
+    result.errors.push(`Template "${label}" Dataverse seed data ${location} file does not exist: ${fileExport.path}`);
+    return;
+  }
+
+  const stats = fs.statSync(filePath);
+  if (stats.size === 0) {
+    result.errors.push(`Template "${label}" Dataverse seed data ${location} file is empty: ${fileExport.path}`);
+  }
+
+  if (Number.isFinite(fileExport.size) && fileExport.size !== stats.size) {
+    result.errors.push(`Template "${label}" Dataverse seed data ${location} size ${fileExport.size} does not match file size ${stats.size}: ${fileExport.path}`);
+  }
 }
 
 function validateSeedDataFileAttachments(records, seedDataDirectory, label, result) {
@@ -388,18 +480,31 @@ function validateOptionalAttachmentString(attachment, propertyName, location, la
 }
 
 function resolveSeedDataAttachmentPath(seedDataDirectory, relativePath, location, label, result) {
+  return resolveSeedDataFilePath(seedDataDirectory, relativePath, `${location} filePath`, label, result);
+}
+
+function resolveSeedDataFilePath(seedDataDirectory, relativePath, location, label, result) {
   if (path.isAbsolute(relativePath)) {
-    result.errors.push(`Template "${label}" seed data ${location} filePath must be relative to the seed data file: ${relativePath}`);
+    result.errors.push(`Template "${label}" seed data ${location} must be relative to the seed data file: ${relativePath}`);
     return null;
   }
 
   const resolvedPath = path.resolve(seedDataDirectory, relativePath);
   if (!resolvedPath.startsWith(`${seedDataDirectory}${path.sep}`)) {
-    result.errors.push(`Template "${label}" seed data ${location} filePath must stay inside the seed data folder: ${relativePath}`);
+    result.errors.push(`Template "${label}" seed data ${location} must stay inside the seed data folder: ${relativePath}`);
     return null;
   }
 
   return resolvedPath;
+}
+
+function validateNonEmptyString(value, location, label, result) {
+  if (typeof value !== "string" || value.length === 0) {
+    result.errors.push(`Template "${label}" Dataverse seed data ${location} must be a non-empty string.`);
+    return false;
+  }
+
+  return true;
 }
 
 function resolveTemplatePath(root, relativePath, label, result) {

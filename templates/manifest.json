@@ -27,6 +27,7 @@
         "spa/supplier-invoice-portal/previews/review.png"
       ],
       "solutionPath": "spa/supplier-invoice-portal/solution/supplier-invoice-portal-managed.zip",
+      "seedDataPath": "spa/supplier-invoice-portal/seed/data.json",
       "templateVersion": "1.0.0.1",
       "author": "Microsoft"
     }

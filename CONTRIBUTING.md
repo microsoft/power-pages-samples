@@ -66,7 +66,9 @@ Preview images listed in the manifest must be `.png` files.
 Do not list placeholder screenshots.
 If screenshots or seed data are not ready, leave `previewImages` empty or omit `seedDataPath`, then add a short README in the template folder that explains what is missing.
 
-Seed data can attach local files to a record with an optional `fileAttachments` array.
+Seed data can use either a simple single-entity shape or a Dataverse export shape.
+
+For a simple single-entity seed file, attach local files to a record with an optional `fileAttachments` array.
 Each attachment must include `columnName` and `filePath`, and may include `fileName` and `mimeType`.
 The `filePath` is relative to the seed-data JSON file and must stay inside that seed-data folder.
 For example:
@@ -85,6 +87,34 @@ For example:
           "mimeType": "application/pdf"
         }
       ]
+    }
+  ]
+}
+```
+
+For a Dataverse export seed file, use `tables` for entity data and `fileExports` for file-column binaries.
+Each `fileExports[].path` is relative to the seed-data JSON file and must stay inside that seed-data folder.
+For example:
+
+```json
+{
+  "schemaVersion": 1,
+  "tables": {
+    "accounts": {
+      "logicalName": "account",
+      "entitySet": "accounts",
+      "idColumn": "accountid",
+      "records": []
+    }
+  },
+  "fileExports": [
+    {
+      "attachmentId": "00000000-0000-0000-0000-000000000000",
+      "fileColumn": "sample_file",
+      "fileName": "contract.pdf",
+      "contentType": "application/pdf",
+      "size": 12345,
+      "path": "files/contract.pdf"
     }
   ]
 }

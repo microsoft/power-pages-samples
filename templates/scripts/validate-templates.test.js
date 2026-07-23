@@ -159,6 +159,96 @@ test("rejects malformed seed data file attachments", () => {
   assert.match(cliResult.stderr, /filePath must be relative/);
 });
 
+test("accepts Dataverse export seed data with fileExports", () => {
+  const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed/data.json",
+    seedData: {
+      schemaVersion: 1,
+      tables: {
+        accounts: {
+          logicalName: "account",
+          entitySet: "accounts",
+          idColumn: "accountid",
+          records: [
+            {
+              accountid: "00000000-0000-0000-0000-000000000001",
+              name: "Contoso"
+            }
+          ]
+        }
+      },
+      fileExports: [
+        {
+          attachmentId: "00000000-0000-0000-0000-000000000002",
+          fileColumn: "sample_file",
+          fileName: "contract.pdf",
+          contentType: "application/pdf",
+          size: 3,
+          path: "files/contract.pdf"
+        }
+      ]
+    }
+  });
+
+  fs.mkdirSync(path.join(root, "spa/test-template/seed/files"), { recursive: true });
+  fs.writeFileSync(path.join(root, "spa/test-template/seed/files/contract.pdf"), "pdf");
+
+  const result = validateTemplates({ root });
+  assert.deepEqual(result.errors, []);
+});
+
+test("rejects malformed Dataverse export seed data fileExports", () => {
+  const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed/data.json",
+    seedData: {
+      schemaVersion: 1,
+      tables: {
+        accounts: {
+          logicalName: "account",
+          entitySet: "accounts",
+          idColumn: "accountid",
+          records: []
+        },
+        badTable: {
+          logicalName: "",
+          entitySet: "",
+          records: {}
+        }
+      },
+      fileExports: [
+        {
+          attachmentId: "00000000-0000-0000-0000-000000000002",
+          fileColumn: "sample_file",
+          fileName: "contract.pdf",
+          contentType: "application/pdf",
+          size: 3,
+          path: "../contract.pdf"
+        },
+        {
+          attachmentId: "",
+          fileColumn: "",
+          fileName: "",
+          path: "/tmp/absolute.pdf"
+        },
+        {
+          attachmentId: "00000000-0000-0000-0000-000000000003",
+          fileColumn: "sample_file",
+          fileName: "missing.pdf",
+          path: "files/missing.pdf"
+        }
+      ]
+    }
+  });
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("table badTable logicalName must be a non-empty string")));
+  assert(result.errors.some((error) => error.includes("table badTable records must be an array")));
+  assert(result.errors.some((error) => error.includes("fileExports[0] path must stay inside")));
+  assert(result.errors.some((error) => error.includes("fileExports[1] path must be relative")));
+  assert(result.errors.some((error) => error.includes("fileExports[1] attachmentId must be a non-empty string")));
+  assert(result.errors.some((error) => error.includes("fileExports[2] file does not exist")));
+});
+
 function createTemplateRoot(options = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "template-validation-"));
   const id = options.id ?? "test-template";
