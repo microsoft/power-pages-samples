@@ -19,9 +19,6 @@ The validator detects the managed state from `solution.xml` during validation.
 | --- | --- |
 | ![Supplier Invoice Portal purchase orders](previews/purchase-orders.png) | ![Supplier Invoice Portal review queue](previews/review.png) |
 
-The deployed preview URL redirects to Microsoft sign-in, so these screenshots were captured from the supplied local site build at `~/Downloads/templates-work/supplier-invoice-portal/Site/supplier-invoice-portal`.
-The local capture hides the AI summary panels because they call tenant APIs that are unavailable in a static preview server.
-
 ## Use this template manually
 
 Use these steps if you want to install the template yourself instead of using an installer skill.
