@@ -26,21 +26,20 @@ Use these steps if you want to install the template yourself instead of using an
 1. Install the [Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction).
 2. Allow `*.js` files by removing it from `Blocked Attachments` in `Privacy + Security` settings for your environment from Power Pages Admin Center.
 3. Make sure English (LCID 1033) is installed in the target Dataverse environment.
-4. Make sure the target environment has Dataverse knowledge article support enabled.
-5. Sign in to the target environment:
+4. Sign in to the target environment:
 
    ```bash
    pac auth create --url https://YOUR-ENVIRONMENT.crm.dynamics.com
    ```
 
-6. Import the unmanaged solution from the repository root:
+5. Import the unmanaged solution from the repository root:
 
    ```bash
    pac solution import --path templates/spa/311-portal/solution/311-portal-unmanaged.zip --publish-changes
    ```
 
-7. Confirm the site and Dataverse tables were created in the target environment.
-8. Import `seed/data.json` after the solution import completes.
+6. Confirm the site and Dataverse tables were created in the target environment.
+7. Import `seed/data.json` after the solution import completes.
    The Power Platform CLI solution import command does not import this JSON file.
    Use an installer or a Dataverse import script that understands the seed-data shape below.
 
