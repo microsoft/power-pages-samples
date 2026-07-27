@@ -11,8 +11,6 @@ The schema for the catalog is [`schemas/templates-manifest.schema.json`](schemas
 
 - [SPA templates](spa/) - installable code-site templates built with frontend frameworks.
 
-Traditional templates will get their own folder when the first traditional installable template ships.
-
 ## Use a template
 
 1. Open the template folder.
