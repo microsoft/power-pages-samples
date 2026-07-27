@@ -19,9 +19,6 @@ The solution metadata lists a dependency on Dataverse knowledge articles through
 | --- |
 | ![311 Portal admin access page](previews/admin.png) |
 
-They were captured from the supplied local site build at `~/Downloads/templates-work/311-portal/Site/Zava 311 wo Node`.
-The service catalog and service detail pages were not used for previews because they need Dataverse data at runtime.
-
 ## Use this template manually
 
 Use these steps if you want to install the template yourself instead of using an installer skill.
