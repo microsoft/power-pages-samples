@@ -132,7 +132,7 @@ test("rejects malformed seed data file attachments", () => {
             },
             {
               columnName: "sample_contract",
-              filePath: "/tmp/absolute.pdf"
+              filePath: path.resolve("absolute.pdf")
             },
             {
               columnName: "",
@@ -228,7 +228,7 @@ test("rejects malformed Dataverse export seed data fileExports", () => {
           attachmentId: "",
           fileColumn: "",
           fileName: "",
-          path: "/tmp/absolute.pdf"
+          path: path.resolve("absolute.pdf")
         },
         {
           attachmentId: "00000000-0000-0000-0000-000000000003",
