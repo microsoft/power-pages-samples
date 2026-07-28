@@ -50,3 +50,19 @@ It does not include file exports.
 If you import the seed data without an installer, create or upsert records table by table using the order in `seed/data.json`.
 Preserve the IDs in each table because later records refer to earlier records by lookup ID.
 Do not use Dataverse's spreadsheet import for this file because it will not preserve lookup IDs.
+
+## Customize this template
+
+The solution includes the SPA source code, not just the compiled site assets.
+After you import the solution and identify the created Power Pages website ID, download the code site:
+
+```bash
+pac pages download-code-site --webSiteId <website-id> --path ./311-portal --overwrite
+```
+
+The downloaded folder includes the full React source code.
+Make your changes there, run the build command from the downloaded site's README or `package.json`, and upload the updated code site when you are ready:
+
+```bash
+pac pages upload-code-site --rootPath ./311-portal
+```
