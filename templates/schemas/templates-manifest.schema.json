@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/microsoft/power-pages-samples/templates/schemas/templates-manifest.schema.json",
+  "title": "Power Pages templates manifest",
+  "type": "object",
+  "required": [
+    "templates"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "templates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "displayName",
+          "description",
+          "kind",
+          "framework",
+          "keywords",
+          "audience",
+          "previewImages",
+          "solutionPath",
+          "templateVersion",
+          "author"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "spa",
+              "traditional"
+            ]
+          },
+          "framework": {
+            "type": "string",
+            "enum": [
+              "angular",
+              "react",
+              "vue",
+              "none",
+              "other"
+            ]
+          },
+          "keywords": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "audience": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "admins",
+                "developers",
+                "makers",
+                "partners"
+              ]
+            }
+          },
+          "previewImages": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^.+\\.png$"
+            }
+          },
+          "solutionPath": {
+            "type": "string",
+            "pattern": "^.+\\.zip$"
+          },
+          "seedDataPath": {
+            "type": "string",
+            "pattern": "^.+\\.json$"
+          },
+          "templateVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+(?:\\.\\d+)?$"
+          },
+          "author": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

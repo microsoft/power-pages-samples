@@ -1,0 +1,40 @@
+{
+  "skill_name": "release-power-pages-templates",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a draft GitHub release for the current templates catalog with tag templates-v1.0.0. Include a summary of what changed.",
+      "expected_output": "Validates the template catalog, builds factual release notes from templates/manifest.json and READMEs, creates an annotated tag, pushes it, and creates a draft GitHub release.",
+      "files": [],
+      "expectations": [
+        "Runs node templates/scripts/validate-templates.js before creating the tag",
+        "Checks whether the requested tag already exists locally or remotely",
+        "Uses an annotated tag",
+        "Creates a draft release when the user asks for a draft"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Prepare release notes for the installable templates but do not publish yet.",
+      "expected_output": "Produces release notes that list templates, solution zips, seed data, previews, prerequisites, and validation commands without creating a tag or release.",
+      "files": [],
+      "expectations": [
+        "Reads templates/manifest.json",
+        "Includes template IDs and display names",
+        "Mentions seed data and preview image paths",
+        "Does not create or push a tag when the user asks only for notes"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Release the templates with tag templates-v1.0.0, but that tag already exists on origin.",
+      "expected_output": "Stops and asks for a new tag instead of moving, deleting, or force-updating the existing tag.",
+      "files": [],
+      "expectations": [
+        "Checks the remote tag before creating a new one",
+        "Does not force-update an existing tag",
+        "Explains the blocker clearly"
+      ]
+    }
+  ]
+}

@@ -37,3 +37,89 @@ Samples live under `samples/`, grouped by how they are delivered to Power Pages:
 **Server logic → `extensions/` graduation:** `server-logic/` is currently a top-level category because it is the only runtime-feature sample. When a **second, different** runtime-feature category is needed (for example a non-server-logic runtime extension), introduce a shared parent `extensions/` and move `server-logic/` under it (`extensions/server-logic/`) at that point — do not add the new feature as another top-level peer.
 
 When adding a sample, follow the structure and README conventions of an existing sample in the same category (README with setup steps, deployment notes, and a `screenshot.png`).
+
+## Contributing a template
+
+Templates live under `templates/`.
+They are installable starting points, not learning examples.
+Use `samples/` when the contribution teaches a technique, pattern, or API.
+Use `templates/` when the contribution is meant to be imported as a reusable Power Pages site.
+
+The template catalog is `templates/manifest.json`.
+Each entry must match `templates/schemas/templates-manifest.schema.json`.
+SPA templates use a flat folder path: `templates/spa/<id>/`.
+The folder name must match the manifest `id`, and the `id` must be stable kebab-case.
+Create `templates/traditional/` when the first traditional installable template ships.
+
+To contribute a template:
+
+1. Build the SPA code site.
+2. Export the Power Pages site solution zip.
+3. Capture real PNG preview images.
+4. Optionally author seed-data JSON files using this shape: `{ "entitySetName": "<plural entity set>", "records": [...] }`.
+5. Create `templates/spa/<id>/` with a `solution/` subfolder and, when screenshots are ready, a `previews/` subfolder.
+6. Append the template entry to `templates/manifest.json`.
+7. Run `node templates/scripts/validate-templates.js`.
+8. Open a pull request and follow the existing CLA bot instructions.
+
+Preview images listed in the manifest must be `.png` files.
+Do not list placeholder screenshots.
+If screenshots or seed data are not ready, leave `previewImages` empty or omit `seedDataPath`, then add a short README in the template folder that explains what is missing.
+
+Seed data can use either a simple single-entity shape or a Dataverse export shape.
+
+For a simple single-entity seed file, attach local files to a record with an optional `fileAttachments` array.
+Each attachment must include `columnName` and `filePath`, and may include `fileName` and `mimeType`.
+The `filePath` is relative to the seed-data JSON file and must stay inside that seed-data folder.
+For example:
+
+```json
+{
+  "entitySetName": "accounts",
+  "records": [
+    {
+      "name": "Contoso",
+      "fileAttachments": [
+        {
+          "columnName": "sample_contract",
+          "filePath": "files/contract.pdf",
+          "fileName": "contract.pdf",
+          "mimeType": "application/pdf"
+        }
+      ]
+    }
+  ]
+}
+```
+
+For a Dataverse export seed file, use `tables` for entity data and `fileExports` for file-column binaries.
+Each `fileExports[].path` is relative to the seed-data JSON file and must stay inside that seed-data folder.
+For example:
+
+```json
+{
+  "schemaVersion": 1,
+  "tables": {
+    "accounts": {
+      "logicalName": "account",
+      "entitySet": "accounts",
+      "idColumn": "accountid",
+      "records": []
+    }
+  },
+  "fileExports": [
+    {
+      "attachmentId": "00000000-0000-0000-0000-000000000000",
+      "fileColumn": "sample_file",
+      "fileName": "contract.pdf",
+      "contentType": "application/pdf",
+      "size": 12345,
+      "path": "files/contract.pdf"
+    }
+  ]
+}
+```
+
+The validator checks that referenced paths resolve under `templates/`, that seed-data file attachments exist, that the solution zip is real and contains `solution.xml`, and that the solution managed state is readable.
+Managed solution zips are reported as warnings by default.
+If a consuming pipeline requires unmanaged solutions, run `node templates/scripts/validate-templates.js --enforce-unmanaged` and replace managed zips with unmanaged exports before release.
