@@ -1,0 +1,55 @@
+{
+  "skill_name": "add-power-pages-template",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have an unmanaged solution zip at ~/Downloads/ContosoGrantsPortal.zip exported from a Power Pages code site. Add it to this repo as a new template called Contoso Grants Portal.",
+      "expected_output": "Inspects the zip, confirms it is unmanaged and contains a site, adds the badge, scaffolds templates/spa/contoso-grants-portal/, captures previews, settles seed data with the user, writes the README and manifest entry, updates the index tables, and runs the validator.",
+      "files": [],
+      "expectations": [
+        "Runs scripts/inspect-solution-zip.js instead of unzipping the solution by hand",
+        "Asks the user about seed data rather than assuming",
+        "Adds the badge before the previews are captured",
+        "Adds a manifest entry whose paths are relative to templates/",
+        "Runs node templates/scripts/validate-templates.js at the end"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Add the attached solution zip as a template. It contains site source files as well as the built site.",
+      "expected_output": "Detects the powerpagessourcefiles entries in the zip and writes a Customize this template section in the template README with the pac pages download-code-site and upload-code-site round trip.",
+      "files": [],
+      "expectations": [
+        "Detects site source files from the zip rather than asking the user",
+        "Includes a Customize this template section in the template README",
+        "Documents the download-code-site and upload-code-site commands",
+        "Follows the README section order used by the existing templates"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Here is a managed solution zip for a new template. Please add it to templates/.",
+      "expected_output": "Stops and asks for an unmanaged export instead of committing the managed zip or routing around the validator warning.",
+      "files": [],
+      "expectations": [
+        "Detects the managed state from solution.xml",
+        "Explains why templates ship unmanaged",
+        "Does not commit the managed zip into templates/",
+        "Asks the user for an unmanaged export"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Add this solution as a template and generate seed data for it, I don't have any.",
+      "expected_output": "Builds the seed data from the tables declared in the solution zip, uses the Dataverse export shape with stable GUIDs and parent-before-child ordering, and validates that the file passes the template validator.",
+      "files": [],
+      "expectations": [
+        "Derives the table list from the solution zip rather than guessing",
+        "Uses the Dataverse export shape with tables and optional fileExports",
+        "Uses fictional data with no real tenant names or emails",
+        "Orders tables so lookups resolve to records defined earlier",
+        "Sets seedDataPath in the manifest entry"
+      ]
+    }
+  ]
+}

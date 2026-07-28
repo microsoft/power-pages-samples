@@ -1,0 +1,39 @@
+{
+  "skill_name": "add-power-pages-badge",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add a Built with Microsoft Power Pages badge to the React app in samples/spa/react/file-upload/notes.",
+      "expected_output": "Copies the SVG into the project, renders a fixed badge in the app shell using the project's own styling conventions, and validates with the project's build command.",
+      "files": [],
+      "expectations": [
+        "Copies the SVG into the target project instead of referencing the skill folder",
+        "Uses the exact label text Built with Microsoft Power Pages",
+        "Marks the logo decorative with alt empty and aria-hidden",
+        "Runs the project's existing build command to validate"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "This Power Pages code site needs the powered-by badge, but the badge keeps covering the chat widget on mobile.",
+      "expected_output": "Adds or repositions the badge so it does not block primary UI on small screens, following the host site's responsive conventions.",
+      "files": [],
+      "expectations": [
+        "Renders a single badge with a stable selector",
+        "Hides or repositions the badge on small screens",
+        "Does not cover navigation, toasts, or chat widgets"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Add the Power Pages badge to a code site that has a bundleFilePatterns list in powerpages.config.json.",
+      "expected_output": "Adds the badge and includes the emitted SVG asset in the deployment manifest so the badge image ships with the site.",
+      "files": [],
+      "expectations": [
+        "Adds the emitted SVG pattern to bundleFilePatterns",
+        "References the project-local SVG copy from the component",
+        "Validates the build so the emitted asset name is known"
+      ]
+    }
+  ]
+}

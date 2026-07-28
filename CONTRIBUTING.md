@@ -72,6 +72,9 @@ Add every LCID required by localized solution components.
 Put shared language requirements at the family level.
 Set `variants.<framework>.requiredDataverseLanguages` only when that framework variant differs from the family default.
 
+If you use an agent, the [`add-power-pages-template`](.agents/skills/add-power-pages-template/SKILL.md) skill walks through these steps and runs the validator for you.
+It also covers the parts that are easy to forget: adding the Power Pages badge before the solution is exported, and adding a "Customize this template" README section when the solution carries site source files.
+
 Preview images listed in the manifest must be `.png` files.
 Do not list placeholder screenshots.
 If screenshots or seed data are not ready, leave `previewImages` empty or omit `seedDataPath`, then add a short README in the template folder that explains what is missing.

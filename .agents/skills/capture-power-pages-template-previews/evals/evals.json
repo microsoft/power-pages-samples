@@ -1,0 +1,41 @@
+{
+  "skill_name": "capture-power-pages-template-previews",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Capture preview screenshots for templates/spa/supplier-invoice-portal from the local dev server at http://localhost:5173 and update templates/manifest.json.",
+      "expected_output": "PNG screenshots are saved under the template previews folder, manifest previewImages contains those paths, and the template validator is run.",
+      "files": [],
+      "expectations": [
+        "Uses browser automation rather than manual screenshots",
+        "Saves only real PNG files under templates/spa/supplier-invoice-portal/previews",
+        "Updates previewImages with paths relative to templates/",
+        "Runs node templates/scripts/validate-templates.js"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The template only has a deployed Power Pages URL and no local source. Capture catalog previews and avoid leaking tenant-specific data.",
+      "expected_output": "The workflow asks for or uses the deployed URL, captures safe PNG previews, checks for sensitive content, and documents blockers if pages cannot be reached.",
+      "files": [],
+      "expectations": [
+        "Uses the deployed site as the preview source when local source is unavailable",
+        "Checks screenshots for secrets, emails, tenant names, and other sensitive data",
+        "Does not invent screenshots for blocked pages",
+        "Documents capture blockers in the template README"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Refresh stale previews for a template where manifest paths point to missing files.",
+      "expected_output": "Missing or stale preview paths are removed or replaced with new PNG paths, and validation passes.",
+      "files": [],
+      "expectations": [
+        "Finds the template entry and matching folder",
+        "Removes stale previewImages entries when files do not exist",
+        "Adds only existing .png files",
+        "Runs the validator after manifest edits"
+      ]
+    }
+  ]
+}
