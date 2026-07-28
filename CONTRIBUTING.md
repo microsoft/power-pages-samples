@@ -121,5 +121,5 @@ For example:
 ```
 
 The validator checks that referenced paths resolve under `templates/`, that seed-data file attachments exist, that the solution zip is real and contains `solution.xml`, and that the solution managed state is readable.
-Managed solution zips are reported as warnings by default because the Supplier Invoice Portal starter zip supplied for the initial catalog entry is managed.
+Managed solution zips are reported as warnings by default.
 If a consuming pipeline requires unmanaged solutions, run `node templates/scripts/validate-templates.js --enforce-unmanaged` and replace managed zips with unmanaged exports before release.

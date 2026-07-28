@@ -149,7 +149,7 @@ function validateId(template, ids, root, result) {
   if (typeof template.kind === "string" && VALID_KINDS.has(template.kind)) {
     const expectedFolder = path.join(root, template.kind, id);
     if (!directoryExists(expectedFolder)) {
-      result.errors.push(`Template "${id}" must live in ${path.relative(root, expectedFolder)}.`);
+      result.errors.push(`Template "${id}" must live in ${template.kind}/${id}.`);
     }
   }
 }
