@@ -55,10 +55,10 @@ Do not use Dataverse's spreadsheet import for this file because it will not pres
 ## Customize this template
 
 The solution includes the SPA source code, not just the compiled site assets.
-After you import the solution and identify the created Power Pages website ID, download the code site:
+After you import the solution, download the code site:
 
 ```bash
-pac pages download-code-site --webSiteId <website-id> --path ./supplier-invoice-portal --overwrite
+pac pages download-code-site --webSiteId <website-id> --path <download-path> --overwrite
 ```
 
 The downloaded folder includes the full React source code.
