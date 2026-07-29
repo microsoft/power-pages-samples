@@ -60,6 +60,29 @@ test("rejects invalid ids and folder mismatches", () => {
   assert(result.errors.some((error) => error.includes("must live in spa/Bad_Id")));
 });
 
+test("rejects missing or invalid required Dataverse languages", () => {
+  const missingRoot = createTemplateRoot({
+    requiredDataverseLanguages: undefined
+  });
+
+  const missingResult = validateTemplates({ root: missingRoot });
+  assert(missingResult.errors.some((error) => error.includes("$.templates[0].requiredDataverseLanguages is required")));
+
+  const invalidRoot = createTemplateRoot({
+    requiredDataverseLanguages: [1033, "1036"]
+  });
+
+  const invalidResult = validateTemplates({ root: invalidRoot });
+  assert(invalidResult.errors.some((error) => error.includes("$.templates[0].requiredDataverseLanguages[1] must be integer")));
+
+  const nonPositiveRoot = createTemplateRoot({
+    requiredDataverseLanguages: [0]
+  });
+
+  const nonPositiveResult = validateTemplates({ root: nonPositiveRoot });
+  assert(nonPositiveResult.errors.some((error) => error.includes("$.templates[0].requiredDataverseLanguages[0] must be greater than or equal to 1")));
+});
+
 test("rejects missing solution.xml, Git LFS pointers, non-PNG previews, and malformed seed data", () => {
   const root = createTemplateRoot({
     solutionXml: null,
@@ -276,9 +299,14 @@ function createTemplateRoot(options = {}) {
     audience: ["developers"],
     previewImages: options.previewImages ?? [],
     solutionPath,
+    requiredDataverseLanguages: options.requiredDataverseLanguages ?? [1033],
     templateVersion: "1.0.0",
     author: "Test"
   };
+
+  if (Object.hasOwn(options, "requiredDataverseLanguages") && options.requiredDataverseLanguages === undefined) {
+    delete template.requiredDataverseLanguages;
+  }
 
   if (options.seedDataPath) {
     template.seedDataPath = options.seedDataPath;

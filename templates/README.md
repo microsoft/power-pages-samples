@@ -4,7 +4,7 @@ Templates are installable Power Pages starting points.
 They are different from `samples/`: templates are meant to be imported into an environment, while samples are learning examples that explain a pattern or capability.
 
 The central catalog is [`manifest.json`](manifest.json).
-Each entry points to a solution zip, preview images, and optional seed data.
+Each entry points to a solution zip, preview images, required Dataverse languages, and optional seed data.
 The schema for the catalog is [`schemas/templates-manifest.schema.json`](schemas/templates-manifest.schema.json).
 
 ## Template categories

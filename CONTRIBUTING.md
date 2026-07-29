@@ -62,6 +62,10 @@ To contribute a template:
 7. Run `node templates/scripts/validate-templates.js`.
 8. Open a pull request and follow the existing CLA bot instructions.
 
+Set `requiredDataverseLanguages` to the Dataverse language LCIDs the template needs before import.
+Use `[1033]` for templates that only require English (United States).
+Add every LCID required by localized solution components.
+
 Preview images listed in the manifest must be `.png` files.
 Do not list placeholder screenshots.
 If screenshots or seed data are not ready, leave `previewImages` empty or omit `seedDataPath`, then add a short README in the template folder that explains what is missing.
