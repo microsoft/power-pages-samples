@@ -27,6 +27,9 @@
       ],
       "solutionPath": "spa/311-portal/solution/311-portal-unmanaged.zip",
       "seedDataPath": "spa/311-portal/seed/data.json",
+      "requiredDataverseLanguages": [
+        1033
+      ],
       "templateVersion": "1.0.0.1",
       "author": "Microsoft"
     },
@@ -57,6 +60,9 @@
       ],
       "solutionPath": "spa/supplier-invoice-portal/solution/supplier-invoice-spa-portal-unmanaged.zip",
       "seedDataPath": "spa/supplier-invoice-portal/seed/data.json",
+      "requiredDataverseLanguages": [
+        1033
+      ],
       "templateVersion": "1.0.0.1",
       "author": "Microsoft"
     }

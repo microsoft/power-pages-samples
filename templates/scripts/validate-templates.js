@@ -81,6 +81,10 @@ function validateAgainstSchema(value, schema, location, result) {
     }
   }
 
+  if (typeof value === "number" && Number.isFinite(schema.minimum) && value < schema.minimum) {
+    result.errors.push(`${location} must be greater than or equal to ${schema.minimum}.`);
+  }
+
   if (Array.isArray(value)) {
     if (schema.minItems && value.length < schema.minItems) {
       result.errors.push(`${location} must contain at least ${schema.minItems} item(s).`);
@@ -122,6 +126,10 @@ function validateAgainstSchema(value, schema, location, result) {
 function matchesType(value, expectedType) {
   if (expectedType === "array") {
     return Array.isArray(value);
+  }
+
+  if (expectedType === "integer") {
+    return Number.isInteger(value);
   }
 
   if (expectedType === "object") {

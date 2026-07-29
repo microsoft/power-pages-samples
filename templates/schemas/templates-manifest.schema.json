@@ -26,6 +26,7 @@
           "audience",
           "previewImages",
           "solutionPath",
+          "requiredDataverseLanguages",
           "templateVersion",
           "author"
         ],
@@ -98,6 +99,15 @@
           "seedDataPath": {
             "type": "string",
             "pattern": "^.+\\.json$"
+          },
+          "requiredDataverseLanguages": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
           },
           "templateVersion": {
             "type": "string",
