@@ -21,14 +21,12 @@
           "displayName",
           "description",
           "kind",
-          "framework",
           "keywords",
           "audience",
           "previewImages",
-          "solutionPath",
           "requiredDataverseLanguages",
-          "templateVersion",
-          "author"
+          "author",
+          "variants"
         ],
         "additionalProperties": false,
         "properties": {
@@ -49,16 +47,6 @@
             "enum": [
               "spa",
               "traditional"
-            ]
-          },
-          "framework": {
-            "type": "string",
-            "enum": [
-              "angular",
-              "react",
-              "vue",
-              "none",
-              "other"
             ]
           },
           "keywords": {
@@ -92,10 +80,6 @@
               "pattern": "^.+\\.png$"
             }
           },
-          "solutionPath": {
-            "type": "string",
-            "pattern": "^.+\\.zip$"
-          },
           "seedDataPath": {
             "type": "string",
             "pattern": "^.+\\.json$"
@@ -109,13 +93,69 @@
               "minimum": 1
             }
           },
-          "templateVersion": {
-            "type": "string",
-            "pattern": "^\\d+\\.\\d+\\.\\d+(?:\\.\\d+)?$"
-          },
           "author": {
             "type": "string",
             "minLength": 1
+          },
+          "variants": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": false,
+            "properties": {
+              "angular": {
+                "$ref": "#/$defs/templateVariant"
+              },
+              "astro": {
+                "$ref": "#/$defs/templateVariant"
+              },
+              "react": {
+                "$ref": "#/$defs/templateVariant"
+              },
+              "vue": {
+                "$ref": "#/$defs/templateVariant"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "templateVariant": {
+      "type": "object",
+      "required": [
+        "templateVersion",
+        "solutionPath"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "templateVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(?:\\.\\d+)?$"
+        },
+        "solutionPath": {
+          "type": "string",
+          "pattern": "^.+\\.zip$"
+        },
+        "previewImages": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^.+\\.png$"
+          }
+        },
+        "seedDataPath": {
+          "type": "string",
+          "pattern": "^.+\\.json$"
+        },
+        "requiredDataverseLanguages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1
           }
         }
       }

@@ -32,22 +32,22 @@ Use these steps if you want to install the template yourself instead of using an
    pac auth create --url https://YOUR-ENVIRONMENT.crm.dynamics.com
    ```
 
-5. Import the unmanaged solution from the repository root:
+5. Import the React variant's unmanaged solution from the repository root:
 
    ```bash
-   pac solution import --path templates/spa/311-portal/solution/311-portal-unmanaged.zip --publish-changes
+   pac solution import --path templates/spa/311-portal/variants/react/solution/311-portal-unmanaged.zip --publish-changes
    ```
 
 6. Confirm the site and Dataverse tables were created in the target environment.
-7. Import `seed/data.json` after the solution import completes.
+7. Import `seed-data/data.json` after the solution import completes.
    The Power Platform CLI solution import command does not import this JSON file.
    Use an installer or a Dataverse import script that understands the seed-data shape below.
 
-Seed data is included under `seed/`.
+Seed data is included under `seed-data/`.
 The seed data uses a Dataverse export shape with `tables`.
 It does not include file exports.
 
-If you import the seed data without an installer, create or upsert records table by table using the order in `seed/data.json`.
+If you import the seed data without an installer, create or upsert records table by table using the order in `seed-data/data.json`.
 Preserve the IDs in each table because later records refer to earlier records by lookup ID.
 Do not use Dataverse's spreadsheet import for this file because it will not preserve lookup IDs.
 

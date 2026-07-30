@@ -6,7 +6,6 @@
       "displayName": "311 Portal",
       "description": "A Power Pages SPA template for citizen service requests, request tracking, city service maps, knowledge articles, and 311 contact flows.",
       "kind": "spa",
-      "framework": "react",
       "keywords": [
         "311",
         "citizen-services",
@@ -25,20 +24,23 @@
         "spa/311-portal/previews/contact.png",
         "spa/311-portal/previews/admin.png"
       ],
-      "solutionPath": "spa/311-portal/solution/311-portal-unmanaged.zip",
-      "seedDataPath": "spa/311-portal/seed/data.json",
+      "seedDataPath": "spa/311-portal/seed-data/data.json",
       "requiredDataverseLanguages": [
         1033
       ],
-      "templateVersion": "1.0.0.1",
-      "author": "Microsoft"
+      "author": "Microsoft",
+      "variants": {
+        "react": {
+          "templateVersion": "1.0.0.1",
+          "solutionPath": "spa/311-portal/variants/react/solution/311-portal-unmanaged.zip"
+        }
+      }
     },
     {
       "id": "supplier-invoice-portal",
       "displayName": "Supplier Invoice Portal",
       "description": "A Power Pages SPA template for supplier onboarding, purchase orders, invoice submission, invoice review, and invoice tracking.",
       "kind": "spa",
-      "framework": "react",
       "keywords": [
         "supplier",
         "invoice",
@@ -58,13 +60,17 @@
         "spa/supplier-invoice-portal/previews/purchase-orders.png",
         "spa/supplier-invoice-portal/previews/review.png"
       ],
-      "solutionPath": "spa/supplier-invoice-portal/solution/supplier-invoice-spa-portal-unmanaged.zip",
-      "seedDataPath": "spa/supplier-invoice-portal/seed/data.json",
+      "seedDataPath": "spa/supplier-invoice-portal/seed-data/data.json",
       "requiredDataverseLanguages": [
         1033
       ],
-      "templateVersion": "1.0.0.1",
-      "author": "Microsoft"
+      "author": "Microsoft",
+      "variants": {
+        "react": {
+          "templateVersion": "1.0.0.1",
+          "solutionPath": "spa/supplier-invoice-portal/variants/react/solution/supplier-invoice-spa-portal-unmanaged.zip"
+        }
+      }
     }
   ]
 }

@@ -7,7 +7,7 @@ const path = require("node:path");
 const zlib = require("node:zlib");
 
 const VALID_KINDS = new Set(["spa", "traditional"]);
-const VALID_FRAMEWORKS = new Set(["angular", "react", "vue", "none", "other"]);
+const VALID_FRAMEWORKS = new Set(["angular", "astro", "react", "vue"]);
 const VALID_AUDIENCES = new Set(["admins", "developers", "makers", "partners"]);
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const LFS_POINTER_PREFIX = "version https://git-lfs.github.com/spec/v1";
@@ -61,7 +61,16 @@ function readJsonFile(filePath, label, result) {
   }
 }
 
-function validateAgainstSchema(value, schema, location, result) {
+function validateAgainstSchema(value, schema, location, result, rootSchema = schema) {
+  if (schema.$ref) {
+    const ref = schema.$ref;
+    schema = resolveSchemaRef(rootSchema, ref);
+    if (!schema) {
+      result.errors.push(`${location} references unsupported schema ${ref}.`);
+      return;
+    }
+  }
+
   if (schema.type && !matchesType(value, schema.type)) {
     result.errors.push(`${location} must be ${schema.type}.`);
     return;
@@ -95,11 +104,15 @@ function validateAgainstSchema(value, schema, location, result) {
     }
 
     if (schema.items) {
-      value.forEach((item, index) => validateAgainstSchema(item, schema.items, `${location}[${index}]`, result));
+      value.forEach((item, index) => validateAgainstSchema(item, schema.items, `${location}[${index}]`, result, rootSchema));
     }
   }
 
   if (value && typeof value === "object" && !Array.isArray(value)) {
+    if (schema.minProperties && Object.keys(value).length < schema.minProperties) {
+      result.errors.push(`${location} must contain at least ${schema.minProperties} property/properties.`);
+    }
+
     const properties = schema.properties ?? {};
     for (const requiredProperty of schema.required ?? []) {
       if (!Object.hasOwn(value, requiredProperty)) {
@@ -117,10 +130,28 @@ function validateAgainstSchema(value, schema, location, result) {
 
     for (const [propertyName, propertySchema] of Object.entries(properties)) {
       if (Object.hasOwn(value, propertyName)) {
-        validateAgainstSchema(value[propertyName], propertySchema, `${location}.${propertyName}`, result);
+        validateAgainstSchema(value[propertyName], propertySchema, `${location}.${propertyName}`, result, rootSchema);
       }
     }
   }
+}
+
+function resolveSchemaRef(rootSchema, ref) {
+  if (!ref.startsWith("#/")) {
+    return null;
+  }
+
+  return ref
+    .slice(2)
+    .split("/")
+    .reduce((current, segment) => {
+      if (!current || typeof current !== "object") {
+        return null;
+      }
+
+      const propertyName = segment.replace(/~1/g, "/").replace(/~0/g, "~");
+      return current[propertyName] ?? null;
+    }, rootSchema);
 }
 
 function matchesType(value, expectedType) {
@@ -167,10 +198,6 @@ function validateEnums(template, label, result) {
     result.errors.push(`Template "${label}" has unsupported kind "${template.kind}".`);
   }
 
-  if (typeof template.framework === "string" && !VALID_FRAMEWORKS.has(template.framework)) {
-    result.errors.push(`Template "${label}" has unsupported framework "${template.framework}".`);
-  }
-
   if (Array.isArray(template.audience)) {
     for (const audience of template.audience) {
       if (typeof audience === "string" && !VALID_AUDIENCES.has(audience)) {
@@ -214,58 +241,103 @@ function validateTemplateFolders(root, idsByKind, result) {
 }
 
 function validateReferencedPaths(template, label, root, enforceUnmanaged, result) {
-  validateSolutionPath(template, label, root, enforceUnmanaged, result);
-
-  if (Array.isArray(template.previewImages)) {
-    for (const previewImagePath of template.previewImages) {
-      if (typeof previewImagePath !== "string") {
-        continue;
-      }
-
-      if (path.extname(previewImagePath) !== ".png") {
-        result.errors.push(`Template "${label}" preview image must be a .png: ${previewImagePath}`);
-      }
-
-      const fullPreviewPath = resolveTemplatePath(root, previewImagePath, label, result);
-      if (!fullPreviewPath) {
-        continue;
-      }
-
-      if (!fileExists(fullPreviewPath)) {
-        result.errors.push(`Template "${label}" preview image does not exist: ${previewImagePath}`);
-      }
-    }
-  }
+  const familyBase = getFamilyBasePath(template);
+  validatePreviewImages(template.previewImages, label, root, `${familyBase}/previews`, "previewImages", result);
 
   if (typeof template.seedDataPath === "string") {
-    validateSeedDataPath(template, label, root, result);
+    validateSeedDataPath(template.seedDataPath, label, root, `${familyBase}/seed-data`, "seedDataPath", result);
   }
-}
 
-function validateSolutionPath(template, label, root, enforceUnmanaged, result) {
-  if (typeof template.solutionPath !== "string") {
+  if (!template.variants || typeof template.variants !== "object" || Array.isArray(template.variants)) {
     return;
   }
 
-  const solutionPath = resolveTemplatePath(root, template.solutionPath, label, result);
+  for (const [framework, variant] of Object.entries(template.variants)) {
+    if (!VALID_FRAMEWORKS.has(framework)) {
+      result.errors.push(`Template "${label}" has unsupported framework variant "${framework}".`);
+      continue;
+    }
+
+    if (!variant || typeof variant !== "object" || Array.isArray(variant)) {
+      continue;
+    }
+
+    validateVariantPaths(template, framework, variant, label, root, enforceUnmanaged, result);
+  }
+}
+
+function getFamilyBasePath(template) {
+  if (typeof template.kind !== "string" || typeof template.id !== "string") {
+    return "";
+  }
+
+  return `${template.kind}/${template.id}`;
+}
+
+function validateVariantPaths(template, framework, variant, label, root, enforceUnmanaged, result) {
+  const variantBase = `${getFamilyBasePath(template)}/variants/${framework}`;
+  validateSolutionPath(variant.solutionPath, label, root, `${variantBase}/solution`, `variant "${framework}" solutionPath`, enforceUnmanaged, result);
+  validatePreviewImages(variant.previewImages, label, root, `${variantBase}/previews`, `variant "${framework}" previewImages`, result);
+
+  if (typeof variant.seedDataPath === "string") {
+    validateSeedDataPath(variant.seedDataPath, label, root, `${variantBase}/seed-data`, `variant "${framework}" seedDataPath`, result);
+  }
+}
+
+function validatePreviewImages(previewImages, label, root, expectedDirectory, location, result) {
+  if (!Array.isArray(previewImages)) {
+    return;
+  }
+
+  previewImages.forEach((previewImagePath, index) => {
+    if (typeof previewImagePath !== "string") {
+      return;
+    }
+
+    if (path.extname(previewImagePath) !== ".png") {
+      const previewLocation = location === "previewImages" ? "preview image" : `${location} image`;
+      result.errors.push(`Template "${label}" ${previewLocation} must be a .png: ${previewImagePath}`);
+    }
+
+    const fullPreviewPath = resolveTemplatePath(root, previewImagePath, label, result);
+    if (!fullPreviewPath) {
+      return;
+    }
+
+    validatePathUnder(root, fullPreviewPath, expectedDirectory, label, `${location}[${index}]`, result);
+
+    if (!fileExists(fullPreviewPath)) {
+      result.errors.push(`Template "${label}" preview image does not exist: ${previewImagePath}`);
+    }
+  });
+}
+
+function validateSolutionPath(solutionPathValue, label, root, expectedDirectory, location, enforceUnmanaged, result) {
+  if (typeof solutionPathValue !== "string") {
+    return;
+  }
+
+  const solutionPath = resolveTemplatePath(root, solutionPathValue, label, result);
   if (!solutionPath) {
     return;
   }
 
+  validatePathUnder(root, solutionPath, expectedDirectory, label, location, result);
+
   if (!fileExists(solutionPath)) {
-    result.errors.push(`Template "${label}" solutionPath does not exist: ${template.solutionPath}`);
+    result.errors.push(`Template "${label}" solutionPath does not exist: ${solutionPathValue}`);
     return;
   }
 
   const stats = fs.statSync(solutionPath);
   if (stats.size === 0) {
-    result.errors.push(`Template "${label}" solutionPath is empty: ${template.solutionPath}`);
+    result.errors.push(`Template "${label}" solutionPath is empty: ${solutionPathValue}`);
     return;
   }
 
   const head = readFilePrefix(solutionPath, LFS_POINTER_PREFIX.length);
   if (head.startsWith(LFS_POINTER_PREFIX)) {
-    result.errors.push(`Template "${label}" solutionPath is a Git LFS pointer, not a zip: ${template.solutionPath}`);
+    result.errors.push(`Template "${label}" solutionPath is a Git LFS pointer, not a zip: ${solutionPathValue}`);
     return;
   }
 
@@ -298,14 +370,16 @@ function validateSolutionPath(template, label, root, enforceUnmanaged, result) {
   }
 }
 
-function validateSeedDataPath(template, label, root, result) {
-  const seedDataPath = resolveTemplatePath(root, template.seedDataPath, label, result);
+function validateSeedDataPath(seedDataPathValue, label, root, expectedDirectory, location, result) {
+  const seedDataPath = resolveTemplatePath(root, seedDataPathValue, label, result);
   if (!seedDataPath) {
     return;
   }
 
+  validatePathUnder(root, seedDataPath, expectedDirectory, label, location, result);
+
   if (!fileExists(seedDataPath)) {
-    result.errors.push(`Template "${label}" seedDataPath does not exist: ${template.seedDataPath}`);
+    result.errors.push(`Template "${label}" seedDataPath does not exist: ${seedDataPathValue}`);
     return;
   }
 
@@ -498,7 +572,7 @@ function resolveSeedDataFilePath(seedDataDirectory, relativePath, location, labe
   }
 
   const resolvedPath = path.resolve(seedDataDirectory, relativePath);
-  if (!resolvedPath.startsWith(`${seedDataDirectory}${path.sep}`)) {
+  if (!isPathInsideOrEqual(seedDataDirectory, resolvedPath) || resolvedPath === seedDataDirectory) {
     result.errors.push(`Template "${label}" seed data ${location} must stay inside the seed data folder: ${relativePath}`);
     return null;
   }
@@ -517,12 +591,28 @@ function validateNonEmptyString(value, location, label, result) {
 
 function resolveTemplatePath(root, relativePath, label, result) {
   const resolvedPath = path.resolve(root, relativePath);
-  if (!resolvedPath.startsWith(`${root}${path.sep}`) && resolvedPath !== root) {
+  if (!isPathInsideOrEqual(root, resolvedPath)) {
     result.errors.push(`Template "${label}" referenced path escapes templates/: ${relativePath}`);
     return null;
   }
 
   return resolvedPath;
+}
+
+function validatePathUnder(root, fullPath, expectedDirectory, label, location, result) {
+  if (!expectedDirectory) {
+    return;
+  }
+
+  const expectedFullDirectory = path.resolve(root, expectedDirectory);
+  if (!isPathInsideOrEqual(expectedFullDirectory, fullPath) || fullPath === expectedFullDirectory) {
+    result.errors.push(`Template "${label}" ${location} must live in ${expectedDirectory}/.`);
+  }
+}
+
+function isPathInsideOrEqual(parentPath, candidatePath) {
+  const relativePath = path.relative(parentPath, candidatePath);
+  return relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath));
 }
 
 function readFilePrefix(filePath, length) {
