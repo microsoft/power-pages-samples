@@ -4,7 +4,9 @@ Templates are installable Power Pages starting points.
 They are different from `samples/`: templates are meant to be imported into an environment, while samples are learning examples that explain a pattern or capability.
 
 The central catalog is [`manifest.json`](manifest.json).
-Each entry points to a solution zip, preview images, required Dataverse languages, and optional seed data.
+Each entry is a template family with one or more framework variants.
+The family defines shared metadata, preview images, required Dataverse languages, and optional seed data.
+Each variant defines its own solution zip and template version.
 The schema for the catalog is [`schemas/templates-manifest.schema.json`](schemas/templates-manifest.schema.json).
 
 ## Template categories
@@ -14,8 +16,9 @@ The schema for the catalog is [`schemas/templates-manifest.schema.json`](schemas
 ## Use a template
 
 1. Open the template folder.
-1. Follow the template README to import its unmanaged solution zip.
-1. Import the seed data separately when the template includes `seed/data.json`.
+1. Choose the framework variant you want to install.
+1. Follow the template README to import that variant's unmanaged solution zip.
+1. Import the seed data separately when the template includes `seed-data/data.json`.
 1. Review any template-specific prerequisites, such as Dataverse features or Power Pages Admin Center settings.
 
 The Power Platform CLI solution import command imports the solution zip only.

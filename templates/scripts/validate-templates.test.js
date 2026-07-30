@@ -10,11 +10,11 @@ const { spawnSync } = require("node:child_process");
 
 const { validateTemplates } = require("./validate-templates");
 
-test("accepts a valid unmanaged template fixture", () => {
+test("accepts a valid unmanaged template family fixture", () => {
   const root = createTemplateRoot({
     solutionXml: "<ImportExportXml><SolutionManifest><Managed>0</Managed></SolutionManifest></ImportExportXml>",
     previewImages: ["spa/test-template/previews/home.png"],
-    seedDataPath: "spa/test-template/seed/accounts.json",
+    seedDataPath: "spa/test-template/seed-data/accounts.json",
     seedData: {
       entitySetName: "accounts",
       records: [
@@ -30,6 +30,47 @@ test("accepts a valid unmanaged template fixture", () => {
   const result = validateTemplates({ root });
   assert.deepEqual(result.errors, []);
   assert.deepEqual(result.warnings, []);
+});
+
+test("accepts variant-specific overrides when they are needed", () => {
+  const root = createTemplateRoot({
+    variantOverrides: {
+      previewImages: ["spa/test-template/variants/react/previews/home-react.png"],
+      seedDataPath: "spa/test-template/variants/react/seed-data/accounts.json",
+      requiredDataverseLanguages: [1033, 1036]
+    },
+    variantSeedData: {
+      entitySetName: "accounts",
+      records: [
+        {
+          name: "Contoso React"
+        }
+      ]
+    }
+  });
+
+  fs.mkdirSync(path.join(root, "spa/test-template/variants/react/previews"), { recursive: true });
+  fs.mkdirSync(path.join(root, "spa/test-template/variants/react/seed-data"), { recursive: true });
+  fs.writeFileSync(path.join(root, "spa/test-template/variants/react/previews/home-react.png"), "png");
+
+  const result = validateTemplates({ root });
+  assert.deepEqual(result.errors, []);
+  assert.deepEqual(result.warnings, []);
+});
+
+test("rejects flat template package fields at the family level", () => {
+  const root = createTemplateRoot({
+    familyExtras: {
+      framework: "react",
+      solutionPath: "spa/test-template/solution/template.zip",
+      templateVersion: "1.0.0"
+    }
+  });
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("$.templates[0].framework is not allowed")));
+  assert(result.errors.some((error) => error.includes("$.templates[0].solutionPath is not allowed")));
+  assert(result.errors.some((error) => error.includes("$.templates[0].templateVersion is not allowed")));
 });
 
 test("reports managed solution zips and can enforce unmanaged-only policy", () => {
@@ -51,7 +92,7 @@ test("rejects invalid ids and folder mismatches", () => {
   const root = createTemplateRoot({
     id: "Bad_Id",
     folderId: "different-folder",
-    solutionPath: "spa/different-folder/solution/template.zip",
+    solutionPath: "spa/different-folder/variants/react/solution/template.zip",
     solutionXml: "<ImportExportXml><SolutionManifest><Managed>0</Managed></SolutionManifest></ImportExportXml>"
   });
 
@@ -87,7 +128,7 @@ test("rejects missing solution.xml, Git LFS pointers, non-PNG previews, and malf
   const root = createTemplateRoot({
     solutionXml: null,
     previewImages: ["spa/test-template/previews/home.jpg"],
-    seedDataPath: "spa/test-template/seed/accounts.json",
+    seedDataPath: "spa/test-template/seed-data/accounts.json",
     seedData: {
       entitySetName: "accounts"
     }
@@ -103,7 +144,7 @@ test("rejects missing solution.xml, Git LFS pointers, non-PNG previews, and malf
     solutionXml: "<ImportExportXml><SolutionManifest><Managed>0</Managed></SolutionManifest></ImportExportXml>"
   });
   fs.writeFileSync(
-    path.join(lfsRoot, "spa/test-template/solution/template.zip"),
+    path.join(lfsRoot, "spa/test-template/variants/react/solution/template.zip"),
     "version https://git-lfs.github.com/spec/v1\noid sha256:abc\nsize 123\n"
   );
 
@@ -114,7 +155,7 @@ test("rejects missing solution.xml, Git LFS pointers, non-PNG previews, and malf
 
 test("accepts seed data records with file attachments inside the seed data folder", () => {
   const root = createTemplateRoot({
-    seedDataPath: "spa/test-template/seed/accounts.json",
+    seedDataPath: "spa/test-template/seed-data/accounts.json",
     seedData: {
       entitySetName: "accounts",
       records: [
@@ -133,8 +174,8 @@ test("accepts seed data records with file attachments inside the seed data folde
     }
   });
 
-  fs.mkdirSync(path.join(root, "spa/test-template/seed/files"), { recursive: true });
-  fs.writeFileSync(path.join(root, "spa/test-template/seed/files/contract.pdf"), "pdf");
+  fs.mkdirSync(path.join(root, "spa/test-template/seed-data/files"), { recursive: true });
+  fs.writeFileSync(path.join(root, "spa/test-template/seed-data/files/contract.pdf"), "pdf");
 
   const result = validateTemplates({ root });
   assert.deepEqual(result.errors, []);
@@ -142,7 +183,7 @@ test("accepts seed data records with file attachments inside the seed data folde
 
 test("rejects malformed seed data file attachments", () => {
   const root = createTemplateRoot({
-    seedDataPath: "spa/test-template/seed/accounts.json",
+    seedDataPath: "spa/test-template/seed-data/accounts.json",
     seedData: {
       entitySetName: "accounts",
       records: [
@@ -184,7 +225,7 @@ test("rejects malformed seed data file attachments", () => {
 
 test("accepts Dataverse export seed data with fileExports", () => {
   const root = createTemplateRoot({
-    seedDataPath: "spa/test-template/seed/data.json",
+    seedDataPath: "spa/test-template/seed-data/data.json",
     seedData: {
       schemaVersion: 1,
       tables: {
@@ -213,8 +254,8 @@ test("accepts Dataverse export seed data with fileExports", () => {
     }
   });
 
-  fs.mkdirSync(path.join(root, "spa/test-template/seed/files"), { recursive: true });
-  fs.writeFileSync(path.join(root, "spa/test-template/seed/files/contract.pdf"), "pdf");
+  fs.mkdirSync(path.join(root, "spa/test-template/seed-data/files"), { recursive: true });
+  fs.writeFileSync(path.join(root, "spa/test-template/seed-data/files/contract.pdf"), "pdf");
 
   const result = validateTemplates({ root });
   assert.deepEqual(result.errors, []);
@@ -222,7 +263,7 @@ test("accepts Dataverse export seed data with fileExports", () => {
 
 test("rejects malformed Dataverse export seed data fileExports", () => {
   const root = createTemplateRoot({
-    seedDataPath: "spa/test-template/seed/data.json",
+    seedDataPath: "spa/test-template/seed-data/data.json",
     seedData: {
       schemaVersion: 1,
       tables: {
@@ -272,17 +313,39 @@ test("rejects malformed Dataverse export seed data fileExports", () => {
   assert(result.errors.some((error) => error.includes("fileExports[2] file does not exist")));
 });
 
+test("rejects variant package paths outside their framework layout", () => {
+  const root = createTemplateRoot({
+    solutionPath: "spa/test-template/solution/template.zip",
+    variantOverrides: {
+      previewImages: ["spa/test-template/previews/react-home.png"],
+      seedDataPath: "spa/test-template/seed-data/react-accounts.json"
+    },
+    variantSeedData: {
+      entitySetName: "accounts",
+      records: []
+    }
+  });
+
+  fs.writeFileSync(path.join(root, "spa/test-template/previews/react-home.png"), "png");
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("variant \"react\" solutionPath must live in spa/test-template/variants/react/solution/")));
+  assert(result.errors.some((error) => error.includes("variant \"react\" previewImages[0] must live in spa/test-template/variants/react/previews/")));
+  assert(result.errors.some((error) => error.includes("variant \"react\" seedDataPath must live in spa/test-template/variants/react/seed-data/")));
+});
+
 function createTemplateRoot(options = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "template-validation-"));
   const id = options.id ?? "test-template";
   const folderId = options.folderId ?? id;
-  const solutionPath = options.solutionPath ?? `spa/${folderId}/solution/template.zip`;
+  const framework = options.framework ?? "react";
+  const solutionPath = options.solutionPath ?? `spa/${folderId}/variants/${framework}/solution/template.zip`;
   const templateFolder = path.join(root, "spa", folderId);
   fs.mkdirSync(path.join(root, "schemas"), { recursive: true });
   fs.mkdirSync(path.join(root, "traditional"), { recursive: true });
-  fs.mkdirSync(path.join(templateFolder, "solution"), { recursive: true });
+  fs.mkdirSync(path.join(templateFolder, "variants", framework, "solution"), { recursive: true });
   fs.mkdirSync(path.join(templateFolder, "previews"), { recursive: true });
-  fs.mkdirSync(path.join(templateFolder, "seed"), { recursive: true });
+  fs.mkdirSync(path.join(templateFolder, "seed-data"), { recursive: true });
 
   fs.copyFileSync(
     path.join(__dirname, "..", "schemas", "templates-manifest.schema.json"),
@@ -294,14 +357,19 @@ function createTemplateRoot(options = {}) {
     displayName: "Test Template",
     description: "Fixture template for validator tests.",
     kind: "spa",
-    framework: "react",
     keywords: ["test"],
     audience: ["developers"],
     previewImages: options.previewImages ?? [],
-    solutionPath,
     requiredDataverseLanguages: options.requiredDataverseLanguages ?? [1033],
-    templateVersion: "1.0.0",
-    author: "Test"
+    author: "Test",
+    variants: {
+      [framework]: {
+        templateVersion: "1.0.0",
+        solutionPath,
+        ...(options.variantOverrides ?? {})
+      }
+    },
+    ...(options.familyExtras ?? {})
   };
 
   if (Object.hasOwn(options, "requiredDataverseLanguages") && options.requiredDataverseLanguages === undefined) {
@@ -310,10 +378,20 @@ function createTemplateRoot(options = {}) {
 
   if (options.seedDataPath) {
     template.seedDataPath = options.seedDataPath;
+    fs.mkdirSync(path.dirname(path.join(root, options.seedDataPath)), { recursive: true });
     fs.writeFileSync(path.join(root, options.seedDataPath), JSON.stringify(options.seedData ?? {}, null, 2));
   }
 
+  if (options.variantOverrides?.seedDataPath) {
+    fs.mkdirSync(path.dirname(path.join(root, options.variantOverrides.seedDataPath)), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, options.variantOverrides.seedDataPath),
+      JSON.stringify(options.variantSeedData ?? {}, null, 2)
+    );
+  }
+
   fs.writeFileSync(path.join(root, "manifest.json"), JSON.stringify({ templates: [template] }, null, 2));
+  fs.mkdirSync(path.dirname(path.join(root, solutionPath)), { recursive: true });
   writeZip(path.join(root, solutionPath), options.solutionXml === undefined ? defaultSolutionXml() : options.solutionXml);
   return root;
 }
