@@ -122,6 +122,11 @@ const createResultRaw = await Server.Connector.Dataverse.CreateRecord(ENTITY_SET
 
 ## Step 6: Test
 
+The custom **Request a callback** form presents the CAPTCHA challenge before the
+submission is accepted:
+
+![Custom callback form showing the reCAPTCHA challenge](./media/callback-form-captcha.png)
+
 1. Browse to the **Request a callback** page.
 2. The **Submit** button stays disabled until you solve the CAPTCHA.
 3. Fill in **Full name** and **Phone number** (Email and Best time to call are
