@@ -131,19 +131,3 @@ const createResultRaw = await Server.Connector.Dataverse.CreateRecord(ENTITY_SET
 5. To see failure handling, let the CAPTCHA expire (wait, or use the widget's
    reset) and submit — the client blocks the request and prompts you to complete
    the CAPTCHA again.
-
-## Security notes
-
-* **Server-side verification.** The CAPTCHA token is verified in server logic, not
-  in the browser, so the check cannot be skipped by editing client code.
-* **Secret stays server-side.** The secret key is stored as an environment variable
-  and only read by the server logic. Only the public site key reaches the browser.
-* **No internal details leaked.** Dataverse or CRM errors are written to
-  `Server.Logger` and the client receives a generic message, so stack traces are
-  never exposed to end users.
-* **Least-privilege access.** The bundled table permission grants the Anonymous
-  Users role only **Create** on the Callback Request table — it does not need read,
-  update, or delete for this form.
-* **Defense in depth.** A CAPTCHA reduces automated spam but is not a complete
-  anti-abuse solution; combine it with rate limiting and monitoring for
-  high-traffic public forms.
