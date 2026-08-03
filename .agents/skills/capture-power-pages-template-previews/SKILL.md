@@ -11,6 +11,9 @@ Capture real PNG previews for an installable Power Pages template and wire them 
 
 Find the template entry in `templates/manifest.json` and the matching folder under `templates/spa/<id>/` or `templates/traditional/<id>/`.
 
+Each manifest entry is a template family with one or more framework variants under `variants`.
+The previews you capture describe the family, so note which variant you are capturing from and whether the family already has previews you would be replacing.
+
 Decide where the screenshots should come from:
 
 - Prefer a running local app when the template source can be run locally.
@@ -71,6 +74,10 @@ Completion criterion: each screenshot is safe to commit and represents the templ
 ## Step 5: Update the template contract
 
 Add each preview path to the template's `previewImages` array in `templates/manifest.json`.
+
+Previews belong to the template family, so they normally go in the family-level `previewImages` and live under `templates/<kind>/<id>/previews/`.
+Every framework variant of a family renders the same UI, so add `variants.<framework>.previewImages` only when that variant genuinely looks different, and put those files under `variants/<framework>/previews/`.
+The validator checks each path against the folder it belongs to, so a family preview listed under a variant fails even when the file exists.
 
 Paths are relative to `templates/`, for example:
 

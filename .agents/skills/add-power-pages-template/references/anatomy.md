@@ -5,29 +5,47 @@ Read this when writing the folder, the README, the manifest entry, or the seed d
 
 ## Contents
 
+- [Families and variants](#families-and-variants)
 - [Folder layout](#folder-layout)
 - [Manifest entry](#manifest-entry)
 - [README structure](#readme-structure)
 - [Seed data shapes](#seed-data-shapes)
 - [What the validator enforces](#what-the-validator-enforces)
 
+## Families and variants
+
+A **family** is one scenario, such as `311-portal`.
+It owns the metadata a catalog visitor reads: display name, description, keywords, audience, previews, required languages, and seed data.
+
+A **variant** is one framework build of that scenario, such as `react`.
+It owns the things that differ per build: the solution zip and its `templateVersion`.
+
+A family needs at least one variant, and a variant's framework is the key it is stored under: `react`, `vue`, `angular`, or `astro`.
+
+Previews, seed data, and required languages are declared once at the family level and can be overridden per variant.
+Override only when a variant genuinely differs.
+Duplicating identical previews across variants adds weight to the repository without helping anyone choose a template.
+
 ## Folder layout
 
 ```
 templates/
-├── manifest.json                     catalog, one entry per template
+├── manifest.json                     catalog, one entry per family
 ├── schemas/templates-manifest.schema.json
 ├── scripts/validate-templates.js     validator run by CI
 ├── <kind>/README.md                  index table for that kind
 └── <kind>/<id>/
     ├── README.md
-    ├── solution/<name>-unmanaged.zip
-    ├── previews/
+    ├── previews/                     shared across variants
     │   ├── README.md
     │   └── *.png
-    └── seed/                         optional
-        ├── data.json
-        └── files/                    only when file columns are seeded
+    ├── seed-data/                    optional, shared across variants
+    │   ├── data.json
+    │   └── files/                    only when file columns are seeded
+    └── variants/<framework>/
+        ├── solution/<name>-unmanaged.zip
+        ├── previews/                 optional, only when this variant differs
+        └── seed-data/                optional, only when this variant differs
 ```
 
 `<kind>` is `spa` or `traditional`.
@@ -40,46 +58,65 @@ Create it when the first traditional template ships.
 
 ```json
 {
-  "id": "supplier-invoice-portal",
-  "displayName": "Supplier Invoice Portal",
-  "description": "A Power Pages SPA template for supplier onboarding, purchase orders, invoice submission, invoice review, and invoice tracking.",
+  "id": "311-portal",
+  "displayName": "311 Portal",
+  "description": "A Power Pages SPA template for citizen service requests, request tracking, city service maps, knowledge articles, and 311 contact flows.",
   "kind": "spa",
-  "framework": "react",
-  "keywords": ["supplier", "invoice", "portal", "purchase-order", "approval"],
+  "keywords": ["311", "citizen-services", "service-requests"],
   "audience": ["makers", "developers"],
   "previewImages": [
-    "spa/supplier-invoice-portal/previews/home.png",
-    "spa/supplier-invoice-portal/previews/list.png"
+    "spa/311-portal/previews/home.png",
+    "spa/311-portal/previews/map.png"
   ],
-  "solutionPath": "spa/supplier-invoice-portal/solution/supplier-invoice-spa-portal-unmanaged.zip",
-  "seedDataPath": "spa/supplier-invoice-portal/seed/data.json",
-  "templateVersion": "1.0.0.1",
-  "author": "Microsoft"
+  "seedDataPath": "spa/311-portal/seed-data/data.json",
+  "requiredDataverseLanguages": [1033],
+  "author": "Microsoft",
+  "variants": {
+    "react": {
+      "templateVersion": "1.0.0.2",
+      "solutionPath": "spa/311-portal/variants/react/solution/311-portal-unmanaged.zip"
+    }
+  }
 }
 ```
 
-Field rules:
+### Family fields
 
 | Field | Rule | Enforced by |
 | --- | --- | --- |
-| `id` | kebab-case | schema |
+| `id` | kebab-case | schema and validator |
 | `id` | unique, and matches the folder name under `<kind>/` | validator |
 | `displayName`, `description`, `author` | required, non-empty | schema |
 | `kind` | `spa` or `traditional` | schema |
-| `framework` | `angular`, `react`, `vue`, `none`, or `other` | schema |
 | `keywords` | at least one, no duplicates | schema |
 | `audience` | at least one of `admins`, `developers`, `makers`, `partners` | schema |
 | `previewImages` | `.png` paths, no duplicates | schema |
-| `previewImages` | each path resolves to a committed file under `templates/` | validator |
-| `solutionPath` | `.zip` path | schema |
-| `solutionPath` | resolves to a real, non-empty zip containing `solution.xml` | validator |
+| `previewImages` | each resolves to a committed file under `<kind>/<id>/previews/` | validator |
 | `seedDataPath` | `.json` path, omit when unused | schema |
-| `templateVersion` | `1.0.0` or `1.0.0.1` | schema |
+| `seedDataPath` | resolves under `<kind>/<id>/seed-data/` | validator |
+| `requiredDataverseLanguages` | required, at least one positive integer LCID, no duplicates | schema |
+| `variants` | required, at least one entry | schema |
+| `variants` keys | `angular`, `astro`, `react`, or `vue` | schema and validator |
 
-All fields except `seedDataPath` are required.
-No other properties are allowed.
-Paths are relative to `templates/`.
-Order the preview images the way you want them read: the first one is the thumbnail used in index tables.
+Every family field except `seedDataPath` is required.
+There is no top-level `framework`, `solutionPath`, or `templateVersion`. Those moved into the variants.
+
+### Variant fields
+
+| Field | Rule | Enforced by |
+| --- | --- | --- |
+| `templateVersion` | required, three or four dot-separated numbers, such as `1.0.0` or `1.0.0.2` | schema |
+| `solutionPath` | required, `.zip` path | schema |
+| `solutionPath` | resolves to a real, non-empty zip containing `solution.xml`, under `<kind>/<id>/variants/<framework>/solution/` | validator |
+| `solutionPath` | points at an unmanaged export | validator warns by default, errors under `--enforce-unmanaged` |
+| `previewImages` | optional override, `.png` paths | schema |
+| `previewImages` | resolve under `variants/<framework>/previews/` | validator |
+| `seedDataPath` | optional override, `.json` path | schema |
+| `seedDataPath` | resolves under `variants/<framework>/seed-data/` | validator |
+| `requiredDataverseLanguages` | optional override, same rules as the family field | schema |
+
+No other properties are allowed at either level.
+All paths are relative to `templates/`, and the validator checks each one against the folder it is supposed to live in, so a file in the wrong folder fails even when it exists.
 
 ## README structure
 
@@ -100,8 +137,8 @@ and any dependency the solution metadata declares.>
 ## Use this template manually
 
 <Numbered steps: install pac, unblock *.js in Power Pages Admin Center,
-confirm English LCID 1033, pac auth create, pac solution import,
-verify, then import seed data.>
+confirm the required Dataverse languages, pac auth create,
+pac solution import for a named variant, verify, then import seed data.>
 
 <Prose about the seed data shape, where files live, and why Dataverse
 spreadsheet import will not work for it.>
@@ -116,7 +153,9 @@ Notes on individual sections:
 
 **Previews.** Two per row reads well. Use alt text that describes the page, not the file name.
 
-**Use this template manually.** These steps exist because the Power Platform CLI imports the solution zip but not the seed JSON, and because `*.js` is blocked by default in Power Pages environments. Both trip people up, so both are called out every time.
+**Use this template manually.** These steps exist because the Power Platform CLI imports the solution zip but not the seed JSON, because `*.js` is blocked by default in Power Pages environments, and because a missing Dataverse language fails the import. All three trip people up, so all three are called out every time.
+
+Name the variant in the import step, the way the 311 Portal README says "Import the React variant's unmanaged solution". Once a family has two variants, "the solution" is ambiguous.
 
 **Customize this template.** Include only when the zip has files under `powerpagessourcefiles/`. The point of the section is that the import carries the app source, so a person can round-trip it:
 
@@ -166,7 +205,7 @@ Use this for anything with more than one table, or with file columns.
 Table keys are friendly names you choose.
 `logicalName` and `entitySet` are required per table and must be non-empty.
 
-`fileExports[].size` must match the real byte size of the file on disk, and `path` is relative to `data.json` and must stay inside the seed folder.
+`fileExports[].size` must match the real byte size of the file on disk, and `path` is relative to `data.json` and must stay inside the seed-data folder.
 Prefixing file names with the attachment id keeps them unique when two records attach files with the same name.
 
 Order matters: `tables` is read top to bottom, so parents come before the children that look them up.
@@ -200,13 +239,15 @@ Use this only when the template seeds one table and needs nothing else.
 
 `node templates/scripts/validate-templates.js` fails on:
 
-- A manifest entry that breaks the schema, including unknown properties.
+- A manifest entry that breaks the schema, including unknown properties at the family or variant level.
 - A folder under `templates/<kind>/` with no manifest entry, and the reverse.
+- A variant key that is not `angular`, `astro`, `react`, or `vue`.
+- A path that resolves outside the folder it belongs to, such as a solution zip that is not under `variants/<framework>/solution/`.
 - A `previewImages` path that is not a `.png` or does not exist.
 - A `solutionPath` that is missing, empty, a Git LFS pointer, not a real zip, or has no `solution.xml`.
 - A `solution.xml` with no readable `<Managed>` value.
 - Seed data that is not an object, or a table entry missing `logicalName`, `entitySet`, or a `records` array.
-- A seed file reference that does not exist, is empty, escapes the seed folder, or whose declared `size` disagrees with the file on disk.
+- A seed file reference that does not exist, is empty, escapes the seed-data folder, or whose declared `size` disagrees with the file on disk.
 - Any referenced path that escapes `templates/`.
 
 Managed solutions are a warning by default and an error under `--enforce-unmanaged`.

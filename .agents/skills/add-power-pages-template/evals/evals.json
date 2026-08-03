@@ -3,19 +3,35 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "I have an unmanaged solution zip at ~/Downloads/ContosoGrantsPortal.zip exported from a Power Pages code site. Add it to this repo as a new template called Contoso Grants Portal.",
-      "expected_output": "Inspects the zip, confirms it is unmanaged and contains a site, adds the badge, scaffolds templates/spa/contoso-grants-portal/, captures previews, settles seed data with the user, writes the README and manifest entry, updates the index tables, and runs the validator.",
+      "prompt": "I have an unmanaged solution zip at ~/Downloads/ContosoGrantsPortal.zip exported from a React Power Pages code site. Add it to this repo as a new template called Contoso Grants Portal.",
+      "expected_output": "Inspects the zip, confirms it is unmanaged and contains a site, adds the badge, scaffolds templates/spa/contoso-grants-portal/ with the zip under variants/react/solution/, captures previews, settles seed data with the user, writes the README and family manifest entry, updates the index tables, and runs the validator.",
       "files": [],
       "expectations": [
         "Runs scripts/inspect-solution-zip.js instead of unzipping the solution by hand",
+        "Puts the solution zip under variants/react/solution/ rather than a flat solution/ folder",
+        "Writes a family manifest entry with a variants object rather than a top-level framework and solutionPath",
+        "Sets requiredDataverseLanguages from the languages reported by the inspector",
         "Asks the user about seed data rather than assuming",
         "Adds the badge before the previews are captured",
-        "Adds a manifest entry whose paths are relative to templates/",
         "Runs node templates/scripts/validate-templates.js at the end"
       ]
     },
     {
       "id": 2,
+      "prompt": "We now have a Vue build of the 311 Portal. Here is its unmanaged solution zip. Add it to the catalog.",
+      "expected_output": "Recognises 311-portal as an existing family, adds only the vue variant under variants.vue with its own templateVersion and solutionPath, reuses the family previews and seed data, updates the READMEs, and validates.",
+      "files": [],
+      "expectations": [
+        "Detects that the 311-portal family already exists in templates/manifest.json",
+        "Adds a variants.vue entry rather than a second top-level template entry",
+        "Places the zip under templates/spa/311-portal/variants/vue/solution/",
+        "Does not duplicate the family preview images under the variant",
+        "Leaves the existing react variant and family metadata unchanged",
+        "Updates the Variants column in templates/spa/README.md"
+      ]
+    },
+    {
+      "id": 3,
       "prompt": "Add the attached solution zip as a template. It contains site source files as well as the built site.",
       "expected_output": "Detects the powerpagessourcefiles entries in the zip and writes a Customize this template section in the template README with the pac pages download-code-site and upload-code-site round trip.",
       "files": [],
@@ -23,11 +39,12 @@
         "Detects site source files from the zip rather than asking the user",
         "Includes a Customize this template section in the template README",
         "Documents the download-code-site and upload-code-site commands",
+        "Names the framework variant in the solution import step",
         "Follows the README section order used by the existing templates"
       ]
     },
     {
-      "id": 3,
+      "id": 4,
       "prompt": "Here is a managed solution zip for a new template. Please add it to templates/.",
       "expected_output": "Stops and asks for an unmanaged export instead of committing the managed zip or routing around the validator warning.",
       "files": [],
@@ -39,16 +56,18 @@
       ]
     },
     {
-      "id": 4,
+      "id": 5,
       "prompt": "Add this solution as a template and generate seed data for it, I don't have any.",
-      "expected_output": "Builds the seed data from the tables declared in the solution zip, uses the Dataverse export shape with stable GUIDs and parent-before-child ordering, and validates that the file passes the template validator.",
+      "expected_output": "Builds the seed data from the tables declared in the solution zip, uses the Dataverse export shape with stable GUIDs and parent-before-child ordering, places it in the family seed-data folder, and validates.",
       "files": [],
       "expectations": [
         "Derives the table list from the solution zip rather than guessing",
+        "Reads entity set names and the primarykey column from customizations.xml",
         "Uses the Dataverse export shape with tables and optional fileExports",
+        "Writes the file to the family seed-data/ folder, not seed/",
         "Uses fictional data with no real tenant names or emails",
         "Orders tables so lookups resolve to records defined earlier",
-        "Sets seedDataPath in the manifest entry"
+        "Sets seedDataPath in the family manifest entry"
       ]
     }
   ]

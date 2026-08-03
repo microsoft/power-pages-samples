@@ -46,15 +46,17 @@ Write release notes from the template catalog and git diff, not from memory alon
 
 Include:
 
-- Template IDs and display names.
-- Solution zip paths.
+- Template family IDs and display names.
+- The framework variants each family ships, with each variant's `templateVersion` and solution zip path.
 - Seed data paths, if present.
 - Preview image paths.
+- Required Dataverse languages, since a missing language blocks the import.
 - Any known prerequisites from template READMEs.
 - Validation commands run.
 
 Keep the summary factual.
 Mention known caveats such as Dataverse dependencies, seed import requirements, or file-column seed data.
+A variant whose `templateVersion` changed since the last release is the most useful thing in the notes, so call those out rather than listing every family unchanged.
 
 Completion criterion: the notes explain what ships, how to validate it, and any setup caveats a user needs before installing.
 

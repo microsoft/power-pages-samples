@@ -67,9 +67,11 @@ function main() {
 
   let entries;
   let solutionXml;
+  let customizationsXml;
   try {
     entries = readZipEntries(buffer);
     solutionXml = readEntryText(buffer, entries, "solution.xml");
+    customizationsXml = readEntryText(buffer, entries, "customizations.xml");
   } catch (error) {
     console.error(`error: could not read ${zipPath} as a solution zip: ${error.message}`);
     process.exitCode = 1;
@@ -90,6 +92,7 @@ function main() {
     displayName: readLocalizedName(solutionXml),
     version: readTag(solutionXml, "Version"),
     publisherPrefix: readTag(solutionXml, "CustomizationPrefix"),
+    dataverseLanguages: readDataverseLanguages(customizationsXml, solutionXml),
     rootComponents: summarizeRootComponents(solutionXml),
     missingDependencies: readMissingDependencies(solutionXml),
     siteComponentCount: countComponentFolders(entries, "powerpagecomponents/"),
@@ -114,6 +117,7 @@ function printReport(report, listSourceFiles) {
   console.log(`Version:         ${report.version}`);
   console.log(`Managed state:   ${report.managedState}`);
   console.log(`Publisher prefix:${report.publisherPrefix ? ` ${report.publisherPrefix}` : " (none)"}`);
+  console.log(`Languages:       ${report.dataverseLanguages.length > 0 ? report.dataverseLanguages.join(", ") : "(none declared)"}  -> requiredDataverseLanguages`);
   console.log(`Zip size:        ${(report.zipSizeBytes / (1024 * 1024)).toFixed(2)} MB`);
   console.log("");
 
@@ -187,6 +191,35 @@ function summarizeRootComponents(solutionXml) {
   }
 
   return [...groups.values()].sort((left, right) => left.type - right.type);
+}
+
+// The manifest's requiredDataverseLanguages needs the LCIDs the solution's
+// localized components were exported for. customizations.xml declares them in a
+// <Languages> block; solution.xml's own languagecode attribute is the fallback
+// for exports that omit it.
+// https://learn.microsoft.com/power-platform/admin/enable-languages
+function readDataverseLanguages(customizationsXml, solutionXml) {
+  const languages = new Set();
+
+  if (customizationsXml) {
+    const block = /<Languages>([\s\S]*?)<\/Languages>/.exec(customizationsXml);
+    if (block) {
+      const pattern = /<Language>\s*(\d+)\s*<\/Language>/g;
+      let match;
+      while ((match = pattern.exec(block[1])) !== null) {
+        languages.add(Number(match[1]));
+      }
+    }
+  }
+
+  if (languages.size === 0) {
+    const fallback = /languagecode="(\d+)"/.exec(solutionXml);
+    if (fallback) {
+      languages.add(Number(fallback[1]));
+    }
+  }
+
+  return [...languages].sort((left, right) => left - right);
 }
 
 function readMissingDependencies(solutionXml) {
