@@ -44,12 +44,12 @@ Use these steps if you want to install the template yourself instead of using an
    Use an installer or a Dataverse import script that understands the seed-data shape below.
 
 Seed data is included under `seed-data/`.
-The seed data uses a Dataverse export shape with `tables` and `fileExports`.
-Files referenced from `fileExports` are stored under `seed-data/files/`.
+The seed data uses a Dataverse export shape with `tables`.
+Records that carry a file attachment declare it with the reserved `__files` key, which maps a Dataverse file column to a path under `seed-data/files/`.
 
 If you import the seed data without an installer, create or upsert records table by table using the order in `seed-data/data.json`.
 Preserve the IDs in each table because later records refer to earlier records by lookup ID.
-After the `spnvc_invoiceattachment` records exist, upload each `fileExports` file to the listed Dataverse file column.
+Each `spnvc_invoiceattachment` record spells out its own `spnvc_invoiceattachmentid`, so create it with that GUID and then upload its `__files` entry to the named file column.
 Do not use Dataverse's spreadsheet import for this file because it will not preserve lookup IDs or upload file-column binaries.
 
 ## Customize this template

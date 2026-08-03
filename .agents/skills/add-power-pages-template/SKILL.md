@@ -180,7 +180,8 @@ pac env fetch --xml "<fetch><entity name='<logical-name>'/></fetch>"
 - Tables ordered so parents come before the children that reference them.
 - Fictional names, addresses, and emails only. Nothing from a real tenant.
 
-Use the Dataverse export shape (`tables` plus optional `fileExports`) for anything with more than one table, and put file-column binaries under `seed-data/files/`.
+Use the Dataverse export shape (`tables`) for anything with more than one table, and attach file-column binaries with the reserved `__files` key on the owning record, storing the files under `seed-data/files/`.
+A record that attaches files has to carry an explicit GUID in its table's `idColumn`, because that is how the importer addresses the upload.
 [references/anatomy.md](references/anatomy.md) has the exact shape and the rules the validator enforces on it.
 
 Use the `notes` array to record anything a person importing the data would otherwise find surprising, such as a lookup deliberately left empty.

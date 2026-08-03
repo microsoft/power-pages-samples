@@ -12,6 +12,20 @@ const VALID_AUDIENCES = new Set(["admins", "developers", "makers", "partners"]);
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const LFS_POINTER_PREFIX = "version https://git-lfs.github.com/spec/v1";
 
+// Reserved key a seed record uses to attach binaries to Dataverse file columns.
+// It maps a file-column logical name to a path relative to the seed-data file.
+const SEED_FILES_KEY = "__files";
+
+// V1 of the create-site seed importer uploads to Dataverse file columns only,
+// and it needs a content type it can infer from the extension. Anything outside
+// this list would either fail the upload or land with the wrong type.
+const SEED_ATTACHMENT_EXTENSIONS = new Set([".pdf", ".png", ".jpg", ".jpeg", ".txt", ".csv", ".json", ".docx", ".xlsx"]);
+
+// The importer addresses each attachment by the record's primary key, so a
+// record carrying __files has to spell its own GUID out rather than relying on
+// Dataverse to generate one on create.
+const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function validateTemplates(options = {}) {
   const root = path.resolve(options.root ?? path.join(__dirname, ".."));
   const manifestPath = path.join(root, "manifest.json");
@@ -407,7 +421,7 @@ function validateSeedDataPath(seedDataPathValue, label, root, expectedDirectory,
     return;
   }
 
-  validateSeedDataFileAttachments(seedData.records, path.dirname(seedDataPath), label, result);
+  validateSeedRecordFiles(seedData.records, seedData.primaryKey, "record", path.dirname(seedDataPath), label, result);
 }
 
 function isDataverseExportSeedData(seedData) {
@@ -421,15 +435,15 @@ function validateDataverseExportSeedData(seedData, seedDataDirectory, label, res
   }
 
   for (const [tableName, table] of Object.entries(seedData.tables)) {
-    validateDataverseSeedTable(tableName, table, label, result);
+    validateDataverseSeedTable(tableName, table, seedDataDirectory, label, result);
   }
 
   if (Object.hasOwn(seedData, "fileExports")) {
-    validateDataverseFileExports(seedData.fileExports, seedDataDirectory, label, result);
+    result.errors.push(`Template "${label}" seed data uses fileExports, which is no longer supported. Attach files with the "${SEED_FILES_KEY}" key on the owning record instead.`);
   }
 }
 
-function validateDataverseSeedTable(tableName, table, label, result) {
+function validateDataverseSeedTable(tableName, table, seedDataDirectory, label, result) {
   const location = `table ${tableName}`;
   if (!table || typeof table !== "object" || Array.isArray(table)) {
     result.errors.push(`Template "${label}" Dataverse seed data ${location} must be an object.`);
@@ -441,128 +455,120 @@ function validateDataverseSeedTable(tableName, table, label, result) {
 
   if (!Array.isArray(table.records)) {
     result.errors.push(`Template "${label}" Dataverse seed data ${location} records must be an array.`);
+    return;
   }
+
+  // In the Dataverse export shape the table's idColumn is the primary key the
+  // importer addresses attachments by, so it plays the role that the top-level
+  // primaryKey plays in the single-entity shape.
+  validateSeedRecordFiles(table.records, table.idColumn, `${location} record`, seedDataDirectory, label, result);
 }
 
-function validateDataverseFileExports(fileExports, seedDataDirectory, label, result) {
-  if (!Array.isArray(fileExports)) {
-    result.errors.push(`Template "${label}" Dataverse seed data fileExports must be an array.`);
-    return;
-  }
-
-  fileExports.forEach((fileExport, index) => {
-    validateDataverseFileExport(fileExport, `fileExports[${index}]`, seedDataDirectory, label, result);
-  });
-}
-
-function validateDataverseFileExport(fileExport, location, seedDataDirectory, label, result) {
-  if (!fileExport || typeof fileExport !== "object" || Array.isArray(fileExport)) {
-    result.errors.push(`Template "${label}" Dataverse seed data ${location} must be an object.`);
-    return;
-  }
-
-  validateNonEmptyString(fileExport.attachmentId, `${location} attachmentId`, label, result);
-  validateNonEmptyString(fileExport.fileColumn, `${location} fileColumn`, label, result);
-  validateNonEmptyString(fileExport.fileName, `${location} fileName`, label, result);
-
-  if (Object.hasOwn(fileExport, "contentType")) {
-    validateNonEmptyString(fileExport.contentType, `${location} contentType`, label, result);
-  }
-
-  if (Object.hasOwn(fileExport, "size") && (!Number.isFinite(fileExport.size) || fileExport.size < 0)) {
-    result.errors.push(`Template "${label}" Dataverse seed data ${location} size must be a non-negative number.`);
-  }
-
-  if (!validateNonEmptyString(fileExport.path, `${location} path`, label, result)) {
-    return;
-  }
-
-  const filePath = resolveSeedDataFilePath(seedDataDirectory, fileExport.path, `${location} path`, label, result);
-  if (!filePath) {
-    return;
-  }
-
-  if (!fileExists(filePath)) {
-    result.errors.push(`Template "${label}" Dataverse seed data ${location} file does not exist: ${fileExport.path}`);
-    return;
-  }
-
-  const stats = fs.statSync(filePath);
-  if (stats.size === 0) {
-    result.errors.push(`Template "${label}" Dataverse seed data ${location} file is empty: ${fileExport.path}`);
-  }
-
-  if (Number.isFinite(fileExport.size) && fileExport.size !== stats.size) {
-    result.errors.push(`Template "${label}" Dataverse seed data ${location} size ${fileExport.size} does not match file size ${stats.size}: ${fileExport.path}`);
-  }
-}
-
-function validateSeedDataFileAttachments(records, seedDataDirectory, label, result) {
+function validateSeedRecordFiles(records, primaryKeyColumn, locationPrefix, seedDataDirectory, label, result) {
   records.forEach((record, recordIndex) => {
-    if (!record || typeof record !== "object" || Array.isArray(record) || !Object.hasOwn(record, "fileAttachments")) {
+    const location = `${locationPrefix}[${recordIndex}]`;
+
+    if (!record || typeof record !== "object" || Array.isArray(record)) {
+      result.errors.push(`Template "${label}" seed data ${location} must be an object.`);
       return;
     }
 
-    const attachments = record.fileAttachments;
-    const recordLocation = `record[${recordIndex}].fileAttachments`;
-    if (!Array.isArray(attachments)) {
-      result.errors.push(`Template "${label}" seed data ${recordLocation} must be an array.`);
+    if (Object.hasOwn(record, "fileAttachments")) {
+      result.errors.push(`Template "${label}" seed data ${location} uses fileAttachments, which is no longer supported. Attach files with the "${SEED_FILES_KEY}" key instead.`);
+    }
+
+    if (!Object.hasOwn(record, SEED_FILES_KEY)) {
       return;
     }
 
-    attachments.forEach((attachment, attachmentIndex) => {
-      validateSeedDataFileAttachment(attachment, `${recordLocation}[${attachmentIndex}]`, seedDataDirectory, label, result);
-    });
+    const files = record[SEED_FILES_KEY];
+    const filesLocation = `${location}.${SEED_FILES_KEY}`;
+    if (!files || typeof files !== "object" || Array.isArray(files)) {
+      result.errors.push(`Template "${label}" seed data ${filesLocation} must be an object mapping file column names to file paths.`);
+      return;
+    }
+
+    if (Object.keys(files).length === 0) {
+      result.errors.push(`Template "${label}" seed data ${filesLocation} must not be empty.`);
+      return;
+    }
+
+    validateSeedRecordPrimaryKey(record, primaryKeyColumn, location, label, result);
+
+    for (const [fileColumn, filePath] of Object.entries(files)) {
+      validateSeedRecordFile(fileColumn, filePath, `${filesLocation}.${fileColumn}`, seedDataDirectory, label, result);
+    }
   });
 }
 
-function validateSeedDataFileAttachment(attachment, location, seedDataDirectory, label, result) {
-  if (!attachment || typeof attachment !== "object" || Array.isArray(attachment)) {
-    result.errors.push(`Template "${label}" seed data ${location} must be an object.`);
+function validateSeedRecordPrimaryKey(record, primaryKeyColumn, location, label, result) {
+  if (typeof primaryKeyColumn !== "string" || primaryKeyColumn.length === 0) {
+    result.errors.push(`Template "${label}" seed data ${location} attaches files, so the seed data must declare the primary key column.`);
     return;
   }
 
-  validateRequiredAttachmentString(attachment, "columnName", location, label, result);
-  validateOptionalAttachmentString(attachment, "fileName", location, label, result);
-  validateOptionalAttachmentString(attachment, "mimeType", location, label, result);
-
-  if (!validateRequiredAttachmentString(attachment, "filePath", location, label, result)) {
-    return;
-  }
-
-  const attachmentPath = resolveSeedDataAttachmentPath(seedDataDirectory, attachment.filePath, location, label, result);
-  if (!attachmentPath) {
-    return;
-  }
-
-  if (!fileExists(attachmentPath)) {
-    result.errors.push(`Template "${label}" seed data ${location} file does not exist: ${attachment.filePath}`);
-    return;
-  }
-
-  const stats = fs.statSync(attachmentPath);
-  if (stats.size === 0) {
-    result.errors.push(`Template "${label}" seed data ${location} file is empty: ${attachment.filePath}`);
+  const primaryKeyValue = record[primaryKeyColumn];
+  if (typeof primaryKeyValue !== "string" || !GUID.test(primaryKeyValue)) {
+    result.errors.push(`Template "${label}" seed data ${location} attaches files, so ${primaryKeyColumn} must be an explicit GUID.`);
   }
 }
 
-function validateRequiredAttachmentString(attachment, propertyName, location, label, result) {
-  if (typeof attachment[propertyName] !== "string" || attachment[propertyName].length === 0) {
-    result.errors.push(`Template "${label}" seed data ${location} ${propertyName} must be a non-empty string.`);
+function validateSeedRecordFile(fileColumn, filePath, location, seedDataDirectory, label, result) {
+  if (typeof fileColumn !== "string" || fileColumn.length === 0) {
+    result.errors.push(`Template "${label}" seed data ${location} file column name must be a non-empty string.`);
+    return;
+  }
+
+  if (typeof filePath !== "string" || filePath.length === 0) {
+    result.errors.push(`Template "${label}" seed data ${location} must be a non-empty file path.`);
+    return;
+  }
+
+  const extension = path.extname(filePath).toLowerCase();
+  if (!SEED_ATTACHMENT_EXTENSIONS.has(extension)) {
+    const allowed = [...SEED_ATTACHMENT_EXTENSIONS].map((value) => value.slice(1)).join(", ");
+    result.errors.push(`Template "${label}" seed data ${location} has unsupported file type "${extension || filePath}". Supported types: ${allowed}.`);
+    return;
+  }
+
+  const resolvedPath = resolveSeedDataFilePath(seedDataDirectory, filePath, location, label, result);
+  if (!resolvedPath) {
+    return;
+  }
+
+  if (!fileExists(resolvedPath)) {
+    result.errors.push(`Template "${label}" seed data ${location} file does not exist: ${filePath}`);
+    return;
+  }
+
+  // The containment check above is lexical, so a committed symlink could still
+  // point outside the template. Compare real paths now that the file is known to
+  // exist, resolving both sides because the seed folder itself can sit under a
+  // symlinked parent (macOS /tmp is the common case).
+  if (!isRealPathInside(seedDataDirectory, resolvedPath)) {
+    result.errors.push(`Template "${label}" seed data ${location} resolves outside the seed data folder: ${filePath}`);
+    return;
+  }
+
+  const stats = fs.statSync(resolvedPath);
+  if (stats.size === 0) {
+    result.errors.push(`Template "${label}" seed data ${location} file is empty: ${filePath}`);
+    return;
+  }
+
+  const head = readFilePrefix(resolvedPath, LFS_POINTER_PREFIX.length);
+  if (head.startsWith(LFS_POINTER_PREFIX)) {
+    result.errors.push(`Template "${label}" seed data ${location} file is a Git LFS pointer, not the real file: ${filePath}`);
+  }
+}
+
+function isRealPathInside(parentPath, candidatePath) {
+  try {
+    return isPathInsideOrEqual(fs.realpathSync(parentPath), fs.realpathSync(candidatePath));
+  } catch {
+    // A broken symlink or a race with the filesystem cannot be proven safe.
     return false;
   }
-
-  return true;
-}
-
-function validateOptionalAttachmentString(attachment, propertyName, location, label, result) {
-  if (Object.hasOwn(attachment, propertyName) && (typeof attachment[propertyName] !== "string" || attachment[propertyName].length === 0)) {
-    result.errors.push(`Template "${label}" seed data ${location} ${propertyName} must be a non-empty string.`);
-  }
-}
-
-function resolveSeedDataAttachmentPath(seedDataDirectory, relativePath, location, label, result) {
-  return resolveSeedDataFilePath(seedDataDirectory, relativePath, `${location} filePath`, label, result);
 }
 
 function resolveSeedDataFilePath(seedDataDirectory, relativePath, location, label, result) {

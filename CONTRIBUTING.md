@@ -85,33 +85,35 @@ Variant-specific seed data lives under `templates/spa/<family>/variants/<framewo
 
 Seed data can use either a simple single-entity shape or a Dataverse export shape.
 
-For a simple single-entity seed file, attach local files to a record with an optional `fileAttachments` array.
-Each attachment must include `columnName` and `filePath`, and may include `fileName` and `mimeType`.
-The `filePath` is relative to the seed-data JSON file and must stay inside that seed-data folder.
-For example:
+Both shapes attach files to Dataverse **file columns** with the reserved `__files` key on the owning record.
+`__files` maps a file column's logical name to a path relative to the seed-data JSON file, and that path must stay inside the seed-data folder.
+
+Because the importer uploads each file against the record's primary key, a seed file that uses `__files` has to say which column that is, and every attaching record has to carry an explicit GUID in it:
+
+- Single-entity shape: declare `primaryKey` at the top level.
+- Dataverse export shape: the table's existing `idColumn` is the primary key.
+
+Attachments support these file types: `pdf`, `png`, `jpg`, `jpeg`, `txt`, `csv`, `json`, `docx`, `xlsx`.
+
+A single-entity seed file looks like this:
 
 ```json
 {
   "entitySetName": "accounts",
+  "primaryKey": "accountid",
   "records": [
     {
+      "accountid": "11111111-1111-1111-1111-111111111111",
       "name": "Contoso",
-      "fileAttachments": [
-        {
-          "columnName": "sample_contract",
-          "filePath": "files/contract.pdf",
-          "fileName": "contract.pdf",
-          "mimeType": "application/pdf"
-        }
-      ]
+      "__files": {
+        "sample_contract": "files/contract.pdf"
+      }
     }
   ]
 }
 ```
 
-For a Dataverse export seed file, use `tables` for entity data and `fileExports` for file-column binaries.
-Each `fileExports[].path` is relative to the seed-data JSON file and must stay inside that seed-data folder.
-For example:
+A Dataverse export seed file uses `tables` for entity data, and attaches files the same way:
 
 ```json
 {
@@ -121,22 +123,23 @@ For example:
       "logicalName": "account",
       "entitySet": "accounts",
       "idColumn": "accountid",
-      "records": []
+      "records": [
+        {
+          "accountid": "11111111-1111-1111-1111-111111111111",
+          "name": "Contoso",
+          "__files": {
+            "sample_file": "files/contract.pdf"
+          }
+        }
+      ]
     }
-  },
-  "fileExports": [
-    {
-      "attachmentId": "00000000-0000-0000-0000-000000000000",
-      "fileColumn": "sample_file",
-      "fileName": "contract.pdf",
-      "contentType": "application/pdf",
-      "size": 12345,
-      "path": "files/contract.pdf"
-    }
-  ]
+  }
 }
 ```
 
-The validator checks that referenced paths resolve under `templates/`, that files use the expected family or variant folders, that seed-data file attachments exist, that the solution zip is real and contains `solution.xml`, and that the solution managed state is readable.
+The older `fileAttachments` array and top-level `fileExports` array are no longer supported, because the create-site runtime does not read them.
+The validator rejects both and points at `__files`.
+
+The validator checks that referenced paths resolve under `templates/`, that files use the expected family or variant folders, that `__files` attachments exist and use a supported file type, that attaching records declare a primary key GUID, that the solution zip is real and contains `solution.xml`, and that the solution managed state is readable.
 Managed solution zips are reported as warnings by default.
 If a consuming pipeline requires unmanaged solutions, run `node templates/scripts/validate-templates.js --enforce-unmanaged` and replace managed zips with unmanaged exports before release.

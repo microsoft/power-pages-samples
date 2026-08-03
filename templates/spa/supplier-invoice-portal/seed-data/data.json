@@ -4,7 +4,7 @@
   "sourceEnvironmentUrl": "https://example.crm.dynamics.com",
   "notes": [
     "Contacts are intentionally scoped to records whose fullname contains Amy or Bob.",
-    "File-column binaries are stored under files/ and referenced from fileExports."
+    "File-column binaries are stored under files/ and attached to their record with the reserved __files key."
   ],
   "tables": {
     "contacts": {
@@ -792,7 +792,10 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:08:20Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c"
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "__files": {
+            "spnvc_file": "files/791bafe1-da26-f111-8341-000d3a37e531-laptop-order-receipt.pdf"
+          }
         },
         {
           "@odata.etag": "W/\"38059890\"",
@@ -806,7 +809,10 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:08:25Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c"
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "__files": {
+            "spnvc_file": "files/051dfce4-da26-f111-8341-000d3a58de60-monitors-packing-slip.pdf"
+          }
         },
         {
           "@odata.etag": "W/\"38059895\"",
@@ -820,7 +826,10 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:08:30Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "f2c43ab9-d926-f111-8341-000d3a5bf33c"
+          "_spnvc_contactid_value": "f2c43ab9-d926-f111-8341-000d3a5bf33c",
+          "__files": {
+            "spnvc_file": "files/221dfce4-da26-f111-8341-000d3a58de60-steel-materials-spec.pdf"
+          }
         },
         {
           "@odata.etag": "W/\"38059900\"",
@@ -834,7 +843,10 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:08:42Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "51e91fd4-d926-f111-8341-000d3a5bf33c"
+          "_spnvc_contactid_value": "51e91fd4-d926-f111-8341-000d3a5bf33c",
+          "__files": {
+            "spnvc_file": "files/c342dfee-da26-f111-8341-000d3a5bf33c-shipping-manifest.pdf"
+          }
         },
         {
           "@odata.etag": "W/\"38059904\"",
@@ -848,7 +860,10 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:08:47Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "06f3e7d8-d926-f111-8341-000d3a58dd8c"
+          "_spnvc_contactid_value": "06f3e7d8-d926-f111-8341-000d3a58dd8c",
+          "__files": {
+            "spnvc_file": "files/1e1d9bf2-da26-f111-8341-000d3a58dd8c-camping-equipment-quote.pdf"
+          }
         },
         {
           "@odata.etag": "W/\"38059909\"",
@@ -862,7 +877,10 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:09:07Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "5df22d44-9d11-f111-8406-000d3a36e41e"
+          "_spnvc_contactid_value": "5df22d44-9d11-f111-8406-000d3a36e41e",
+          "__files": {
+            "spnvc_file": "files/b9f9ecfe-da26-f111-8341-000d3a5bf33c-license-agreement-2026.pdf"
+          }
         },
         {
           "@odata.etag": "W/\"38059913\"",
@@ -876,7 +894,10 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:09:13Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c"
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "__files": {
+            "spnvc_file": "files/bef9ecfe-da26-f111-8341-000d3a5bf33c-analytics-sow.pdf"
+          }
         },
         {
           "@odata.etag": "W/\"38059917\"",
@@ -890,7 +911,10 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:09:20Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "5df22d44-9d11-f111-8406-000d3a36e41e"
+          "_spnvc_contactid_value": "5df22d44-9d11-f111-8406-000d3a36e41e",
+          "__files": {
+            "spnvc_file": "files/202ce703-db26-f111-8341-000d3a58de60-av-system-proposal.pdf"
+          }
         },
         {
           "@odata.etag": "W/\"38059921\"",
@@ -904,7 +928,10 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:09:24Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "f2c43ab9-d926-f111-8341-000d3a5bf33c"
+          "_spnvc_contactid_value": "f2c43ab9-d926-f111-8341-000d3a5bf33c",
+          "__files": {
+            "spnvc_file": "files/737b6109-db26-f111-8341-000d3a36e41e-lab-supplies-catalog.pdf"
+          }
         },
         {
           "@odata.etag": "W/\"38059925\"",
@@ -918,7 +945,10 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:09:29Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "06f3e7d8-d926-f111-8341-000d3a58dd8c"
+          "_spnvc_contactid_value": "06f3e7d8-d926-f111-8341-000d3a58dd8c",
+          "__files": {
+            "spnvc_file": "files/87c2600c-db26-f111-8341-000d3a5bf33c-hiking-gear-invoice.pdf"
+          }
         },
         {
           "@odata.etag": "W/\"38066205\"",
@@ -933,7 +963,10 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T18:11:54Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c"
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "__files": {
+            "spnvc_file": "files/f00a14c0-e326-f111-8341-000d3a5bf33c-INV-2026-001-Contoso-Ltd.pdf"
+          }
         },
         {
           "@odata.etag": "W/\"38298523\"",
@@ -947,7 +980,10 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-25T05:55:13Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c"
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "__files": {
+            "spnvc_file": "files/a1f67c30-0f28-f111-8341-000d3a37e531-INV-2026-001-Contoso-Ltd.pdf"
+          }
         },
         {
           "@odata.etag": "W/\"38298551\"",
@@ -962,115 +998,12 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-25T06:14:43Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c"
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "__files": {
+            "spnvc_file": "files/293aace7-1128-f111-8341-000d3a37e531-INV-2026-005-Trey-Research.pdf"
+          }
         }
       ]
     }
-  },
-  "fileExports": [
-    {
-      "attachmentId": "791bafe1-da26-f111-8341-000d3a37e531",
-      "fileColumn": "spnvc_file",
-      "fileName": "laptop-order-receipt.pdf",
-      "contentType": "application/octet-stream",
-      "size": 1608,
-      "path": "files/791bafe1-da26-f111-8341-000d3a37e531-laptop-order-receipt.pdf"
-    },
-    {
-      "attachmentId": "051dfce4-da26-f111-8341-000d3a58de60",
-      "fileColumn": "spnvc_file",
-      "fileName": "monitors-packing-slip.pdf",
-      "contentType": "application/octet-stream",
-      "size": 1614,
-      "path": "files/051dfce4-da26-f111-8341-000d3a58de60-monitors-packing-slip.pdf"
-    },
-    {
-      "attachmentId": "221dfce4-da26-f111-8341-000d3a58de60",
-      "fileColumn": "spnvc_file",
-      "fileName": "steel-materials-spec.pdf",
-      "contentType": "application/octet-stream",
-      "size": 1788,
-      "path": "files/221dfce4-da26-f111-8341-000d3a58de60-steel-materials-spec.pdf"
-    },
-    {
-      "attachmentId": "c342dfee-da26-f111-8341-000d3a5bf33c",
-      "fileColumn": "spnvc_file",
-      "fileName": "shipping-manifest.pdf",
-      "contentType": "application/octet-stream",
-      "size": 1796,
-      "path": "files/c342dfee-da26-f111-8341-000d3a5bf33c-shipping-manifest.pdf"
-    },
-    {
-      "attachmentId": "1e1d9bf2-da26-f111-8341-000d3a58dd8c",
-      "fileColumn": "spnvc_file",
-      "fileName": "camping-equipment-quote.pdf",
-      "contentType": "application/octet-stream",
-      "size": 1784,
-      "path": "files/1e1d9bf2-da26-f111-8341-000d3a58dd8c-camping-equipment-quote.pdf"
-    },
-    {
-      "attachmentId": "b9f9ecfe-da26-f111-8341-000d3a5bf33c",
-      "fileColumn": "spnvc_file",
-      "fileName": "license-agreement-2026.pdf",
-      "contentType": "application/octet-stream",
-      "size": 1620,
-      "path": "files/b9f9ecfe-da26-f111-8341-000d3a5bf33c-license-agreement-2026.pdf"
-    },
-    {
-      "attachmentId": "bef9ecfe-da26-f111-8341-000d3a5bf33c",
-      "fileColumn": "spnvc_file",
-      "fileName": "analytics-sow.pdf",
-      "contentType": "application/octet-stream",
-      "size": 1774,
-      "path": "files/bef9ecfe-da26-f111-8341-000d3a5bf33c-analytics-sow.pdf"
-    },
-    {
-      "attachmentId": "202ce703-db26-f111-8341-000d3a58de60",
-      "fileColumn": "spnvc_file",
-      "fileName": "av-system-proposal.pdf",
-      "contentType": "application/octet-stream",
-      "size": 1944,
-      "path": "files/202ce703-db26-f111-8341-000d3a58de60-av-system-proposal.pdf"
-    },
-    {
-      "attachmentId": "737b6109-db26-f111-8341-000d3a36e41e",
-      "fileColumn": "spnvc_file",
-      "fileName": "lab-supplies-catalog.pdf",
-      "contentType": "application/octet-stream",
-      "size": 1779,
-      "path": "files/737b6109-db26-f111-8341-000d3a36e41e-lab-supplies-catalog.pdf"
-    },
-    {
-      "attachmentId": "87c2600c-db26-f111-8341-000d3a5bf33c",
-      "fileColumn": "spnvc_file",
-      "fileName": "hiking-gear-invoice.pdf",
-      "contentType": "application/octet-stream",
-      "size": 1781,
-      "path": "files/87c2600c-db26-f111-8341-000d3a5bf33c-hiking-gear-invoice.pdf"
-    },
-    {
-      "attachmentId": "f00a14c0-e326-f111-8341-000d3a5bf33c",
-      "fileColumn": "spnvc_file",
-      "fileName": "INV-2026-001-Contoso-Ltd.pdf",
-      "contentType": "application/octet-stream",
-      "size": 1613,
-      "path": "files/f00a14c0-e326-f111-8341-000d3a5bf33c-INV-2026-001-Contoso-Ltd.pdf"
-    },
-    {
-      "attachmentId": "a1f67c30-0f28-f111-8341-000d3a37e531",
-      "fileColumn": "spnvc_file",
-      "fileName": "INV-2026-001-Contoso-Ltd.pdf",
-      "contentType": "application/octet-stream",
-      "size": 1613,
-      "path": "files/a1f67c30-0f28-f111-8341-000d3a37e531-INV-2026-001-Contoso-Ltd.pdf"
-    },
-    {
-      "attachmentId": "293aace7-1128-f111-8341-000d3a37e531",
-      "fileColumn": "spnvc_file",
-      "fileName": "INV-2026-005-Trey-Research.pdf",
-      "contentType": "application/octet-stream",
-      "size": 1789,
-      "path": "files/293aace7-1128-f111-8341-000d3a37e531-INV-2026-005-Trey-Research.pdf"
-    }
-  ]
+  }
 }

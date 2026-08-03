@@ -152,23 +152,19 @@ test("rejects missing solution.xml, Git LFS pointers, non-PNG previews, and malf
   assert(lfsResult.errors.some((error) => error.includes("Git LFS pointer")));
 });
 
-
-test("accepts seed data records with file attachments inside the seed data folder", () => {
+test("accepts single-entity seed records that attach files with __files", () => {
   const root = createTemplateRoot({
     seedDataPath: "spa/test-template/seed-data/accounts.json",
     seedData: {
       entitySetName: "accounts",
+      primaryKey: "accountid",
       records: [
         {
+          accountid: "11111111-1111-1111-1111-111111111111",
           name: "Contoso",
-          fileAttachments: [
-            {
-              columnName: "sample_contract",
-              filePath: "files/contract.pdf",
-              fileName: "contract.pdf",
-              mimeType: "application/pdf"
-            }
-          ]
+          __files: {
+            sample_contract: "files/contract.pdf"
+          }
         }
       ]
     }
@@ -181,49 +177,7 @@ test("accepts seed data records with file attachments inside the seed data folde
   assert.deepEqual(result.errors, []);
 });
 
-test("rejects malformed seed data file attachments", () => {
-  const root = createTemplateRoot({
-    seedDataPath: "spa/test-template/seed-data/accounts.json",
-    seedData: {
-      entitySetName: "accounts",
-      records: [
-        {
-          name: "Contoso",
-          fileAttachments: [
-            {
-              columnName: "sample_contract",
-              filePath: "../outside.pdf"
-            },
-            {
-              columnName: "sample_contract",
-              filePath: path.resolve("absolute.pdf")
-            },
-            {
-              columnName: "",
-              filePath: "files/missing.pdf",
-              mimeType: ""
-            }
-          ]
-        }
-      ]
-    }
-  });
-
-  const result = validateTemplates({ root });
-  assert(result.errors.some((error) => error.includes("record[0].fileAttachments[0] filePath must stay inside")));
-  assert(result.errors.some((error) => error.includes("record[0].fileAttachments[1] filePath must be relative")));
-  assert(result.errors.some((error) => error.includes("record[0].fileAttachments[2] file does not exist")));
-  assert(result.errors.some((error) => error.includes("record[0].fileAttachments[2] columnName must be a non-empty string")));
-  assert(result.errors.some((error) => error.includes("record[0].fileAttachments[2] mimeType must be a non-empty string")));
-
-  const cliResult = spawnSync(process.execPath, [path.join(__dirname, "validate-templates.js"), "--root", root], {
-    encoding: "utf8"
-  });
-  assert.notEqual(cliResult.status, 0);
-  assert.match(cliResult.stderr, /filePath must be relative/);
-});
-
-test("accepts Dataverse export seed data with fileExports", () => {
+test("accepts Dataverse export seed records that attach files with __files", () => {
   const root = createTemplateRoot({
     seedDataPath: "spa/test-template/seed-data/data.json",
     seedData: {
@@ -235,22 +189,15 @@ test("accepts Dataverse export seed data with fileExports", () => {
           idColumn: "accountid",
           records: [
             {
-              accountid: "00000000-0000-0000-0000-000000000001",
-              name: "Contoso"
+              accountid: "11111111-1111-1111-1111-111111111111",
+              name: "Contoso",
+              __files: {
+                sample_contract: "files/contract.pdf"
+              }
             }
           ]
         }
-      },
-      fileExports: [
-        {
-          attachmentId: "00000000-0000-0000-0000-000000000002",
-          fileColumn: "sample_file",
-          fileName: "contract.pdf",
-          contentType: "application/pdf",
-          size: 3,
-          path: "files/contract.pdf"
-        }
-      ]
+      }
     }
   });
 
@@ -261,8 +208,232 @@ test("accepts Dataverse export seed data with fileExports", () => {
   assert.deepEqual(result.errors, []);
 });
 
-test("rejects malformed Dataverse export seed data fileExports", () => {
+test("rejects __files records without a declared primary key column", () => {
   const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/accounts.json",
+    seedData: {
+      entitySetName: "accounts",
+      records: [
+        {
+          name: "Contoso",
+          __files: {
+            sample_contract: "files/contract.pdf"
+          }
+        }
+      ]
+    }
+  });
+
+  fs.mkdirSync(path.join(root, "spa/test-template/seed-data/files"), { recursive: true });
+  fs.writeFileSync(path.join(root, "spa/test-template/seed-data/files/contract.pdf"), "pdf");
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("record[0] attaches files, so the seed data must declare the primary key column")));
+});
+
+test("rejects __files records whose primary key is missing or not a GUID", () => {
+  const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/accounts.json",
+    seedData: {
+      entitySetName: "accounts",
+      primaryKey: "accountid",
+      records: [
+        {
+          name: "Contoso",
+          __files: { sample_contract: "files/contract.pdf" }
+        },
+        {
+          accountid: "not-a-guid",
+          name: "Fabrikam",
+          __files: { sample_contract: "files/contract.pdf" }
+        }
+      ]
+    }
+  });
+
+  fs.mkdirSync(path.join(root, "spa/test-template/seed-data/files"), { recursive: true });
+  fs.writeFileSync(path.join(root, "spa/test-template/seed-data/files/contract.pdf"), "pdf");
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("record[0] attaches files, so accountid must be an explicit GUID")));
+  assert(result.errors.some((error) => error.includes("record[1] attaches files, so accountid must be an explicit GUID")));
+});
+
+test("rejects __files paths that are unusable", () => {
+  const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/accounts.json",
+    seedData: {
+      entitySetName: "accounts",
+      primaryKey: "accountid",
+      records: [
+        {
+          accountid: "11111111-1111-1111-1111-111111111111",
+          __files: {
+            outside: "../outside.pdf",
+            absolute: path.resolve("absolute.pdf"),
+            missing: "files/missing.pdf",
+            blank: "",
+            empty_file: "files/empty.pdf",
+            unsupported: "files/notes.md",
+            pointer: "files/pointer.pdf"
+          }
+        }
+      ]
+    }
+  });
+
+  const filesDirectory = path.join(root, "spa/test-template/seed-data/files");
+  fs.mkdirSync(filesDirectory, { recursive: true });
+  fs.writeFileSync(path.join(filesDirectory, "empty.pdf"), "");
+  fs.writeFileSync(path.join(filesDirectory, "notes.md"), "notes");
+  fs.writeFileSync(
+    path.join(filesDirectory, "pointer.pdf"),
+    "version https://git-lfs.github.com/spec/v1\noid sha256:abc\nsize 123\n"
+  );
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("__files.outside must stay inside")));
+  assert(result.errors.some((error) => error.includes("__files.absolute must be relative")));
+  assert(result.errors.some((error) => error.includes("__files.missing file does not exist")));
+  assert(result.errors.some((error) => error.includes("__files.blank must be a non-empty file path")));
+  assert(result.errors.some((error) => error.includes("__files.empty_file file is empty")));
+  assert(result.errors.some((error) => error.includes('__files.unsupported has unsupported file type ".md"')));
+  assert(result.errors.some((error) => error.includes("__files.pointer file is a Git LFS pointer")));
+
+  const cliResult = spawnSync(process.execPath, [path.join(__dirname, "validate-templates.js"), "--root", root], {
+    encoding: "utf8"
+  });
+  assert.notEqual(cliResult.status, 0);
+  assert.match(cliResult.stderr, /must be relative/);
+});
+
+test("rejects __files that is not a non-empty object", () => {
+  const notObjectRoot = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/accounts.json",
+    seedData: {
+      entitySetName: "accounts",
+      primaryKey: "accountid",
+      records: [{ accountid: "11111111-1111-1111-1111-111111111111", __files: ["files/contract.pdf"] }]
+    }
+  });
+
+  const notObjectResult = validateTemplates({ root: notObjectRoot });
+  assert(notObjectResult.errors.some((error) => error.includes("__files must be an object mapping file column names to file paths")));
+
+  const emptyRoot = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/accounts.json",
+    seedData: {
+      entitySetName: "accounts",
+      primaryKey: "accountid",
+      records: [{ accountid: "11111111-1111-1111-1111-111111111111", __files: {} }]
+    }
+  });
+
+  const emptyResult = validateTemplates({ root: emptyRoot });
+  assert(emptyResult.errors.some((error) => error.includes("__files must not be empty")));
+});
+
+test("rejects Dataverse export records that attach files without an idColumn", () => {
+  const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/data.json",
+    seedData: {
+      schemaVersion: 1,
+      tables: {
+        accounts: {
+          logicalName: "account",
+          entitySet: "accounts",
+          records: [
+            {
+              accountid: "11111111-1111-1111-1111-111111111111",
+              __files: { sample_file: "files/contract.pdf" }
+            }
+          ]
+        }
+      }
+    }
+  });
+
+  fs.mkdirSync(path.join(root, "spa/test-template/seed-data/files"), { recursive: true });
+  fs.writeFileSync(path.join(root, "spa/test-template/seed-data/files/contract.pdf"), "pdf");
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("table accounts record[0] attaches files, so the seed data must declare the primary key column")));
+});
+
+test("rejects malformed Dataverse export seed tables and records", () => {
+  const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/data.json",
+    seedData: {
+      schemaVersion: 1,
+      tables: {
+        badTable: {
+          logicalName: "",
+          entitySet: 123,
+          records: "not-an-array"
+        },
+        badRecords: {
+          logicalName: "account",
+          entitySet: "accounts",
+          idColumn: "accountid",
+          records: [null, "Contoso", ["sample_file", "files/contract.pdf"]]
+        }
+      }
+    }
+  });
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("table badTable logicalName must be a non-empty string")));
+  assert(result.errors.some((error) => error.includes("table badTable entitySet must be a non-empty string")));
+  assert(result.errors.some((error) => error.includes("table badTable records must be an array")));
+  assert(result.errors.some((error) => error.includes("table badRecords record[0] must be an object")));
+  assert(result.errors.some((error) => error.includes("table badRecords record[1] must be an object")));
+  assert(result.errors.some((error) => error.includes("table badRecords record[2] must be an object")));
+});
+
+test("rejects __files paths that escape the seed data folder through a symlink", () => {
+  const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/accounts.json",
+    seedData: {
+      entitySetName: "accounts",
+      primaryKey: "accountid",
+      records: [
+        {
+          accountid: "11111111-1111-1111-1111-111111111111",
+          __files: { sample_contract: "files/escape.pdf" }
+        }
+      ]
+    }
+  });
+
+  const outsideFile = path.join(root, "outside.pdf");
+  fs.writeFileSync(outsideFile, "pdf");
+
+  const filesDirectory = path.join(root, "spa/test-template/seed-data/files");
+  fs.mkdirSync(filesDirectory, { recursive: true });
+  fs.symlinkSync(outsideFile, path.join(filesDirectory, "escape.pdf"));
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("__files.sample_contract resolves outside the seed data folder")));
+});
+
+test("rejects the retired fileAttachments and fileExports attachment shapes", () => {
+  const attachmentsRoot = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/accounts.json",
+    seedData: {
+      entitySetName: "accounts",
+      records: [
+        {
+          name: "Contoso",
+          fileAttachments: [{ columnName: "sample_contract", filePath: "files/contract.pdf" }]
+        }
+      ]
+    }
+  });
+
+  const attachmentsResult = validateTemplates({ root: attachmentsRoot });
+  assert(attachmentsResult.errors.some((error) => error.includes("uses fileAttachments, which is no longer supported")));
+
+  const exportsRoot = createTemplateRoot({
     seedDataPath: "spa/test-template/seed-data/data.json",
     seedData: {
       schemaVersion: 1,
@@ -272,46 +443,23 @@ test("rejects malformed Dataverse export seed data fileExports", () => {
           entitySet: "accounts",
           idColumn: "accountid",
           records: []
-        },
-        badTable: {
-          logicalName: "",
-          entitySet: "",
-          records: {}
         }
       },
       fileExports: [
         {
-          attachmentId: "00000000-0000-0000-0000-000000000002",
+          attachmentId: "11111111-1111-1111-1111-111111111111",
           fileColumn: "sample_file",
           fileName: "contract.pdf",
-          contentType: "application/pdf",
-          size: 3,
-          path: "../contract.pdf"
-        },
-        {
-          attachmentId: "",
-          fileColumn: "",
-          fileName: "",
-          path: path.resolve("absolute.pdf")
-        },
-        {
-          attachmentId: "00000000-0000-0000-0000-000000000003",
-          fileColumn: "sample_file",
-          fileName: "missing.pdf",
-          path: "files/missing.pdf"
+          path: "files/contract.pdf"
         }
       ]
     }
   });
 
-  const result = validateTemplates({ root });
-  assert(result.errors.some((error) => error.includes("table badTable logicalName must be a non-empty string")));
-  assert(result.errors.some((error) => error.includes("table badTable records must be an array")));
-  assert(result.errors.some((error) => error.includes("fileExports[0] path must stay inside")));
-  assert(result.errors.some((error) => error.includes("fileExports[1] path must be relative")));
-  assert(result.errors.some((error) => error.includes("fileExports[1] attachmentId must be a non-empty string")));
-  assert(result.errors.some((error) => error.includes("fileExports[2] file does not exist")));
+  const exportsResult = validateTemplates({ root: exportsRoot });
+  assert(exportsResult.errors.some((error) => error.includes("uses fileExports, which is no longer supported")));
 });
+
 
 test("rejects variant package paths outside their framework layout", () => {
   const root = createTemplateRoot({

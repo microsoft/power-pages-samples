@@ -63,7 +63,7 @@
       "expectations": [
         "Derives the table list from the solution zip rather than guessing",
         "Reads entity set names and the primarykey column from customizations.xml",
-        "Uses the Dataverse export shape with tables and optional fileExports",
+        "Uses the Dataverse export shape with tables, and __files for any file-column attachments",
         "Writes the file to the family seed-data/ folder, not seed/",
         "Uses fictional data with no real tenant names or emails",
         "Orders tables so lookups resolve to records defined earlier",

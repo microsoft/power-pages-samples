@@ -168,6 +168,7 @@ pac pages upload-code-site --rootPath ./<id>
 ## Seed data shapes
 
 The validator accepts two shapes.
+Both attach files the same way, with the reserved `__files` key described in [Attaching files](#attaching-files).
 
 ### Dataverse export shape
 
@@ -182,31 +183,26 @@ Use this for anything with more than one table, or with file columns.
     "Records use stable GUIDs so an importer can safely upsert them."
   ],
   "tables": {
-    "suppliers": {
-      "logicalName": "spnvc_supplier",
-      "entitySet": "spnvc_suppliers",
-      "idColumn": "spnvc_supplierid",
-      "records": []
+    "invoiceAttachments": {
+      "logicalName": "spnvc_invoiceattachment",
+      "entitySet": "spnvc_invoiceattachments",
+      "idColumn": "spnvc_invoiceattachmentid",
+      "records": [
+        {
+          "spnvc_invoiceattachmentid": "791bafe1-da26-f111-8341-000d3a37e531",
+          "spnvc_name": "laptop-order-receipt.pdf",
+          "__files": {
+            "spnvc_file": "files/791bafe1-da26-f111-8341-000d3a37e531-laptop-order-receipt.pdf"
+          }
+        }
+      ]
     }
-  },
-  "fileExports": [
-    {
-      "attachmentId": "00000000-0000-0000-0000-000000000000",
-      "fileColumn": "spnvc_file",
-      "fileName": "contract.pdf",
-      "contentType": "application/pdf",
-      "size": 12345,
-      "path": "files/00000000-0000-0000-0000-000000000000-contract.pdf"
-    }
-  ]
+  }
 }
 ```
 
 Table keys are friendly names you choose.
 `logicalName` and `entitySet` are required per table and must be non-empty.
-
-`fileExports[].size` must match the real byte size of the file on disk, and `path` is relative to `data.json` and must stay inside the seed-data folder.
-Prefixing file names with the attachment id keeps them unique when two records attach files with the same name.
 
 Order matters: `tables` is read top to bottom, so parents come before the children that look them up.
 
@@ -217,23 +213,41 @@ Use this only when the template seeds one table and needs nothing else.
 ```json
 {
   "entitySetName": "accounts",
+  "primaryKey": "accountid",
   "records": [
     {
+      "accountid": "11111111-1111-1111-1111-111111111111",
       "name": "Contoso",
-      "fileAttachments": [
-        {
-          "columnName": "sample_contract",
-          "filePath": "files/contract.pdf",
-          "fileName": "contract.pdf",
-          "mimeType": "application/pdf"
-        }
-      ]
+      "__files": {
+        "sample_contract": "files/contract.pdf"
+      }
     }
   ]
 }
 ```
 
-`fileAttachments` is optional, and `columnName` plus `filePath` are required when present.
+`primaryKey` is only required when a record uses `__files`.
+
+### Attaching files
+
+`__files` is a reserved key on a record that maps a Dataverse **file column** logical name to a path relative to the seed-data JSON file.
+File columns are the only attachment target supported today.
+
+```json
+"__files": { "spnvc_file": "files/contract.pdf" }
+```
+
+The importer uploads each file against the record it belongs to, addressed by primary key, so two things have to be true:
+
+- The seed file declares its primary key column: top-level `primaryKey` in the single-entity shape, or the table's `idColumn` in the Dataverse export shape.
+- Every record with `__files` spells out an explicit GUID in that column instead of letting Dataverse generate one.
+
+Supported file types are `pdf`, `png`, `jpg`, `jpeg`, `txt`, `csv`, `json`, `docx`, `xlsx`.
+Store the files under the seed-data folder, conventionally in `files/`.
+Prefixing each file name with the owning record id keeps names unique when two records attach files that are otherwise named the same.
+
+The retired `fileAttachments` array and top-level `fileExports` array are rejected by the validator.
+Neither is read by the create-site runtime, so a template using them would import with no files attached.
 
 ## What the validator enforces
 
@@ -247,7 +261,10 @@ Use this only when the template seeds one table and needs nothing else.
 - A `solutionPath` that is missing, empty, a Git LFS pointer, not a real zip, or has no `solution.xml`.
 - A `solution.xml` with no readable `<Managed>` value.
 - Seed data that is not an object, or a table entry missing `logicalName`, `entitySet`, or a `records` array.
-- A seed file reference that does not exist, is empty, escapes the seed-data folder, or whose declared `size` disagrees with the file on disk.
+- A record using the retired `fileAttachments` array, or a seed file using the retired top-level `fileExports` array.
+- A `__files` value that is not a non-empty object.
+- A record attaching files when the seed data declares no primary key column, or when that column does not hold an explicit GUID.
+- A `__files` path that does not exist, is empty, is a Git LFS pointer, escapes the seed-data folder, or uses a file type outside `pdf`, `png`, `jpg`, `jpeg`, `txt`, `csv`, `json`, `docx`, `xlsx`.
 - Any referenced path that escapes `templates/`.
 
 Managed solutions are a warning by default and an error under `--enforce-unmanaged`.
