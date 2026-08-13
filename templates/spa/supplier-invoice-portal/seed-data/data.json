@@ -98,7 +98,7 @@
           "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
           "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-001",
-          "spnvc_postatus": 2,
+          "spnvc_postatus": 132140001,
           "spnvc_totalamount": 15000
         },
         {
@@ -111,7 +111,7 @@
           "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
           "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-002",
-          "spnvc_postatus": 2,
+          "spnvc_postatus": 132140001,
           "spnvc_totalamount": 32500
         },
         {
@@ -124,7 +124,7 @@
           "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
           "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-003",
-          "spnvc_postatus": 3,
+          "spnvc_postatus": 132140002,
           "spnvc_totalamount": 8750
         },
         {
@@ -137,7 +137,7 @@
           "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
           "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-004",
-          "spnvc_postatus": 2,
+          "spnvc_postatus": 132140001,
           "spnvc_totalamount": 22000
         },
         {
@@ -150,7 +150,7 @@
           "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
           "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-005",
-          "spnvc_postatus": 1,
+          "spnvc_postatus": 132140000,
           "spnvc_totalamount": 12300
         },
         {
@@ -163,7 +163,7 @@
           "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
           "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-006",
-          "spnvc_postatus": 1,
+          "spnvc_postatus": 132140000,
           "spnvc_totalamount": 18900
         },
         {
@@ -176,7 +176,7 @@
           "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
           "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-007",
-          "spnvc_postatus": 4,
+          "spnvc_postatus": 132140003,
           "spnvc_totalamount": 45000
         },
         {
@@ -189,7 +189,7 @@
           "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
           "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-008",
-          "spnvc_postatus": 2,
+          "spnvc_postatus": 132140001,
           "spnvc_totalamount": 28400
         },
         {
@@ -202,7 +202,7 @@
           "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
           "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-009",
-          "spnvc_postatus": 5,
+          "spnvc_postatus": 132140004,
           "spnvc_totalamount": 9600
         },
         {
@@ -215,7 +215,7 @@
           "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
           "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-010",
-          "spnvc_postatus": 2,
+          "spnvc_postatus": 132140001,
           "spnvc_totalamount": 16750
         }
       ]
@@ -240,7 +240,7 @@
           "_spnvc_purchaseorderid_value": null,
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
-          "spnvc_invoicestatus": 5
+          "spnvc_invoicestatus": 132140004
         },
         {
           "@odata.etag": "W/\"38974672\"",
@@ -257,7 +257,7 @@
           "_spnvc_purchaseorderid_value": null,
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
-          "spnvc_invoicestatus": 5
+          "spnvc_invoicestatus": 132140004
         },
         {
           "@odata.etag": "W/\"39017467\"",
@@ -274,7 +274,7 @@
           "_spnvc_purchaseorderid_value": null,
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
-          "spnvc_invoicestatus": 4
+          "spnvc_invoicestatus": 132140003
         },
         {
           "@odata.etag": "W/\"40766389\"",
@@ -293,7 +293,7 @@
           "_spnvc_purchaseorderid_value": "f52b7e24-da26-f111-8341-000d3a37e531",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 5
+          "spnvc_invoicestatus": 132140004
         },
         {
           "@odata.etag": "W/\"40769402\"",
@@ -310,7 +310,7 @@
           "_spnvc_purchaseorderid_value": null,
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 2
+          "spnvc_invoicestatus": 132140001
         },
         {
           "@odata.etag": "W/\"40769405\"",
@@ -327,7 +327,7 @@
           "_spnvc_purchaseorderid_value": null,
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 2
+          "spnvc_invoicestatus": 132140001
         },
         {
           "@odata.etag": "W/\"40766384\"",
@@ -346,7 +346,7 @@
           "_spnvc_purchaseorderid_value": "f52b7e24-da26-f111-8341-000d3a37e531",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 2
+          "spnvc_invoicestatus": 132140001
         },
         {
           "@odata.etag": "W/\"40766393\"",
@@ -365,7 +365,7 @@
           "_spnvc_purchaseorderid_value": "c7a71336-da26-f111-8341-000d3a36e41e",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 3
+          "spnvc_invoicestatus": 132140002
         },
         {
           "@odata.etag": "W/\"40766387\"",
@@ -384,7 +384,7 @@
           "_spnvc_purchaseorderid_value": "8e0f5d38-da26-f111-8341-000d3a37e531",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 7
+          "spnvc_invoicestatus": 132140006
         },
         {
           "@odata.etag": "W/\"40766391\"",
@@ -403,7 +403,7 @@
           "_spnvc_purchaseorderid_value": "0515b442-da26-f111-8341-000d3a58dd8c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 1
+          "spnvc_invoicestatus": 132140000
         },
         {
           "@odata.etag": "W/\"40766395\"",
@@ -422,7 +422,7 @@
           "_spnvc_purchaseorderid_value": "23548357-da26-f111-8341-000d3a36e41e",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 7
+          "spnvc_invoicestatus": 132140006
         },
         {
           "@odata.etag": "W/\"40766397\"",
@@ -441,7 +441,7 @@
           "_spnvc_purchaseorderid_value": "71ca6963-da26-f111-8341-000d3a37e531",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 2
+          "spnvc_invoicestatus": 132140001
         },
         {
           "@odata.etag": "W/\"40766399\"",
@@ -460,7 +460,7 @@
           "_spnvc_purchaseorderid_value": "34831367-da26-f111-8341-000d3a5bf33c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 6
+          "spnvc_invoicestatus": 132140005
         },
         {
           "@odata.etag": "W/\"40766401\"",
@@ -479,7 +479,7 @@
           "_spnvc_purchaseorderid_value": "d7ee956a-da26-f111-8341-000d3a58dd8c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 4
+          "spnvc_invoicestatus": 132140003
         },
         {
           "@odata.etag": "W/\"40766402\"",
@@ -498,7 +498,7 @@
           "_spnvc_purchaseorderid_value": "0515b442-da26-f111-8341-000d3a58dd8c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 3
+          "spnvc_invoicestatus": 132140002
         }
       ]
     },
