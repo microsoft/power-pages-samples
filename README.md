@@ -53,7 +53,7 @@ Server-side JavaScript that runs on the Power Pages runtime, callable from both 
 | Sample | Integrates | Use this sample to learn |
 | --- | --- | --- |
 | [SharePoint Integration](samples/server-logic/sharepoint-integration/) | Microsoft Graph + SharePoint | Call Microsoft Graph and SharePoint Online from server logic using an Entra client-credentials app. Pairs with the [File Upload (SharePoint)](samples/spa/snippets/file-upload/sharepoint/) code-site sample. |
-| [Unbound Custom API Invocation](samples/server-logic/unbound-custom-api/) | Dataverse Custom APIs | Invoke an unbound Custom Action with `POST` and an unbound Custom Function with `GET` from server logic using a ready-to-import solution. |
+| [Unbound Custom API Invocation](samples/server-logic/unbound-custom-api/) | Dataverse Custom APIs | Invoke an unbound Custom Action with `POST` and a parameterized unbound Custom Function with `GET` from server logic using a ready-to-import solution. |
 
 ## Sample categories
 
