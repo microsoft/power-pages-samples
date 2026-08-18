@@ -1,6 +1,13 @@
 (() => {
     "use strict";
 
+    const sampleRoot = document.querySelector(".custom-api-sample");
+    if (!sampleRoot || sampleRoot.dataset.serverLogicSampleInitialized === "true") {
+        return;
+    }
+
+    sampleRoot.dataset.serverLogicSampleInitialized = "true";
+
     const endpoint = "/_api/serverlogics/sl-unbound-customapi-manual-test";
 
     const setText = (id, value) => {

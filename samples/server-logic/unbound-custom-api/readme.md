@@ -18,7 +18,7 @@ compilation, page editing, or plug-in registration is required after import.
 
 | Component | Value |
 | --- | --- |
-| Solution | `ServerLogicUnboundCustomApiSample_1_0_0_0.zip` |
+| Solution | `ServerLogicUnboundCustomApiSample_1_0_0_1.zip` |
 | Site | `Custom API Support in Server Logic` |
 | Site type | Traditional enhanced-data-model site (not a code site) |
 | Home page | Automatically invokes the server logic endpoint and renders both results |
@@ -42,7 +42,7 @@ compilation, page editing, or plug-in registration is required after import.
 ## Import and activate the sample
 
 1. Download
-   [`ServerLogicUnboundCustomApiSample_1_0_0_0.zip`](./ServerLogicUnboundCustomApiSample_1_0_0_0.zip).
+   [`ServerLogicUnboundCustomApiSample_1_0_0_1.zip`](./ServerLogicUnboundCustomApiSample_1_0_0_1.zip).
 2. In [Power Apps](https://make.powerapps.com), open the target environment,
    select **Solutions**, and import the ZIP file.
 3. Open [Power Pages](https://make.powerpages.microsoft.com) in the same
@@ -224,6 +224,10 @@ execution user.
 - **The home page stays on "Running":** publish all customizations and confirm
   that the imported Home Web Template is still assigned to the Home Page
   Template.
+- **The browser sends two requests to the server logic endpoint:** import
+  version `1.0.0.1` or later, publish all customizations, and clear the site's
+  configuration cache. This version removes legacy page JavaScript and also
+  prevents duplicate initialization.
 - **Custom API not found:** confirm the two Custom APIs and the plug-in assembly
   were imported successfully, then publish all customizations.
 - **The action succeeds but the function reports HTTP 400:** the target
