@@ -7,18 +7,21 @@ unbound Dataverse Custom API:
 - A **Custom Function** by using `GET` with OData parameter aliases and no
   request body.
 
-The importable unmanaged solution includes the Power Pages site, server logic,
-two Custom APIs, their parameters and response properties, and a compiled,
-signed Dataverse plug-in. No code compilation or plug-in registration is
-required after import.
+The importable unmanaged solution includes a traditional Power Pages site,
+its ready-to-run home page, server logic, two Custom APIs, their parameters
+and response properties, and a compiled, signed Dataverse plug-in. No code
+compilation, page editing, or plug-in registration is required after import.
 
-![Successful parameterized Custom Function response from the server logic endpoint](./screenshot.png)
+![Traditional sample home page showing successful Custom Action and parameterized Custom Function results](./screenshot.png)
 
 ## Solution contents
 
 | Component | Value |
 | --- | --- |
 | Solution | `ServerLogicUnboundCustomApiSample_1_0_0_0.zip` |
+| Site | `Custom API Support in Server Logic` |
+| Site type | Traditional enhanced-data-model site (not a code site) |
+| Home page | Automatically invokes the server logic endpoint and renders both results |
 | Server logic endpoint | `sl-unbound-customapi-manual-test` |
 | Custom Action | `new_ServerLogicUnboundActionManualTest` |
 | Custom Function | `new_ServerLogicUnboundFunctionManualTest` |
@@ -30,7 +33,6 @@ required after import.
 ## Prerequisites
 
 - A Power Platform environment with Power Pages provisioned.
-- A Power Pages site that uses the enhanced data model.
 - Permission to import solutions and reactivate a Power Pages site.
 - The standard Power Pages managed solutions. The package declares these
   dependencies:
@@ -44,8 +46,8 @@ required after import.
 2. In [Power Apps](https://make.powerapps.com), open the target environment,
    select **Solutions**, and import the ZIP file.
 3. Open [Power Pages](https://make.powerpages.microsoft.com) in the same
-   environment. Locate the imported **Power Pages Server Logic Unbound Custom
-   API Sample** site and reactivate it.
+   environment. Locate the imported **Custom API Support in Server Logic**
+   site and reactivate it.
 4. Choose an available site address when prompted.
 5. Publish all customizations and wait for the site to finish provisioning.
 
@@ -54,15 +56,24 @@ address cannot be provisioned by a portable solution package.
 
 ## Run the sample
 
-Browse to:
+Browse to the activated site's home page:
 
 ```text
-https://<your-site-domain>/_api/serverlogics/sl-unbound-customapi-manual-test
+https://<your-site-domain>/
 ```
 
-The endpoint returns a wrapper whose `data` property is a JSON string. Parse
-`data` to inspect the action and function results. A successful response has
-this shape:
+The page automatically calls:
+
+```text
+GET /_api/serverlogics/sl-unbound-customapi-manual-test
+```
+
+It displays the action and function request values, HTTP statuses, response
+values, pass/fail badges, and the reference code used by the sample. You can
+also browse directly to the endpoint URL to inspect its raw JSON response.
+
+The endpoint returns a wrapper whose `data` property is a JSON string. A
+successful response has this shape:
 
 ```json
 {
@@ -105,6 +116,24 @@ After parsing `data`, both calls report the expected values:
 ```
 
 ## How it works
+
+The dedicated home Web Template renders the page content and embeds the
+client-side script, so the sample does not depend on JavaScript hooks from a
+starter site's Header or Footer. The script uses a normal same-origin request
+and parses the Server Logic response:
+
+```javascript
+const response = await fetch(
+    "/_api/serverlogics/sl-unbound-customapi-manual-test",
+    {
+        method: "GET",
+        credentials: "same-origin",
+        headers: { Accept: "application/json" }
+    }
+);
+const outer = await response.json();
+const result = JSON.parse(outer.data);
+```
 
 The server logic sends a body with the unbound action:
 
@@ -166,6 +195,14 @@ Its two inputs are configured as Custom API request parameters:
 
 ## Source files
 
+- [`source/homepage-content.html`](./source/homepage-content.html) contains the
+  traditional page markup and styles included in the solution.
+- [`source/homepage.js`](./source/homepage.js) invokes the Server Logic endpoint
+  and renders the action and function results. The dedicated home Web Template
+  in the solution embeds this script after the editable page content.
+- [`source/header.html`](./source/header.html) and
+  [`source/footer.html`](./source/footer.html) keep the imported traditional
+  site self-contained and free of starter-template snippet dependencies.
 - [`source/sl-unbound-customapi-manual-test.sl`](./source/sl-unbound-customapi-manual-test.sl)
   contains the server logic included in the solution.
 - [`source/EchoPlugin.cs`](./source/EchoPlugin.cs) contains the equivalent
@@ -184,7 +221,13 @@ execution user.
 
 - **404 from the server logic URL:** confirm that the imported site is active,
   the endpoint name is unchanged, and customizations are published.
+- **The home page stays on "Running":** publish all customizations and confirm
+  that the imported Home Web Template is still assigned to the Home Page
+  Template.
 - **Custom API not found:** confirm the two Custom APIs and the plug-in assembly
   were imported successfully, then publish all customizations.
+- **The action succeeds but the function reports HTTP 400:** the target
+  environment has not yet received the Power Pages runtime version that
+  supports parameterized unbound Custom Functions through `InvokeCustomApi`.
 - **Managed dependency error during import:** provision Power Pages in the
   target environment so the required Power Pages core solutions are installed.
