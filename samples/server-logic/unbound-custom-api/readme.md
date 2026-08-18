@@ -12,7 +12,7 @@ two Custom APIs, their parameters and response properties, and a compiled,
 signed Dataverse plug-in. No code compilation or plug-in registration is
 required after import.
 
-![Successful action and function responses from the server logic endpoint](./screenshot.png)
+![Successful parameterized Custom Function response from the server logic endpoint](./screenshot.png)
 
 ## Solution contents
 
