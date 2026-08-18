@@ -4,7 +4,8 @@ This sample shows how Power Pages server logic can invoke both forms of an
 unbound Dataverse Custom API:
 
 - A **Custom Action** by using `POST` with request parameters.
-- A **Custom Function** by using `GET` without a request body.
+- A **Custom Function** by using `GET` with OData parameter aliases and no
+  request body.
 
 The importable unmanaged solution includes the Power Pages site, server logic,
 two Custom APIs, their parameters and response properties, and a compiled,
@@ -22,6 +23,7 @@ required after import.
 | Custom Action | `new_ServerLogicUnboundActionManualTest` |
 | Custom Function | `new_ServerLogicUnboundFunctionManualTest` |
 | Action inputs | `InputText` (String), `InputNumber` (Integer) |
+| Function inputs | `InputText` (String), `InputNumber` (Integer) |
 | Action and function outputs | `ResponseText` (String), `ResponseNumber` (Integer) |
 | Access | Anonymous Users and Authenticated Users web roles |
 
@@ -87,10 +89,14 @@ After parsing `data`, both calls report the expected values:
   },
   "function": {
     "method": "GET",
+    "request": {
+      "InputText": "Manual GET parameter test / aliases",
+      "InputNumber": 61
+    },
     "response": {
       "statusCode": 200,
       "body": {
-        "ResponseNumber": 7
+        "ResponseNumber": 68
       }
     },
     "passed": true
@@ -115,19 +121,34 @@ var actionResponse = Server.Connector.Dataverse.InvokeCustomApi(
 );
 ```
 
-The unbound function uses `GET` and has no body:
+The unbound function uses `GET` and puts its input values in OData parameter
+aliases. The binding list stays in the operation path, while the encoded values
+stay in the query string:
 
 ```javascript
+function encodeODataStringAlias(value) {
+    return encodeURIComponent("'" + value.replace(/'/g, "''") + "'");
+}
+
+var functionRequest = {
+    InputText: "Manual GET parameter test / aliases",
+    InputNumber: 61
+};
+var functionUrl =
+    "new_ServerLogicUnboundFunctionManualTest(InputText=@text,InputNumber=@number)"
+    + "?@text=" + encodeODataStringAlias(functionRequest.InputText)
+    + "&@number=" + functionRequest.InputNumber;
+
 var functionResponse = Server.Connector.Dataverse.InvokeCustomApi(
     "GET",
-    "new_ServerLogicUnboundFunctionManualTest"
+    functionUrl
 );
 ```
 
-The plug-in echoes the action text and adds `7` to `InputNumber`. The action
-therefore returns `42`, while the function has no input number and returns `7`.
-The server logic parses the connector response and sets `overallPass` only when
-both calls return the expected values.
+The plug-in echoes each input text and adds `7` to `InputNumber`. The action
+therefore returns `42`, while the function returns `68`. The server logic parses
+the connector response and sets `overallPass` only when both calls return the
+expected values.
 
 ## Imported Custom API configuration
 
@@ -138,6 +159,10 @@ The action is global (`Binding Type = Global`) and is not a function:
 The function is also global and has `Is Function = Yes`:
 
 ![Unbound Custom Function configuration](./media/unbound-custom-function-configuration.png)
+
+Its two inputs are configured as Custom API request parameters:
+
+![Unbound Custom Function request parameters](./media/unbound-custom-function-request-parameters.png)
 
 ## Source files
 

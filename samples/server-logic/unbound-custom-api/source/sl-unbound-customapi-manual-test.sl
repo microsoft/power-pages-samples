@@ -10,11 +10,22 @@ function parseConnectorResponse(raw) {
     };
 }
 
+function encodeODataStringAlias(value) {
+    return encodeURIComponent("'" + value.replace(/'/g, "''") + "'");
+}
+
 function get() {
     var actionRequest = {
         InputText: "Manual test from Power Pages",
         InputNumber: 35
     };
+    var functionRequest = {
+        InputText: "Manual GET parameter test / aliases",
+        InputNumber: 61
+    };
+    var functionUrl = "new_ServerLogicUnboundFunctionManualTest(InputText=@text,InputNumber=@number)"
+        + "?@text=" + encodeODataStringAlias(functionRequest.InputText)
+        + "&@number=" + functionRequest.InputNumber;
     var actionResponse = parseConnectorResponse(
         Server.Connector.Dataverse.InvokeCustomApi(
             "POST",
@@ -25,7 +36,7 @@ function get() {
     var functionResponse = parseConnectorResponse(
         Server.Connector.Dataverse.InvokeCustomApi(
             "GET",
-            "new_ServerLogicUnboundFunctionManualTest"
+            functionUrl
         )
     );
     var actionPassed = actionResponse.isSuccess
@@ -34,7 +45,8 @@ function get() {
         && actionResponse.body.ResponseText.indexOf(actionRequest.InputText) >= 0;
     var functionPassed = functionResponse.isSuccess
         && functionResponse.body
-        && functionResponse.body.ResponseNumber === 7;
+        && functionResponse.body.ResponseNumber === 68
+        && functionResponse.body.ResponseText.indexOf(functionRequest.InputText) >= 0;
 
     return JSON.stringify({
         overallPass: actionPassed && functionPassed,
@@ -48,7 +60,8 @@ function get() {
         function: {
             method: "GET",
             name: "new_ServerLogicUnboundFunctionManualTest",
-            request: null,
+            url: functionUrl,
+            request: functionRequest,
             response: functionResponse,
             passed: functionPassed
         }
