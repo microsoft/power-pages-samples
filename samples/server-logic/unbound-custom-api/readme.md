@@ -35,6 +35,8 @@ import.
 
 - A Power Platform environment with Power Pages provisioned.
 - Permission to import solutions and reactivate a Power Pages site.
+- Power Pages runtime version `9.8.9.xx` or later for unbound Custom Function
+  calls through `InvokeCustomApi`.
 - The standard Power Pages managed solutions. The package declares these
   dependencies:
   - `PowerPages_CoreBase` version `1.1.2605.1` or later.
@@ -234,7 +236,8 @@ portal application user.
 - **Custom API not found:** confirm the two Custom APIs and the plug-in assembly
   were imported successfully, then publish all customizations.
 - **The action succeeds but the function reports HTTP 400:** the target
-  environment has not yet received the Power Pages runtime version that
-  supports parameterized unbound Custom Functions through `InvokeCustomApi`.
+  environment has not yet received Power Pages runtime version `9.8.9.xx` or
+  later. Parameterized unbound Custom Functions through `InvokeCustomApi` are
+  available starting with `9.8.9.xx`.
 - **Managed dependency error during import:** provision Power Pages in the
   target environment so the required Power Pages core solutions are installed.
