@@ -7,20 +7,21 @@ unbound Dataverse Custom API:
 - A **Custom Function** by using `GET` with OData parameter aliases and no
   request body.
 
-The importable unmanaged solution includes a traditional Power Pages site,
-its ready-to-run home page, server logic, two Custom APIs, their parameters
-and response properties, and a compiled, signed Dataverse plug-in. No code
-compilation, page editing, or plug-in registration is required after import.
+The importable unmanaged solution includes an enhanced-data-model Power Pages
+site, its ready-to-run home page, server logic, two Custom APIs, their
+parameters and response properties, and a compiled, signed Dataverse plug-in.
+No code compilation, page editing, or plug-in registration is required after
+import.
 
-![Traditional sample home page showing successful Custom Action and parameterized Custom Function results](./screenshot.png)
+![Sample home page showing successful Custom Action and parameterized Custom Function results](./screenshot.png)
 
 ## Solution contents
 
 | Component | Value |
 | --- | --- |
-| Solution | `ServerLogicUnboundCustomApiSample_1_0_0_1.zip` |
+| Solution | `ServerLogicUnboundCustomApiSample_1_0_0_2.zip` |
 | Site | `Custom API Support in Server Logic` |
-| Site type | Traditional enhanced-data-model site (not a code site) |
+| Site type | Enhanced-data-model site (not a code site) |
 | Home page | Automatically invokes the server logic endpoint and renders both results |
 | Server logic endpoint | `sl-unbound-customapi-manual-test` |
 | Custom Action | `new_ServerLogicUnboundActionManualTest` |
@@ -42,7 +43,7 @@ compilation, page editing, or plug-in registration is required after import.
 ## Import and activate the sample
 
 1. Download
-   [`ServerLogicUnboundCustomApiSample_1_0_0_1.zip`](./ServerLogicUnboundCustomApiSample_1_0_0_1.zip).
+   [`ServerLogicUnboundCustomApiSample_1_0_0_2.zip`](./ServerLogicUnboundCustomApiSample_1_0_0_2.zip).
 2. In [Power Apps](https://make.powerapps.com), open the target environment,
    select **Solutions**, and import the ZIP file.
 3. Open [Power Pages](https://make.powerpages.microsoft.com) in the same
@@ -52,7 +53,9 @@ compilation, page editing, or plug-in registration is required after import.
 5. Publish all customizations and wait for the site to finish provisioning.
 
 Site reactivation is required after the first import because a Power Pages site
-address cannot be provisioned by a portable solution package.
+address cannot be provisioned by a portable solution package. The package
+intentionally omits a primary domain so importing a newer sample version does
+not replace the address of an already activated site.
 
 ## Run the sample
 
@@ -196,13 +199,13 @@ Its two inputs are configured as Custom API request parameters:
 ## Source files
 
 - [`source/homepage-content.html`](./source/homepage-content.html) contains the
-  traditional page markup and styles included in the solution.
+  page markup and styles included in the solution.
 - [`source/homepage.js`](./source/homepage.js) invokes the Server Logic endpoint
   and renders the action and function results. The dedicated home Web Template
   in the solution embeds this script after the editable page content.
 - [`source/header.html`](./source/header.html) and
-  [`source/footer.html`](./source/footer.html) keep the imported traditional
-  site self-contained and free of starter-template snippet dependencies.
+  [`source/footer.html`](./source/footer.html) keep the imported site
+  self-contained and free of starter-template snippet dependencies.
 - [`source/sl-unbound-customapi-manual-test.sl`](./source/sl-unbound-customapi-manual-test.sl)
   contains the server logic included in the solution.
 - [`source/EchoPlugin.cs`](./source/EchoPlugin.cs) contains the equivalent
@@ -214,8 +217,8 @@ Its two inputs are configured as Custom API request parameters:
 This demonstration endpoint is assigned to both anonymous and authenticated
 web roles because it returns only deterministic sample values. For production
 code, grant only the minimum required web roles, validate every input, avoid
-returning sensitive Dataverse data, and review the privileges of the plug-in
-execution user.
+returning sensitive Dataverse data, and review the privileges granted to the
+portal application user.
 
 ## Troubleshooting
 
@@ -225,7 +228,7 @@ execution user.
   that the imported Home Web Template is still assigned to the Home Page
   Template.
 - **The browser sends two requests to the server logic endpoint:** import
-  version `1.0.0.1` or later, publish all customizations, and clear the site's
+  version `1.0.0.2` or later, publish all customizations, and clear the site's
   configuration cache. This version removes legacy page JavaScript and also
   prevents duplicate initialization.
 - **Custom API not found:** confirm the two Custom APIs and the plug-in assembly

@@ -154,6 +154,26 @@
     margin-top: 36px;
   }
 
+  .custom-api-sample .sample-security-note {
+    border-left: 8px solid #a7e3c3;
+    margin-top: 36px;
+    padding-left: 22px;
+  }
+
+  .custom-api-sample .sample-security-note h2 {
+    background: #ff9933;
+    display: inline-block;
+    margin: 0 0 16px;
+    padding: 4px 8px;
+  }
+
+  .custom-api-sample .sample-security-note p {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 1200px;
+  }
+
   @media (max-width: 600px) {
     .custom-api-sample .sample-grid {
       grid-template-columns: 1fr;
@@ -168,7 +188,7 @@
 <main class="custom-api-sample" aria-labelledby="custom-api-sample-title">
   <h1 id="custom-api-sample-title">Custom API Support in Server Logic</h1>
   <p class="sample-lead">
-    This traditional Power Pages page automatically invokes one unbound Custom Action and one
+    This Power Pages page automatically invokes one unbound Custom Action and one
     parameterized unbound Custom Function through the Server Logic Dataverse connector.
   </p>
   <p>
@@ -236,6 +256,16 @@
       </details>
     </section>
   </div>
+
+  <section class="sample-security-note" aria-labelledby="sample-security-note-title">
+    <h2 id="sample-security-note-title">Security note</h2>
+    <p>
+      This demonstration endpoint is assigned to both anonymous and authenticated web roles
+      because it returns only deterministic sample values. For production code, grant only the
+      minimum required web roles, validate every input, avoid returning sensitive Dataverse data,
+      and review the privileges granted to the portal application user.
+    </p>
+  </section>
 
   <section class="sample-reference" aria-labelledby="sample-reference-title">
     <h2 id="sample-reference-title">Reference code</h2>
