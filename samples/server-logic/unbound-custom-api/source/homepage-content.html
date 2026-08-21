@@ -1,0 +1,297 @@
+<style>
+  html {
+    min-height: 100%;
+    overflow-y: scroll !important;
+  }
+
+  body {
+    min-height: 100%;
+  }
+
+  .custom-api-sample {
+    --sample-accent: #0f6cbd;
+    --sample-border: #d1d1d1;
+    --sample-fail: #a4262c;
+    --sample-muted: #616161;
+    --sample-pass: #107c10;
+    color: #242424;
+    margin: 0 auto;
+    max-width: 1440px;
+    padding: 32px 20px 64px;
+  }
+
+  .custom-api-sample h1 {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    margin-bottom: 12px;
+  }
+
+  .custom-api-sample h2 {
+    font-size: 1.5rem;
+    margin-top: 0;
+  }
+
+  .custom-api-sample h3 {
+    font-size: 1.1rem;
+  }
+
+  .custom-api-sample .sample-lead {
+    color: var(--sample-muted);
+    font-size: 1.1rem;
+    max-width: 900px;
+  }
+
+  .custom-api-sample .sample-overall {
+    align-items: center;
+    border: 2px solid var(--sample-border);
+    border-radius: 8px;
+    display: flex;
+    font-size: 1.15rem;
+    font-weight: 700;
+    gap: 12px;
+    margin: 28px 0;
+    padding: 16px 20px;
+  }
+
+  .custom-api-sample .sample-overall.sample-pass {
+    border-color: var(--sample-pass);
+    color: var(--sample-pass);
+  }
+
+  .custom-api-sample .sample-overall.sample-fail {
+    border-color: var(--sample-fail);
+    color: var(--sample-fail);
+  }
+
+  .custom-api-sample .sample-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  }
+
+  .custom-api-sample .sample-card {
+    border: 1px solid var(--sample-border);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+    min-width: 0;
+    padding: 22px;
+  }
+
+  .custom-api-sample .sample-badge {
+    border-radius: 999px;
+    display: inline-block;
+    font-weight: 700;
+    margin-bottom: 12px;
+    padding: 4px 12px;
+  }
+
+  .custom-api-sample .sample-badge.sample-pass {
+    background: #dff6dd;
+    color: var(--sample-pass);
+  }
+
+  .custom-api-sample .sample-badge.sample-fail {
+    background: #fde7e9;
+    color: var(--sample-fail);
+  }
+
+  .custom-api-sample dl {
+    display: grid;
+    gap: 8px 16px;
+    grid-template-columns: max-content minmax(0, 1fr);
+    margin: 16px 0;
+  }
+
+  .custom-api-sample dt {
+    font-weight: 700;
+  }
+
+  .custom-api-sample dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .custom-api-sample code,
+  .custom-api-sample pre {
+    font-family: Consolas, "Courier New", monospace;
+  }
+
+  .custom-api-sample code {
+    background: #f5f5f5;
+    border-radius: 3px;
+    padding: 1px 4px;
+  }
+
+  .custom-api-sample pre {
+    background: #1e1e1e;
+    border-radius: 6px;
+    color: #f5f5f5;
+    overflow: auto;
+    padding: 16px;
+    white-space: pre-wrap;
+  }
+
+  .custom-api-sample pre code {
+    background: transparent;
+    border-radius: 0;
+    color: inherit;
+    display: block;
+    padding: 0;
+  }
+
+  .custom-api-sample details {
+    border-top: 1px solid var(--sample-border);
+    margin-top: 20px;
+    padding-top: 16px;
+  }
+
+  .custom-api-sample summary {
+    color: var(--sample-accent);
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .custom-api-sample .sample-reference {
+    margin-top: 36px;
+  }
+
+  .custom-api-sample .sample-security-note {
+    border-left: 8px solid #a7e3c3;
+    margin-top: 36px;
+    padding-left: 22px;
+  }
+
+  .custom-api-sample .sample-security-note h2 {
+    background: #ff9933;
+    display: inline-block;
+    margin: 0 0 16px;
+    padding: 4px 8px;
+  }
+
+  .custom-api-sample .sample-security-note p {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin: 0;
+    max-width: 1200px;
+  }
+
+  @media (max-width: 600px) {
+    .custom-api-sample .sample-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .custom-api-sample dl {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<main class="custom-api-sample" aria-labelledby="custom-api-sample-title">
+  <h1 id="custom-api-sample-title">Custom API Support in Server Logic</h1>
+  <p class="sample-lead">
+    This Power Pages page automatically invokes one unbound Custom Action and one
+    parameterized unbound Custom Function through the Server Logic Dataverse connector.
+  </p>
+  <p>
+    Endpoint:
+    <code>GET /_api/serverlogics/sl-unbound-customapi-manual-test</code>
+  </p>
+
+  <div id="sample-overall" class="sample-overall" role="status" aria-live="polite">
+    <span aria-hidden="true">...</span>
+    <span id="sample-overall-text">Running the Server Logic sample...</span>
+  </div>
+
+  <div class="sample-grid">
+    <section class="sample-card" aria-labelledby="sample-action-title">
+      <span id="sample-action-badge" class="sample-badge">Running</span>
+      <h2 id="sample-action-title">Unbound Custom Action</h2>
+      <dl>
+        <dt>Method</dt>
+        <dd id="sample-action-method">POST</dd>
+        <dt>API</dt>
+        <dd><code id="sample-action-name">new_ServerLogicUnboundActionManualTest</code></dd>
+        <dt>Request text</dt>
+        <dd id="sample-action-request-text">-</dd>
+        <dt>Request number</dt>
+        <dd id="sample-action-request-number">-</dd>
+        <dt>HTTP status</dt>
+        <dd id="sample-action-status">-</dd>
+        <dt>Response text</dt>
+        <dd id="sample-action-response-text">-</dd>
+        <dt>Response number</dt>
+        <dd id="sample-action-response-number">-</dd>
+      </dl>
+      <details>
+        <summary>Request and response JSON</summary>
+        <pre id="sample-action-json">Waiting for the endpoint response.</pre>
+      </details>
+    </section>
+
+    <section class="sample-card" aria-labelledby="sample-function-title">
+      <span id="sample-function-badge" class="sample-badge">Running</span>
+      <h2 id="sample-function-title">Parameterized Custom Function</h2>
+      <dl>
+        <dt>Method</dt>
+        <dd id="sample-function-method">GET</dd>
+        <dt>API</dt>
+        <dd><code id="sample-function-name">new_ServerLogicUnboundFunctionManualTest</code></dd>
+        <dt>Function URL</dt>
+        <dd><code id="sample-function-url">Waiting for the endpoint response.</code></dd>
+        <dt>Aliases</dt>
+        <dd><code>@text</code> and <code>@number</code></dd>
+        <dt>Request text</dt>
+        <dd id="sample-function-request-text">-</dd>
+        <dt>Request number</dt>
+        <dd id="sample-function-request-number">-</dd>
+        <dt>HTTP status</dt>
+        <dd id="sample-function-status">-</dd>
+        <dt>Response text</dt>
+        <dd id="sample-function-response-text">-</dd>
+        <dt>Response number</dt>
+        <dd id="sample-function-response-number">-</dd>
+      </dl>
+      <details>
+        <summary>Request and response JSON</summary>
+        <pre id="sample-function-json">Waiting for the endpoint response.</pre>
+      </details>
+    </section>
+  </div>
+
+  <section class="sample-security-note" aria-labelledby="sample-security-note-title">
+    <h2 id="sample-security-note-title">Security note</h2>
+    <p>
+      This demonstration endpoint is assigned to both anonymous and authenticated web roles
+      because it returns only deterministic sample values. For production code, grant only the
+      minimum required web roles, validate every input, avoid returning sensitive Dataverse data,
+      and review the privileges granted to the portal application user.
+    </p>
+  </section>
+
+  <section class="sample-reference" aria-labelledby="sample-reference-title">
+    <h2 id="sample-reference-title">Reference code</h2>
+    <p>
+      The page uses a normal client-side <code>fetch</code>. The endpoint runs the Server Logic
+      source on the server, where the Dataverse connector invokes the same Custom API contracts.
+    </p>
+    <h3>Homepage request</h3>
+    <pre><code>const response = await fetch(
+  "/_api/serverlogics/sl-unbound-customapi-manual-test",
+  { method: "GET", headers: { Accept: "application/json" } }
+);
+const outer = await response.json();
+const result = JSON.parse(outer.data);</code></pre>
+    <h3>Server Logic Custom Action</h3>
+    <pre><code>Server.Connector.Dataverse.InvokeCustomApi(
+  "POST",
+  "new_ServerLogicUnboundActionManualTest",
+  JSON.stringify(actionRequest)
+);</code></pre>
+    <h3>Server Logic parameterized Custom Function</h3>
+    <pre><code>Server.Connector.Dataverse.InvokeCustomApi(
+  "GET",
+  "new_ServerLogicUnboundFunctionManualTest(InputText=@text,InputNumber=@number)"
+    + "?@text=" + encodedText
+    + "&amp;@number=" + functionRequest.InputNumber
+);</code></pre>
+  </section>
+</main>

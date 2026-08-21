@@ -8,6 +8,7 @@ and lets a site reach services that the portal Web API can't.
 | Sample | Integrates | Use this sample to learn |
 | --- | --- | --- |
 | [SharePoint Integration](sharepoint-integration/) | Microsoft Graph + SharePoint | Call Microsoft Graph and SharePoint Online from server logic using an Entra client-credentials app. Pairs with the [File Upload (SharePoint)](../spa/snippets/file-upload/sharepoint/) code-site sample. |
+| [Unbound Custom API Invocation](unbound-custom-api/) | Dataverse Custom APIs | Invoke an unbound Custom Action with `POST` and a parameterized unbound Custom Function with `GET` from server logic using a ready-to-import solution. |
 
 See the repository [CONTRIBUTING guide](../../CONTRIBUTING.md) for how the sample
 categories are organized and where a new sample belongs.
