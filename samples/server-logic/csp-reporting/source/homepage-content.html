@@ -60,7 +60,15 @@
 
   .csp-reporting-sample table {
     border-collapse: collapse;
+    table-layout: fixed;
     width: 100%;
+  }
+
+  .csp-reporting-sample caption {
+    caption-side: top;
+    color: #616161;
+    padding-bottom: 10px;
+    text-align: left;
   }
 
   .csp-reporting-sample th,
@@ -71,13 +79,51 @@
     vertical-align: top;
   }
 
+  .csp-reporting-sample td code {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
   .csp-reporting-sample .sample-pixel {
     border-radius: 8px;
     flex: 0 0 auto;
     height: 48px;
     width: 48px;
   }
+
+  .csp-reporting-sample .sample-status {
+    background: #f5f5f5;
+    border-left: 4px solid #616161;
+    margin-top: 16px;
+    padding: 12px;
+  }
+
+  .csp-reporting-sample .sample-status[data-state="detected"] {
+    background: #dff6dd;
+    border-left-color: #107c10;
+  }
+
+  .csp-reporting-sample .sample-help {
+    color: #424242;
+    margin-bottom: 0;
+  }
 </style>
+
+<script>
+  document.addEventListener("securitypolicyviolation", function (event) {
+    if (event.disposition !== "report" || event.effectiveDirective !== "img-src") {
+      return;
+    }
+
+    var status = document.getElementById("csp-reporting-event-status");
+    if (!status) {
+      return;
+    }
+
+    status.setAttribute("data-state", "detected");
+    status.textContent = "Browser detected the report-only img-src violation and queued a Reporting API report.";
+  });
+</script>
 
 <main class="csp-reporting-sample" aria-labelledby="csp-reporting-title">
   <p style="font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Power Pages Server Logic sample</p>
@@ -92,6 +138,7 @@
     <section class="sample-card" aria-labelledby="configuration-title">
       <h2 id="configuration-title">Configuration</h2>
       <table>
+        <caption>Portable package values</caption>
         <thead>
           <tr>
             <th scope="col">Site setting</th>
@@ -105,7 +152,11 @@
           </tr>
           <tr>
             <td><code>HTTP/Reporting-Endpoints</code></td>
-            <td><code>csp-endpoint="https://example.invalid/_api/serverlogics/csp-report"</code></td>
+            <td>
+              <code>csp-endpoint="https://example.invalid/_api/serverlogics/csp-report"</code>
+              <br>
+              Replace <code>example.invalid</code> with the activated site's domain.
+            </td>
           </tr>
           <tr>
             <td><code>HTTP/Content-Security-Policy-Report-Only</code></td>
@@ -117,6 +168,14 @@
 
     <section class="sample-card" aria-labelledby="trigger-title">
       <h2 id="trigger-title">Harmless browser violation</h2>
+      <p
+        class="sample-status"
+        id="csp-reporting-event-status"
+        role="status"
+        aria-live="polite"
+        data-state="waiting">
+        Waiting for the browser's report-only CSP event.
+      </p>
       <div class="sample-trigger">
         <img
           class="sample-pixel"
@@ -131,6 +190,11 @@
           policy is report-only.
         </p>
       </div>
+      <p class="sample-help">
+        Reporting API delivery is asynchronous and does not appear as ordinary
+        Fetch/XHR traffic. In Chromium DevTools, use
+        <strong>Application &gt; Background services &gt; Reporting API</strong>.
+      </p>
     </section>
   </div>
 

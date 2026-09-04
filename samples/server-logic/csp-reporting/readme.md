@@ -30,7 +30,7 @@ required site settings.
 | Persistence | None |
 
 Solution ZIP SHA-256:
-`4435EE60B4E86A73EB7C04816724A515A2C25A10DCE99D227D86A5E6A05EED90`.
+`E80ACA07EEDDC52B373C48C97517E237D023E51B1376F87E1AA7C474FA879D7A`.
 
 ## Prerequisites
 
@@ -76,7 +76,8 @@ https://<your-site-domain>/
 
 The page loads a harmless green data-URI image. The report-only policy excludes
 the `data:` scheme from `img-src`, causing a genuine `csp-violation` report
-without blocking the image or breaking the page.
+without blocking the image or breaking the page. The status in the card changes
+when the browser raises its report-only CSP event.
 
 The response headers should include:
 
@@ -88,6 +89,15 @@ Reporting-Endpoints: csp-endpoint="https://<your-site-domain>/_api/serverlogics/
 Browsers batch Reporting API requests, so delivery may take approximately one
 minute. The request is sent without an antiforgery token using
 `Content-Type: application/reports+json`.
+
+The background delivery does not appear as ordinary Fetch/XHR traffic in the
+DevTools **Network** panel. To inspect it in Chromium-based browsers:
+
+1. Open DevTools before reloading the page.
+2. In **Console**, clear filters and reload to see the report-only CSP warning.
+3. Open **Application > Background services > Reporting API**, start recording,
+   reload the page, and wait for the `csp-violation` report to be delivered to
+   `csp-endpoint`.
 
 ## Validate the security boundary
 
