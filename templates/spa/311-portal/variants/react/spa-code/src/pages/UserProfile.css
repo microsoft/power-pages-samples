@@ -1,0 +1,143 @@
+/* User profile page — account summary plus the editable contact form. */
+
+.profile-container {
+  max-width: 720px;
+  padding-top: var(--space-2xl);
+  padding-bottom: var(--space-2xl);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.profile-icon {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(27, 73, 101, 0.08);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-title {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 2px;
+}
+
+.profile-subtitle {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+}
+
+.profile-card {
+  padding: 28px;
+  margin-bottom: 20px;
+}
+.profile-card:hover {
+  transform: none;
+}
+
+.profile-section-title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+/* Read-only account summary */
+.profile-account {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-account-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.profile-account-row dt {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-light);
+  flex: 0 0 140px;
+  padding-top: 2px;
+}
+
+.profile-account-row dd {
+  font-family: var(--font-heading);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text);
+  word-break: break-word;
+  flex: 1 1 200px;
+}
+
+/* Editable form */
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px 20px;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.profile-actions .btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Missing-contact state */
+.profile-empty {
+  text-align: center;
+  padding: 16px 0;
+  color: var(--color-warning);
+}
+
+.profile-empty p {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--color-text-muted);
+  max-width: 46ch;
+  margin: 8px auto 0;
+}
+
+@media (max-width: 560px) {
+  .profile-card {
+    padding: 22px 18px;
+  }
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+  .profile-actions .btn {
+    width: 100%;
+  }
+  .profile-account-row dt {
+    flex-basis: 100%;
+  }
+}

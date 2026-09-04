@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- c8031dd9-b8d4-435a-87df-3b90748d2fc4
+append: false
+appendto: false
+create: false
+delete: true
+entitylogicalname: spnvc_invoiceattachment
+entityname: Invoice Attachment - Reviewer Access
+id: 43822015-bdfb-4451-a1c4-bd5a7797a5b6
+read: true
+scope: 756150000
+write: false

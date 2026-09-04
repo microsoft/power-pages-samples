@@ -16,11 +16,12 @@
     {
       "id": 2,
       "prompt": "Prepare release notes for the installable templates but do not publish yet.",
-      "expected_output": "Produces release notes that list templates, solution zips, seed data, previews, prerequisites, and validation commands without creating a tag or release.",
+      "expected_output": "Produces release notes that list templates, unpacked solution source paths, SPA code paths, seed data, previews, prerequisites, and validation commands without creating a tag or release.",
       "files": [],
       "expectations": [
         "Reads templates/manifest.json",
         "Includes template IDs and display names",
+        "Includes each variant's SPA code path",
         "Mentions seed data and preview image paths",
         "Does not create or push a tag when the user asks only for notes"
       ]

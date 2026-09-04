@@ -1,0 +1,15 @@
+.track-result {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track-result {
+    animation: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .track-result .card {
+    padding: 20px;
+  }
+}

@@ -1,0 +1,52 @@
+<div/>
+<script>
+  // Code Site Shell Header — rewrites server-rendered auth URLs to their SPA
+  // equivalents so links from emails (password reset, invitations, email
+  // confirmation) and server-side bounces never drop the user out of the app.
+  //
+  // This lives in a SEPARATE web template on purpose. `pac pages upload-code-site`
+  // overwrites the content of the templates literally named "Header" and "Footer"
+  // with `<div/>` on every upload, so anything added there is lost. website.yml
+  // points headerwebtemplateid at this template instead, and the upload command
+  // leaves it alone.
+  //
+  // Runs before the SPA bundle exists, so it is plain ES5 with no dependencies.
+  (function () {
+    var path = window.location.pathname.toLowerCase();
+    var search = window.location.search;
+    var origin = window.location.origin;
+
+    // Server path (lowercased) -> SPA route. Only paths with a real SPA page.
+    var redirects = {
+      '/signin': '/login',
+      '/account/login/register': '/registration',
+      '/account/login/forgotpassword': '/forgot-password',
+      '/account/login/resetpassword': '/reset-password',
+      '/account/login/redeeminvitation': '/redeem-invitation',
+      // /Register is the server's alias for RedeemInvitation. External users who
+      // sign in with no contact and no invitation get bounced here.
+      '/register': '/redeem-invitation',
+      '/account/login/externallogincallback': '/external-login-confirmation'
+    };
+
+    // External auth failure is hardcoded in OWIN startup and cannot be pointed
+    // elsewhere via site settings. The server appends ?message=access_denied when
+    // the user declined at the IdP, but sends no query string for generic
+    // failures — supply a code so the login page always explains itself.
+    if (path === '/account/login/externalauthenticationfailed') {
+      window.location.replace(origin + '/login' + (search || '?message=external_auth_failed'));
+      return;
+    }
+
+    // Email confirmation has no SPA equivalent (the server does the work and
+    // renders a result page), so send the user to sign in with a success banner.
+    if (path === '/account/login/confirmemail') {
+      window.location.replace(origin + '/login?message=email_confirmed');
+      return;
+    }
+
+    if (redirects[path]) {
+      window.location.replace(origin + redirects[path] + search);
+    }
+  })();
+</script>

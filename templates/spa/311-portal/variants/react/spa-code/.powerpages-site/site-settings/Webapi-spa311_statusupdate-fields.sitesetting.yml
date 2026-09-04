@@ -1,0 +1,4 @@
+id: 12e670f6-a778-4e8d-970c-aeb1dc14898f
+name: Webapi/spa311_statusupdate/fields
+source: 0
+value: spa311_statusupdateid,spa311_name,spa311_status,spa311_updatedate,spa311_note,spa311_ServiceRequestId,_spa311_servicerequestid_value,createdon,modifiedon

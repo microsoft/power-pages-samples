@@ -1,0 +1,4 @@
+description: Enable Web API access for Invoice Comment table
+id: 57ce1f67-9881-4d07-bb44-5e013f029fdf
+name: Webapi/spnvc_invoicecomment/enabled
+value: true

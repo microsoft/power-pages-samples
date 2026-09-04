@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- c8031dd9-b8d4-435a-87df-3b90748d2fc4
+append: true
+appendto: true
+create: true
+delete: true
+entitylogicalname: spnvc_purchaseorder
+entityname: Purchase Order - Reviewer Access
+id: 361bb4a3-aa40-487d-8329-23a3c2f00fc0
+read: true
+scope: 756150000
+write: true

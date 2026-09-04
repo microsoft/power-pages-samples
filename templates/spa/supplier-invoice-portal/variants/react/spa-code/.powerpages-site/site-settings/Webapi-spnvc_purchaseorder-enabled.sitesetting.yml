@@ -1,0 +1,4 @@
+description: Enable Web API access for spnvc_purchaseorder table
+id: 8adabb36-27d3-4a4b-b3c0-880ee0e6bd25
+name: Webapi/spnvc_purchaseorder/enabled
+value: true

@@ -1,0 +1,4 @@
+description: Sign in with email address rather than a separate username
+id: c0eb9b8d-7790-4777-8ce3-bf12515c7ede
+name: Authentication/Registration/LocalLoginByEmail
+value: true

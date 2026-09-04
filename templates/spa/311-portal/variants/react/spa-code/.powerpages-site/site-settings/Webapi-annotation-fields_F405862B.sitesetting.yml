@@ -1,0 +1,4 @@
+id: b2c3d4e5-f6a7-8901-bcde-f12345678901
+name: Webapi/annotation/fields
+source: 0
+value: annotationid,subject,filename,mimetype,documentbody,isdocument,objectid,notetext

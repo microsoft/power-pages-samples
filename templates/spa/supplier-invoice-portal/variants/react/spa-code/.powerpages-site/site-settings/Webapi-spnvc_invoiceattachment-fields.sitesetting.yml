@@ -1,0 +1,4 @@
+description: Allowed fields for spnvc_invoiceattachment Web API access
+id: a4e1632b-be2f-41d3-945e-613397fd9fce
+name: Webapi/spnvc_invoiceattachment/fields
+value: _spnvc_invoicecommentid_value,_spnvc_invoiceid_value,createdon,modifiedon,spnvc_ContactId,spnvc_InvoiceCommentId,spnvc_InvoiceId,spnvc_file,spnvc_file_name,spnvc_filesize,spnvc_filetype,spnvc_invoiceattachmentid,spnvc_name

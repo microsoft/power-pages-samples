@@ -1,0 +1,4 @@
+id: ac71d639-e62d-4ba0-9d5f-4690da90c6fb
+name: Webapi/spnvc_visaapplication/fields
+source: 0
+value: spnvc_visaapplicationid,spnvc_applicationnumber,spnvc_applicationstatus,spnvc_submitteddate,spnvc_visatype,spnvc_contactid,createdon,modifiedon

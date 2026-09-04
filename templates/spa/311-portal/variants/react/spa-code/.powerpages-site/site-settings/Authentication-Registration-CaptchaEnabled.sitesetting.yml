@@ -1,0 +1,4 @@
+description: SPA cannot render the server CAPTCHA widget; leaving it on makes registration fail silently
+id: 16fd37c5-2ac4-4d1f-ae2a-52d24ab51804
+name: Authentication/Registration/CaptchaEnabled
+value: false
