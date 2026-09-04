@@ -32,7 +32,7 @@
       "variants": {
         "react": {
           "templateVersion": "1.0.0.2",
-          "solutionPath": "spa/311-portal/variants/react/solution/311-portal-unmanaged.zip",
+          "solutionPath": "spa/311-portal/variants/react/solution",
           "spaCodePath": "spa/311-portal/variants/react/spa-code"
         }
       }
@@ -69,7 +69,7 @@
       "variants": {
         "react": {
           "templateVersion": "1.0.0.1",
-          "solutionPath": "spa/supplier-invoice-portal/variants/react/solution/supplier-invoice-spa-portal-unmanaged.zip",
+          "solutionPath": "spa/supplier-invoice-portal/variants/react/solution",
           "spaCodePath": "spa/supplier-invoice-portal/variants/react/spa-code"
         }
       }

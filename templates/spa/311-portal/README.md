@@ -2,7 +2,7 @@
 
 This folder contains the 311 Portal template entry for the installable `templates/` catalog.
 
-The checked-in supporting solution zip is an unmanaged export with the `spa311` publisher prefix.
+The checked-in supporting solution source is an unpacked unmanaged export with the `spa311` publisher prefix.
 The solution metadata lists a dependency on Dataverse knowledge articles through `msdynce_KnowledgeManagementFeatures`.
 It contains Dataverse artifacts only. The Power Pages website project is stored separately under `variants/react/spa-code/`.
 
@@ -33,10 +33,13 @@ Use these steps if you want to install the template yourself instead of using an
    pac auth create --url https://YOUR-ENVIRONMENT.crm.dynamics.com
    ```
 
-5. Import the React variant's supporting unmanaged solution from the repository root:
+5. Pack and import the React variant's supporting unmanaged solution from the repository root:
 
    ```bash
-   pac solution import --path templates/spa/311-portal/variants/react/solution/311-portal-unmanaged.zip --publish-changes
+   temp_dir="$(mktemp -d)"
+   trap 'rm -rf "$temp_dir"' EXIT
+   pac solution pack --zipfile "$temp_dir/311-portal-unmanaged.zip" --folder templates/spa/311-portal/variants/react/solution --packagetype Unmanaged
+   pac solution import --path "$temp_dir/311-portal-unmanaged.zip" --publish-changes
    ```
 
 6. Confirm the Dataverse tables were created in the target environment.

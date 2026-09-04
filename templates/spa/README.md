@@ -15,7 +15,7 @@ Use this index to choose the template that best matches the scenario you want to
 1. Open the template folder.
 1. Allow `*.js` files by removing it from `Blocked Attachments` in `Privacy + Security` settings for your environment from Power Pages Admin Center.
 1. Pick a framework variant.
-1. Import the supporting unmanaged solution zip listed for that variant in the template README.
+1. Pack and import the supporting unmanaged solution source listed for that variant in the template README.
 1. Import `seed-data/data.json` separately if the template family includes seed data.
 1. Upload the code site from the variant's `spa-code/` folder.
 1. Open the site in Power Pages and complete any template-specific setup.

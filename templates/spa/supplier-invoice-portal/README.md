@@ -2,8 +2,8 @@
 
 This folder contains the Supplier Invoice Portal template entry for the installable `templates/` catalog.
 
-The checked-in supporting solution zip is an unmanaged export with the `spnvc` publisher prefix.
-The validator detects the managed state from `solution.xml` during validation.
+The checked-in supporting solution source is an unpacked unmanaged export with the `spnvc` publisher prefix.
+The validator detects the managed state from `solution/Other/Solution.xml`.
 It contains Dataverse artifacts only. The Power Pages website project is stored separately under `variants/react/spa-code/`.
 
 ## Previews
@@ -33,10 +33,13 @@ Use these steps if you want to install the template yourself instead of using an
    pac auth create --url https://YOUR-ENVIRONMENT.crm.dynamics.com
    ```
 
-5. Import the React variant's supporting unmanaged solution from the repository root:
+5. Pack and import the React variant's supporting unmanaged solution from the repository root:
 
    ```bash
-   pac solution import --path templates/spa/supplier-invoice-portal/variants/react/solution/supplier-invoice-spa-portal-unmanaged.zip --publish-changes
+   temp_dir="$(mktemp -d)"
+   trap 'rm -rf "$temp_dir"' EXIT
+   pac solution pack --zipfile "$temp_dir/supplier-invoice-spa-portal-unmanaged.zip" --folder templates/spa/supplier-invoice-portal/variants/react/solution --packagetype Unmanaged
+   pac solution import --path "$temp_dir/supplier-invoice-spa-portal-unmanaged.zip" --publish-changes
    ```
 
 6. Confirm the Dataverse tables were created in the target environment.

@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>0</isdefault>
+    <savedqueryid>{d9705c0a-93c4-4dc4-997e-792b60056e1c}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="spa311_requestnumber" select="1" icon="1" preview="1">
+        <row name="result" id="spa311_servicerequestid">
+          <cell name="spa311_requestnumber" width="300" />
+          <cell name="createdon" width="125" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>0</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="spa311_servicerequest">
+          <attribute name="spa311_servicerequestid" />
+          <attribute name="spa311_requestnumber" />
+          <attribute name="createdon" />
+          <order attribute="spa311_requestnumber" descending="false" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="1" />
+          </filter>
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Inactive Service Requests" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

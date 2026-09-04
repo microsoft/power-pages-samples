@@ -4,13 +4,11 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
-const zlib = require("node:zlib");
 
 const VALID_KINDS = new Set(["spa", "traditional"]);
 const VALID_FRAMEWORKS = new Set(["angular", "astro", "react", "vue"]);
 const VALID_AUDIENCES = new Set(["admins", "developers", "makers", "partners"]);
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const LFS_POINTER_PREFIX = "version https://git-lfs.github.com/spec/v1";
 const FORBIDDEN_SPA_CODE_DIRECTORIES = new Set([
   ".git",
   ".playwright-mcp",
@@ -23,6 +21,13 @@ const FORBIDDEN_SPA_CODE_DIRECTORIES = new Set([
   "node_modules",
   "playwright-report",
   "test-results"
+]);
+const FORBIDDEN_SOLUTION_DIRECTORIES = new Set([
+  ...FORBIDDEN_SPA_CODE_DIRECTORIES,
+  ".idea",
+  ".vs",
+  "bin",
+  "obj"
 ]);
 
 function validateTemplates(options = {}) {
@@ -288,7 +293,15 @@ function getFamilyBasePath(template) {
 
 function validateVariantPaths(template, framework, variant, label, root, result) {
   const variantBase = `${getFamilyBasePath(template)}/variants/${framework}`;
-  validateSolutionPath(variant.solutionPath, label, root, `${variantBase}/solution`, `variant "${framework}" solutionPath`, result);
+  validateSolutionPath(
+    variant.solutionPath,
+    label,
+    root,
+    `${variantBase}/solution`,
+    variantBase,
+    `variant "${framework}" solutionPath`,
+    result
+  );
   validateSpaCodePath(variant.spaCodePath, label, root, `${variantBase}/spa-code`, `variant "${framework}" spaCodePath`, result);
   validatePreviewImages(variant.previewImages, label, root, `${variantBase}/previews`, `variant "${framework}" previewImages`, result);
 
@@ -325,7 +338,7 @@ function validatePreviewImages(previewImages, label, root, expectedDirectory, lo
   });
 }
 
-function validateSolutionPath(solutionPathValue, label, root, expectedDirectory, location, result) {
+function validateSolutionPath(solutionPathValue, label, root, expectedDirectory, variantBase, location, result) {
   if (typeof solutionPathValue !== "string") {
     return;
   }
@@ -335,56 +348,110 @@ function validateSolutionPath(solutionPathValue, label, root, expectedDirectory,
     return;
   }
 
-  validatePathUnder(root, solutionPath, expectedDirectory, label, location, result);
+  const expectedFullDirectory = path.resolve(root, expectedDirectory);
+  if (solutionPathValue !== expectedDirectory || solutionPath !== expectedFullDirectory) {
+    result.errors.push(`Template "${label}" ${location} must be ${expectedDirectory}.`);
+  }
 
-  if (!fileExists(solutionPath)) {
-    result.errors.push(`Template "${label}" solutionPath does not exist: ${solutionPathValue}`);
+  if (!directoryExists(solutionPath)) {
+    result.errors.push(`Template "${label}" solutionPath does not exist or is not a directory: ${solutionPathValue}`);
     return;
   }
 
-  const stats = fs.statSync(solutionPath);
-  if (stats.size === 0) {
-    result.errors.push(`Template "${label}" solutionPath is empty: ${solutionPathValue}`);
+  if (fs.lstatSync(solutionPath).isSymbolicLink()) {
+    result.errors.push(`Template "${label}" solutionPath must not be a symbolic link: ${solutionPathValue}`);
+  }
+
+  const requiredFiles = [
+    ["Other", "Solution.xml"],
+    ["Other", "Customizations.xml"]
+  ];
+  for (const pathSegments of requiredFiles) {
+    const requiredPath = path.join(solutionPath, ...pathSegments);
+    if (!fileExists(requiredPath)) {
+      result.errors.push(`Template "${label}" solutionPath must contain ${pathSegments.join("/")}.`);
+    }
+  }
+
+  validateSolutionContents(solutionPath, solutionPath, label, result);
+  validateVariantHasNoSolutionZip(path.resolve(root, variantBase), label, result);
+
+  const solutionXmlPath = path.join(solutionPath, "Other", "Solution.xml");
+  if (!fileExists(solutionXmlPath)) {
     return;
   }
-
-  const head = readFilePrefix(solutionPath, LFS_POINTER_PREFIX.length);
-  if (head.startsWith(LFS_POINTER_PREFIX)) {
-    result.errors.push(`Template "${label}" solutionPath is a Git LFS pointer, not a zip: ${solutionPathValue}`);
-    return;
-  }
-
-  let solutionXml;
-  try {
-    solutionXml = readZipTextFile(solutionPath, "solution.xml");
-  } catch (error) {
-    result.errors.push(`Template "${label}" solution zip is invalid: ${error.message}`);
-    return;
-  }
-
-  if (!solutionXml) {
-    result.errors.push(`Template "${label}" solution zip must contain solution.xml.`);
-    return;
-  }
-
-  const websiteComponentEntry = readZipFileNames(solutionPath).find((entryName) =>
-    /^powerpagecomponents(?:\/|$)/i.test(normalizeZipName(entryName))
-  );
-  if (websiteComponentEntry) {
-    result.errors.push(
-      `Template "${label}" supporting solution must not contain Power Pages website components: ${websiteComponentEntry}`
-    );
-  }
-
+  const solutionXml = fs.readFileSync(solutionXmlPath, "utf8");
   const managedState = detectManagedState(solutionXml);
   if (managedState === "unknown") {
-    result.errors.push(`Template "${label}" solution.xml does not contain a readable <Managed> value.`);
+    result.errors.push(`Template "${label}" Other/Solution.xml does not contain a readable <Managed> value.`);
     return;
   }
 
   if (managedState === "managed") {
     result.errors.push(`Template "${label}" solution is managed. Replace it with an unmanaged export.`);
   }
+}
+
+function validateSolutionContents(solutionRoot, currentDirectory, label, result) {
+  for (const entry of fs.readdirSync(currentDirectory, { withFileTypes: true })) {
+    const fullPath = path.join(currentDirectory, entry.name);
+    const relativePath = path.relative(solutionRoot, fullPath).split(path.sep).join("/");
+
+    if (entry.isSymbolicLink()) {
+      result.errors.push(`Template "${label}" solution must not contain symbolic links: ${relativePath}`);
+      continue;
+    }
+
+    if (entry.isDirectory()) {
+      if (entry.name.toLowerCase() === "powerpagecomponents") {
+        result.errors.push(
+          `Template "${label}" supporting solution must not contain Power Pages website components: ${relativePath}/`
+        );
+        continue;
+      }
+
+      if (FORBIDDEN_SOLUTION_DIRECTORIES.has(entry.name)) {
+        result.errors.push(`Template "${label}" solution contains excluded directory: ${relativePath}/`);
+        continue;
+      }
+
+      validateSolutionContents(solutionRoot, fullPath, label, result);
+      continue;
+    }
+
+    if (isForbiddenLocalFile(entry.name)) {
+      result.errors.push(`Template "${label}" solution contains excluded file: ${relativePath}`);
+    }
+  }
+}
+
+function validateVariantHasNoSolutionZip(variantPath, label, result) {
+  if (!directoryExists(variantPath)) {
+    return;
+  }
+
+  for (const entryPath of findFilesByExtension(variantPath, ".zip")) {
+    const relativePath = path.relative(variantPath, entryPath).split(path.sep).join("/");
+    result.errors.push(`Template "${label}" variant must not contain committed solution zips: ${relativePath}`);
+  }
+}
+
+function findFilesByExtension(currentDirectory, extension) {
+  const matches = [];
+  for (const entry of fs.readdirSync(currentDirectory, { withFileTypes: true })) {
+    if (entry.isSymbolicLink()) {
+      continue;
+    }
+
+    const fullPath = path.join(currentDirectory, entry.name);
+    if (entry.isDirectory()) {
+      matches.push(...findFilesByExtension(fullPath, extension));
+    } else if (entry.name.toLowerCase().endsWith(extension)) {
+      matches.push(fullPath);
+    }
+  }
+
+  return matches;
 }
 
 function validateSpaCodePath(spaCodePathValue, label, root, expectedDirectory, location, result) {
@@ -453,7 +520,7 @@ function validateSpaCodeContents(spaCodeRoot, currentDirectory, label, result) {
   }
 }
 
-function isForbiddenSpaCodeFile(fileName) {
+function isForbiddenLocalFile(fileName) {
   return fileName === ".DS_Store" ||
     fileName === ".datamodel-manifest.json" ||
     fileName === "AGENTS.md" ||
@@ -464,6 +531,10 @@ function isForbiddenSpaCodeFile(fileName) {
     fileName.endsWith(".log") ||
     fileName.endsWith(".err") ||
     fileName.endsWith(".sarif");
+}
+
+function isForbiddenSpaCodeFile(fileName) {
+  return isForbiddenLocalFile(fileName);
 }
 
 function isEnvironmentSpecificPortalManifest(relativePath) {
@@ -817,17 +888,6 @@ function isPathInsideOrEqual(parentPath, candidatePath) {
   return relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath));
 }
 
-function readFilePrefix(filePath, length) {
-  const file = fs.openSync(filePath, "r");
-  try {
-    const buffer = Buffer.alloc(length);
-    const bytesRead = fs.readSync(file, buffer, 0, length, 0);
-    return buffer.subarray(0, bytesRead).toString("utf8");
-  } finally {
-    fs.closeSync(file);
-  }
-}
-
 function directoryExists(directoryPath) {
   try {
     return fs.statSync(directoryPath).isDirectory();
@@ -851,97 +911,6 @@ function detectManagedState(solutionXml) {
   }
 
   return match[1] === "1" ? "managed" : "unmanaged";
-}
-
-function readZipTextFile(zipPath, wantedName) {
-  const buffer = fs.readFileSync(zipPath);
-  const entries = readZipEntries(buffer);
-  const entry = entries.find((candidate) => normalizeZipName(candidate.name) === wantedName);
-  if (!entry) {
-    return null;
-  }
-
-  const localHeaderOffset = entry.localHeaderOffset;
-  if (buffer.readUInt32LE(localHeaderOffset) !== 0x04034b50) {
-    throw new Error(`bad local file header for ${entry.name}`);
-  }
-
-  const fileNameLength = buffer.readUInt16LE(localHeaderOffset + 26);
-  const extraLength = buffer.readUInt16LE(localHeaderOffset + 28);
-  const dataStart = localHeaderOffset + 30 + fileNameLength + extraLength;
-  const compressedData = buffer.subarray(dataStart, dataStart + entry.compressedSize);
-  const data = inflateZipEntry(compressedData, entry.compressionMethod, entry.name);
-  return data.toString("utf8");
-}
-
-function readZipFileNames(zipPath) {
-  return readZipEntries(fs.readFileSync(zipPath)).map((entry) => entry.name);
-}
-
-function readZipEntries(buffer) {
-  const eocdOffset = findEndOfCentralDirectory(buffer);
-  if (eocdOffset === -1) {
-    throw new Error("missing end of central directory");
-  }
-
-  const entryCount = buffer.readUInt16LE(eocdOffset + 10);
-  const centralDirectoryOffset = buffer.readUInt32LE(eocdOffset + 16);
-  const entries = [];
-  let offset = centralDirectoryOffset;
-
-  for (let index = 0; index < entryCount; index += 1) {
-    if (buffer.readUInt32LE(offset) !== 0x02014b50) {
-      throw new Error("bad central directory header");
-    }
-
-    const compressionMethod = buffer.readUInt16LE(offset + 10);
-    const compressedSize = buffer.readUInt32LE(offset + 20);
-    const fileNameLength = buffer.readUInt16LE(offset + 28);
-    const extraLength = buffer.readUInt16LE(offset + 30);
-    const commentLength = buffer.readUInt16LE(offset + 32);
-    const localHeaderOffset = buffer.readUInt32LE(offset + 42);
-    const nameStart = offset + 46;
-    const name = buffer.subarray(nameStart, nameStart + fileNameLength).toString("utf8");
-    entries.push({
-      name,
-      compressionMethod,
-      compressedSize,
-      localHeaderOffset
-    });
-
-    offset = nameStart + fileNameLength + extraLength + commentLength;
-  }
-
-  return entries;
-}
-
-function findEndOfCentralDirectory(buffer) {
-  // ZIP comments can be up to 65,535 bytes. Search backward through that window
-  // for the EOCD signature so normal archives and archives with comments both work.
-  const minimumOffset = Math.max(0, buffer.length - 65557);
-  for (let offset = buffer.length - 22; offset >= minimumOffset; offset -= 1) {
-    if (buffer.readUInt32LE(offset) === 0x06054b50) {
-      return offset;
-    }
-  }
-
-  return -1;
-}
-
-function inflateZipEntry(data, compressionMethod, name) {
-  if (compressionMethod === 0) {
-    return data;
-  }
-
-  if (compressionMethod === 8) {
-    return zlib.inflateRawSync(data);
-  }
-
-  throw new Error(`unsupported compression method ${compressionMethod} for ${name}`);
-}
-
-function normalizeZipName(name) {
-  return name.replace(/\\/g, "/").replace(/^\/+/, "");
 }
 
 function runCli() {

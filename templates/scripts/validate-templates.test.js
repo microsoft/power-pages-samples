@@ -4,7 +4,6 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const zlib = require("node:zlib");
 const test = require("node:test");
 const { spawnSync } = require("node:child_process");
 
@@ -82,7 +81,7 @@ test("rejects flat template package fields at the family level", () => {
   assert(result.errors.some((error) => error.includes("$.templates[0].templateVersion is not allowed")));
 });
 
-test("rejects managed solution zips", () => {
+test("rejects managed unpacked solutions", () => {
   const root = createTemplateRoot({
     solutionXml: "<ImportExportXml><SolutionManifest><Managed>1</Managed></SolutionManifest></ImportExportXml>"
   });
@@ -91,6 +90,17 @@ test("rejects managed solution zips", () => {
   assert.equal(result.errors.length, 1);
   assert.match(result.errors[0], /solution is managed/);
   assert.deepEqual(result.warnings, []);
+});
+
+test("rejects unpacked solutions without authoritative managed metadata", () => {
+  const root = createTemplateRoot({
+    solutionXml: "<ImportExportXml><SolutionManifest /></ImportExportXml>"
+  });
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) =>
+    error.includes("Other/Solution.xml does not contain a readable <Managed> value")
+  ));
 });
 
 test("rejects supporting solutions that contain Power Pages website components", () => {
@@ -106,7 +116,7 @@ test("rejects invalid ids and folder mismatches", () => {
   const root = createTemplateRoot({
     id: "Bad_Id",
     folderId: "different-folder",
-    solutionPath: "spa/different-folder/variants/react/solution/template.zip",
+    solutionPath: "spa/different-folder/variants/react/solution",
     solutionXml: "<ImportExportXml><SolutionManifest><Managed>0</Managed></SolutionManifest></ImportExportXml>"
   });
 
@@ -138,9 +148,10 @@ test("rejects missing or invalid required Dataverse languages", () => {
   assert(nonPositiveResult.errors.some((error) => error.includes("$.templates[0].requiredDataverseLanguages[0] must be greater than or equal to 1")));
 });
 
-test("rejects missing solution.xml, Git LFS pointers, non-PNG previews, and malformed seed data", () => {
+test("rejects missing unpacked solution roots, non-PNG previews, and malformed seed data", () => {
   const root = createTemplateRoot({
     solutionXml: null,
+    customizationsXml: null,
     previewImages: ["spa/test-template/previews/home.jpg"],
     seedDataPath: "spa/test-template/seed-data/accounts.json",
     seedData: {
@@ -150,20 +161,10 @@ test("rejects missing solution.xml, Git LFS pointers, non-PNG previews, and malf
 
   fs.writeFileSync(path.join(root, "spa/test-template/previews/home.jpg"), "jpg");
   const result = validateTemplates({ root });
-  assert(result.errors.some((error) => error.includes("must contain solution.xml")));
+  assert(result.errors.some((error) => error.includes("must contain Other/Solution.xml")));
+  assert(result.errors.some((error) => error.includes("must contain Other/Customizations.xml")));
   assert(result.errors.some((error) => error.includes("preview image must be a .png")));
   assert(result.errors.some((error) => error.includes("seed data records must be an array")));
-
-  const lfsRoot = createTemplateRoot({
-    solutionXml: "<ImportExportXml><SolutionManifest><Managed>0</Managed></SolutionManifest></ImportExportXml>"
-  });
-  fs.writeFileSync(
-    path.join(lfsRoot, "spa/test-template/variants/react/solution/template.zip"),
-    "version https://git-lfs.github.com/spec/v1\noid sha256:abc\nsize 123\n"
-  );
-
-  const lfsResult = validateTemplates({ root: lfsRoot });
-  assert(lfsResult.errors.some((error) => error.includes("Git LFS pointer")));
 });
 
 
@@ -329,7 +330,7 @@ test("rejects malformed Dataverse export seed data fileExports", () => {
 
 test("rejects variant package paths outside their framework layout", () => {
   const root = createTemplateRoot({
-    solutionPath: "spa/test-template/solution/template.zip",
+    solutionPath: "spa/test-template/solution",
     variantOverrides: {
       spaCodePath: "spa/test-template/spa-code",
       previewImages: ["spa/test-template/previews/react-home.png"],
@@ -344,10 +345,72 @@ test("rejects variant package paths outside their framework layout", () => {
   fs.writeFileSync(path.join(root, "spa/test-template/previews/react-home.png"), "png");
 
   const result = validateTemplates({ root });
-  assert(result.errors.some((error) => error.includes("variant \"react\" solutionPath must live in spa/test-template/variants/react/solution/")));
+  assert(result.errors.some((error) => error.includes("variant \"react\" solutionPath must be spa/test-template/variants/react/solution")));
   assert(result.errors.some((error) => error.includes("variant \"react\" spaCodePath must be spa/test-template/variants/react/spa-code")));
   assert(result.errors.some((error) => error.includes("variant \"react\" previewImages[0] must live in spa/test-template/variants/react/previews/")));
   assert(result.errors.some((error) => error.includes("variant \"react\" seedDataPath must live in spa/test-template/variants/react/seed-data/")));
+});
+
+test("requires solutionPath to reference the exact unpacked solution directory", () => {
+  const zipRoot = createTemplateRoot({
+    solutionPath: "spa/test-template/variants/react/solution/template.zip"
+  });
+  const zipResult = validateTemplates({ root: zipRoot });
+  assert(zipResult.errors.some((error) => error.includes("$.templates[0].variants.react.solutionPath does not match")));
+  assert(zipResult.errors.some((error) =>
+    error.includes("variant \"react\" solutionPath must be spa/test-template/variants/react/solution")
+  ));
+
+  const redundantRoot = createTemplateRoot({
+    solutionPath: "spa/test-template/variants/react/../react/solution"
+  });
+  const redundantResult = validateTemplates({ root: redundantRoot });
+  assert(redundantResult.errors.some((error) =>
+    error.includes("variant \"react\" solutionPath must be spa/test-template/variants/react/solution")
+  ));
+
+  const fileRoot = createTemplateRoot();
+  const fileSolutionPath = path.join(fileRoot, "spa/test-template/variants/react/solution");
+  fs.rmSync(fileSolutionPath, { recursive: true });
+  fs.writeFileSync(fileSolutionPath, "not a directory");
+  const fileResult = validateTemplates({ root: fileRoot });
+  assert(fileResult.errors.some((error) => error.includes("solutionPath does not exist or is not a directory")));
+
+  const nestedRoot = createTemplateRoot();
+  const solutionRoot = path.join(nestedRoot, "spa/test-template/variants/react/solution");
+  fs.mkdirSync(path.join(solutionRoot, "unpacked"), { recursive: true });
+  fs.renameSync(path.join(solutionRoot, "Other"), path.join(solutionRoot, "unpacked/Other"));
+
+  const nestedResult = validateTemplates({ root: nestedRoot });
+  assert(nestedResult.errors.some((error) => error.includes("must contain Other/Solution.xml")));
+  assert(nestedResult.errors.some((error) => error.includes("must contain Other/Customizations.xml")));
+});
+
+test("rejects committed solution zips anywhere in a variant", () => {
+  const root = createTemplateRoot();
+  fs.writeFileSync(
+    path.join(root, "spa/test-template/variants/react/template-unmanaged.zip"),
+    "not committed"
+  );
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) =>
+    error.includes("variant must not contain committed solution zips: template-unmanaged.zip")
+  ));
+});
+
+test("rejects symbolic links and generated or local-only solution files", () => {
+  const root = createTemplateRoot();
+  const solutionRoot = path.join(root, "spa/test-template/variants/react/solution");
+  fs.symlinkSync("Other/Solution.xml", path.join(solutionRoot, "solution-link.xml"));
+  fs.mkdirSync(path.join(solutionRoot, "obj"), { recursive: true });
+  fs.writeFileSync(path.join(solutionRoot, "obj/generated.xml"), "<generated />");
+  fs.writeFileSync(path.join(solutionRoot, ".DS_Store"), "local");
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("solution must not contain symbolic links: solution-link.xml")));
+  assert(result.errors.some((error) => error.includes("solution contains excluded directory: obj/")));
+  assert(result.errors.some((error) => error.includes("solution contains excluded file: .DS_Store")));
 });
 
 test("rejects generated and local-only files in spa-code projects", () => {
@@ -449,7 +512,7 @@ function createTemplateRoot(options = {}) {
   const id = options.id ?? "test-template";
   const folderId = options.folderId ?? id;
   const framework = options.framework ?? "react";
-  const solutionPath = options.solutionPath ?? `spa/${folderId}/variants/${framework}/solution/template.zip`;
+  const solutionPath = options.solutionPath ?? `spa/${folderId}/variants/${framework}/solution`;
   const spaCodePath = options.spaCodePath ?? `spa/${folderId}/variants/${framework}/spa-code`;
   const templateFolder = path.join(root, "spa", folderId);
   fs.mkdirSync(path.join(root, "schemas"), { recursive: true });
@@ -514,10 +577,10 @@ function createTemplateRoot(options = {}) {
     fs.writeFileSync(path.join(fixtureSpaCodePath, "package.json"), "{}");
     fs.writeFileSync(path.join(fixtureSpaCodePath, "powerpages.config.json"), "{}");
   }
-  fs.mkdirSync(path.dirname(path.join(root, solutionPath)), { recursive: true });
-  writeZip(
+  writeUnpackedSolution(
     path.join(root, solutionPath),
     options.solutionXml === undefined ? defaultSolutionXml() : options.solutionXml,
+    options.customizationsXml === undefined ? "<ImportExportXml />" : options.customizationsXml,
     options.solutionHasWebsiteComponent
   );
   return root;
@@ -527,96 +590,20 @@ function defaultSolutionXml() {
   return "<ImportExportXml><SolutionManifest><Managed>0</Managed></SolutionManifest></ImportExportXml>";
 }
 
-function writeZip(zipPath, solutionXml, solutionHasWebsiteComponent = false) {
-  const entries = [];
+function writeUnpackedSolution(solutionPath, solutionXml, customizationsXml, solutionHasWebsiteComponent = false) {
+  const otherPath = path.join(solutionPath, "Other");
+  fs.mkdirSync(otherPath, { recursive: true });
   if (solutionXml !== null) {
-    entries.push({
-      name: "solution.xml",
-      data: Buffer.from(solutionXml, "utf8")
-    });
-  } else {
-    entries.push({
-      name: "customizations.xml",
-      data: Buffer.from("<customizations />", "utf8")
-    });
+    fs.writeFileSync(path.join(otherPath, "Solution.xml"), solutionXml);
+  }
+
+  if (customizationsXml !== null) {
+    fs.writeFileSync(path.join(otherPath, "Customizations.xml"), customizationsXml);
   }
 
   if (solutionHasWebsiteComponent) {
-    entries.push({
-      name: "powerpagecomponents/website/filecontent/index.html",
-      data: Buffer.from("<html></html>", "utf8")
-    });
+    const websitePath = path.join(solutionPath, "powerpagecomponents", "website");
+    fs.mkdirSync(websitePath, { recursive: true });
+    fs.writeFileSync(path.join(websitePath, "index.html"), "<html></html>");
   }
-
-  fs.writeFileSync(zipPath, createZip(entries));
 }
-
-function createZip(entries) {
-  const localParts = [];
-  const centralParts = [];
-  let offset = 0;
-
-  for (const entry of entries) {
-    const name = Buffer.from(entry.name, "utf8");
-    const compressed = zlib.deflateRawSync(entry.data);
-    const crc = crc32(entry.data);
-
-    const localHeader = Buffer.alloc(30);
-    localHeader.writeUInt32LE(0x04034b50, 0);
-    localHeader.writeUInt16LE(20, 4);
-    localHeader.writeUInt16LE(0, 6);
-    localHeader.writeUInt16LE(8, 8);
-    localHeader.writeUInt32LE(crc, 14);
-    localHeader.writeUInt32LE(compressed.length, 18);
-    localHeader.writeUInt32LE(entry.data.length, 22);
-    localHeader.writeUInt16LE(name.length, 26);
-    localHeader.writeUInt16LE(0, 28);
-    localParts.push(localHeader, name, compressed);
-
-    const centralHeader = Buffer.alloc(46);
-    centralHeader.writeUInt32LE(0x02014b50, 0);
-    centralHeader.writeUInt16LE(20, 4);
-    centralHeader.writeUInt16LE(20, 6);
-    centralHeader.writeUInt16LE(0, 8);
-    centralHeader.writeUInt16LE(8, 10);
-    centralHeader.writeUInt32LE(crc, 16);
-    centralHeader.writeUInt32LE(compressed.length, 20);
-    centralHeader.writeUInt32LE(entry.data.length, 24);
-    centralHeader.writeUInt16LE(name.length, 28);
-    centralHeader.writeUInt16LE(0, 30);
-    centralHeader.writeUInt16LE(0, 32);
-    centralHeader.writeUInt32LE(offset, 42);
-    centralParts.push(centralHeader, name);
-
-    offset += localHeader.length + name.length + compressed.length;
-  }
-
-  const centralDirectoryOffset = offset;
-  const centralDirectory = Buffer.concat(centralParts);
-  const endOfCentralDirectory = Buffer.alloc(22);
-  endOfCentralDirectory.writeUInt32LE(0x06054b50, 0);
-  endOfCentralDirectory.writeUInt16LE(entries.length, 8);
-  endOfCentralDirectory.writeUInt16LE(entries.length, 10);
-  endOfCentralDirectory.writeUInt32LE(centralDirectory.length, 12);
-  endOfCentralDirectory.writeUInt32LE(centralDirectoryOffset, 16);
-
-  return Buffer.concat([...localParts, centralDirectory, endOfCentralDirectory]);
-}
-
-function crc32(buffer) {
-  let crc = 0xffffffff;
-  for (const byte of buffer) {
-    crc = (crc >>> 8) ^ CRC_TABLE[(crc ^ byte) & 0xff];
-  }
-
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-const CRC_TABLE = Array.from({ length: 256 }, (_, index) => {
-  let value = index;
-  for (let bit = 0; bit < 8; bit += 1) {
-    value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
-  }
-
-  return value >>> 0;
-});

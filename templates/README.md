@@ -6,7 +6,7 @@ They are different from `samples/`: templates are meant to be imported into an e
 The central catalog is [`manifest.json`](manifest.json).
 Each entry is a template family with one or more framework variants.
 The family defines shared metadata, preview images, required Dataverse languages, and optional seed data.
-Each variant defines its template version, supporting solution zip, and downloadable SPA code project.
+Each variant defines its template version, unpacked supporting solution source, and downloadable SPA code project.
 The schema for the catalog is [`schemas/templates-manifest.schema.json`](schemas/templates-manifest.schema.json).
 
 ## Template categories
@@ -17,17 +17,19 @@ The schema for the catalog is [`schemas/templates-manifest.schema.json`](schemas
 
 1. Open the template folder.
 1. Choose the framework variant you want to install.
-1. Follow the template README to import that variant's unmanaged supporting solution zip.
+1. Follow the template README to pack and import that variant's unmanaged supporting solution.
 1. Import the seed data separately when the template includes `seed-data/data.json`.
 1. Upload the code site from the variant's `spa-code/` folder.
 1. Review any template-specific prerequisites, such as Dataverse features or Power Pages Admin Center settings.
 
-The Power Platform CLI solution import command imports the solution zip only.
+The repository stores each unmanaged solution as reviewable source under the variant's `solution/` directory.
+Pack that directory with `pac solution pack --packagetype Unmanaged` before importing it.
+The Power Platform CLI solution import command imports the packed solution only.
 It does not import the JSON seed data.
 The solution contains supporting Dataverse artifacts and does not contain the Power Pages website.
 
 Catalog paths are relative to `templates/manifest.json`.
-Consumers must resolve a release tag to a commit SHA and fetch the manifest, solution, SPA code, seed data, and previews from that same immutable revision.
+Consumers must resolve a release tag to a commit SHA and fetch the manifest, solution source, SPA code, seed data, and previews from that same immutable revision.
 
 ## Validate templates
 

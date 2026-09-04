@@ -136,7 +136,7 @@
         },
         "solutionPath": {
           "type": "string",
-          "pattern": "^.+\\.zip$"
+          "pattern": "^.+/solution$"
         },
         "spaCodePath": {
           "type": "string",
