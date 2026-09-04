@@ -26,7 +26,7 @@ Completion criterion: you know the tag, target ref, release mode, and template I
 Run the template validator before tagging:
 
 ```bash
-node templates/scripts/validate-templates.js --enforce-unmanaged
+node templates/scripts/validate-templates.js
 ```
 
 If the repo has validator tests, run them too:

@@ -29,7 +29,6 @@ function validateTemplates(options = {}) {
   const root = path.resolve(options.root ?? path.join(__dirname, ".."));
   const manifestPath = path.join(root, "manifest.json");
   const schemaPath = path.join(root, "schemas", "templates-manifest.schema.json");
-  const enforceUnmanaged = Boolean(options.enforceUnmanaged);
   const result = {
     errors: [],
     warnings: []
@@ -57,7 +56,7 @@ function validateTemplates(options = {}) {
     validateId(template, ids, root, result);
     trackIdByKind(template, idsByKind);
     validateEnums(template, label, result);
-    validateReferencedPaths(template, label, root, enforceUnmanaged, result);
+    validateReferencedPaths(template, label, root, result);
   }
 
   validateTemplateFolders(root, idsByKind, result);
@@ -253,7 +252,7 @@ function validateTemplateFolders(root, idsByKind, result) {
   }
 }
 
-function validateReferencedPaths(template, label, root, enforceUnmanaged, result) {
+function validateReferencedPaths(template, label, root, result) {
   const familyBase = getFamilyBasePath(template);
   validatePreviewImages(template.previewImages, label, root, `${familyBase}/previews`, "previewImages", result);
 
@@ -275,7 +274,7 @@ function validateReferencedPaths(template, label, root, enforceUnmanaged, result
       continue;
     }
 
-    validateVariantPaths(template, framework, variant, label, root, enforceUnmanaged, result);
+    validateVariantPaths(template, framework, variant, label, root, result);
   }
 }
 
@@ -287,9 +286,9 @@ function getFamilyBasePath(template) {
   return `${template.kind}/${template.id}`;
 }
 
-function validateVariantPaths(template, framework, variant, label, root, enforceUnmanaged, result) {
+function validateVariantPaths(template, framework, variant, label, root, result) {
   const variantBase = `${getFamilyBasePath(template)}/variants/${framework}`;
-  validateSolutionPath(variant.solutionPath, label, root, `${variantBase}/solution`, `variant "${framework}" solutionPath`, enforceUnmanaged, result);
+  validateSolutionPath(variant.solutionPath, label, root, `${variantBase}/solution`, `variant "${framework}" solutionPath`, result);
   validateSpaCodePath(variant.spaCodePath, label, root, `${variantBase}/spa-code`, `variant "${framework}" spaCodePath`, result);
   validatePreviewImages(variant.previewImages, label, root, `${variantBase}/previews`, `variant "${framework}" previewImages`, result);
 
@@ -326,7 +325,7 @@ function validatePreviewImages(previewImages, label, root, expectedDirectory, lo
   });
 }
 
-function validateSolutionPath(solutionPathValue, label, root, expectedDirectory, location, enforceUnmanaged, result) {
+function validateSolutionPath(solutionPathValue, label, root, expectedDirectory, location, result) {
   if (typeof solutionPathValue !== "string") {
     return;
   }
@@ -384,12 +383,7 @@ function validateSolutionPath(solutionPathValue, label, root, expectedDirectory,
   }
 
   if (managedState === "managed") {
-    const message = `Template "${label}" solution is managed. Replace it with an unmanaged export if the consuming pipeline requires unmanaged templates.`;
-    if (enforceUnmanaged) {
-      result.errors.push(message);
-    } else {
-      result.warnings.push(message);
-    }
+    result.errors.push(`Template "${label}" solution is managed. Replace it with an unmanaged export.`);
   }
 }
 
@@ -898,8 +892,7 @@ function runCli() {
   const args = process.argv.slice(2);
   const rootArgIndex = args.indexOf("--root");
   const root = rootArgIndex === -1 ? undefined : args[rootArgIndex + 1];
-  const enforceUnmanaged = args.includes("--enforce-unmanaged");
-  const result = validateTemplates({ root, enforceUnmanaged });
+  const result = validateTemplates({ root });
 
   for (const warning of result.warnings) {
     console.warn(`warning: ${warning}`);

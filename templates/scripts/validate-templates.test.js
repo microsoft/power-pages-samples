@@ -82,19 +82,15 @@ test("rejects flat template package fields at the family level", () => {
   assert(result.errors.some((error) => error.includes("$.templates[0].templateVersion is not allowed")));
 });
 
-test("reports managed solution zips and can enforce unmanaged-only policy", () => {
+test("rejects managed solution zips", () => {
   const root = createTemplateRoot({
     solutionXml: "<ImportExportXml><SolutionManifest><Managed>1</Managed></SolutionManifest></ImportExportXml>"
   });
 
-  const warningResult = validateTemplates({ root });
-  assert.deepEqual(warningResult.errors, []);
-  assert.equal(warningResult.warnings.length, 1);
-  assert.match(warningResult.warnings[0], /solution is managed/);
-
-  const enforcedResult = validateTemplates({ root, enforceUnmanaged: true });
-  assert.equal(enforcedResult.errors.length, 1);
-  assert.match(enforcedResult.errors[0], /solution is managed/);
+  const result = validateTemplates({ root });
+  assert.equal(result.errors.length, 1);
+  assert.match(result.errors[0], /solution is managed/);
+  assert.deepEqual(result.warnings, []);
 });
 
 test("rejects supporting solutions that contain Power Pages website components", () => {

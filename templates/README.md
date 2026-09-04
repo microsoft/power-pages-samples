@@ -34,7 +34,7 @@ Consumers must resolve a release tag to a commit SHA and fetch the manifest, sol
 Run the validator from the repository root:
 
 ```bash
-node templates/scripts/validate-templates.js --enforce-unmanaged
+node templates/scripts/validate-templates.js
 ```
 
 Run the validator tests when changing the contract:
