@@ -1,4 +1,4 @@
-description: Allowed fields for spnvc_purchaseorder Web API access (wildcard required for /aggregate queries)
+description: Allowed fields for spnvc_purchaseorder Web API access
 id: ad995874-c305-4e79-95e5-216e01477197
 name: Webapi/spnvc_purchaseorder/fields
-value: '*'
+value: _spnvc_supplierid_value,createdon,modifiedon,spnvc_SupplierId,spnvc_deliverydate,spnvc_description,spnvc_name,spnvc_postatus,spnvc_purchaseorderid,spnvc_totalamount

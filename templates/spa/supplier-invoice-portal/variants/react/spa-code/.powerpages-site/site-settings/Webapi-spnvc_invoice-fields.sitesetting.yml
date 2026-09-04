@@ -1,4 +1,4 @@
-description: Allowed fields for Invoice Web API access (wildcard required for $apply groupby/aggregate queries)
+description: Allowed fields for Invoice Web API access
 id: c4f4d61d-12e0-4f1b-a109-f9e95868e19f
 name: Webapi/spnvc_invoice/fields
-value: '*'
+value: _spnvc_contactid_value,_spnvc_purchaseorderid_value,_spnvc_supplierid_value,createdon,modifiedon,spnvc_ContactId,spnvc_SupplierId,spnvc_amount,spnvc_description,spnvc_duedate,spnvc_invoiceid,spnvc_invoicestatus,spnvc_name,spnvc_ponumber,spnvc_submissiondate

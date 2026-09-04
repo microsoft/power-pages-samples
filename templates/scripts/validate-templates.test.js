@@ -374,6 +374,53 @@ test("rejects generated and local-only files in spa-code projects", () => {
   assert(result.errors.some((error) => error.includes("excluded file: .powerpages-site/.portalconfig/source.crm.dynamics.com-manifest.yml")));
 });
 
+test("rejects wildcard Web API field settings in modular and aggregate layouts", () => {
+  const root = createTemplateRoot();
+  const sitePath = path.join(root, "spa/test-template/variants/react/spa-code/.powerpages-site");
+  const modularSettingsPath = path.join(sitePath, "site-settings");
+  const profilePath = path.join(sitePath, "deployment-profiles/dev");
+  fs.mkdirSync(modularSettingsPath, { recursive: true });
+  fs.mkdirSync(profilePath, { recursive: true });
+  fs.writeFileSync(
+    path.join(modularSettingsPath, "Webapi-account-fields.sitesetting.yml"),
+    "name: Webapi/account/fields\nvalue: '*'\n"
+  );
+  fs.writeFileSync(
+    path.join(profilePath, "sitesettings.yml"),
+    "- adx_name: Webapi/contact/fields\n  adx_value: *\n"
+  );
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) =>
+    error.includes("Webapi/account/fields") &&
+    error.includes("Webapi-account-fields.sitesetting.yml")
+  ));
+  assert(result.errors.some((error) =>
+    error.includes("Webapi/contact/fields") &&
+    error.includes("deployment-profiles/dev/sitesettings.yml")
+  ));
+});
+
+test("allows explicit Web API field settings and unrelated site settings", () => {
+  const root = createTemplateRoot();
+  const settingsPath = path.join(
+    root,
+    "spa/test-template/variants/react/spa-code/.powerpages-site/site-settings"
+  );
+  fs.mkdirSync(settingsPath, { recursive: true });
+  fs.writeFileSync(
+    path.join(settingsPath, "Webapi-account-fields.sitesetting.yml"),
+    "name: Webapi/account/fields\nvalue: accountid,name\n"
+  );
+  fs.writeFileSync(
+    path.join(settingsPath, "Webapi-error-innererror.sitesetting.yml"),
+    "name: Webapi/error/innererror\nvalue: true\n"
+  );
+
+  const result = validateTemplates({ root });
+  assert.deepEqual(result.errors, []);
+});
+
 test("rejects SPA source metadata that references excluded or missing files", () => {
   const root = createTemplateRoot();
   const spaCodePath = path.join(root, "spa/test-template/variants/react/spa-code");

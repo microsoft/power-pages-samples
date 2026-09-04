@@ -446,6 +446,10 @@ function validateSpaCodeContents(spaCodeRoot, currentDirectory, label, result) {
     if (isForbiddenSpaCodeFile(entry.name) || isEnvironmentSpecificPortalManifest(relativePath)) {
       result.errors.push(`Template "${label}" spa-code contains excluded file: ${relativePath}`);
     }
+
+    if (isPowerPagesSiteSettingFile(relativePath)) {
+      validateWebApiFieldSettings(fullPath, relativePath, label, result);
+    }
   }
 }
 
@@ -464,6 +468,52 @@ function isForbiddenSpaCodeFile(fileName) {
 
 function isEnvironmentSpecificPortalManifest(relativePath) {
   return /^\.powerpages-site\/\.portalconfig\/.+-manifest\.yml$/i.test(relativePath);
+}
+
+function isPowerPagesSiteSettingFile(relativePath) {
+  return relativePath.startsWith(".powerpages-site/") &&
+    /sitesettings?\.ya?ml$/i.test(path.posix.basename(relativePath));
+}
+
+function validateWebApiFieldSettings(settingsPath, relativePath, label, result) {
+  const lines = fs.readFileSync(settingsPath, "utf8").split(/\r?\n/);
+  const namePattern = /^\s*(?:-\s*)?(?:adx_name|name):\s*(.+?)\s*$/i;
+  const valuePattern = /^\s*(?:adx_value|value):\s*(.+?)\s*$/i;
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const nameMatch = lines[index].match(namePattern);
+    if (!nameMatch) {
+      continue;
+    }
+
+    const settingName = unquoteYamlScalar(nameMatch[1]);
+    if (!/^Webapi\/[^/]+\/fields$/i.test(settingName)) {
+      continue;
+    }
+
+    for (let valueIndex = index + 1; valueIndex < lines.length; valueIndex += 1) {
+      if (namePattern.test(lines[valueIndex])) {
+        break;
+      }
+
+      const valueMatch = lines[valueIndex].match(valuePattern);
+      if (!valueMatch) {
+        continue;
+      }
+
+      if (isWildcardYamlScalar(valueMatch[1])) {
+        result.errors.push(
+          `Template "${label}" SPA site setting ${settingName} must use an explicit column allowlist, not '*': ${relativePath}`
+        );
+      }
+      break;
+    }
+  }
+}
+
+function isWildcardYamlScalar(value) {
+  const scalar = value.trim();
+  return scalar === "*" || scalar === "'*'" || scalar === '"*"';
 }
 
 function validateSpaCodeSourceMetadata(spaCodePath, label, result) {
