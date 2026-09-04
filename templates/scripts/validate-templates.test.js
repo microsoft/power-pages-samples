@@ -374,27 +374,36 @@ test("rejects generated and local-only files in spa-code projects", () => {
   assert(result.errors.some((error) => error.includes("excluded file: .powerpages-site/.portalconfig/source.crm.dynamics.com-manifest.yml")));
 });
 
-test("rejects wildcard Web API field settings in modular and aggregate layouts", () => {
+test("rejects wildcard Web API field settings in modular layout", () => {
   const root = createTemplateRoot();
   const sitePath = path.join(root, "spa/test-template/variants/react/spa-code/.powerpages-site");
   const modularSettingsPath = path.join(sitePath, "site-settings");
-  const profilePath = path.join(sitePath, "deployment-profiles/dev");
   fs.mkdirSync(modularSettingsPath, { recursive: true });
-  fs.mkdirSync(profilePath, { recursive: true });
   fs.writeFileSync(
-    path.join(modularSettingsPath, "Webapi-account-fields.sitesetting.yml"),
+    path.join(modularSettingsPath, "Webapi-account-fields.sitesetting.yaml"),
     "name: Webapi/account/fields\nvalue: '*'\n"
   );
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) =>
+    error.includes("Webapi/account/fields") &&
+    error.includes("Webapi-account-fields.sitesetting.yaml")
+  ));
+});
+
+test("rejects wildcard Web API field settings in aggregate layout", () => {
+  const root = createTemplateRoot();
+  const profilePath = path.join(
+    root,
+    "spa/test-template/variants/react/spa-code/.powerpages-site/deployment-profiles/dev"
+  );
+  fs.mkdirSync(profilePath, { recursive: true });
   fs.writeFileSync(
     path.join(profilePath, "sitesettings.yml"),
     "- adx_name: Webapi/contact/fields\n  adx_value: *\n"
   );
 
   const result = validateTemplates({ root });
-  assert(result.errors.some((error) =>
-    error.includes("Webapi/account/fields") &&
-    error.includes("Webapi-account-fields.sitesetting.yml")
-  ));
   assert(result.errors.some((error) =>
     error.includes("Webapi/contact/fields") &&
     error.includes("deployment-profiles/dev/sitesettings.yml")

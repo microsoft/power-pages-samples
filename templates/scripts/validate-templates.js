@@ -471,8 +471,14 @@ function isEnvironmentSpecificPortalManifest(relativePath) {
 }
 
 function isPowerPagesSiteSettingFile(relativePath) {
-  return relativePath.startsWith(".powerpages-site/") &&
-    /sitesettings?\.ya?ml$/i.test(path.posix.basename(relativePath));
+  if (!relativePath.startsWith(".powerpages-site/")) {
+    return false;
+  }
+
+  const fileName = path.posix.basename(relativePath);
+  const isModularSetting = /\.sitesetting\.ya?ml$/i.test(fileName);
+  const isAggregateSettings = /^sitesettings?\.ya?ml$/i.test(fileName);
+  return isModularSetting || isAggregateSettings;
 }
 
 function validateWebApiFieldSettings(settingsPath, relativePath, label, result) {
