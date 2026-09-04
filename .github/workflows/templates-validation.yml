@@ -33,4 +33,4 @@ jobs:
         run: node --test templates/scripts/validate-templates.test.js
 
       - name: Validate templates manifest
-        run: node templates/scripts/validate-templates.js
+        run: node templates/scripts/validate-templates.js --enforce-unmanaged

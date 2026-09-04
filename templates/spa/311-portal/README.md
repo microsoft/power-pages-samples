@@ -2,8 +2,9 @@
 
 This folder contains the 311 Portal template entry for the installable `templates/` catalog.
 
-The checked-in solution zip is an unmanaged export with the `spa311` publisher prefix.
+The checked-in supporting solution zip is an unmanaged export with the `spa311` publisher prefix.
 The solution metadata lists a dependency on Dataverse knowledge articles through `msdynce_KnowledgeManagementFeatures`.
+It contains Dataverse artifacts only. The Power Pages website project is stored separately under `variants/react/spa-code/`.
 
 ## Previews
 
@@ -32,13 +33,13 @@ Use these steps if you want to install the template yourself instead of using an
    pac auth create --url https://YOUR-ENVIRONMENT.crm.dynamics.com
    ```
 
-5. Import the React variant's unmanaged solution from the repository root:
+5. Import the React variant's supporting unmanaged solution from the repository root:
 
    ```bash
    pac solution import --path templates/spa/311-portal/variants/react/solution/311-portal-unmanaged.zip --publish-changes
    ```
 
-6. Confirm the site and Dataverse tables were created in the target environment.
+6. Confirm the Dataverse tables were created in the target environment.
 7. Import `seed-data/data.json` after the solution import completes.
    The Power Platform CLI solution import command does not import this JSON file.
    Use an installer or a Dataverse import script that understands the seed-data shape below.
@@ -51,18 +52,16 @@ If you import the seed data without an installer, create or upsert records table
 Preserve the IDs in each table because later records refer to earlier records by lookup ID.
 Do not use Dataverse's spreadsheet import for this file because it will not preserve lookup IDs.
 
+8. Install dependencies, build the React project, and upload the code site:
+
+```bash
+cd templates/spa/311-portal/variants/react/spa-code
+npm ci
+npm run build
+pac pages upload-code-site --rootPath .
+```
+
 ## Customize this template
 
-The solution includes the SPA source code, not just the compiled site assets.
-After you import the solution, download the code site:
-
-```bash
-pac pages download-code-site --webSiteId <website-id> --path <download-path> --overwrite
-```
-
-The downloaded folder includes the full React source code.
-Make your changes there, run the build command from the downloaded site's README or `package.json`, and upload the updated code site when you are ready:
-
-```bash
-pac pages upload-code-site --rootPath ./311-portal
-```
+The `spa-code/` folder includes the React source, package files, Power Pages configuration, and `.powerpages-site` metadata.
+Make changes there, rebuild, and run the upload command again.

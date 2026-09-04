@@ -125,7 +125,8 @@
       "type": "object",
       "required": [
         "templateVersion",
-        "solutionPath"
+        "solutionPath",
+        "spaCodePath"
       ],
       "additionalProperties": false,
       "properties": {
@@ -136,6 +137,10 @@
         "solutionPath": {
           "type": "string",
           "pattern": "^.+\\.zip$"
+        },
+        "spaCodePath": {
+          "type": "string",
+          "pattern": "^.+/spa-code$"
         },
         "previewImages": {
           "type": "array",

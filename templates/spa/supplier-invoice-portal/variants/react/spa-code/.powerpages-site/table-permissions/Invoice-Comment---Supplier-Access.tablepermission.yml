@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- 997e7996-e241-4117-9c09-28e90a1fcdbc
+append: true
+appendto: true
+contactrelationship: spnvc_contact_invoicecomment_contact
+create: true
+delete: false
+entitylogicalname: spnvc_invoicecomment
+entityname: Invoice Comment - Supplier Access
+id: 01f92b58-a8f6-4b10-91d3-a924ef07e082
+read: true
+scope: 756150001
+write: false

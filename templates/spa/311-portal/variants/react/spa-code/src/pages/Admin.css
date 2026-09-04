@@ -1,0 +1,118 @@
+.admin-status-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.admin-status-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all 150ms ease;
+  font-family: var(--font-heading);
+}
+.admin-status-chip:hover {
+  border-color: var(--color-primary);
+}
+.admin-status-chip.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.admin-chip-count {
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.admin-chip-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Table */
+.admin-table-wrap {
+  border-radius: var(--radius-lg);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.admin-table th {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  padding: 14px 16px;
+  text-align: left;
+  background: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.admin-sort-button {
+  padding: 2px;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.admin-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border-light);
+  vertical-align: middle;
+}
+
+.admin-table tr:hover td {
+  background: rgba(27, 73, 101, 0.02);
+}
+
+.admin-table tr.editing td {
+  background: var(--color-info-bg);
+}
+
+.admin-id {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+/* SLA indicators */
+.admin-sla {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-sla-on-time { color: var(--color-success); }
+.admin-sla-at-risk { color: var(--color-warning); }
+.admin-sla-breached { color: var(--color-error); }
+
+@media (max-width: 900px) {
+  .admin-table {
+    font-size: 0.8125rem;
+  }
+  .admin-table th,
+  .admin-table td {
+    padding: 10px 12px;
+  }
+}

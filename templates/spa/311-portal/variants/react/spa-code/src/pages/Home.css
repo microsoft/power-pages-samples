@@ -1,0 +1,218 @@
+/* Hero */
+.home-hero {
+  position: relative;
+  padding: 80px 0 64px;
+  overflow: hidden;
+}
+
+.home-hero-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--color-primary-dark);
+  z-index: 0;
+}
+
+.home-hero-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: transparent;
+}
+
+.home-hero-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.home-hero-eyebrow {
+  color: #D8E1E8;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+}
+
+.home-hero-title {
+  color: #fff;
+  font-size: 3rem;
+  max-width: 640px;
+  margin-bottom: 16px;
+}
+
+.home-hero-subtitle {
+  color: #E3E9ED;
+  font-size: 1.125rem;
+  max-width: 520px;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.home-hero-search {
+  width: 100%;
+  max-width: 640px;
+}
+
+/* Sections */
+.home-section {
+  padding: 64px 0;
+}
+
+.home-section-title {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+/* Popular topics */
+.home-topics-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+
+.home-topic-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 16px;
+  text-decoration: none;
+  text-align: center;
+}
+
+.home-topic-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.home-topic-label {
+  font-family: var(--font-heading);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+/* CTAs */
+.home-cta-section {
+  background: var(--color-surface-alt);
+}
+
+.home-cta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.home-cta-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  text-decoration: none;
+  transition: all 250ms ease;
+}
+.home-cta-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-border);
+}
+
+.home-cta-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.home-cta-title {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.home-cta-desc {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+/* Stats */
+.home-stats-section {
+  background: var(--color-primary);
+  padding: 40px 0;
+}
+
+.home-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
+  text-align: center;
+}
+
+.home-stat-value {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.home-stat-label {
+  font-size: 0.875rem;
+  color: #D9E4EA;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Knowledge row */
+.home-knowledge-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.home-knowledge-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.home-knowledge-card {
+  text-decoration: none;
+}
+.home-knowledge-card h4 {
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+.home-knowledge-card p {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .home-hero-title { font-size: 2.25rem; }
+  .home-topics-grid { grid-template-columns: repeat(3, 1fr); }
+  .home-cta-grid { grid-template-columns: 1fr; }
+  .home-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .home-knowledge-row { grid-template-columns: 1fr; gap: 32px; }
+}
+
+@media (max-width: 600px) {
+  .home-hero { padding: 48px 0 40px; }
+  .home-hero-title { font-size: 1.75rem; }
+  .home-hero-subtitle { font-size: 1rem; }
+  .home-topics-grid { grid-template-columns: repeat(2, 1fr); }
+  .home-section { padding: 40px 0; }
+  .home-stats-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
+}

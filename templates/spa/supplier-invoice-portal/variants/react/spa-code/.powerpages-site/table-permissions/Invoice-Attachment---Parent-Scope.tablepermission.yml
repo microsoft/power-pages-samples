@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- 2ab5e3ba-0309-f111-8406-6045bd04a357
+append: true
+appendto: true
+contactrelationship: spnvc_contact_invoiceattachment_contact
+create: true
+delete: true
+entitylogicalname: spnvc_invoiceattachment
+entityname: Invoice Attachment - Parent Scope
+id: cbd92278-0cab-458e-bb51-89a4e0cddfd9
+read: true
+scope: 756150001
+write: true

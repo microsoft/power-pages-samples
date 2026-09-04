@@ -11,6 +11,19 @@ const VALID_FRAMEWORKS = new Set(["angular", "astro", "react", "vue"]);
 const VALID_AUDIENCES = new Set(["admins", "developers", "makers", "partners"]);
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const LFS_POINTER_PREFIX = "version https://git-lfs.github.com/spec/v1";
+const FORBIDDEN_SPA_CODE_DIRECTORIES = new Set([
+  ".git",
+  ".playwright-mcp",
+  ".vite",
+  "build",
+  "coverage",
+  "dataverse-export",
+  "dist",
+  "dist-ssr",
+  "node_modules",
+  "playwright-report",
+  "test-results"
+]);
 
 function validateTemplates(options = {}) {
   const root = path.resolve(options.root ?? path.join(__dirname, ".."));
@@ -277,6 +290,7 @@ function getFamilyBasePath(template) {
 function validateVariantPaths(template, framework, variant, label, root, enforceUnmanaged, result) {
   const variantBase = `${getFamilyBasePath(template)}/variants/${framework}`;
   validateSolutionPath(variant.solutionPath, label, root, `${variantBase}/solution`, `variant "${framework}" solutionPath`, enforceUnmanaged, result);
+  validateSpaCodePath(variant.spaCodePath, label, root, `${variantBase}/spa-code`, `variant "${framework}" spaCodePath`, result);
   validatePreviewImages(variant.previewImages, label, root, `${variantBase}/previews`, `variant "${framework}" previewImages`, result);
 
   if (typeof variant.seedDataPath === "string") {
@@ -354,6 +368,15 @@ function validateSolutionPath(solutionPathValue, label, root, expectedDirectory,
     return;
   }
 
+  const websiteComponentEntry = readZipFileNames(solutionPath).find((entryName) =>
+    /^powerpagecomponents(?:\/|$)/i.test(normalizeZipName(entryName))
+  );
+  if (websiteComponentEntry) {
+    result.errors.push(
+      `Template "${label}" supporting solution must not contain Power Pages website components: ${websiteComponentEntry}`
+    );
+  }
+
   const managedState = detectManagedState(solutionXml);
   if (managedState === "unknown") {
     result.errors.push(`Template "${label}" solution.xml does not contain a readable <Managed> value.`);
@@ -368,6 +391,135 @@ function validateSolutionPath(solutionPathValue, label, root, expectedDirectory,
       result.warnings.push(message);
     }
   }
+}
+
+function validateSpaCodePath(spaCodePathValue, label, root, expectedDirectory, location, result) {
+  if (typeof spaCodePathValue !== "string") {
+    return;
+  }
+
+  const spaCodePath = resolveTemplatePath(root, spaCodePathValue, label, result);
+  if (!spaCodePath) {
+    return;
+  }
+
+  const expectedFullDirectory = path.resolve(root, expectedDirectory);
+  if (spaCodePath !== expectedFullDirectory) {
+    result.errors.push(`Template "${label}" ${location} must be ${expectedDirectory}.`);
+  }
+
+  if (!directoryExists(spaCodePath)) {
+    result.errors.push(`Template "${label}" spaCodePath does not exist or is not a directory: ${spaCodePathValue}`);
+    return;
+  }
+
+  const requiredFiles = ["package.json", "powerpages.config.json"];
+  for (const requiredFile of requiredFiles) {
+    const requiredPath = path.join(spaCodePath, requiredFile);
+    if (!fileExists(requiredPath)) {
+      result.errors.push(`Template "${label}" spaCodePath must contain ${requiredFile}.`);
+    }
+  }
+
+  if (!directoryExists(path.join(spaCodePath, ".powerpages-site"))) {
+    result.errors.push(`Template "${label}" spaCodePath must contain .powerpages-site/.`);
+  }
+
+  validateSpaCodeContents(spaCodePath, spaCodePath, label, result);
+  validateSpaCodeSourceMetadata(spaCodePath, label, result);
+}
+
+function validateSpaCodeContents(spaCodeRoot, currentDirectory, label, result) {
+  for (const entry of fs.readdirSync(currentDirectory, { withFileTypes: true })) {
+    const fullPath = path.join(currentDirectory, entry.name);
+    const relativePath = path.relative(spaCodeRoot, fullPath).split(path.sep).join("/");
+
+    if (entry.isSymbolicLink()) {
+      result.errors.push(`Template "${label}" spa-code must not contain symbolic links: ${relativePath}`);
+      continue;
+    }
+
+    if (entry.isDirectory()) {
+      if (FORBIDDEN_SPA_CODE_DIRECTORIES.has(entry.name)) {
+        result.errors.push(`Template "${label}" spa-code contains excluded directory: ${relativePath}/`);
+        continue;
+      }
+
+      validateSpaCodeContents(spaCodeRoot, fullPath, label, result);
+      continue;
+    }
+
+    if (isForbiddenSpaCodeFile(entry.name) || isEnvironmentSpecificPortalManifest(relativePath)) {
+      result.errors.push(`Template "${label}" spa-code contains excluded file: ${relativePath}`);
+    }
+  }
+}
+
+function isForbiddenSpaCodeFile(fileName) {
+  return fileName === ".DS_Store" ||
+    fileName === ".datamodel-manifest.json" ||
+    fileName === "AGENTS.md" ||
+    fileName === "CLAUDE.md" ||
+    fileName === ".env" ||
+    fileName.startsWith(".env.") ||
+    fileName.endsWith(".tsbuildinfo") ||
+    fileName.endsWith(".log") ||
+    fileName.endsWith(".err") ||
+    fileName.endsWith(".sarif");
+}
+
+function isEnvironmentSpecificPortalManifest(relativePath) {
+  return /^\.powerpages-site\/\.portalconfig\/.+-manifest\.yml$/i.test(relativePath);
+}
+
+function validateSpaCodeSourceMetadata(spaCodePath, label, result) {
+  const metadataDirectory = path.join(spaCodePath, ".powerpages-site", "source-files");
+  if (!directoryExists(metadataDirectory)) {
+    return;
+  }
+
+  for (const entry of fs.readdirSync(metadataDirectory, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".sourcefile.yml")) {
+      continue;
+    }
+
+    const metadataPath = path.join(metadataDirectory, entry.name);
+    const metadata = fs.readFileSync(metadataPath, "utf8");
+    const partialUrlMatch = /^partialurl:\s*(.*?)\s*$/m.exec(metadata);
+    if (!partialUrlMatch || partialUrlMatch[1].length === 0) {
+      result.errors.push(`Template "${label}" SPA source metadata must contain partialurl: ${entry.name}`);
+      continue;
+    }
+
+    const partialUrl = unquoteYamlScalar(partialUrlMatch[1]);
+    const sourcePath = resolveSpaCodeSourcePath(spaCodePath, partialUrl, label, entry.name, result);
+    if (sourcePath && !fileExists(sourcePath)) {
+      result.errors.push(`Template "${label}" SPA source metadata references a missing file: ${partialUrl}`);
+    }
+  }
+}
+
+function unquoteYamlScalar(value) {
+  if (value.length >= 2 && ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'")))) {
+    return value.slice(1, -1);
+  }
+
+  return value;
+}
+
+function resolveSpaCodeSourcePath(spaCodePath, partialUrl, label, metadataName, result) {
+  if (path.isAbsolute(partialUrl)) {
+    result.errors.push(`Template "${label}" SPA source metadata partialurl must be relative: ${metadataName}`);
+    return null;
+  }
+
+  const sourcePath = path.resolve(spaCodePath, partialUrl);
+  if (!isPathInsideOrEqual(spaCodePath, sourcePath) || sourcePath === spaCodePath) {
+    result.errors.push(`Template "${label}" SPA source metadata partialurl must stay inside spa-code: ${metadataName}`);
+    return null;
+  }
+
+  return sourcePath;
 }
 
 function validateSeedDataPath(seedDataPathValue, label, root, expectedDirectory, location, result) {
@@ -670,6 +822,10 @@ function readZipTextFile(zipPath, wantedName) {
   const compressedData = buffer.subarray(dataStart, dataStart + entry.compressedSize);
   const data = inflateZipEntry(compressedData, entry.compressionMethod, entry.name);
   return data.toString("utf8");
+}
+
+function readZipFileNames(zipPath) {
+  return readZipEntries(fs.readFileSync(zipPath)).map((entry) => entry.name);
 }
 
 function readZipEntries(buffer) {

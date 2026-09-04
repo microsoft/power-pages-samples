@@ -1,0 +1,14 @@
+adx_entitypermission_webrole:
+- 3be828ee-dd81-4de0-8b66-5667449d67aa
+- 43e715fa-e7a7-41a5-b602-8baad5bfdebd
+- c1cad924-b4ea-4a18-b85e-0d28f2c4a3bc
+append: false
+appendto: false
+create: false
+delete: false
+entitylogicalname: spa311_servicetype
+entityname: Service Type - Anonymous
+id: 41bf0e2c-e76f-4152-b2c0-ad7735bb1b63
+read: true
+scope: 756150000
+write: false

@@ -32,6 +32,15 @@ test("accepts a valid unmanaged template family fixture", () => {
   assert.deepEqual(result.warnings, []);
 });
 
+test("requires each SPA variant to reference its spa-code project", () => {
+  const root = createTemplateRoot({
+    spaCodePath: undefined
+  });
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("$.templates[0].variants.react.spaCodePath is required")));
+});
+
 test("accepts variant-specific overrides when they are needed", () => {
   const root = createTemplateRoot({
     variantOverrides: {
@@ -86,6 +95,15 @@ test("reports managed solution zips and can enforce unmanaged-only policy", () =
   const enforcedResult = validateTemplates({ root, enforceUnmanaged: true });
   assert.equal(enforcedResult.errors.length, 1);
   assert.match(enforcedResult.errors[0], /solution is managed/);
+});
+
+test("rejects supporting solutions that contain Power Pages website components", () => {
+  const root = createTemplateRoot({
+    solutionHasWebsiteComponent: true
+  });
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("supporting solution must not contain Power Pages website components")));
 });
 
 test("rejects invalid ids and folder mismatches", () => {
@@ -317,6 +335,7 @@ test("rejects variant package paths outside their framework layout", () => {
   const root = createTemplateRoot({
     solutionPath: "spa/test-template/solution/template.zip",
     variantOverrides: {
+      spaCodePath: "spa/test-template/spa-code",
       previewImages: ["spa/test-template/previews/react-home.png"],
       seedDataPath: "spa/test-template/seed-data/react-accounts.json"
     },
@@ -330,8 +349,47 @@ test("rejects variant package paths outside their framework layout", () => {
 
   const result = validateTemplates({ root });
   assert(result.errors.some((error) => error.includes("variant \"react\" solutionPath must live in spa/test-template/variants/react/solution/")));
+  assert(result.errors.some((error) => error.includes("variant \"react\" spaCodePath must be spa/test-template/variants/react/spa-code")));
   assert(result.errors.some((error) => error.includes("variant \"react\" previewImages[0] must live in spa/test-template/variants/react/previews/")));
   assert(result.errors.some((error) => error.includes("variant \"react\" seedDataPath must live in spa/test-template/variants/react/seed-data/")));
+});
+
+test("rejects generated and local-only files in spa-code projects", () => {
+  const root = createTemplateRoot();
+  const spaCodePath = path.join(root, "spa/test-template/variants/react/spa-code");
+  fs.mkdirSync(path.join(spaCodePath, "node_modules"), { recursive: true });
+  fs.writeFileSync(path.join(spaCodePath, "node_modules/package.json"), "{}");
+  fs.writeFileSync(path.join(spaCodePath, "tsconfig.tsbuildinfo"), "state");
+  fs.writeFileSync(path.join(spaCodePath, ".env.local"), "SECRET=value");
+  fs.writeFileSync(path.join(spaCodePath, ".datamodel-manifest.json"), "{\"environmentUrl\":\"https://source.example\"}");
+  fs.writeFileSync(path.join(spaCodePath, "AGENTS.md"), "local instructions");
+  fs.mkdirSync(path.join(spaCodePath, ".powerpages-site/.portalconfig"), { recursive: true });
+  fs.writeFileSync(
+    path.join(spaCodePath, ".powerpages-site/.portalconfig/source.crm.dynamics.com-manifest.yml"),
+    "environment: source"
+  );
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("excluded directory: node_modules/")));
+  assert(result.errors.some((error) => error.includes("excluded file: tsconfig.tsbuildinfo")));
+  assert(result.errors.some((error) => error.includes("excluded file: .env.local")));
+  assert(result.errors.some((error) => error.includes("excluded file: .datamodel-manifest.json")));
+  assert(result.errors.some((error) => error.includes("excluded file: AGENTS.md")));
+  assert(result.errors.some((error) => error.includes("excluded file: .powerpages-site/.portalconfig/source.crm.dynamics.com-manifest.yml")));
+});
+
+test("rejects SPA source metadata that references excluded or missing files", () => {
+  const root = createTemplateRoot();
+  const spaCodePath = path.join(root, "spa/test-template/variants/react/spa-code");
+  const metadataDirectory = path.join(spaCodePath, ".powerpages-site/source-files");
+  fs.mkdirSync(metadataDirectory, { recursive: true });
+  fs.writeFileSync(
+    path.join(metadataDirectory, "AGENTS.md.sourcefile.yml"),
+    "filename: AGENTS.md\npartialurl: AGENTS.md\n"
+  );
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("SPA source metadata references a missing file: AGENTS.md")));
 });
 
 function createTemplateRoot(options = {}) {
@@ -340,10 +398,12 @@ function createTemplateRoot(options = {}) {
   const folderId = options.folderId ?? id;
   const framework = options.framework ?? "react";
   const solutionPath = options.solutionPath ?? `spa/${folderId}/variants/${framework}/solution/template.zip`;
+  const spaCodePath = options.spaCodePath ?? `spa/${folderId}/variants/${framework}/spa-code`;
   const templateFolder = path.join(root, "spa", folderId);
   fs.mkdirSync(path.join(root, "schemas"), { recursive: true });
   fs.mkdirSync(path.join(root, "traditional"), { recursive: true });
   fs.mkdirSync(path.join(templateFolder, "variants", framework, "solution"), { recursive: true });
+  fs.mkdirSync(path.join(root, spaCodePath, ".powerpages-site"), { recursive: true });
   fs.mkdirSync(path.join(templateFolder, "previews"), { recursive: true });
   fs.mkdirSync(path.join(templateFolder, "seed-data"), { recursive: true });
 
@@ -366,6 +426,7 @@ function createTemplateRoot(options = {}) {
       [framework]: {
         templateVersion: "1.0.0",
         solutionPath,
+        spaCodePath,
         ...(options.variantOverrides ?? {})
       }
     },
@@ -374,6 +435,10 @@ function createTemplateRoot(options = {}) {
 
   if (Object.hasOwn(options, "requiredDataverseLanguages") && options.requiredDataverseLanguages === undefined) {
     delete template.requiredDataverseLanguages;
+  }
+
+  if (Object.hasOwn(options, "spaCodePath") && options.spaCodePath === undefined) {
+    delete template.variants[framework].spaCodePath;
   }
 
   if (options.seedDataPath) {
@@ -391,8 +456,18 @@ function createTemplateRoot(options = {}) {
   }
 
   fs.writeFileSync(path.join(root, "manifest.json"), JSON.stringify({ templates: [template] }, null, 2));
+  if (typeof template.variants[framework].spaCodePath === "string") {
+    const fixtureSpaCodePath = path.join(root, template.variants[framework].spaCodePath);
+    fs.mkdirSync(path.join(fixtureSpaCodePath, ".powerpages-site"), { recursive: true });
+    fs.writeFileSync(path.join(fixtureSpaCodePath, "package.json"), "{}");
+    fs.writeFileSync(path.join(fixtureSpaCodePath, "powerpages.config.json"), "{}");
+  }
   fs.mkdirSync(path.dirname(path.join(root, solutionPath)), { recursive: true });
-  writeZip(path.join(root, solutionPath), options.solutionXml === undefined ? defaultSolutionXml() : options.solutionXml);
+  writeZip(
+    path.join(root, solutionPath),
+    options.solutionXml === undefined ? defaultSolutionXml() : options.solutionXml,
+    options.solutionHasWebsiteComponent
+  );
   return root;
 }
 
@@ -400,7 +475,7 @@ function defaultSolutionXml() {
   return "<ImportExportXml><SolutionManifest><Managed>0</Managed></SolutionManifest></ImportExportXml>";
 }
 
-function writeZip(zipPath, solutionXml) {
+function writeZip(zipPath, solutionXml, solutionHasWebsiteComponent = false) {
   const entries = [];
   if (solutionXml !== null) {
     entries.push({
@@ -411,6 +486,13 @@ function writeZip(zipPath, solutionXml) {
     entries.push({
       name: "customizations.xml",
       data: Buffer.from("<customizations />", "utf8")
+    });
+  }
+
+  if (solutionHasWebsiteComponent) {
+    entries.push({
+      name: "powerpagecomponents/website/filecontent/index.html",
+      data: Buffer.from("<html></html>", "utf8")
     });
   }
 

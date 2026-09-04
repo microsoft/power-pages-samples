@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- 2ab5e3ba-0309-f111-8406-6045bd04a357
+- 997e7996-e241-4117-9c09-28e90a1fcdbc
+append: true
+appendto: true
+create: false
+delete: false
+entitylogicalname: spnvc_supplier
+entityname: Supplier - Read
+id: e82591a8-9fd5-4665-a975-855df52d839f
+read: true
+scope: 756150000
+write: false
