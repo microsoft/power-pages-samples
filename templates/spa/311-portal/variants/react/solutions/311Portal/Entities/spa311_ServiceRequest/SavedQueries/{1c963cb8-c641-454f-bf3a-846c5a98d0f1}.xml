@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>1</isdefault>
+    <savedqueryid>{1c963cb8-c641-454f-bf3a-846c5a98d0f1}</savedqueryid>
+    <layoutxml>
+      <grid name="spa311_servicerequests" jump="spa311_requestnumber" select="1" icon="1" preview="1">
+        <row name="spa311_servicerequest" id="spa311_servicerequestid">
+          <cell name="spa311_requestnumber" width="300" />
+          <cell name="createdon" width="125" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>2</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="spa311_servicerequest">
+          <attribute name="spa311_servicerequestid" />
+          <attribute name="spa311_requestnumber" />
+          <attribute name="createdon" />
+          <order attribute="spa311_requestnumber" descending="false" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="0" />
+          </filter>
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Service Request Associated View" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

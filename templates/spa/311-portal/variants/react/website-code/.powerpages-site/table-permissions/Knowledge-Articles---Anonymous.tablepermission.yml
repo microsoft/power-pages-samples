@@ -1,0 +1,14 @@
+adx_entitypermission_webrole:
+- 3be828ee-dd81-4de0-8b66-5667449d67aa
+- 43e715fa-e7a7-41a5-b602-8baad5bfdebd
+- c1cad924-b4ea-4a18-b85e-0d28f2c4a3bc
+append: false
+appendto: false
+create: false
+delete: false
+entitylogicalname: knowledgearticle
+entityname: Knowledge Articles - Anonymous
+id: 1f53d3a7-ae05-48ed-b845-32c2ccb462e5
+read: true
+scope: 756150000
+write: false

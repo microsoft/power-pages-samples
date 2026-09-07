@@ -4,19 +4,36 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
-const zlib = require("node:zlib");
 
 const VALID_KINDS = new Set(["spa", "traditional"]);
-const VALID_FRAMEWORKS = new Set(["angular", "astro", "react", "vue"]);
+const VALID_FRAMEWORKS = new Set(["angular", "astro", "none", "react", "vue"]);
 const VALID_AUDIENCES = new Set(["admins", "developers", "makers", "partners"]);
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const LFS_POINTER_PREFIX = "version https://git-lfs.github.com/spec/v1";
+const FORBIDDEN_WEBSITE_CODE_DIRECTORIES = new Set([
+  ".git",
+  ".playwright-mcp",
+  ".vite",
+  "build",
+  "coverage",
+  "dataverse-export",
+  "dist",
+  "dist-ssr",
+  "node_modules",
+  "playwright-report",
+  "test-results"
+]);
+const FORBIDDEN_SOLUTION_DIRECTORIES = new Set([
+  ...FORBIDDEN_WEBSITE_CODE_DIRECTORIES,
+  ".idea",
+  ".vs",
+  "bin",
+  "obj"
+]);
 
 function validateTemplates(options = {}) {
   const root = path.resolve(options.root ?? path.join(__dirname, ".."));
   const manifestPath = path.join(root, "manifest.json");
   const schemaPath = path.join(root, "schemas", "templates-manifest.schema.json");
-  const enforceUnmanaged = Boolean(options.enforceUnmanaged);
   const result = {
     errors: [],
     warnings: []
@@ -44,7 +61,7 @@ function validateTemplates(options = {}) {
     validateId(template, ids, root, result);
     trackIdByKind(template, idsByKind);
     validateEnums(template, label, result);
-    validateReferencedPaths(template, label, root, enforceUnmanaged, result);
+    validateReferencedPaths(template, label, root, result);
   }
 
   validateTemplateFolders(root, idsByKind, result);
@@ -240,7 +257,7 @@ function validateTemplateFolders(root, idsByKind, result) {
   }
 }
 
-function validateReferencedPaths(template, label, root, enforceUnmanaged, result) {
+function validateReferencedPaths(template, label, root, result) {
   const familyBase = getFamilyBasePath(template);
   validatePreviewImages(template.previewImages, label, root, `${familyBase}/previews`, "previewImages", result);
 
@@ -262,7 +279,7 @@ function validateReferencedPaths(template, label, root, enforceUnmanaged, result
       continue;
     }
 
-    validateVariantPaths(template, framework, variant, label, root, enforceUnmanaged, result);
+    validateVariantPaths(template, framework, variant, label, root, result);
   }
 }
 
@@ -274,9 +291,23 @@ function getFamilyBasePath(template) {
   return `${template.kind}/${template.id}`;
 }
 
-function validateVariantPaths(template, framework, variant, label, root, enforceUnmanaged, result) {
+function validateVariantPaths(template, framework, variant, label, root, result) {
   const variantBase = `${getFamilyBasePath(template)}/variants/${framework}`;
-  validateSolutionPath(variant.solutionPath, label, root, `${variantBase}/solution`, `variant "${framework}" solutionPath`, enforceUnmanaged, result);
+  validateSolutionsDirectory(
+    label,
+    root,
+    `${variantBase}/solutions`,
+    variantBase,
+    template.kind === "traditional",
+    result
+  );
+  validateWebsiteCodePath(
+    template.kind,
+    label,
+    root,
+    `${variantBase}/website-code`,
+    result
+  );
   validatePreviewImages(variant.previewImages, label, root, `${variantBase}/previews`, `variant "${framework}" previewImages`, result);
 
   if (typeof variant.seedDataPath === "string") {
@@ -312,62 +343,418 @@ function validatePreviewImages(previewImages, label, root, expectedDirectory, lo
   });
 }
 
-function validateSolutionPath(solutionPathValue, label, root, expectedDirectory, location, enforceUnmanaged, result) {
-  if (typeof solutionPathValue !== "string") {
+function validateSolutionsDirectory(
+  label,
+  root,
+  solutionsDirectory,
+  variantBase,
+  allowPowerPagesComponents,
+  result
+) {
+  const solutionsPath = path.resolve(root, solutionsDirectory);
+  if (!directoryExists(solutionsPath)) {
+    result.errors.push(`Template "${label}" solutions directory does not exist: ${solutionsDirectory}`);
     return;
   }
 
-  const solutionPath = resolveTemplatePath(root, solutionPathValue, label, result);
-  if (!solutionPath) {
+  if (fs.lstatSync(solutionsPath).isSymbolicLink()) {
+    result.errors.push(`Template "${label}" solutions directory must not be a symbolic link: ${solutionsDirectory}`);
     return;
   }
 
-  validatePathUnder(root, solutionPath, expectedDirectory, label, location, result);
+  const solutionDirectories = [];
+  for (const entry of fs.readdirSync(solutionsPath, { withFileTypes: true })) {
+    if (entry.isSymbolicLink() || !entry.isDirectory()) {
+      result.errors.push(
+        `Template "${label}" solutions directory may contain only direct solution folders: ${entry.name}`
+      );
+      continue;
+    }
 
-  if (!fileExists(solutionPath)) {
-    result.errors.push(`Template "${label}" solutionPath does not exist: ${solutionPathValue}`);
-    return;
+    solutionDirectories.push(entry);
   }
 
-  const stats = fs.statSync(solutionPath);
-  if (stats.size === 0) {
-    result.errors.push(`Template "${label}" solutionPath is empty: ${solutionPathValue}`);
-    return;
+  if (solutionDirectories.length === 0) {
+    result.errors.push(`Template "${label}" solutions directory must contain at least one solution folder.`);
   }
 
-  const head = readFilePrefix(solutionPath, LFS_POINTER_PREFIX.length);
-  if (head.startsWith(LFS_POINTER_PREFIX)) {
-    result.errors.push(`Template "${label}" solutionPath is a Git LFS pointer, not a zip: ${solutionPathValue}`);
-    return;
+  solutionDirectories.sort((left, right) => compareCaseInsensitive(left.name, right.name));
+  const solutions = [];
+  const uniqueNames = new Map();
+  for (const entry of solutionDirectories) {
+    const solution = validateSolutionDirectory(
+      path.join(solutionsPath, entry.name),
+      entry.name,
+      label,
+      allowPowerPagesComponents,
+      result
+    );
+    if (!solution) {
+      continue;
+    }
+
+    const normalizedUniqueName = solution.uniqueName.toLowerCase();
+    const previousFolder = uniqueNames.get(normalizedUniqueName);
+    if (previousFolder) {
+      result.errors.push(
+        `Template "${label}" solutions have duplicate case-insensitive unique name "${solution.uniqueName}": ` +
+        `${previousFolder}, ${entry.name}`
+      );
+    } else {
+      uniqueNames.set(normalizedUniqueName, entry.name);
+    }
+    solutions.push(solution);
   }
 
-  let solutionXml;
-  try {
-    solutionXml = readZipTextFile(solutionPath, "solution.xml");
-  } catch (error) {
-    result.errors.push(`Template "${label}" solution zip is invalid: ${error.message}`);
-    return;
+  validateIndependentSiblingSolutions(solutions, uniqueNames, label, result);
+  validateVariantHasNoSolutionZip(path.resolve(root, variantBase), label, result);
+}
+
+function compareCaseInsensitive(left, right) {
+  const normalizedLeft = left.toLowerCase();
+  const normalizedRight = right.toLowerCase();
+  if (normalizedLeft < normalizedRight) {
+    return -1;
+  }
+  if (normalizedLeft > normalizedRight) {
+    return 1;
+  }
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function validateSolutionDirectory(solutionPath, folderName, label, allowPowerPagesComponents, result) {
+  const requiredFiles = [
+    ["Other", "Solution.xml"],
+    ["Other", "Customizations.xml"]
+  ];
+  for (const pathSegments of requiredFiles) {
+    const requiredPath = path.join(solutionPath, ...pathSegments);
+    if (!fileExists(requiredPath)) {
+      result.errors.push(`Template "${label}" solution "${folderName}" must contain ${pathSegments.join("/")}.`);
+    }
   }
 
-  if (!solutionXml) {
-    result.errors.push(`Template "${label}" solution zip must contain solution.xml.`);
-    return;
+  validateSolutionContents(solutionPath, solutionPath, label, allowPowerPagesComponents, result);
+
+  const solutionXmlPath = path.join(solutionPath, "Other", "Solution.xml");
+  if (!fileExists(solutionXmlPath)) {
+    return null;
+  }
+  const solutionXml = fs.readFileSync(solutionXmlPath, "utf8");
+  const uniqueName = detectSolutionUniqueName(solutionXml);
+  if (!uniqueName) {
+    result.errors.push(`Template "${label}" solution "${folderName}" does not contain a readable solution UniqueName.`);
+    return null;
+  }
+
+  if (folderName !== uniqueName) {
+    result.errors.push(
+      `Template "${label}" solution folder "${folderName}" must exactly match XML unique name "${uniqueName}".`
+    );
   }
 
   const managedState = detectManagedState(solutionXml);
   if (managedState === "unknown") {
-    result.errors.push(`Template "${label}" solution.xml does not contain a readable <Managed> value.`);
+    result.errors.push(
+      `Template "${label}" solution "${folderName}" Other/Solution.xml does not contain a readable <Managed> value.`
+    );
+  } else if (managedState === "managed") {
+    result.errors.push(`Template "${label}" solution "${folderName}" is managed. Replace it with an unmanaged export.`);
+  }
+
+  return {
+    folderName,
+    solutionXml,
+    uniqueName
+  };
+}
+
+function detectSolutionUniqueName(solutionXml) {
+  const match = /<SolutionManifest\b[^>]*>[\s\S]*?<UniqueName>\s*([^<]+?)\s*<\/UniqueName>/i.exec(solutionXml);
+  return match ? decodeXmlEntities(match[1].trim()) : null;
+}
+
+function validateIndependentSiblingSolutions(solutions, uniqueNames, label, result) {
+  for (const solution of solutions) {
+    for (const requiredUniqueName of extractRequiredSolutionNames(solution.solutionXml)) {
+      const siblingFolder = uniqueNames.get(requiredUniqueName.toLowerCase());
+      if (siblingFolder && siblingFolder !== solution.folderName) {
+        result.errors.push(
+          `Template "${label}" solution "${solution.folderName}" depends on sibling solution "${siblingFolder}". ` +
+          "Sibling solutions must be independently importable."
+        );
+      }
+    }
+  }
+}
+
+function extractRequiredSolutionNames(solutionXml) {
+  const names = [];
+  const requiredPattern = /<Required\b[^>]*\bsolution\s*=\s*(["'])(.*?)\1/gi;
+  let match;
+  while ((match = requiredPattern.exec(solutionXml)) !== null) {
+    // PAC writes solution dependencies as "UniqueName (version)", for example
+    // solution="msdynce_KnowledgeManagementFeatures (9.0.26064.3010)".
+    // Split only the trailing version suffix because unique names cannot contain spaces.
+    const dependency = decodeXmlEntities(match[2]).trim().replace(/\s+\([^)]*\)\s*$/, "");
+    if (dependency) {
+      names.push(dependency);
+    }
+  }
+
+  return names;
+}
+
+function decodeXmlEntities(value) {
+  return value
+    .replace(/&quot;/g, "\"")
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
+function validateSolutionContents(solutionRoot, currentDirectory, label, allowPowerPagesComponents, result) {
+  for (const entry of fs.readdirSync(currentDirectory, { withFileTypes: true })) {
+    const fullPath = path.join(currentDirectory, entry.name);
+    const relativePath = path.relative(solutionRoot, fullPath).split(path.sep).join("/");
+
+    if (entry.isSymbolicLink()) {
+      result.errors.push(`Template "${label}" solution must not contain symbolic links: ${relativePath}`);
+      continue;
+    }
+
+    if (entry.isDirectory()) {
+      if (!allowPowerPagesComponents && entry.name.toLowerCase() === "powerpagecomponents") {
+        result.errors.push(
+          `Template "${label}" supporting solution must not contain Power Pages website components: ${relativePath}/`
+        );
+        continue;
+      }
+
+      if (FORBIDDEN_SOLUTION_DIRECTORIES.has(entry.name)) {
+        result.errors.push(`Template "${label}" solution contains excluded directory: ${relativePath}/`);
+        continue;
+      }
+
+      validateSolutionContents(solutionRoot, fullPath, label, allowPowerPagesComponents, result);
+      continue;
+    }
+
+    if (isForbiddenLocalFile(entry.name)) {
+      result.errors.push(`Template "${label}" solution contains excluded file: ${relativePath}`);
+    }
+  }
+}
+
+function validateVariantHasNoSolutionZip(variantPath, label, result) {
+  if (!directoryExists(variantPath)) {
     return;
   }
 
-  if (managedState === "managed") {
-    const message = `Template "${label}" solution is managed. Replace it with an unmanaged export if the consuming pipeline requires unmanaged templates.`;
-    if (enforceUnmanaged) {
-      result.errors.push(message);
-    } else {
-      result.warnings.push(message);
+  for (const entryPath of findFilesByExtension(variantPath, ".zip")) {
+    const relativePath = path.relative(variantPath, entryPath).split(path.sep).join("/");
+    result.errors.push(`Template "${label}" variant must not contain committed solution zips: ${relativePath}`);
+  }
+}
+
+function findFilesByExtension(currentDirectory, extension) {
+  const matches = [];
+  for (const entry of fs.readdirSync(currentDirectory, { withFileTypes: true })) {
+    if (entry.isSymbolicLink()) {
+      continue;
+    }
+
+    const fullPath = path.join(currentDirectory, entry.name);
+    if (entry.isDirectory()) {
+      matches.push(...findFilesByExtension(fullPath, extension));
+    } else if (entry.name.toLowerCase().endsWith(extension)) {
+      matches.push(fullPath);
     }
   }
+
+  return matches;
+}
+
+function validateWebsiteCodePath(kind, label, root, expectedDirectory, result) {
+  const websiteCodePath = path.resolve(root, expectedDirectory);
+  if (!directoryExists(websiteCodePath)) {
+    result.errors.push(`Template "${label}" website-code directory does not exist: ${expectedDirectory}`);
+    return;
+  }
+
+  const siteDirectory = path.join(websiteCodePath, ".powerpages-site");
+  if (!directoryExists(siteDirectory)) {
+    result.errors.push(`Template "${label}" website-code must contain .powerpages-site/.`);
+  } else if (!fileExists(path.join(siteDirectory, "website.yml"))) {
+    result.errors.push(`Template "${label}" website-code must contain .powerpages-site/website.yml.`);
+  }
+
+  if (kind === "spa") {
+    for (const requiredFile of ["package.json", "powerpages.config.json"]) {
+      if (!fileExists(path.join(websiteCodePath, requiredFile))) {
+        result.errors.push(`Template "${label}" SPA website-code must contain ${requiredFile}.`);
+      }
+    }
+  }
+
+  validateWebsiteCodeContents(websiteCodePath, websiteCodePath, label, result);
+  validateWebsiteCodeSourceMetadata(websiteCodePath, label, result);
+}
+
+function validateWebsiteCodeContents(websiteCodeRoot, currentDirectory, label, result) {
+  for (const entry of fs.readdirSync(currentDirectory, { withFileTypes: true })) {
+    const fullPath = path.join(currentDirectory, entry.name);
+    const relativePath = path.relative(websiteCodeRoot, fullPath).split(path.sep).join("/");
+
+    if (entry.isSymbolicLink()) {
+      result.errors.push(`Template "${label}" website-code must not contain symbolic links: ${relativePath}`);
+      continue;
+    }
+
+    if (entry.isDirectory()) {
+      if (FORBIDDEN_WEBSITE_CODE_DIRECTORIES.has(entry.name)) {
+        result.errors.push(`Template "${label}" website-code contains excluded directory: ${relativePath}/`);
+        continue;
+      }
+
+      validateWebsiteCodeContents(websiteCodeRoot, fullPath, label, result);
+      continue;
+    }
+
+    if (isForbiddenWebsiteCodeFile(entry.name) || isEnvironmentSpecificPortalManifest(relativePath)) {
+      result.errors.push(`Template "${label}" website-code contains excluded file: ${relativePath}`);
+    }
+
+    if (isPowerPagesSiteSettingFile(relativePath)) {
+      validateWebApiFieldSettings(fullPath, relativePath, label, result);
+    }
+  }
+}
+
+function isForbiddenLocalFile(fileName) {
+  return fileName === ".DS_Store" ||
+    fileName === ".datamodel-manifest.json" ||
+    fileName === "AGENTS.md" ||
+    fileName === "CLAUDE.md" ||
+    fileName === ".env" ||
+    fileName.startsWith(".env.") ||
+    fileName.endsWith(".tsbuildinfo") ||
+    fileName.endsWith(".log") ||
+    fileName.endsWith(".err") ||
+    fileName.endsWith(".sarif");
+}
+
+function isForbiddenWebsiteCodeFile(fileName) {
+  return isForbiddenLocalFile(fileName);
+}
+
+function isEnvironmentSpecificPortalManifest(relativePath) {
+  return /^\.powerpages-site\/\.portalconfig\/.+-manifest\.yml$/i.test(relativePath);
+}
+
+function isPowerPagesSiteSettingFile(relativePath) {
+  if (!relativePath.startsWith(".powerpages-site/")) {
+    return false;
+  }
+
+  const fileName = path.posix.basename(relativePath);
+  const isModularSetting = /\.sitesetting\.ya?ml$/i.test(fileName);
+  const isAggregateSettings = /^sitesettings?\.ya?ml$/i.test(fileName);
+  return isModularSetting || isAggregateSettings;
+}
+
+function validateWebApiFieldSettings(settingsPath, relativePath, label, result) {
+  const lines = fs.readFileSync(settingsPath, "utf8").split(/\r?\n/);
+  const namePattern = /^\s*(?:-\s*)?(?:adx_name|name):\s*(.+?)\s*$/i;
+  const valuePattern = /^\s*(?:adx_value|value):\s*(.+?)\s*$/i;
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const nameMatch = lines[index].match(namePattern);
+    if (!nameMatch) {
+      continue;
+    }
+
+    const settingName = unquoteYamlScalar(nameMatch[1]);
+    if (!/^Webapi\/[^/]+\/fields$/i.test(settingName)) {
+      continue;
+    }
+
+    for (let valueIndex = index + 1; valueIndex < lines.length; valueIndex += 1) {
+      if (namePattern.test(lines[valueIndex])) {
+        break;
+      }
+
+      const valueMatch = lines[valueIndex].match(valuePattern);
+      if (!valueMatch) {
+        continue;
+      }
+
+      if (isWildcardYamlScalar(valueMatch[1])) {
+        result.errors.push(
+          `Template "${label}" site setting ${settingName} must use an explicit column allowlist, not '*': ${relativePath}`
+        );
+      }
+      break;
+    }
+  }
+}
+
+function isWildcardYamlScalar(value) {
+  const scalar = value.trim();
+  return scalar === "*" || scalar === "'*'" || scalar === '"*"';
+}
+
+function validateWebsiteCodeSourceMetadata(websiteCodePath, label, result) {
+  const metadataDirectory = path.join(websiteCodePath, ".powerpages-site", "source-files");
+  if (!directoryExists(metadataDirectory)) {
+    return;
+  }
+
+  for (const entry of fs.readdirSync(metadataDirectory, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".sourcefile.yml")) {
+      continue;
+    }
+
+    const metadataPath = path.join(metadataDirectory, entry.name);
+    const metadata = fs.readFileSync(metadataPath, "utf8");
+    const partialUrlMatch = /^partialurl:\s*(.*?)\s*$/m.exec(metadata);
+    if (!partialUrlMatch || partialUrlMatch[1].length === 0) {
+      result.errors.push(`Template "${label}" website source metadata must contain partialurl: ${entry.name}`);
+      continue;
+    }
+
+    const partialUrl = unquoteYamlScalar(partialUrlMatch[1]);
+    const sourcePath = resolveWebsiteCodeSourcePath(websiteCodePath, partialUrl, label, entry.name, result);
+    if (sourcePath && !fileExists(sourcePath)) {
+      result.errors.push(`Template "${label}" website source metadata references a missing file: ${partialUrl}`);
+    }
+  }
+}
+
+function unquoteYamlScalar(value) {
+  if (value.length >= 2 && ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'")))) {
+    return value.slice(1, -1);
+  }
+
+  return value;
+}
+
+function resolveWebsiteCodeSourcePath(websiteCodePath, partialUrl, label, metadataName, result) {
+  if (path.isAbsolute(partialUrl)) {
+    result.errors.push(`Template "${label}" website source metadata partialurl must be relative: ${metadataName}`);
+    return null;
+  }
+
+  const sourcePath = path.resolve(websiteCodePath, partialUrl);
+  if (!isPathInsideOrEqual(websiteCodePath, sourcePath) || sourcePath === websiteCodePath) {
+    result.errors.push(
+      `Template "${label}" website source metadata partialurl must stay inside website-code: ${metadataName}`
+    );
+    return null;
+  }
+
+  return sourcePath;
 }
 
 function validateSeedDataPath(seedDataPathValue, label, root, expectedDirectory, location, result) {
@@ -615,17 +1002,6 @@ function isPathInsideOrEqual(parentPath, candidatePath) {
   return relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath));
 }
 
-function readFilePrefix(filePath, length) {
-  const file = fs.openSync(filePath, "r");
-  try {
-    const buffer = Buffer.alloc(length);
-    const bytesRead = fs.readSync(file, buffer, 0, length, 0);
-    return buffer.subarray(0, bytesRead).toString("utf8");
-  } finally {
-    fs.closeSync(file);
-  }
-}
-
 function directoryExists(directoryPath) {
   try {
     return fs.statSync(directoryPath).isDirectory();
@@ -651,99 +1027,11 @@ function detectManagedState(solutionXml) {
   return match[1] === "1" ? "managed" : "unmanaged";
 }
 
-function readZipTextFile(zipPath, wantedName) {
-  const buffer = fs.readFileSync(zipPath);
-  const entries = readZipEntries(buffer);
-  const entry = entries.find((candidate) => normalizeZipName(candidate.name) === wantedName);
-  if (!entry) {
-    return null;
-  }
-
-  const localHeaderOffset = entry.localHeaderOffset;
-  if (buffer.readUInt32LE(localHeaderOffset) !== 0x04034b50) {
-    throw new Error(`bad local file header for ${entry.name}`);
-  }
-
-  const fileNameLength = buffer.readUInt16LE(localHeaderOffset + 26);
-  const extraLength = buffer.readUInt16LE(localHeaderOffset + 28);
-  const dataStart = localHeaderOffset + 30 + fileNameLength + extraLength;
-  const compressedData = buffer.subarray(dataStart, dataStart + entry.compressedSize);
-  const data = inflateZipEntry(compressedData, entry.compressionMethod, entry.name);
-  return data.toString("utf8");
-}
-
-function readZipEntries(buffer) {
-  const eocdOffset = findEndOfCentralDirectory(buffer);
-  if (eocdOffset === -1) {
-    throw new Error("missing end of central directory");
-  }
-
-  const entryCount = buffer.readUInt16LE(eocdOffset + 10);
-  const centralDirectoryOffset = buffer.readUInt32LE(eocdOffset + 16);
-  const entries = [];
-  let offset = centralDirectoryOffset;
-
-  for (let index = 0; index < entryCount; index += 1) {
-    if (buffer.readUInt32LE(offset) !== 0x02014b50) {
-      throw new Error("bad central directory header");
-    }
-
-    const compressionMethod = buffer.readUInt16LE(offset + 10);
-    const compressedSize = buffer.readUInt32LE(offset + 20);
-    const fileNameLength = buffer.readUInt16LE(offset + 28);
-    const extraLength = buffer.readUInt16LE(offset + 30);
-    const commentLength = buffer.readUInt16LE(offset + 32);
-    const localHeaderOffset = buffer.readUInt32LE(offset + 42);
-    const nameStart = offset + 46;
-    const name = buffer.subarray(nameStart, nameStart + fileNameLength).toString("utf8");
-    entries.push({
-      name,
-      compressionMethod,
-      compressedSize,
-      localHeaderOffset
-    });
-
-    offset = nameStart + fileNameLength + extraLength + commentLength;
-  }
-
-  return entries;
-}
-
-function findEndOfCentralDirectory(buffer) {
-  // ZIP comments can be up to 65,535 bytes. Search backward through that window
-  // for the EOCD signature so normal archives and archives with comments both work.
-  const minimumOffset = Math.max(0, buffer.length - 65557);
-  for (let offset = buffer.length - 22; offset >= minimumOffset; offset -= 1) {
-    if (buffer.readUInt32LE(offset) === 0x06054b50) {
-      return offset;
-    }
-  }
-
-  return -1;
-}
-
-function inflateZipEntry(data, compressionMethod, name) {
-  if (compressionMethod === 0) {
-    return data;
-  }
-
-  if (compressionMethod === 8) {
-    return zlib.inflateRawSync(data);
-  }
-
-  throw new Error(`unsupported compression method ${compressionMethod} for ${name}`);
-}
-
-function normalizeZipName(name) {
-  return name.replace(/\\/g, "/").replace(/^\/+/, "");
-}
-
 function runCli() {
   const args = process.argv.slice(2);
   const rootArgIndex = args.indexOf("--root");
   const root = rootArgIndex === -1 ? undefined : args[rootArgIndex + 1];
-  const enforceUnmanaged = args.includes("--enforce-unmanaged");
-  const result = validateTemplates({ root, enforceUnmanaged });
+  const result = validateTemplates({ root });
 
   for (const warning of result.warnings) {
     console.warn(`warning: ${warning}`);

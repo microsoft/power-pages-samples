@@ -1,0 +1,4 @@
+id: c05415f6-ea1d-4237-91e1-cbf618b0d2fd
+name: Webapi/contact/fields
+source: 0
+value: contactid,firstname,lastname,fullname,emailaddress1,telephone1,mobilephone,address1_line1,address1_city,address1_stateorprovince,address1_postalcode,address1_country

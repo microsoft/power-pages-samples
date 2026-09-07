@@ -1,0 +1,4 @@
+id: 121494d1-c3b9-4d8e-a9bd-02c142460426
+name: Webapi/knowledgearticle/fields
+source: 0
+value: knowledgearticleid,title,content,keywords,spa311_slug,spa311_summary,spa311_publishedon,statecode,createdon,modifiedon

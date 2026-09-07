@@ -108,6 +108,9 @@
               "astro": {
                 "$ref": "#/$defs/templateVariant"
               },
+              "none": {
+                "$ref": "#/$defs/templateVariant"
+              },
               "react": {
                 "$ref": "#/$defs/templateVariant"
               },
@@ -124,18 +127,13 @@
     "templateVariant": {
       "type": "object",
       "required": [
-        "templateVersion",
-        "solutionPath"
+        "templateVersion"
       ],
       "additionalProperties": false,
       "properties": {
         "templateVersion": {
           "type": "string",
           "pattern": "^\\d+\\.\\d+\\.\\d+(?:\\.\\d+)?$"
-        },
-        "solutionPath": {
-          "type": "string",
-          "pattern": "^.+\\.zip$"
         },
         "previewImages": {
           "type": "array",

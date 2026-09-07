@@ -1,0 +1,4 @@
+description: 'The Prefix entered here will be used to filter Notes Text, allowing you to control notes exposed on the Portal ex: *WEB*'
+id: d9ddd898-abb2-4021-8b08-7c1ec0bb0fbf
+name: KnowledgeManagement/NotesFilter
+value: '*WEB*'

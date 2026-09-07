@@ -1,0 +1,4 @@
+description: Enable detailed error messages for Web API debugging
+id: 865d17c2-68d0-4f24-9a10-7043281e7c66
+name: Webapi/error/innererror
+value: true

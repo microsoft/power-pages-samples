@@ -1,0 +1,4 @@
+id: 2ff829b2-d474-4624-8dde-a3692f010087
+name: Webapi/spa311_servicerequest/fields
+source: 0
+value: spa311_servicerequestid,spa311_requestnumber,spa311_description,spa311_address,spa311_latitude,spa311_longitude,spa311_status,spa311_urgency,spa311_department,spa311_dateobserved,spa311_ContactId,_spa311_servicetypeid_value,_spa311_categoryid_value,_spa311_contactid_value,createdon,modifiedon

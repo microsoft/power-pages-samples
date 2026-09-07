@@ -1,0 +1,4 @@
+id: 7402d1f7-3487-4070-a669-afc035f1002f
+name: Webapi/spa311_servicetype/fields
+source: 0
+value: spa311_servicetypeid,spa311_name,spa311_slug,spa311_icon,spa311_description,spa311_details,spa311_whatyouneed,spa311_eligibility,spa311_targetsla,spa311_sladays,_spa311_categoryid_value,createdon,modifiedon

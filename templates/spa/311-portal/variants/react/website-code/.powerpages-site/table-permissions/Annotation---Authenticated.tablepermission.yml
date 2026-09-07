@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- 3be828ee-dd81-4de0-8b66-5667449d67aa
+append: true
+appendto: true
+create: true
+delete: false
+entitylogicalname: annotation
+entityname: Annotation - Authenticated
+id: a8391916-80c7-46c5-905e-ed91bf9fa86f
+read: true
+scope: 756150000
+write: true

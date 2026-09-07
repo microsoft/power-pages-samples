@@ -1,0 +1,4 @@
+description: Enable the Power Pages data summarization API
+id: 782fef95-2cb3-4266-936f-1758b0a96c30
+name: Summarization/Data/Enable
+value: true

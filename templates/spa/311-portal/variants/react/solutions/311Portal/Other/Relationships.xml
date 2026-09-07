@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EntityRelationships xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <EntityRelationship Name="business_unit_spa311_category" />
+  <EntityRelationship Name="business_unit_spa311_servicerequest" />
+  <EntityRelationship Name="business_unit_spa311_servicetype" />
+  <EntityRelationship Name="business_unit_spa311_statusupdate" />
+  <EntityRelationship Name="lk_spa311_category_createdby" />
+  <EntityRelationship Name="lk_spa311_category_modifiedby" />
+  <EntityRelationship Name="lk_spa311_servicerequest_createdby" />
+  <EntityRelationship Name="lk_spa311_servicerequest_modifiedby" />
+  <EntityRelationship Name="lk_spa311_servicetype_createdby" />
+  <EntityRelationship Name="lk_spa311_servicetype_modifiedby" />
+  <EntityRelationship Name="lk_spa311_statusupdate_createdby" />
+  <EntityRelationship Name="lk_spa311_statusupdate_modifiedby" />
+  <EntityRelationship Name="owner_spa311_category" />
+  <EntityRelationship Name="owner_spa311_servicerequest" />
+  <EntityRelationship Name="owner_spa311_servicetype" />
+  <EntityRelationship Name="owner_spa311_statusupdate" />
+  <EntityRelationship Name="spa311_Category_ServiceRequest" />
+  <EntityRelationship Name="spa311_Category_ServiceType" />
+  <EntityRelationship Name="spa311_Contact_ServiceRequest" />
+  <EntityRelationship Name="spa311_KnowledgeArticle_ServiceType" />
+  <EntityRelationship Name="spa311_ServiceRequest_StatusUpdate" />
+  <EntityRelationship Name="spa311_ServiceType_ServiceRequest" />
+  <EntityRelationship Name="team_spa311_category" />
+  <EntityRelationship Name="team_spa311_servicerequest" />
+  <EntityRelationship Name="team_spa311_servicetype" />
+  <EntityRelationship Name="team_spa311_statusupdate" />
+  <EntityRelationship Name="user_spa311_category" />
+  <EntityRelationship Name="user_spa311_servicerequest" />
+  <EntityRelationship Name="user_spa311_servicetype" />
+  <EntityRelationship Name="user_spa311_statusupdate" />
+</EntityRelationships>

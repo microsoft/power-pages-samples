@@ -1,0 +1,4 @@
+id: c7648824-2ccf-4522-96fc-ab83ee07f38e
+name: Site/FileManagement/SupportedMimeType
+source: 0
+value: image/jpeg;image/png;image/gif;image/bmp;image/webp;image/heic;image/heif;application/pdf;application/msword;application/vnd.openxmlformats-officedocument.wordprocessingml.document

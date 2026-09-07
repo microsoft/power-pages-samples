@@ -1,0 +1,7 @@
+{
+  "$schema": "https://www.schemastore.org/powerpages.config.json",
+  "siteName": "311 Portal",
+  "compiledPath": "dist",
+  "defaultLandingPage": "index.html",
+  "includeSource": true
+}

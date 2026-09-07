@@ -1,0 +1,4 @@
+description: Enable Web API access for supplier table
+id: 9ceeadf5-f849-4a0c-adf6-c368f0d45cc8
+name: Webapi/spnvc_supplier/enabled
+value: true

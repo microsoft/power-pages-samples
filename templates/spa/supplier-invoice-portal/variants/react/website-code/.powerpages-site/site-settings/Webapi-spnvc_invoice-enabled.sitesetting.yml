@@ -1,0 +1,4 @@
+description: Enable Web API access for Invoice table
+id: cd222456-a34b-4e31-b7a6-583033222e78
+name: Webapi/spnvc_invoice/enabled
+value: true

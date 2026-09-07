@@ -50,21 +50,26 @@ Each entry must match `templates/schemas/templates-manifest.schema.json`.
 SPA template families use this folder path: `templates/spa/<family>/`.
 The folder name must match the manifest `id`, and the `id` must be stable kebab-case.
 Each family can have one variant per framework: `react`, `vue`, `angular`, or `astro`.
-Each framework variant owns its own solution zip and `templateVersion`.
+Each framework variant owns its website code, one or more unpacked solutions, and `templateVersion`.
 Create `templates/traditional/` when the first traditional installable template ships.
 
 To contribute a template:
 
 1. Build the SPA code site.
-2. Export the Power Pages site solution zip.
+2. Export the Power Pages site and any unmanaged supporting solutions.
 3. Capture real PNG preview images.
 4. Optionally author seed-data JSON files using this shape: `{ "entitySetName": "<plural entity set>", "records": [...] }`.
 5. Create `templates/spa/<family>/` with shared `previews/` and optional `seed-data/` folders.
-6. Put each installable package under `templates/spa/<family>/variants/<framework>/solution/`.
-7. Append or update the template family entry in `templates/manifest.json`.
-8. Add the variant under `variants.<framework>` with its `templateVersion` and `solutionPath`.
-9. Run `node templates/scripts/validate-templates.js`.
-10. Open a pull request and follow the existing CLA bot instructions.
+6. Put the site export under `templates/spa/<family>/variants/<framework>/website-code/`.
+7. Unpack each supporting solution under `templates/spa/<family>/variants/<framework>/solutions/<solution-unique-name>/`. The folder name must match `Other/Solution.xml`.
+8. Append or update the template family entry in `templates/manifest.json`.
+9. Add the variant under `variants.<framework>` with its `templateVersion`.
+10. Run `node templates/scripts/validate-templates.js`.
+11. Open a pull request and follow the existing CLA bot instructions.
+
+Supporting solutions must be independently importable.
+Do not add dependencies between sibling solutions in the same variant.
+Import sibling solutions in case-insensitive lexical unique-name order.
 
 Set `requiredDataverseLanguages` to the Dataverse language LCIDs the template needs before import.
 Use `[1033]` for templates that only require English (United States).

@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- 3be828ee-dd81-4de0-8b66-5667449d67aa
+- 43e715fa-e7a7-41a5-b602-8baad5bfdebd
+append: true
+appendto: true
+create: true
+delete: true
+entitylogicalname: spa311_servicerequest
+entityname: Service Request - Admin
+id: af8fcb67-41f9-4017-8e89-fb2a3337ecb7
+read: true
+scope: 756150000
+write: true

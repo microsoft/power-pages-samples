@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- c8031dd9-b8d4-435a-87df-3b90748d2fc4
+append: true
+appendto: true
+create: true
+delete: false
+entitylogicalname: spnvc_invoicecomment
+entityname: Invoice Comment - Reviewer Access
+id: d5172b66-1a1d-40c3-95f9-4ed1f9ac1d60
+read: true
+scope: 756150000
+write: false

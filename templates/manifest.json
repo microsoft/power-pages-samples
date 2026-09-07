@@ -31,8 +31,7 @@
       "author": "Microsoft",
       "variants": {
         "react": {
-          "templateVersion": "1.0.0.2",
-          "solutionPath": "spa/311-portal/variants/react/solution/311-portal-unmanaged.zip"
+          "templateVersion": "1.0.0.2"
         }
       }
     },
@@ -67,8 +66,7 @@
       "author": "Microsoft",
       "variants": {
         "react": {
-          "templateVersion": "1.0.0.1",
-          "solutionPath": "spa/supplier-invoice-portal/variants/react/solution/supplier-invoice-spa-portal-unmanaged.zip"
+          "templateVersion": "1.0.0.1"
         }
       }
     }
