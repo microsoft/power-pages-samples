@@ -40,6 +40,19 @@ test("requires each SPA variant to reference its spa-code project", () => {
   assert(result.errors.some((error) => error.includes("$.templates[0].variants.react.spaCodePath is required")));
 });
 
+test("accepts a traditional variant without a spa-code project", () => {
+  const root = createTemplateRoot({
+    kind: "traditional",
+    framework: "none",
+    spaCodePath: undefined,
+    solutionHasWebsiteComponent: true
+  });
+
+  const result = validateTemplates({ root });
+  assert.deepEqual(result.errors, []);
+  assert.deepEqual(result.warnings, []);
+});
+
 test("accepts variant-specific overrides when they are needed", () => {
   const root = createTemplateRoot({
     variantOverrides: {
@@ -511,14 +524,18 @@ function createTemplateRoot(options = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "template-validation-"));
   const id = options.id ?? "test-template";
   const folderId = options.folderId ?? id;
+  const kind = options.kind ?? "spa";
   const framework = options.framework ?? "react";
-  const solutionPath = options.solutionPath ?? `spa/${folderId}/variants/${framework}/solution`;
-  const spaCodePath = options.spaCodePath ?? `spa/${folderId}/variants/${framework}/spa-code`;
-  const templateFolder = path.join(root, "spa", folderId);
+  const solutionPath = options.solutionPath ?? `${kind}/${folderId}/variants/${framework}/solution`;
+  const spaCodePath = Object.hasOwn(options, "spaCodePath")
+    ? options.spaCodePath
+    : `${kind}/${folderId}/variants/${framework}/spa-code`;
+  const templateFolder = path.join(root, kind, folderId);
   fs.mkdirSync(path.join(root, "schemas"), { recursive: true });
-  fs.mkdirSync(path.join(root, "traditional"), { recursive: true });
   fs.mkdirSync(path.join(templateFolder, "variants", framework, "solution"), { recursive: true });
-  fs.mkdirSync(path.join(root, spaCodePath, ".powerpages-site"), { recursive: true });
+  if (typeof spaCodePath === "string") {
+    fs.mkdirSync(path.join(root, spaCodePath, ".powerpages-site"), { recursive: true });
+  }
   fs.mkdirSync(path.join(templateFolder, "previews"), { recursive: true });
   fs.mkdirSync(path.join(templateFolder, "seed-data"), { recursive: true });
 
@@ -531,7 +548,7 @@ function createTemplateRoot(options = {}) {
     id,
     displayName: "Test Template",
     description: "Fixture template for validator tests.",
-    kind: "spa",
+    kind,
     keywords: ["test"],
     audience: ["developers"],
     previewImages: options.previewImages ?? [],

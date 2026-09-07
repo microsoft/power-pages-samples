@@ -108,6 +108,9 @@
               "astro": {
                 "$ref": "#/$defs/templateVariant"
               },
+              "none": {
+                "$ref": "#/$defs/templateVariant"
+              },
               "react": {
                 "$ref": "#/$defs/templateVariant"
               },
@@ -116,7 +119,54 @@
               }
             }
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "spa"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "variants": {
+                  "properties": {
+                    "angular": {
+                      "required": [
+                        "spaCodePath"
+                      ]
+                    },
+                    "astro": {
+                      "required": [
+                        "spaCodePath"
+                      ]
+                    },
+                    "none": {
+                      "required": [
+                        "spaCodePath"
+                      ]
+                    },
+                    "react": {
+                      "required": [
+                        "spaCodePath"
+                      ]
+                    },
+                    "vue": {
+                      "required": [
+                        "spaCodePath"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     }
   },
@@ -125,8 +175,7 @@
       "type": "object",
       "required": [
         "templateVersion",
-        "solutionPath",
-        "spaCodePath"
+        "solutionPath"
       ],
       "additionalProperties": false,
       "properties": {

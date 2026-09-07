@@ -6,7 +6,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const VALID_KINDS = new Set(["spa", "traditional"]);
-const VALID_FRAMEWORKS = new Set(["angular", "astro", "react", "vue"]);
+const VALID_FRAMEWORKS = new Set(["angular", "astro", "none", "react", "vue"]);
 const VALID_AUDIENCES = new Set(["admins", "developers", "makers", "partners"]);
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const FORBIDDEN_SPA_CODE_DIRECTORIES = new Set([
@@ -95,6 +95,26 @@ function validateAgainstSchema(value, schema, location, result, rootSchema = sch
 
   if (schema.enum && !schema.enum.includes(value)) {
     result.errors.push(`${location} must be one of: ${schema.enum.join(", ")}.`);
+  }
+
+  if (Object.hasOwn(schema, "const") && value !== schema.const) {
+    result.errors.push(`${location} must be ${JSON.stringify(schema.const)}.`);
+  }
+
+  for (const subschema of schema.allOf ?? []) {
+    validateAgainstSchema(value, subschema, location, result, rootSchema);
+  }
+
+  if (schema.if) {
+    const conditionResult = {
+      errors: [],
+      warnings: []
+    };
+    validateAgainstSchema(value, schema.if, location, conditionResult, rootSchema);
+    const conditionalSchema = conditionResult.errors.length === 0 ? schema.then : schema.else;
+    if (conditionalSchema) {
+      validateAgainstSchema(value, conditionalSchema, location, result, rootSchema);
+    }
   }
 
   if (typeof value === "string") {
@@ -299,10 +319,13 @@ function validateVariantPaths(template, framework, variant, label, root, result)
     root,
     `${variantBase}/solution`,
     variantBase,
+    template.kind === "traditional",
     `variant "${framework}" solutionPath`,
     result
   );
-  validateSpaCodePath(variant.spaCodePath, label, root, `${variantBase}/spa-code`, `variant "${framework}" spaCodePath`, result);
+  if (template.kind === "spa" || typeof variant.spaCodePath === "string") {
+    validateSpaCodePath(variant.spaCodePath, label, root, `${variantBase}/spa-code`, `variant "${framework}" spaCodePath`, result);
+  }
   validatePreviewImages(variant.previewImages, label, root, `${variantBase}/previews`, `variant "${framework}" previewImages`, result);
 
   if (typeof variant.seedDataPath === "string") {
@@ -338,7 +361,16 @@ function validatePreviewImages(previewImages, label, root, expectedDirectory, lo
   });
 }
 
-function validateSolutionPath(solutionPathValue, label, root, expectedDirectory, variantBase, location, result) {
+function validateSolutionPath(
+  solutionPathValue,
+  label,
+  root,
+  expectedDirectory,
+  variantBase,
+  allowPowerPagesComponents,
+  location,
+  result
+) {
   if (typeof solutionPathValue !== "string") {
     return;
   }
@@ -373,7 +405,7 @@ function validateSolutionPath(solutionPathValue, label, root, expectedDirectory,
     }
   }
 
-  validateSolutionContents(solutionPath, solutionPath, label, result);
+  validateSolutionContents(solutionPath, solutionPath, label, allowPowerPagesComponents, result);
   validateVariantHasNoSolutionZip(path.resolve(root, variantBase), label, result);
 
   const solutionXmlPath = path.join(solutionPath, "Other", "Solution.xml");
@@ -392,7 +424,7 @@ function validateSolutionPath(solutionPathValue, label, root, expectedDirectory,
   }
 }
 
-function validateSolutionContents(solutionRoot, currentDirectory, label, result) {
+function validateSolutionContents(solutionRoot, currentDirectory, label, allowPowerPagesComponents, result) {
   for (const entry of fs.readdirSync(currentDirectory, { withFileTypes: true })) {
     const fullPath = path.join(currentDirectory, entry.name);
     const relativePath = path.relative(solutionRoot, fullPath).split(path.sep).join("/");
@@ -403,7 +435,7 @@ function validateSolutionContents(solutionRoot, currentDirectory, label, result)
     }
 
     if (entry.isDirectory()) {
-      if (entry.name.toLowerCase() === "powerpagecomponents") {
+      if (!allowPowerPagesComponents && entry.name.toLowerCase() === "powerpagecomponents") {
         result.errors.push(
           `Template "${label}" supporting solution must not contain Power Pages website components: ${relativePath}/`
         );
@@ -415,7 +447,7 @@ function validateSolutionContents(solutionRoot, currentDirectory, label, result)
         continue;
       }
 
-      validateSolutionContents(solutionRoot, fullPath, label, result);
+      validateSolutionContents(solutionRoot, fullPath, label, allowPowerPagesComponents, result);
       continue;
     }
 
