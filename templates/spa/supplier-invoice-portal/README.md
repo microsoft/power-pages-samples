@@ -4,7 +4,7 @@ This folder contains the Supplier Invoice Portal template entry for the installa
 
 The checked-in supporting solution source is an unpacked unmanaged export with the `spnvc` publisher prefix.
 The validator detects the managed state from `solution/Other/Solution.xml`.
-It contains Dataverse artifacts only. The Power Pages website project is stored separately under `variants/react/spa-code/`.
+It contains Dataverse artifacts only. The Power Pages website project is stored separately under `variants/react/website-code/`.
 
 ## Previews
 
@@ -59,7 +59,7 @@ Do not use Dataverse's spreadsheet import for this file because it will not pres
 8. Install dependencies, build the React project, and upload the code site:
 
 ```bash
-cd templates/spa/supplier-invoice-portal/variants/react/spa-code
+cd templates/spa/supplier-invoice-portal/variants/react/website-code
 npm ci
 npm run build
 pac pages upload-code-site --rootPath .
@@ -67,5 +67,5 @@ pac pages upload-code-site --rootPath .
 
 ## Customize this template
 
-The `spa-code/` folder includes the React source, package files, Power Pages configuration, and `.powerpages-site` metadata.
+The `website-code/` folder includes the React source, package files, Power Pages configuration, and `.powerpages-site` metadata.
 Make changes there, rebuild, and run the upload command again.

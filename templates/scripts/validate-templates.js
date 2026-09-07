@@ -9,7 +9,7 @@ const VALID_KINDS = new Set(["spa", "traditional"]);
 const VALID_FRAMEWORKS = new Set(["angular", "astro", "none", "react", "vue"]);
 const VALID_AUDIENCES = new Set(["admins", "developers", "makers", "partners"]);
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const FORBIDDEN_SPA_CODE_DIRECTORIES = new Set([
+const FORBIDDEN_WEBSITE_CODE_DIRECTORIES = new Set([
   ".git",
   ".playwright-mcp",
   ".vite",
@@ -23,7 +23,7 @@ const FORBIDDEN_SPA_CODE_DIRECTORIES = new Set([
   "test-results"
 ]);
 const FORBIDDEN_SOLUTION_DIRECTORIES = new Set([
-  ...FORBIDDEN_SPA_CODE_DIRECTORIES,
+  ...FORBIDDEN_WEBSITE_CODE_DIRECTORIES,
   ".idea",
   ".vs",
   "bin",
@@ -95,26 +95,6 @@ function validateAgainstSchema(value, schema, location, result, rootSchema = sch
 
   if (schema.enum && !schema.enum.includes(value)) {
     result.errors.push(`${location} must be one of: ${schema.enum.join(", ")}.`);
-  }
-
-  if (Object.hasOwn(schema, "const") && value !== schema.const) {
-    result.errors.push(`${location} must be ${JSON.stringify(schema.const)}.`);
-  }
-
-  for (const subschema of schema.allOf ?? []) {
-    validateAgainstSchema(value, subschema, location, result, rootSchema);
-  }
-
-  if (schema.if) {
-    const conditionResult = {
-      errors: [],
-      warnings: []
-    };
-    validateAgainstSchema(value, schema.if, location, conditionResult, rootSchema);
-    const conditionalSchema = conditionResult.errors.length === 0 ? schema.then : schema.else;
-    if (conditionalSchema) {
-      validateAgainstSchema(value, conditionalSchema, location, result, rootSchema);
-    }
   }
 
   if (typeof value === "string") {
@@ -323,9 +303,15 @@ function validateVariantPaths(template, framework, variant, label, root, result)
     `variant "${framework}" solutionPath`,
     result
   );
-  if (template.kind === "spa" || typeof variant.spaCodePath === "string") {
-    validateSpaCodePath(variant.spaCodePath, label, root, `${variantBase}/spa-code`, `variant "${framework}" spaCodePath`, result);
-  }
+  validateWebsiteCodePath(
+    variant.websiteCodePath,
+    template.kind,
+    label,
+    root,
+    `${variantBase}/website-code`,
+    `variant "${framework}" websiteCodePath`,
+    result
+  );
   validatePreviewImages(variant.previewImages, label, root, `${variantBase}/previews`, `variant "${framework}" previewImages`, result);
 
   if (typeof variant.seedDataPath === "string") {
@@ -486,64 +472,69 @@ function findFilesByExtension(currentDirectory, extension) {
   return matches;
 }
 
-function validateSpaCodePath(spaCodePathValue, label, root, expectedDirectory, location, result) {
-  if (typeof spaCodePathValue !== "string") {
+function validateWebsiteCodePath(websiteCodePathValue, kind, label, root, expectedDirectory, location, result) {
+  if (typeof websiteCodePathValue !== "string") {
     return;
   }
 
-  const spaCodePath = resolveTemplatePath(root, spaCodePathValue, label, result);
-  if (!spaCodePath) {
+  const websiteCodePath = resolveTemplatePath(root, websiteCodePathValue, label, result);
+  if (!websiteCodePath) {
     return;
   }
 
   const expectedFullDirectory = path.resolve(root, expectedDirectory);
-  if (spaCodePath !== expectedFullDirectory) {
+  if (websiteCodePathValue !== expectedDirectory || websiteCodePath !== expectedFullDirectory) {
     result.errors.push(`Template "${label}" ${location} must be ${expectedDirectory}.`);
   }
 
-  if (!directoryExists(spaCodePath)) {
-    result.errors.push(`Template "${label}" spaCodePath does not exist or is not a directory: ${spaCodePathValue}`);
+  if (!directoryExists(websiteCodePath)) {
+    result.errors.push(
+      `Template "${label}" websiteCodePath does not exist or is not a directory: ${websiteCodePathValue}`
+    );
     return;
   }
 
-  const requiredFiles = ["package.json", "powerpages.config.json"];
-  for (const requiredFile of requiredFiles) {
-    const requiredPath = path.join(spaCodePath, requiredFile);
-    if (!fileExists(requiredPath)) {
-      result.errors.push(`Template "${label}" spaCodePath must contain ${requiredFile}.`);
+  const siteDirectory = path.join(websiteCodePath, ".powerpages-site");
+  if (!directoryExists(siteDirectory)) {
+    result.errors.push(`Template "${label}" websiteCodePath must contain .powerpages-site/.`);
+  } else if (!fileExists(path.join(siteDirectory, "website.yml"))) {
+    result.errors.push(`Template "${label}" websiteCodePath must contain .powerpages-site/website.yml.`);
+  }
+
+  if (kind === "spa") {
+    for (const requiredFile of ["package.json", "powerpages.config.json"]) {
+      if (!fileExists(path.join(websiteCodePath, requiredFile))) {
+        result.errors.push(`Template "${label}" SPA websiteCodePath must contain ${requiredFile}.`);
+      }
     }
   }
 
-  if (!directoryExists(path.join(spaCodePath, ".powerpages-site"))) {
-    result.errors.push(`Template "${label}" spaCodePath must contain .powerpages-site/.`);
-  }
-
-  validateSpaCodeContents(spaCodePath, spaCodePath, label, result);
-  validateSpaCodeSourceMetadata(spaCodePath, label, result);
+  validateWebsiteCodeContents(websiteCodePath, websiteCodePath, label, result);
+  validateWebsiteCodeSourceMetadata(websiteCodePath, label, result);
 }
 
-function validateSpaCodeContents(spaCodeRoot, currentDirectory, label, result) {
+function validateWebsiteCodeContents(websiteCodeRoot, currentDirectory, label, result) {
   for (const entry of fs.readdirSync(currentDirectory, { withFileTypes: true })) {
     const fullPath = path.join(currentDirectory, entry.name);
-    const relativePath = path.relative(spaCodeRoot, fullPath).split(path.sep).join("/");
+    const relativePath = path.relative(websiteCodeRoot, fullPath).split(path.sep).join("/");
 
     if (entry.isSymbolicLink()) {
-      result.errors.push(`Template "${label}" spa-code must not contain symbolic links: ${relativePath}`);
+      result.errors.push(`Template "${label}" website-code must not contain symbolic links: ${relativePath}`);
       continue;
     }
 
     if (entry.isDirectory()) {
-      if (FORBIDDEN_SPA_CODE_DIRECTORIES.has(entry.name)) {
-        result.errors.push(`Template "${label}" spa-code contains excluded directory: ${relativePath}/`);
+      if (FORBIDDEN_WEBSITE_CODE_DIRECTORIES.has(entry.name)) {
+        result.errors.push(`Template "${label}" website-code contains excluded directory: ${relativePath}/`);
         continue;
       }
 
-      validateSpaCodeContents(spaCodeRoot, fullPath, label, result);
+      validateWebsiteCodeContents(websiteCodeRoot, fullPath, label, result);
       continue;
     }
 
-    if (isForbiddenSpaCodeFile(entry.name) || isEnvironmentSpecificPortalManifest(relativePath)) {
-      result.errors.push(`Template "${label}" spa-code contains excluded file: ${relativePath}`);
+    if (isForbiddenWebsiteCodeFile(entry.name) || isEnvironmentSpecificPortalManifest(relativePath)) {
+      result.errors.push(`Template "${label}" website-code contains excluded file: ${relativePath}`);
     }
 
     if (isPowerPagesSiteSettingFile(relativePath)) {
@@ -565,7 +556,7 @@ function isForbiddenLocalFile(fileName) {
     fileName.endsWith(".sarif");
 }
 
-function isForbiddenSpaCodeFile(fileName) {
+function isForbiddenWebsiteCodeFile(fileName) {
   return isForbiddenLocalFile(fileName);
 }
 
@@ -612,7 +603,7 @@ function validateWebApiFieldSettings(settingsPath, relativePath, label, result) 
 
       if (isWildcardYamlScalar(valueMatch[1])) {
         result.errors.push(
-          `Template "${label}" SPA site setting ${settingName} must use an explicit column allowlist, not '*': ${relativePath}`
+          `Template "${label}" site setting ${settingName} must use an explicit column allowlist, not '*': ${relativePath}`
         );
       }
       break;
@@ -625,8 +616,8 @@ function isWildcardYamlScalar(value) {
   return scalar === "*" || scalar === "'*'" || scalar === '"*"';
 }
 
-function validateSpaCodeSourceMetadata(spaCodePath, label, result) {
-  const metadataDirectory = path.join(spaCodePath, ".powerpages-site", "source-files");
+function validateWebsiteCodeSourceMetadata(websiteCodePath, label, result) {
+  const metadataDirectory = path.join(websiteCodePath, ".powerpages-site", "source-files");
   if (!directoryExists(metadataDirectory)) {
     return;
   }
@@ -640,14 +631,14 @@ function validateSpaCodeSourceMetadata(spaCodePath, label, result) {
     const metadata = fs.readFileSync(metadataPath, "utf8");
     const partialUrlMatch = /^partialurl:\s*(.*?)\s*$/m.exec(metadata);
     if (!partialUrlMatch || partialUrlMatch[1].length === 0) {
-      result.errors.push(`Template "${label}" SPA source metadata must contain partialurl: ${entry.name}`);
+      result.errors.push(`Template "${label}" website source metadata must contain partialurl: ${entry.name}`);
       continue;
     }
 
     const partialUrl = unquoteYamlScalar(partialUrlMatch[1]);
-    const sourcePath = resolveSpaCodeSourcePath(spaCodePath, partialUrl, label, entry.name, result);
+    const sourcePath = resolveWebsiteCodeSourcePath(websiteCodePath, partialUrl, label, entry.name, result);
     if (sourcePath && !fileExists(sourcePath)) {
-      result.errors.push(`Template "${label}" SPA source metadata references a missing file: ${partialUrl}`);
+      result.errors.push(`Template "${label}" website source metadata references a missing file: ${partialUrl}`);
     }
   }
 }
@@ -660,15 +651,17 @@ function unquoteYamlScalar(value) {
   return value;
 }
 
-function resolveSpaCodeSourcePath(spaCodePath, partialUrl, label, metadataName, result) {
+function resolveWebsiteCodeSourcePath(websiteCodePath, partialUrl, label, metadataName, result) {
   if (path.isAbsolute(partialUrl)) {
-    result.errors.push(`Template "${label}" SPA source metadata partialurl must be relative: ${metadataName}`);
+    result.errors.push(`Template "${label}" website source metadata partialurl must be relative: ${metadataName}`);
     return null;
   }
 
-  const sourcePath = path.resolve(spaCodePath, partialUrl);
-  if (!isPathInsideOrEqual(spaCodePath, sourcePath) || sourcePath === spaCodePath) {
-    result.errors.push(`Template "${label}" SPA source metadata partialurl must stay inside spa-code: ${metadataName}`);
+  const sourcePath = path.resolve(websiteCodePath, partialUrl);
+  if (!isPathInsideOrEqual(websiteCodePath, sourcePath) || sourcePath === websiteCodePath) {
+    result.errors.push(
+      `Template "${label}" website source metadata partialurl must stay inside website-code: ${metadataName}`
+    );
     return null;
   }
 

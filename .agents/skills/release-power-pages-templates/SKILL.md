@@ -48,7 +48,7 @@ Include:
 
 - Template IDs and display names.
 - Unpacked solution source paths.
-- SPA code paths.
+- Website code paths.
 - Seed data paths, if present.
 - Preview image paths.
 - Any known prerequisites from template READMEs.
@@ -96,7 +96,7 @@ For a published release:
 gh release create TAG_NAME --title "Power Pages templates TAG_NAME" --notes-file RELEASE_NOTES_FILE
 ```
 
-Attach packed solution zips or SPA code archives only if the user asks for release assets.
+Attach packed solution zips or website code archives only if the user asks for release assets.
 When a solution zip is requested, pack the catalog's `solutionPath` directory into a temporary directory with `pac solution pack --packagetype Unmanaged`, attach the result, and remove the temporary directory.
 The repository stores the unpacked solution source, so a release can usually link to the immutable tag without duplicating it.
 

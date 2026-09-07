@@ -119,54 +119,7 @@
               }
             }
           }
-        },
-        "allOf": [
-          {
-            "if": {
-              "properties": {
-                "kind": {
-                  "const": "spa"
-                }
-              },
-              "required": [
-                "kind"
-              ]
-            },
-            "then": {
-              "properties": {
-                "variants": {
-                  "properties": {
-                    "angular": {
-                      "required": [
-                        "spaCodePath"
-                      ]
-                    },
-                    "astro": {
-                      "required": [
-                        "spaCodePath"
-                      ]
-                    },
-                    "none": {
-                      "required": [
-                        "spaCodePath"
-                      ]
-                    },
-                    "react": {
-                      "required": [
-                        "spaCodePath"
-                      ]
-                    },
-                    "vue": {
-                      "required": [
-                        "spaCodePath"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          }
-        ]
+        }
       }
     }
   },
@@ -175,7 +128,8 @@
       "type": "object",
       "required": [
         "templateVersion",
-        "solutionPath"
+        "solutionPath",
+        "websiteCodePath"
       ],
       "additionalProperties": false,
       "properties": {
@@ -187,9 +141,9 @@
           "type": "string",
           "pattern": "^.+/solution$"
         },
-        "spaCodePath": {
+        "websiteCodePath": {
           "type": "string",
-          "pattern": "^.+/spa-code$"
+          "pattern": "^.+/website-code$"
         },
         "previewImages": {
           "type": "array",

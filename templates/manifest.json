@@ -33,7 +33,7 @@
         "react": {
           "templateVersion": "1.0.0.2",
           "solutionPath": "spa/311-portal/variants/react/solution",
-          "spaCodePath": "spa/311-portal/variants/react/spa-code"
+          "websiteCodePath": "spa/311-portal/variants/react/website-code"
         }
       }
     },
@@ -70,7 +70,7 @@
         "react": {
           "templateVersion": "1.0.0.1",
           "solutionPath": "spa/supplier-invoice-portal/variants/react/solution",
-          "spaCodePath": "spa/supplier-invoice-portal/variants/react/spa-code"
+          "websiteCodePath": "spa/supplier-invoice-portal/variants/react/website-code"
         }
       }
     }
