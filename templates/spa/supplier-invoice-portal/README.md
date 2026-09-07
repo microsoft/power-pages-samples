@@ -2,8 +2,10 @@
 
 This folder contains the Supplier Invoice Portal template entry for the installable `templates/` catalog.
 
-The checked-in supporting solution source is an unpacked unmanaged export with the `spnvc` publisher prefix.
-The validator detects the managed state from `solution/Other/Solution.xml`.
+The checked-in supporting solution source is an unpacked unmanaged export under `variants/react/solutions/SupplierInvoiceSPAPortal/`.
+Its folder name matches the `SupplierInvoiceSPAPortal` unique name in `Other/Solution.xml`.
+It uses the `spnvc` publisher prefix.
+The validator detects the managed state from `solutions/SupplierInvoiceSPAPortal/Other/Solution.xml`.
 It contains Dataverse artifacts only. The Power Pages website project is stored separately under `variants/react/website-code/`.
 
 ## Previews
@@ -38,7 +40,7 @@ Use these steps if you want to install the template yourself instead of using an
    ```bash
    temp_dir="$(mktemp -d)"
    trap 'rm -rf "$temp_dir"' EXIT
-   pac solution pack --zipfile "$temp_dir/supplier-invoice-spa-portal-unmanaged.zip" --folder templates/spa/supplier-invoice-portal/variants/react/solution --packagetype Unmanaged
+   pac solution pack --zipfile "$temp_dir/supplier-invoice-spa-portal-unmanaged.zip" --folder templates/spa/supplier-invoice-portal/variants/react/solutions/SupplierInvoiceSPAPortal --packagetype Unmanaged
    pac solution import --path "$temp_dir/supplier-invoice-spa-portal-unmanaged.zip" --publish-changes
    ```
 

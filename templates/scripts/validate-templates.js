@@ -293,23 +293,19 @@ function getFamilyBasePath(template) {
 
 function validateVariantPaths(template, framework, variant, label, root, result) {
   const variantBase = `${getFamilyBasePath(template)}/variants/${framework}`;
-  validateSolutionPath(
-    variant.solutionPath,
+  validateSolutionsDirectory(
     label,
     root,
-    `${variantBase}/solution`,
+    `${variantBase}/solutions`,
     variantBase,
     template.kind === "traditional",
-    `variant "${framework}" solutionPath`,
     result
   );
   validateWebsiteCodePath(
-    variant.websiteCodePath,
     template.kind,
     label,
     root,
     `${variantBase}/website-code`,
-    `variant "${framework}" websiteCodePath`,
     result
   );
   validatePreviewImages(variant.previewImages, label, root, `${variantBase}/previews`, `variant "${framework}" previewImages`, result);
@@ -347,39 +343,86 @@ function validatePreviewImages(previewImages, label, root, expectedDirectory, lo
   });
 }
 
-function validateSolutionPath(
-  solutionPathValue,
+function validateSolutionsDirectory(
   label,
   root,
-  expectedDirectory,
+  solutionsDirectory,
   variantBase,
   allowPowerPagesComponents,
-  location,
   result
 ) {
-  if (typeof solutionPathValue !== "string") {
+  const solutionsPath = path.resolve(root, solutionsDirectory);
+  if (!directoryExists(solutionsPath)) {
+    result.errors.push(`Template "${label}" solutions directory does not exist: ${solutionsDirectory}`);
     return;
   }
 
-  const solutionPath = resolveTemplatePath(root, solutionPathValue, label, result);
-  if (!solutionPath) {
+  if (fs.lstatSync(solutionsPath).isSymbolicLink()) {
+    result.errors.push(`Template "${label}" solutions directory must not be a symbolic link: ${solutionsDirectory}`);
     return;
   }
 
-  const expectedFullDirectory = path.resolve(root, expectedDirectory);
-  if (solutionPathValue !== expectedDirectory || solutionPath !== expectedFullDirectory) {
-    result.errors.push(`Template "${label}" ${location} must be ${expectedDirectory}.`);
+  const solutionDirectories = [];
+  for (const entry of fs.readdirSync(solutionsPath, { withFileTypes: true })) {
+    if (entry.isSymbolicLink() || !entry.isDirectory()) {
+      result.errors.push(
+        `Template "${label}" solutions directory may contain only direct solution folders: ${entry.name}`
+      );
+      continue;
+    }
+
+    solutionDirectories.push(entry);
   }
 
-  if (!directoryExists(solutionPath)) {
-    result.errors.push(`Template "${label}" solutionPath does not exist or is not a directory: ${solutionPathValue}`);
-    return;
+  if (solutionDirectories.length === 0) {
+    result.errors.push(`Template "${label}" solutions directory must contain at least one solution folder.`);
   }
 
-  if (fs.lstatSync(solutionPath).isSymbolicLink()) {
-    result.errors.push(`Template "${label}" solutionPath must not be a symbolic link: ${solutionPathValue}`);
+  solutionDirectories.sort((left, right) => compareCaseInsensitive(left.name, right.name));
+  const solutions = [];
+  const uniqueNames = new Map();
+  for (const entry of solutionDirectories) {
+    const solution = validateSolutionDirectory(
+      path.join(solutionsPath, entry.name),
+      entry.name,
+      label,
+      allowPowerPagesComponents,
+      result
+    );
+    if (!solution) {
+      continue;
+    }
+
+    const normalizedUniqueName = solution.uniqueName.toLowerCase();
+    const previousFolder = uniqueNames.get(normalizedUniqueName);
+    if (previousFolder) {
+      result.errors.push(
+        `Template "${label}" solutions have duplicate case-insensitive unique name "${solution.uniqueName}": ` +
+        `${previousFolder}, ${entry.name}`
+      );
+    } else {
+      uniqueNames.set(normalizedUniqueName, entry.name);
+    }
+    solutions.push(solution);
   }
 
+  validateIndependentSiblingSolutions(solutions, uniqueNames, label, result);
+  validateVariantHasNoSolutionZip(path.resolve(root, variantBase), label, result);
+}
+
+function compareCaseInsensitive(left, right) {
+  const normalizedLeft = left.toLowerCase();
+  const normalizedRight = right.toLowerCase();
+  if (normalizedLeft < normalizedRight) {
+    return -1;
+  }
+  if (normalizedLeft > normalizedRight) {
+    return 1;
+  }
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function validateSolutionDirectory(solutionPath, folderName, label, allowPowerPagesComponents, result) {
   const requiredFiles = [
     ["Other", "Solution.xml"],
     ["Other", "Customizations.xml"]
@@ -387,27 +430,88 @@ function validateSolutionPath(
   for (const pathSegments of requiredFiles) {
     const requiredPath = path.join(solutionPath, ...pathSegments);
     if (!fileExists(requiredPath)) {
-      result.errors.push(`Template "${label}" solutionPath must contain ${pathSegments.join("/")}.`);
+      result.errors.push(`Template "${label}" solution "${folderName}" must contain ${pathSegments.join("/")}.`);
     }
   }
 
   validateSolutionContents(solutionPath, solutionPath, label, allowPowerPagesComponents, result);
-  validateVariantHasNoSolutionZip(path.resolve(root, variantBase), label, result);
 
   const solutionXmlPath = path.join(solutionPath, "Other", "Solution.xml");
   if (!fileExists(solutionXmlPath)) {
-    return;
+    return null;
   }
   const solutionXml = fs.readFileSync(solutionXmlPath, "utf8");
-  const managedState = detectManagedState(solutionXml);
-  if (managedState === "unknown") {
-    result.errors.push(`Template "${label}" Other/Solution.xml does not contain a readable <Managed> value.`);
-    return;
+  const uniqueName = detectSolutionUniqueName(solutionXml);
+  if (!uniqueName) {
+    result.errors.push(`Template "${label}" solution "${folderName}" does not contain a readable solution UniqueName.`);
+    return null;
   }
 
-  if (managedState === "managed") {
-    result.errors.push(`Template "${label}" solution is managed. Replace it with an unmanaged export.`);
+  if (folderName !== uniqueName) {
+    result.errors.push(
+      `Template "${label}" solution folder "${folderName}" must exactly match XML unique name "${uniqueName}".`
+    );
   }
+
+  const managedState = detectManagedState(solutionXml);
+  if (managedState === "unknown") {
+    result.errors.push(
+      `Template "${label}" solution "${folderName}" Other/Solution.xml does not contain a readable <Managed> value.`
+    );
+  } else if (managedState === "managed") {
+    result.errors.push(`Template "${label}" solution "${folderName}" is managed. Replace it with an unmanaged export.`);
+  }
+
+  return {
+    folderName,
+    solutionXml,
+    uniqueName
+  };
+}
+
+function detectSolutionUniqueName(solutionXml) {
+  const match = /<SolutionManifest\b[^>]*>[\s\S]*?<UniqueName>\s*([^<]+?)\s*<\/UniqueName>/i.exec(solutionXml);
+  return match ? decodeXmlEntities(match[1].trim()) : null;
+}
+
+function validateIndependentSiblingSolutions(solutions, uniqueNames, label, result) {
+  for (const solution of solutions) {
+    for (const requiredUniqueName of extractRequiredSolutionNames(solution.solutionXml)) {
+      const siblingFolder = uniqueNames.get(requiredUniqueName.toLowerCase());
+      if (siblingFolder && siblingFolder !== solution.folderName) {
+        result.errors.push(
+          `Template "${label}" solution "${solution.folderName}" depends on sibling solution "${siblingFolder}". ` +
+          "Sibling solutions must be independently importable."
+        );
+      }
+    }
+  }
+}
+
+function extractRequiredSolutionNames(solutionXml) {
+  const names = [];
+  const requiredPattern = /<Required\b[^>]*\bsolution\s*=\s*(["'])(.*?)\1/gi;
+  let match;
+  while ((match = requiredPattern.exec(solutionXml)) !== null) {
+    // PAC writes solution dependencies as "UniqueName (version)", for example
+    // solution="msdynce_KnowledgeManagementFeatures (9.0.26064.3010)".
+    // Split only the trailing version suffix because unique names cannot contain spaces.
+    const dependency = decodeXmlEntities(match[2]).trim().replace(/\s+\([^)]*\)\s*$/, "");
+    if (dependency) {
+      names.push(dependency);
+    }
+  }
+
+  return names;
+}
+
+function decodeXmlEntities(value) {
+  return value
+    .replace(/&quot;/g, "\"")
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
 }
 
 function validateSolutionContents(solutionRoot, currentDirectory, label, allowPowerPagesComponents, result) {
@@ -472,39 +576,24 @@ function findFilesByExtension(currentDirectory, extension) {
   return matches;
 }
 
-function validateWebsiteCodePath(websiteCodePathValue, kind, label, root, expectedDirectory, location, result) {
-  if (typeof websiteCodePathValue !== "string") {
-    return;
-  }
-
-  const websiteCodePath = resolveTemplatePath(root, websiteCodePathValue, label, result);
-  if (!websiteCodePath) {
-    return;
-  }
-
-  const expectedFullDirectory = path.resolve(root, expectedDirectory);
-  if (websiteCodePathValue !== expectedDirectory || websiteCodePath !== expectedFullDirectory) {
-    result.errors.push(`Template "${label}" ${location} must be ${expectedDirectory}.`);
-  }
-
+function validateWebsiteCodePath(kind, label, root, expectedDirectory, result) {
+  const websiteCodePath = path.resolve(root, expectedDirectory);
   if (!directoryExists(websiteCodePath)) {
-    result.errors.push(
-      `Template "${label}" websiteCodePath does not exist or is not a directory: ${websiteCodePathValue}`
-    );
+    result.errors.push(`Template "${label}" website-code directory does not exist: ${expectedDirectory}`);
     return;
   }
 
   const siteDirectory = path.join(websiteCodePath, ".powerpages-site");
   if (!directoryExists(siteDirectory)) {
-    result.errors.push(`Template "${label}" websiteCodePath must contain .powerpages-site/.`);
+    result.errors.push(`Template "${label}" website-code must contain .powerpages-site/.`);
   } else if (!fileExists(path.join(siteDirectory, "website.yml"))) {
-    result.errors.push(`Template "${label}" websiteCodePath must contain .powerpages-site/website.yml.`);
+    result.errors.push(`Template "${label}" website-code must contain .powerpages-site/website.yml.`);
   }
 
   if (kind === "spa") {
     for (const requiredFile of ["package.json", "powerpages.config.json"]) {
       if (!fileExists(path.join(websiteCodePath, requiredFile))) {
-        result.errors.push(`Template "${label}" SPA websiteCodePath must contain ${requiredFile}.`);
+        result.errors.push(`Template "${label}" SPA website-code must contain ${requiredFile}.`);
       }
     }
   }

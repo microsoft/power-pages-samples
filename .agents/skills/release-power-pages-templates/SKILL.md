@@ -47,8 +47,8 @@ Write release notes from the template catalog and git diff, not from memory alon
 Include:
 
 - Template IDs and display names.
-- Unpacked solution source paths.
-- Website code paths.
+- Derived unpacked solution source paths.
+- Derived website code paths.
 - Seed data paths, if present.
 - Preview image paths.
 - Any known prerequisites from template READMEs.
@@ -97,7 +97,8 @@ gh release create TAG_NAME --title "Power Pages templates TAG_NAME" --notes-file
 ```
 
 Attach packed solution zips or website code archives only if the user asks for release assets.
-When a solution zip is requested, pack the catalog's `solutionPath` directory into a temporary directory with `pac solution pack --packagetype Unmanaged`, attach the result, and remove the temporary directory.
+Variant artifacts use `templates/<kind>/<template-id>/variants/<variant>/website-code/` and `solutions/<solution-unique-name>/`.
+When solution zips are requested, discover every direct folder under `solutions/`, sort them by case-insensitive unique name, pack each into a temporary directory with `pac solution pack --packagetype Unmanaged`, attach the results, and remove the temporary directory.
 The repository stores the unpacked solution source, so a release can usually link to the immutable tag without duplicating it.
 
 Completion criterion: GitHub shows the release for the tag.

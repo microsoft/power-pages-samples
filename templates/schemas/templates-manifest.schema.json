@@ -127,23 +127,13 @@
     "templateVariant": {
       "type": "object",
       "required": [
-        "templateVersion",
-        "solutionPath",
-        "websiteCodePath"
+        "templateVersion"
       ],
       "additionalProperties": false,
       "properties": {
         "templateVersion": {
           "type": "string",
           "pattern": "^\\d+\\.\\d+\\.\\d+(?:\\.\\d+)?$"
-        },
-        "solutionPath": {
-          "type": "string",
-          "pattern": "^.+/solution$"
-        },
-        "websiteCodePath": {
-          "type": "string",
-          "pattern": "^.+/website-code$"
         },
         "previewImages": {
           "type": "array",
