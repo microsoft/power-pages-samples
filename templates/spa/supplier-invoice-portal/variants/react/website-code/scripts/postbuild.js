@@ -18,9 +18,11 @@ const ROOT = join(import.meta.dirname, '..')
 const DIST_ASSETS = join(ROOT, 'dist', 'assets')
 const CONFIG_PATH = join(ROOT, 'powerpages.config.json')
 
-// Vite output format: [name]-[hash].[ext]
-// We want to extract "name" and "ext" to produce "name-*.ext" patterns
-const HASH_PATTERN = /^(.+)-[A-Za-z0-9_-]{6,12}\.(js|css|svg)$/
+// Vite's default [name]-[hash].[ext] uses eight-character Rollup hashes.
+// In SubmitInvoice-C-5NEgfP.js, C-5NEgfP is the whole hash; allowing shorter
+// matches treats its hyphen as a name delimiter and misses old bundles.
+// https://rollupjs.org/configuration-options/#output-entryfilenames
+const HASH_PATTERN = /^(.+)-[A-Za-z0-9_-]{8}\.(js|css|svg)$/
 
 try {
   const files = readdirSync(DIST_ASSETS)

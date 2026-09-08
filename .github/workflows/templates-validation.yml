@@ -29,8 +29,8 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Run template validator tests
-        run: node --test templates/scripts/validate-templates.test.js
+      - name: Run template tests
+        run: node --test templates/scripts/validate-templates.test.js templates/scripts/supplier-invoice-postbuild.test.js
 
       - name: Validate templates manifest
         run: node templates/scripts/validate-templates.js
