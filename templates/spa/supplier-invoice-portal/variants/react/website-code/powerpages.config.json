@@ -45,7 +45,7 @@
     "purchaseOrderService-*.js",
     "refresh-cw-*.js",
     "search-*.js",
-    "send-c-*.js",
+    "send-*.js",
     "shield-*.js",
     "triangle-alert-*.js",
     "upload-*.js",
