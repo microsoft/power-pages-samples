@@ -78,6 +78,18 @@ test("requires SPA project files and website export metadata", () => {
 
 test("accepts variant-specific overrides when they are needed", () => {
   const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/unused.json",
+    seedData: {
+      schemaVersion: 1,
+      tables: {
+        unused: {
+          logicalName: "custom_unused",
+          entitySet: "custom_unuseds",
+          idColumn: "custom_unusedid",
+          records: []
+        }
+      }
+    },
     variantOverrides: {
       previewImages: ["spa/test-template/variants/react/previews/home-react.png"],
       seedDataPath: "spa/test-template/variants/react/seed-data/accounts.json",
@@ -107,8 +119,7 @@ test("rejects flat template package fields at the family level", () => {
     familyExtras: {
       framework: "react",
       solutionPath: "spa/test-template/solution/template.zip",
-      websiteCodePath: "spa/test-template/website-code",
-      templateVersion: "1.0.0"
+      websiteCodePath: "spa/test-template/website-code"
     }
   });
 
@@ -116,7 +127,6 @@ test("rejects flat template package fields at the family level", () => {
   assert(result.errors.some((error) => error.includes("$.templates[0].framework is not allowed")));
   assert(result.errors.some((error) => error.includes("$.templates[0].solutionPath is not allowed")));
   assert(result.errors.some((error) => error.includes("$.templates[0].websiteCodePath is not allowed")));
-  assert(result.errors.some((error) => error.includes("$.templates[0].templateVersion is not allowed")));
 });
 
 test("rejects derivable artifact paths in variants", () => {
@@ -293,6 +303,18 @@ test("rejects malformed seed data file attachments", () => {
 
 test("accepts Dataverse export seed data with fileExports", () => {
   const root = createTemplateRoot({
+    solutionTables: [
+      {
+        schemaName: "Account",
+        entitySetName: "accounts",
+        primaryKey: "accountid",
+        attributes: [
+          { physicalName: "AccountId", logicalName: "accountid", type: "primarykey" },
+          { physicalName: "Name", logicalName: "name", type: "nvarchar" },
+          { physicalName: "sample_File", logicalName: "sample_file", type: "file" }
+        ]
+      }
+    ],
     seedDataPath: "spa/test-template/seed-data/data.json",
     seedData: {
       schemaVersion: 1,
@@ -327,6 +349,109 @@ test("accepts Dataverse export seed data with fileExports", () => {
 
   const result = validateTemplates({ root });
   assert.deepEqual(result.errors, []);
+});
+
+test("validates Dataverse seed targets, lookups, records, and dependency order against solution metadata", () => {
+  const solutionTables = [
+    {
+      schemaName: "sample_Category",
+      entitySetName: "sample_categories",
+      primaryKey: "sample_categoryid",
+      attributes: [
+        { physicalName: "sample_CategoryId", logicalName: "sample_categoryid", type: "primarykey" },
+        { physicalName: "sample_Name", logicalName: "sample_name", type: "nvarchar" }
+      ]
+    },
+    {
+      schemaName: "sample_Item",
+      entitySetName: "sample_items",
+      primaryKey: "sample_itemid",
+      attributes: [
+        { physicalName: "sample_ItemId", logicalName: "sample_itemid", type: "primarykey" },
+        { physicalName: "sample_CategoryId", logicalName: "sample_categoryid", type: "lookup" },
+        { physicalName: "sample_Name", logicalName: "sample_name", type: "nvarchar" }
+      ]
+    }
+  ];
+  const solutionRelationships = [
+    {
+      sourceSchemaName: "sample_Item",
+      targetSchemaName: "sample_Category",
+      attributeName: "sample_CategoryId",
+      navigationProperty: "sample_CategoryId"
+    }
+  ];
+  const root = createTemplateRoot({
+    solutionTables,
+    solutionRelationships,
+    seedDataPath: "spa/test-template/seed-data/data.json",
+    seedData: {
+      schemaVersion: 1,
+      tables: {
+        categories: {
+          logicalName: "sample_category",
+          entitySet: "sample_categories",
+          idColumn: "sample_categoryid",
+          records: [
+            {
+              sample_categoryid: "10000000-0000-4000-8000-000000000001",
+              sample_name: "Category"
+            }
+          ]
+        },
+        items: {
+          logicalName: "sample_item",
+          entitySet: "sample_items",
+          idColumn: "sample_itemid",
+          records: [
+            {
+              sample_itemid: "10000000-0000-4000-8000-000000000001",
+              "sample_CategoryId@odata.bind": "/sample_categories(10000000-0000-4000-8000-000000000001)",
+              sample_name: "Item"
+            }
+          ]
+        }
+      }
+    }
+  });
+
+  assert.deepEqual(validateTemplates({ root }).errors, []);
+
+  const dataPath = path.join(root, "spa/test-template/seed-data/data.json");
+  const seedData = JSON.parse(fs.readFileSync(dataPath, "utf8"));
+  seedData.tables.items.entitySet = "wrong_items";
+  seedData.tables.items.records[0] = {
+    sample_itemid: "10000000-0000-4000-8000-000000000001",
+    categoryId: "10000000-0000-4000-8000-000000000001",
+    "sample_categoryid@odata.bind": "/sample_categories(10000000-0000-4000-8000-000000000001)",
+    _sample_categoryid_value: 42
+  };
+  seedData.tables.items.records.push({
+    sample_itemid: "20000000-0000-4000-8000-000000000002",
+    "sample_CategoryId@odata.bind": "/wrong_categories(10000000-0000-4000-8000-000000000001)"
+  });
+  seedData.tables = {
+    items: seedData.tables.items,
+    categories: seedData.tables.categories
+  };
+  fs.writeFileSync(dataPath, JSON.stringify(seedData, null, 2));
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes('entitySet must exactly match "sample_items"')));
+  assert(result.errors.some((error) => error.includes('property "categoryId" was not found')));
+  assert(result.errors.some((error) =>
+    error.includes('lookup must exactly match navigation property "sample_CategoryId"')
+  ));
+  assert(result.errors.some((error) => error.includes('must target entity set "sample_categories"')));
+  assert(result.errors.some((error) => error.includes("must appear in an earlier table")));
+  assert(result.errors.some((error) => error.includes("must be null or a GUID string")));
+
+  delete seedData.tables.categories;
+  fs.writeFileSync(dataPath, JSON.stringify(seedData, null, 2));
+  const missingParentResult = validateTemplates({ root });
+  assert(missingParentResult.errors.some((error) =>
+    error.includes("references record 10000000-0000-4000-8000-000000000001, which is not present")
+  ));
 });
 
 test("rejects malformed Dataverse export seed data fileExports", () => {
@@ -647,7 +772,6 @@ function createTemplateRoot(options = {}) {
     author: "Test",
     variants: {
       [framework]: {
-        templateVersion: "1.0.0",
         ...(options.variantOverrides ?? {})
       }
     },
@@ -683,11 +807,17 @@ function createTemplateRoot(options = {}) {
     }
   }
   if (options.createSolution !== false) {
+    const solutionPath = path.join(solutionsPath, solutionFolderName);
     writeUnpackedSolution(
-      path.join(solutionsPath, solutionFolderName),
+      solutionPath,
       options.solutionXml === undefined ? defaultSolutionXml(solutionUniqueName) : options.solutionXml,
       options.customizationsXml === undefined ? "<ImportExportXml />" : options.customizationsXml,
       options.solutionHasWebsiteComponent
+    );
+    writeDataverseMetadata(
+      solutionPath,
+      options.solutionTables ?? [],
+      options.solutionRelationships ?? []
     );
   }
   return root;
@@ -716,4 +846,57 @@ function writeUnpackedSolution(solutionPath, solutionXml, customizationsXml, sol
     fs.mkdirSync(websitePath, { recursive: true });
     fs.writeFileSync(path.join(websitePath, "index.html"), "<html></html>");
   }
+}
+
+function writeDataverseMetadata(solutionPath, tables, relationships) {
+  for (const table of tables) {
+    const entityPath = path.join(solutionPath, "Entities", table.schemaName);
+    fs.mkdirSync(entityPath, { recursive: true });
+    fs.writeFileSync(path.join(entityPath, "Entity.xml"), dataverseEntityXml(table));
+  }
+
+  if (relationships.length > 0) {
+    const relationshipsPath = path.join(solutionPath, "Other", "Relationships");
+    fs.mkdirSync(relationshipsPath, { recursive: true });
+    fs.writeFileSync(
+      path.join(relationshipsPath, "SeedRelationships.xml"),
+      dataverseRelationshipsXml(relationships)
+    );
+  }
+}
+
+function dataverseEntityXml(table) {
+  const attributes = table.attributes.map((attribute) => `
+        <attribute PhysicalName="${attribute.physicalName}">
+          <Type>${attribute.type}</Type>
+          <Name>${attribute.logicalName}</Name>
+          <LogicalName>${attribute.logicalName}</LogicalName>
+        </attribute>`).join("");
+  return `<Entity>
+  <Name>${table.schemaName}</Name>
+  <EntityInfo>
+    <entity Name="${table.schemaName}">
+      <attributes>${attributes}
+      </attributes>
+      <EntitySetName>${table.entitySetName}</EntitySetName>
+    </entity>
+  </EntityInfo>
+</Entity>`;
+}
+
+function dataverseRelationshipsXml(relationships) {
+  const entries = relationships.map((relationship) => `
+  <EntityRelationship>
+    <ReferencingEntityName>${relationship.sourceSchemaName}</ReferencingEntityName>
+    <ReferencedEntityName>${relationship.targetSchemaName}</ReferencedEntityName>
+    <ReferencingAttributeName>${relationship.attributeName}</ReferencingAttributeName>
+    <EntityRelationshipRoles>
+      <EntityRelationshipRole>
+        <NavigationPropertyName>${relationship.navigationProperty}</NavigationPropertyName>
+        <RelationshipRoleType>1</RelationshipRoleType>
+      </EntityRelationshipRole>
+    </EntityRelationshipRoles>
+  </EntityRelationship>`).join("");
+  return `<EntityRelationships>${entries}
+</EntityRelationships>`;
 }

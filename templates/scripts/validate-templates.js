@@ -261,14 +261,11 @@ function validateReferencedPaths(template, label, root, result) {
   const familyBase = getFamilyBasePath(template);
   validatePreviewImages(template.previewImages, label, root, `${familyBase}/previews`, "previewImages", result);
 
-  if (typeof template.seedDataPath === "string") {
-    validateSeedDataPath(template.seedDataPath, label, root, `${familyBase}/seed-data`, "seedDataPath", result);
-  }
-
   if (!template.variants || typeof template.variants !== "object" || Array.isArray(template.variants)) {
     return;
   }
 
+  const familySeedVariantMetadata = [];
   for (const [framework, variant] of Object.entries(template.variants)) {
     if (!VALID_FRAMEWORKS.has(framework)) {
       result.errors.push(`Template "${label}" has unsupported framework variant "${framework}".`);
@@ -279,7 +276,25 @@ function validateReferencedPaths(template, label, root, result) {
       continue;
     }
 
-    validateVariantPaths(template, framework, variant, label, root, result);
+    const metadataContext = {
+      framework,
+      metadata: validateVariantPaths(template, framework, variant, label, root, result)
+    };
+    if (typeof variant.seedDataPath !== "string") {
+      familySeedVariantMetadata.push(metadataContext);
+    }
+  }
+
+  if (typeof template.seedDataPath === "string") {
+    validateSeedDataPath(
+      template.seedDataPath,
+      label,
+      root,
+      `${familyBase}/seed-data`,
+      "seedDataPath",
+      familySeedVariantMetadata,
+      result
+    );
   }
 }
 
@@ -293,7 +308,7 @@ function getFamilyBasePath(template) {
 
 function validateVariantPaths(template, framework, variant, label, root, result) {
   const variantBase = `${getFamilyBasePath(template)}/variants/${framework}`;
-  validateSolutionsDirectory(
+  const solutionMetadata = validateSolutionsDirectory(
     label,
     root,
     `${variantBase}/solutions`,
@@ -311,8 +326,18 @@ function validateVariantPaths(template, framework, variant, label, root, result)
   validatePreviewImages(variant.previewImages, label, root, `${variantBase}/previews`, `variant "${framework}" previewImages`, result);
 
   if (typeof variant.seedDataPath === "string") {
-    validateSeedDataPath(variant.seedDataPath, label, root, `${variantBase}/seed-data`, `variant "${framework}" seedDataPath`, result);
+    validateSeedDataPath(
+      variant.seedDataPath,
+      label,
+      root,
+      `${variantBase}/seed-data`,
+      `variant "${framework}" seedDataPath`,
+      [{ framework, metadata: solutionMetadata }],
+      result
+    );
   }
+
+  return solutionMetadata;
 }
 
 function validatePreviewImages(previewImages, label, root, expectedDirectory, location, result) {
@@ -351,15 +376,16 @@ function validateSolutionsDirectory(
   allowPowerPagesComponents,
   result
 ) {
+  const metadata = createDataverseMetadata();
   const solutionsPath = path.resolve(root, solutionsDirectory);
   if (!directoryExists(solutionsPath)) {
     result.errors.push(`Template "${label}" solutions directory does not exist: ${solutionsDirectory}`);
-    return;
+    return metadata;
   }
 
   if (fs.lstatSync(solutionsPath).isSymbolicLink()) {
     result.errors.push(`Template "${label}" solutions directory must not be a symbolic link: ${solutionsDirectory}`);
-    return;
+    return metadata;
   }
 
   const solutionDirectories = [];
@@ -404,10 +430,12 @@ function validateSolutionsDirectory(
       uniqueNames.set(normalizedUniqueName, entry.name);
     }
     solutions.push(solution);
+    mergeDataverseMetadata(metadata, solution.metadata, label, result);
   }
 
   validateIndependentSiblingSolutions(solutions, uniqueNames, label, result);
   validateVariantHasNoSolutionZip(path.resolve(root, variantBase), label, result);
+  return metadata;
 }
 
 function compareCaseInsensitive(left, right) {
@@ -464,6 +492,7 @@ function validateSolutionDirectory(solutionPath, folderName, label, allowPowerPa
 
   return {
     folderName,
+    metadata: readSolutionDataverseMetadata(solutionPath, label, result),
     solutionXml,
     uniqueName
   };
@@ -512,6 +541,223 @@ function decodeXmlEntities(value) {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&amp;/g, "&");
+}
+
+function createDataverseMetadata() {
+  return {
+    tablesByEntitySet: new Map(),
+    tablesByLogicalName: new Map(),
+    tablesBySchemaName: new Map()
+  };
+}
+
+function readSolutionDataverseMetadata(solutionPath, label, result) {
+  const metadata = createDataverseMetadata();
+  const entitiesPath = path.join(solutionPath, "Entities");
+  if (directoryExists(entitiesPath)) {
+    for (const entry of fs.readdirSync(entitiesPath, { withFileTypes: true })) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+
+      const entityPath = path.join(entitiesPath, entry.name, "Entity.xml");
+      if (!fileExists(entityPath)) {
+        continue;
+      }
+
+      const table = parseDataverseTableMetadata(fs.readFileSync(entityPath, "utf8"));
+      if (!table) {
+        continue;
+      }
+      addDataverseTable(metadata, table, label, result);
+    }
+  }
+
+  const relationshipsPath = path.join(solutionPath, "Other", "Relationships");
+  if (directoryExists(relationshipsPath)) {
+    for (const entry of fs.readdirSync(relationshipsPath, { withFileTypes: true })) {
+      if (!entry.isFile() || path.extname(entry.name).toLowerCase() !== ".xml") {
+        continue;
+      }
+      addDataverseRelationships(
+        metadata,
+        fs.readFileSync(path.join(relationshipsPath, entry.name), "utf8"),
+        label,
+        result
+      );
+    }
+  }
+
+  return metadata;
+}
+
+function parseDataverseTableMetadata(entityXml) {
+  const schemaName = matchXmlText(entityXml, /<Entity\b[\s\S]*?<Name\b[^>]*>\s*([^<]+?)\s*<\/Name>/i);
+  const entitySetName = matchXmlText(entityXml, /<EntitySetName>\s*([^<]+?)\s*<\/EntitySetName>/i);
+  const attributes = [];
+  const attributePattern = /<attribute\b[^>]*\bPhysicalName=(["'])(.*?)\1[^>]*>([\s\S]*?)<\/attribute>/gi;
+  let attributeMatch;
+  while ((attributeMatch = attributePattern.exec(entityXml)) !== null) {
+    const logicalName = matchXmlText(
+      attributeMatch[3],
+      /<LogicalName>\s*([^<]+?)\s*<\/LogicalName>/i
+    );
+    const type = matchXmlText(attributeMatch[3], /<Type>\s*([^<]+?)\s*<\/Type>/i);
+    if (!logicalName || !type) {
+      continue;
+    }
+    attributes.push({
+      logicalName,
+      physicalName: decodeXmlEntities(attributeMatch[2].trim()),
+      type: type.toLowerCase()
+    });
+  }
+
+  const primaryKeyAttribute = attributes.find((attribute) => attribute.type === "primarykey");
+  if (!schemaName || !entitySetName || !primaryKeyAttribute || !primaryKeyAttribute.logicalName.endsWith("id")) {
+    return null;
+  }
+
+  const logicalName = primaryKeyAttribute.logicalName.slice(0, -2);
+  if (schemaName.toLowerCase() !== logicalName) {
+    return null;
+  }
+
+  return {
+    attributesByLogicalName: new Map(
+      attributes.map((attribute) => [attribute.logicalName.toLowerCase(), attribute])
+    ),
+    attributesByPhysicalName: new Map(
+      attributes.map((attribute) => [attribute.physicalName.toLowerCase(), attribute])
+    ),
+    entitySetName,
+    logicalName,
+    lookupsByAttributeLogicalName: new Map(),
+    lookupsByNavigationProperty: new Map(),
+    primaryKey: primaryKeyAttribute.logicalName,
+    schemaName
+  };
+}
+
+function matchXmlText(xml, pattern) {
+  const match = pattern.exec(xml);
+  return match ? decodeXmlEntities(match[1].trim()) : null;
+}
+
+function addDataverseTable(metadata, table, label, result) {
+  for (const [mapName, value] of [
+    ["tablesByLogicalName", table.logicalName],
+    ["tablesByEntitySet", table.entitySetName],
+    ["tablesBySchemaName", table.schemaName]
+  ]) {
+    const map = metadata[mapName];
+    const normalized = value.toLowerCase();
+    const existing = map.get(normalized);
+    if (existing && existing.schemaName !== table.schemaName) {
+      result.errors.push(
+        `Template "${label}" solutions contain conflicting Dataverse table metadata for "${value}".`
+      );
+      continue;
+    }
+    map.set(normalized, table);
+  }
+}
+
+function addDataverseRelationships(metadata, relationshipsXml, label, result) {
+  const relationshipPattern = /<EntityRelationship\b[^>]*>([\s\S]*?)<\/EntityRelationship>/gi;
+  let relationshipMatch;
+  while ((relationshipMatch = relationshipPattern.exec(relationshipsXml)) !== null) {
+    const relationshipXml = relationshipMatch[1];
+    const sourceSchemaName = matchXmlText(
+      relationshipXml,
+      /<ReferencingEntityName>\s*([^<]+?)\s*<\/ReferencingEntityName>/i
+    );
+    const targetSchemaName = matchXmlText(
+      relationshipXml,
+      /<ReferencedEntityName>\s*([^<]+?)\s*<\/ReferencedEntityName>/i
+    );
+    const attributeName = matchXmlText(
+      relationshipXml,
+      /<ReferencingAttributeName>\s*([^<]+?)\s*<\/ReferencingAttributeName>/i
+    );
+    const navigationProperty = findReferencingNavigationProperty(relationshipXml);
+    if (!sourceSchemaName || !targetSchemaName || !attributeName) {
+      continue;
+    }
+
+    const sourceTable = metadata.tablesBySchemaName.get(sourceSchemaName.toLowerCase());
+    if (!sourceTable) {
+      continue;
+    }
+
+    const attribute = sourceTable.attributesByPhysicalName.get(attributeName.toLowerCase());
+    if (!attribute || attribute.type !== "lookup") {
+      if (!navigationProperty) {
+        continue;
+      }
+      result.errors.push(
+        `Template "${label}" relationship navigation property "${navigationProperty}" references unknown lookup attribute "${attributeName}".`
+      );
+      continue;
+    }
+
+    const lookup = {
+      attributeLogicalName: attribute.logicalName,
+      attributePhysicalName: attribute.physicalName,
+      navigationProperty,
+      targetSchemaName
+    };
+    sourceTable.lookupsByAttributeLogicalName.set(attribute.logicalName.toLowerCase(), lookup);
+    if (navigationProperty) {
+      sourceTable.lookupsByNavigationProperty.set(navigationProperty.toLowerCase(), lookup);
+    }
+  }
+}
+
+function findReferencingNavigationProperty(relationshipXml) {
+  const rolePattern = /<EntityRelationshipRole\b[^>]*>([\s\S]*?)<\/EntityRelationshipRole>/gi;
+  let roleMatch;
+  while ((roleMatch = rolePattern.exec(relationshipXml)) !== null) {
+    if (!/<RelationshipRoleType>\s*1\s*<\/RelationshipRoleType>/i.test(roleMatch[1])) {
+      continue;
+    }
+    return matchXmlText(
+      roleMatch[1],
+      /<NavigationPropertyName>\s*([^<]+?)\s*<\/NavigationPropertyName>/i
+    );
+  }
+  return null;
+}
+
+function mergeDataverseMetadata(target, source, label, result) {
+  for (const table of source.tablesByLogicalName.values()) {
+    const existing = target.tablesByLogicalName.get(table.logicalName.toLowerCase());
+    if (existing) {
+      if (
+        existing.entitySetName !== table.entitySetName ||
+        existing.primaryKey !== table.primaryKey ||
+        existing.schemaName !== table.schemaName
+      ) {
+        result.errors.push(
+          `Template "${label}" solutions contain conflicting Dataverse metadata for table "${table.logicalName}".`
+        );
+      }
+      for (const [name, attribute] of table.attributesByLogicalName) {
+        existing.attributesByLogicalName.set(name, attribute);
+      }
+      for (const [name, attribute] of table.attributesByPhysicalName) {
+        existing.attributesByPhysicalName.set(name, attribute);
+      }
+      for (const [name, lookup] of table.lookupsByNavigationProperty) {
+        existing.lookupsByNavigationProperty.set(name, lookup);
+      }
+      for (const [name, lookup] of table.lookupsByAttributeLogicalName) {
+        existing.lookupsByAttributeLogicalName.set(name, lookup);
+      }
+      continue;
+    }
+    addDataverseTable(target, table, label, result);
+  }
 }
 
 function validateSolutionContents(solutionRoot, currentDirectory, label, allowPowerPagesComponents, result) {
@@ -757,7 +1003,15 @@ function resolveWebsiteCodeSourcePath(websiteCodePath, partialUrl, label, metada
   return sourcePath;
 }
 
-function validateSeedDataPath(seedDataPathValue, label, root, expectedDirectory, location, result) {
+function validateSeedDataPath(
+  seedDataPathValue,
+  label,
+  root,
+  expectedDirectory,
+  location,
+  variantMetadata,
+  result
+) {
   const seedDataPath = resolveTemplatePath(root, seedDataPathValue, label, result);
   if (!seedDataPath) {
     return;
@@ -781,7 +1035,13 @@ function validateSeedDataPath(seedDataPathValue, label, root, expectedDirectory,
   }
 
   if (isDataverseExportSeedData(seedData)) {
-    validateDataverseExportSeedData(seedData, path.dirname(seedDataPath), label, result);
+    validateDataverseExportSeedData(
+      seedData,
+      path.dirname(seedDataPath),
+      label,
+      variantMetadata,
+      result
+    );
     return;
   }
 
@@ -801,14 +1061,21 @@ function isDataverseExportSeedData(seedData) {
   return seedData && typeof seedData === "object" && !Array.isArray(seedData) && Object.hasOwn(seedData, "tables");
 }
 
-function validateDataverseExportSeedData(seedData, seedDataDirectory, label, result) {
+function validateDataverseExportSeedData(seedData, seedDataDirectory, label, variantMetadata, result) {
   if (!seedData.tables || typeof seedData.tables !== "object" || Array.isArray(seedData.tables)) {
     result.errors.push(`Template "${label}" Dataverse seed data tables must be an object.`);
     return;
   }
 
+  const tables = [];
   for (const [tableName, table] of Object.entries(seedData.tables)) {
-    validateDataverseSeedTable(tableName, table, label, result);
+    if (validateDataverseSeedTable(tableName, table, label, result)) {
+      tables.push({ name: tableName, table });
+    }
+  }
+
+  for (const { framework, metadata } of variantMetadata ?? []) {
+    validateDataverseSeedAgainstSolutionMetadata(tables, metadata, framework, label, result);
   }
 
   if (Object.hasOwn(seedData, "fileExports")) {
@@ -820,15 +1087,351 @@ function validateDataverseSeedTable(tableName, table, label, result) {
   const location = `table ${tableName}`;
   if (!table || typeof table !== "object" || Array.isArray(table)) {
     result.errors.push(`Template "${label}" Dataverse seed data ${location} must be an object.`);
-    return;
+    return false;
   }
 
-  validateNonEmptyString(table.logicalName, `${location} logicalName`, label, result);
-  validateNonEmptyString(table.entitySet, `${location} entitySet`, label, result);
+  const hasLogicalName = validateNonEmptyString(table.logicalName, `${location} logicalName`, label, result);
+  const hasEntitySet = validateNonEmptyString(table.entitySet, `${location} entitySet`, label, result);
+  const hasIdColumn = validateNonEmptyString(table.idColumn, `${location} idColumn`, label, result);
 
   if (!Array.isArray(table.records)) {
     result.errors.push(`Template "${label}" Dataverse seed data ${location} records must be an array.`);
+    return false;
   }
+
+  return hasLogicalName && hasEntitySet && hasIdColumn;
+}
+
+function validateDataverseSeedAgainstSolutionMetadata(tables, metadata, framework, label, result) {
+  const seedRecordsByEntitySetAndId = new Map();
+  const seedTablesByLogicalName = new Map();
+  const tableMetadata = [];
+
+  tables.forEach(({ name, table }, tableIndex) => {
+    const location = `table ${name}`;
+    const solutionTable = findExactSeedTableMetadata(table, metadata, framework, location, label, result);
+    tableMetadata.push(solutionTable);
+    seedTablesByLogicalName.set(table.logicalName.toLowerCase(), table);
+
+    table.records.forEach((record, recordIndex) => {
+      const recordLocation = `${location} record[${recordIndex}]`;
+      if (!record || typeof record !== "object" || Array.isArray(record)) {
+        result.errors.push(`Template "${label}" Dataverse seed data ${recordLocation} must be an object.`);
+        return;
+      }
+
+      const recordId = record[table.idColumn];
+      if (typeof recordId !== "string" || !isGuid(recordId)) {
+        result.errors.push(
+          `Template "${label}" Dataverse seed data ${recordLocation} must include GUID primary key ${table.idColumn}.`
+        );
+      } else {
+        const normalizedId = recordId.toLowerCase();
+        const recordKey = getSeedRecordKey(table.entitySet, normalizedId);
+        const previous = seedRecordsByEntitySetAndId.get(recordKey);
+        if (previous) {
+          result.errors.push(
+            `Template "${label}" Dataverse seed data duplicates record ID ${recordId}: ${previous.location}, ${recordLocation}.`
+          );
+        } else {
+          seedRecordsByEntitySetAndId.set(recordKey, {
+            entitySetName: table.entitySet,
+            logicalName: table.logicalName,
+            location: recordLocation,
+            tableIndex
+          });
+        }
+      }
+
+      if (solutionTable) {
+        validateDataverseSeedRecordFields(record, solutionTable, recordLocation, framework, label, result);
+      }
+    });
+  });
+
+  tables.forEach(({ name, table }, tableIndex) => {
+    const solutionTable = tableMetadata[tableIndex];
+    if (!solutionTable) {
+      return;
+    }
+    table.records.forEach((record, recordIndex) => {
+      if (!record || typeof record !== "object" || Array.isArray(record)) {
+        return;
+      }
+      validateDataverseSeedRecordLookups(
+        record,
+        solutionTable,
+        metadata,
+        seedRecordsByEntitySetAndId,
+        seedTablesByLogicalName,
+        tableIndex,
+        `table ${name} record[${recordIndex}]`,
+        framework,
+        label,
+        result
+      );
+    });
+  });
+}
+
+function findExactSeedTableMetadata(table, metadata, framework, location, label, result) {
+  const solutionTable = metadata.tablesByLogicalName.get(table.logicalName.toLowerCase());
+  if (!solutionTable) {
+    if (table.logicalName.includes("_")) {
+      result.errors.push(
+        `Template "${label}" Dataverse seed data ${location} logicalName "${table.logicalName}" ` +
+        `was not found in variant "${framework}" solution metadata.`
+      );
+      return null;
+    }
+    return undefined;
+  }
+
+  if (table.logicalName !== solutionTable.logicalName) {
+    result.errors.push(
+      `Template "${label}" Dataverse seed data ${location} logicalName must exactly match "${solutionTable.logicalName}".`
+    );
+  }
+  if (table.entitySet !== solutionTable.entitySetName) {
+    result.errors.push(
+      `Template "${label}" Dataverse seed data ${location} entitySet must exactly match "${solutionTable.entitySetName}".`
+    );
+  }
+  if (table.idColumn !== solutionTable.primaryKey) {
+    result.errors.push(
+      `Template "${label}" Dataverse seed data ${location} idColumn must exactly match primary key "${solutionTable.primaryKey}".`
+    );
+  }
+
+  return solutionTable;
+}
+
+function validateDataverseSeedRecordFields(record, solutionTable, location, framework, label, result) {
+  for (const propertyName of Object.keys(record)) {
+    if (
+      propertyName === "@odata.etag" ||
+      propertyName === "createdon" ||
+      propertyName === "modifiedon" ||
+      propertyName.endsWith("@odata.bind") ||
+      propertyName.endsWith("@Microsoft.Dynamics.CRM.associatednavigationproperty") ||
+      propertyName.endsWith("@OData.Community.Display.V1.FormattedValue") ||
+      /^_.+_value$/.test(propertyName)
+    ) {
+      continue;
+    }
+
+    const attribute = solutionTable.attributesByLogicalName.get(propertyName.toLowerCase());
+    if (!attribute) {
+      const fileAttributeName = propertyName.endsWith("_name")
+        ? propertyName.slice(0, -"_name".length)
+        : null;
+      const fileAttribute = fileAttributeName
+        ? solutionTable.attributesByLogicalName.get(fileAttributeName.toLowerCase())
+        : null;
+      if (fileAttribute?.type === "file") {
+        continue;
+      }
+      result.errors.push(
+        `Template "${label}" Dataverse seed data ${location} property "${propertyName}" ` +
+        `was not found on table "${solutionTable.logicalName}" in variant "${framework}" solution metadata.`
+      );
+    } else if (propertyName !== attribute.logicalName) {
+      result.errors.push(
+        `Template "${label}" Dataverse seed data ${location} property must exactly match "${attribute.logicalName}".`
+      );
+    }
+  }
+}
+
+function validateDataverseSeedRecordLookups(
+  record,
+  solutionTable,
+  metadata,
+  seedRecordsByEntitySetAndId,
+  seedTablesByLogicalName,
+  tableIndex,
+  location,
+  framework,
+  label,
+  result
+) {
+  for (const [propertyName, value] of Object.entries(record)) {
+    if (propertyName.endsWith("@odata.bind")) {
+      const navigationProperty = propertyName.slice(0, -"@odata.bind".length);
+      const bind = parseODataBind(value);
+      validateDataverseLookupReference({
+        bind,
+        lookupValue: value,
+        metadata,
+        navigationProperty,
+        propertyName,
+        seedRecordsByEntitySetAndId,
+        seedTablesByLogicalName,
+        solutionTable,
+        tableIndex,
+        location,
+        framework,
+        label,
+        lookup: null,
+        requireSeedRecord: true,
+        result
+      });
+      continue;
+    }
+
+    const rawLookupMatch = /^_(.+)_value$/.exec(propertyName);
+    if (!rawLookupMatch || value === null) {
+      continue;
+    }
+    if (typeof value !== "string" || !isGuid(value)) {
+      result.errors.push(
+        `Template "${label}" Dataverse seed data ${location} lookup "${propertyName}" ` +
+        "must be null or a GUID string."
+      );
+      continue;
+    }
+    const lookupAttribute = solutionTable.attributesByLogicalName.get(rawLookupMatch[1].toLowerCase());
+    if (!lookupAttribute || lookupAttribute.type !== "lookup") {
+      result.errors.push(
+        `Template "${label}" Dataverse seed data ${location} lookup attribute "${rawLookupMatch[1]}" ` +
+        `was not found on table "${solutionTable.logicalName}" in variant "${framework}" solution metadata.`
+      );
+      continue;
+    }
+    if (rawLookupMatch[1] !== lookupAttribute.logicalName) {
+      result.errors.push(
+        `Template "${label}" Dataverse seed data ${location} lookup attribute must exactly match ` +
+        `"${lookupAttribute.logicalName}".`
+      );
+    }
+
+    const navigationProperty =
+      record[`${propertyName}@Microsoft.Dynamics.CRM.associatednavigationproperty`];
+    if (typeof navigationProperty !== "string" || navigationProperty.length === 0) {
+      result.errors.push(
+        `Template "${label}" Dataverse seed data ${location} lookup "${propertyName}" must include its exact ` +
+        "Microsoft.Dynamics.CRM.associatednavigationproperty annotation."
+      );
+      continue;
+    }
+    const lookup = solutionTable.lookupsByAttributeLogicalName.get(lookupAttribute.logicalName.toLowerCase());
+    validateDataverseLookupReference({
+      bind: { entitySetName: null, id: value },
+      lookupValue: value,
+      metadata,
+      navigationProperty,
+      propertyName,
+      seedRecordsByEntitySetAndId,
+      seedTablesByLogicalName,
+      solutionTable,
+      tableIndex,
+      location,
+      framework,
+      label,
+      lookup,
+      requireSeedRecord: false,
+      result
+    });
+  }
+}
+
+function validateDataverseLookupReference({
+  bind,
+  lookupValue,
+  metadata,
+  navigationProperty,
+  propertyName,
+  seedRecordsByEntitySetAndId,
+  seedTablesByLogicalName,
+  solutionTable,
+  tableIndex,
+  location,
+  framework,
+  label,
+  lookup,
+  requireSeedRecord,
+  result
+}) {
+  lookup ??= solutionTable.lookupsByNavigationProperty.get(navigationProperty.toLowerCase());
+  if (!lookup) {
+    result.errors.push(
+      `Template "${label}" Dataverse seed data ${location} lookup "${navigationProperty}" ` +
+      `was not found on table "${solutionTable.logicalName}" in variant "${framework}" relationship metadata.`
+    );
+    return;
+  }
+  if (lookup.navigationProperty && navigationProperty !== lookup.navigationProperty) {
+    result.errors.push(
+      `Template "${label}" Dataverse seed data ${location} lookup must exactly match navigation property ` +
+      `"${lookup.navigationProperty}".`
+    );
+  }
+
+  if (!bind) {
+    result.errors.push(
+      `Template "${label}" Dataverse seed data ${location} lookup "${propertyName}" ` +
+      `has invalid record reference "${lookupValue}".`
+    );
+    return;
+  }
+
+  const targetTable = metadata.tablesBySchemaName.get(lookup.targetSchemaName.toLowerCase());
+  const targetSeedTable = seedTablesByLogicalName.get(lookup.targetSchemaName.toLowerCase());
+  const expectedEntitySetName = targetTable?.entitySetName ?? targetSeedTable?.entitySet ?? null;
+  if (expectedEntitySetName && bind.entitySetName && bind.entitySetName !== expectedEntitySetName) {
+    result.errors.push(
+      `Template "${label}" Dataverse seed data ${location} lookup "${propertyName}" ` +
+      `must target entity set "${expectedEntitySetName}".`
+    );
+  }
+
+  const referencedEntitySetName = bind.entitySetName ?? expectedEntitySetName;
+  const targetSeedRecord = referencedEntitySetName
+    ? seedRecordsByEntitySetAndId.get(getSeedRecordKey(referencedEntitySetName, bind.id))
+    : null;
+  if (!targetSeedRecord) {
+    if (requireSeedRecord && referencedEntitySetName) {
+      result.errors.push(
+        `Template "${label}" Dataverse seed data ${location} lookup "${propertyName}" ` +
+        `references record ${bind.id}, which is not present in the seed data.`
+      );
+    }
+    return;
+  }
+  if (bind.entitySetName && targetSeedRecord.entitySetName !== bind.entitySetName) {
+    result.errors.push(
+      `Template "${label}" Dataverse seed data ${location} lookup "${propertyName}" targets ` +
+      `"${bind.entitySetName}", but record ${bind.id} belongs to "${targetSeedRecord.entitySetName}".`
+    );
+  }
+  if (lookup.targetSchemaName.toLowerCase() !== targetSeedRecord.logicalName.toLowerCase()) {
+    result.errors.push(
+      `Template "${label}" Dataverse seed data ${location} lookup "${propertyName}" targets table ` +
+      `"${targetSeedRecord.logicalName}", but relationship metadata targets "${lookup.targetSchemaName}".`
+    );
+  }
+  if (targetSeedRecord.tableIndex >= tableIndex) {
+    result.errors.push(
+      `Template "${label}" Dataverse seed data ${location} lookup "${propertyName}" references ` +
+      `${targetSeedRecord.location}, which must appear in an earlier table.`
+    );
+  }
+}
+
+function getSeedRecordKey(entitySetName, id) {
+  return `${entitySetName.toLowerCase()}\0${id.toLowerCase()}`;
+}
+
+function parseODataBind(value) {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const match = /^\/([^/()]+)\(([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\)$/i.exec(value);
+  return match ? { entitySetName: match[1], id: match[2] } : null;
+}
+
+function isGuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
 function validateDataverseFileExports(fileExports, seedDataDirectory, label, result) {

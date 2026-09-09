@@ -6,7 +6,6 @@ They are different from `samples/`: templates are meant to be imported into an e
 The central catalog is [`manifest.json`](manifest.json).
 Each entry is a template family with one or more variants.
 The family defines shared metadata, preview images, required Dataverse languages, and optional seed data.
-Each variant defines its template version.
 The schema for the catalog is [`schemas/templates-manifest.schema.json`](schemas/templates-manifest.schema.json).
 
 Variant artifacts use a fixed layout, so the manifest does not repeat derivable paths:
@@ -40,6 +39,8 @@ The repository stores each unmanaged solution as reviewable source under the var
 Pack and import every direct solution folder in case-insensitive lexical unique-name order.
 The Power Platform CLI solution import command imports the packed solution only.
 It does not import the JSON seed data.
+Dataverse export seed tables must use the exact logical name, entity set name, primary key, column logical names, and lookup navigation properties from the unpacked solution metadata.
+Write lookups as `<NavigationProperty>@odata.bind` with `/<entitySetName>(<guid>)`, and order parent tables before tables that reference them.
 For SPA templates, the solution contains supporting Dataverse artifacts and does not contain the Power Pages website.
 Traditional solutions may include Power Pages website components.
 

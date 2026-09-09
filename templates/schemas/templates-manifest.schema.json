@@ -126,15 +126,8 @@
   "$defs": {
     "templateVariant": {
       "type": "object",
-      "required": [
-        "templateVersion"
-      ],
       "additionalProperties": false,
       "properties": {
-        "templateVersion": {
-          "type": "string",
-          "pattern": "^\\d+\\.\\d+\\.\\d+(?:\\.\\d+)?$"
-        },
         "previewImages": {
           "type": "array",
           "uniqueItems": true,
