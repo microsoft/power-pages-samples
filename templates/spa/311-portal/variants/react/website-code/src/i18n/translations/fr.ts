@@ -165,7 +165,7 @@ export const fr: Record<string, string> = {
   "createRequest.trackYourRequest": "Suivre votre demande",
   "createRequest.serviceNotFoundDesc": "Nous n\u2019avons pas trouv\u00e9 ce service. Parcourez notre catalogue pour d\u00e9marrer une demande.",
   "createRequest.helpfulArticles": "Avant de soumettre, ces articles pourraient vous aider :",
-  "createRequest.apiNote": "Votre demande a peut-\u00eatre \u00e9t\u00e9 enregistr\u00e9e.",
+  "createRequest.apiNote": "Nous n'avons pas pu confirmer l'envoi de votre demande. Vos informations ont \u00e9t\u00e9 conserv\u00e9es. V\u00e9rifiez vos demandes avant de r\u00e9essayer.",
 
   // Track
   "track.title": "Suivre votre demande",

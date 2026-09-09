@@ -17,6 +17,7 @@ import type {
   UpdateServiceRequestInput,
   RequestStatus,
 } from '../../types/serviceRequest'
+import { mapStatusToPicklist } from '../../types/serviceRequest'
 import type { PaginatedResult } from '../powerPagesApi'
 
 // -- useServiceRequests -------------------------------------------------------
@@ -194,7 +195,7 @@ export function useServiceRequestStats() {
     try {
       const [total, resolved] = await Promise.all([
         getServiceRequestCount(),
-        getServiceRequestCount('(spa311_status eq 100000004 or spa311_status eq 100000005)'),
+        getServiceRequestCount(`(spa311_status eq ${mapStatusToPicklist('resolved')} or spa311_status eq ${mapStatusToPicklist('closed')})`),
       ])
       setTotalCount(total)
       setResolvedCount(resolved)

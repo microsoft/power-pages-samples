@@ -4,9 +4,8 @@
 // Knowledge Articles use statecode eq 3 (Published) to filter only published articles.
 // The entity set name is "knowledgearticles" (standard Dataverse table).
 //
-// NOTE: Column logical names are from the data model manifest. API metadata
-// verification was not available at generation time -- names may need correction
-// if Dataverse auto-generated different logical names.
+// Use standard columns: the bundled solution does not add spa311_* article fields.
+// https://learn.microsoft.com/power-apps/developer/data-platform/reference/entities/knowledgearticle
 
 import {
   powerPagesFetch,
@@ -36,9 +35,9 @@ const ARTICLE_SELECT = [
   'title',
   'content',
   'keywords',
-  'spa311_slug',
-  'spa311_summary',
-  'spa311_publishedon',
+  'articlepublicnumber',
+  'description',
+  'publishon',
   'statecode',
   'createdon',
   'modifiedon',
@@ -78,7 +77,7 @@ export const listArticles = async (
   let filter = params?.filter
   if (params?.search) {
     const escaped = escapeODataString(params.search)
-    const searchFilter = `(contains(title,'${escaped}') or contains(spa311_summary,'${escaped}') or contains(keywords,'${escaped}'))`
+    const searchFilter = `(contains(title,'${escaped}') or contains(description,'${escaped}') or contains(keywords,'${escaped}'))`
     filter = filter ? `${filter} and ${searchFilter}` : searchFilter
   }
 
@@ -86,7 +85,7 @@ export const listArticles = async (
   // Dataverse does NOT support $skip -- pagination uses @odata.nextLink cursors.
   const url = params?.nextLink ?? buildODataUrl('knowledgearticles', {
     '$select': ARTICLE_SELECT,
-    '$orderby': params?.orderBy ?? 'spa311_publishedon desc',
+    '$orderby': params?.orderBy ?? 'publishon desc',
     '$count': 'true',
     '$top': String(pageSize),
     '$filter': withPublishedFilter(filter),
@@ -109,7 +108,7 @@ export const listArticles = async (
 export const getAllArticles = async (lang: Language = 'en'): Promise<KnowledgeArticle[]> => {
   const url = buildODataUrl('knowledgearticles', {
     '$select': ARTICLE_SELECT,
-    '$orderby': 'spa311_publishedon desc',
+    '$orderby': 'publishon desc',
     '$top': '250',
     '$filter': PUBLISHED_FILTER,
   })
@@ -124,7 +123,7 @@ export const getAllArticles = async (lang: Language = 'en'): Promise<KnowledgeAr
     try {
       const enUrl = buildODataUrl('knowledgearticles', {
         '$select': ARTICLE_SELECT,
-        '$orderby': 'spa311_publishedon desc',
+        '$orderby': 'publishon desc',
         '$top': '250',
         '$filter': PUBLISHED_FILTER,
       })
@@ -155,7 +154,10 @@ export const getArticleById = async (id: string): Promise<KnowledgeArticle | nul
 // -- Get by Slug --------------------------------------------------------------
 
 export const getArticleBySlug = async (slug: string, lang: Language = 'en'): Promise<KnowledgeArticle | null> => {
-  const slugFilter = `spa311_slug eq '${escapeODataString(slug)}'`
+  const isRecordId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug)
+  const slugFilter = isRecordId
+    ? `knowledgearticleid eq ${slug}`
+    : `articlepublicnumber eq '${escapeODataString(slug)}'`
   const url = buildODataUrl('knowledgearticles', {
     '$select': ARTICLE_SELECT,
     '$filter': withPublishedFilter(slugFilter),
@@ -173,7 +175,7 @@ export const getArticleBySlug = async (slug: string, lang: Language = 'en'): Pro
     try {
       const enUrl = buildODataUrl('knowledgearticles', {
         '$select': ARTICLE_SELECT,
-        '$filter': withPublishedFilter(`spa311_slug eq '${escapeODataString(slug)}'`),
+        '$filter': withPublishedFilter(slugFilter),
         '$top': '1',
       })
       const response = await powerPagesFetch<ODataCollectionResponse<KnowledgeArticleEntity>>(enUrl)
@@ -197,12 +199,12 @@ export const searchArticles = async (
   if (!query.trim()) return []
 
   const escaped = escapeODataString(query.trim())
-  const searchFilter = `(contains(title,'${escaped}') or contains(spa311_summary,'${escaped}') or contains(keywords,'${escaped}'))`
+  const searchFilter = `(contains(title,'${escaped}') or contains(description,'${escaped}') or contains(keywords,'${escaped}'))`
 
   const url = buildODataUrl('knowledgearticles', {
     '$select': ARTICLE_SELECT,
     '$filter': withPublishedFilter(searchFilter),
-    '$orderby': 'spa311_publishedon desc',
+    '$orderby': 'publishon desc',
     '$top': String(maxResults),
     '$count': 'true',
   })

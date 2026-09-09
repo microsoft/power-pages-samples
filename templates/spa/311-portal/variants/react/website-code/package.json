@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "test": "node --test --test-concurrency=1 tests/serviceRequests.test.mjs tests/articles.test.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },
