@@ -50,7 +50,7 @@ Each entry must match `templates/schemas/templates-manifest.schema.json`.
 SPA template families use this folder path: `templates/spa/<family>/`.
 The folder name must match the manifest `id`, and the `id` must be stable kebab-case.
 Each family can have one variant per framework: `react`, `vue`, `angular`, or `astro`.
-Each framework variant owns its website code, one or more unpacked solutions, and `templateVersion`.
+Each framework variant owns its website code and one or more unpacked solutions.
 Create `templates/traditional/` when the first traditional installable template ships.
 
 To contribute a template:
@@ -63,7 +63,7 @@ To contribute a template:
 6. Put the site export under `templates/spa/<family>/variants/<framework>/website-code/`.
 7. Unpack each supporting solution under `templates/spa/<family>/variants/<framework>/solutions/<solution-unique-name>/`. The folder name must match `Other/Solution.xml`.
 8. Append or update the template family entry in `templates/manifest.json`.
-9. Add the variant under `variants.<framework>` with its `templateVersion`.
+9. Add the variant under `variants.<framework>`.
 10. Run `node templates/scripts/validate-templates.js`.
 11. Open a pull request and follow the existing CLA bot instructions.
 

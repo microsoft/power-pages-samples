@@ -6,7 +6,6 @@ They are different from `samples/`: templates are meant to be imported into an e
 The central catalog is [`manifest.json`](manifest.json).
 Each entry is a template family with one or more variants.
 The family defines shared metadata, preview images, required Dataverse languages, and optional seed data.
-Each variant defines its template version.
 The schema for the catalog is [`schemas/templates-manifest.schema.json`](schemas/templates-manifest.schema.json).
 
 Variant artifacts use a fixed layout, so the manifest does not repeat derivable paths:

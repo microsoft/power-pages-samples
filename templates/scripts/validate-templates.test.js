@@ -119,8 +119,7 @@ test("rejects flat template package fields at the family level", () => {
     familyExtras: {
       framework: "react",
       solutionPath: "spa/test-template/solution/template.zip",
-      websiteCodePath: "spa/test-template/website-code",
-      templateVersion: "1.0.0"
+      websiteCodePath: "spa/test-template/website-code"
     }
   });
 
@@ -128,7 +127,6 @@ test("rejects flat template package fields at the family level", () => {
   assert(result.errors.some((error) => error.includes("$.templates[0].framework is not allowed")));
   assert(result.errors.some((error) => error.includes("$.templates[0].solutionPath is not allowed")));
   assert(result.errors.some((error) => error.includes("$.templates[0].websiteCodePath is not allowed")));
-  assert(result.errors.some((error) => error.includes("$.templates[0].templateVersion is not allowed")));
 });
 
 test("rejects derivable artifact paths in variants", () => {
@@ -774,7 +772,6 @@ function createTemplateRoot(options = {}) {
     author: "Test",
     variants: {
       [framework]: {
-        templateVersion: "1.0.0",
         ...(options.variantOverrides ?? {})
       }
     },
