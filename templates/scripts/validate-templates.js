@@ -260,12 +260,19 @@ function validateTemplateFolders(root, idsByKind, result) {
 function validateReferencedPaths(template, label, root, result) {
   const familyBase = getFamilyBasePath(template);
   validatePreviewImages(template.previewImages, label, root, `${familyBase}/previews`, "previewImages", result);
+  const solutionMetadata = validateSolutionsDirectory(
+    label,
+    root,
+    `${familyBase}/solutions`,
+    familyBase,
+    template.kind === "traditional",
+    result
+  );
 
   if (!template.variants || typeof template.variants !== "object" || Array.isArray(template.variants)) {
     return;
   }
 
-  const familySeedVariantMetadata = [];
   for (const [framework, variant] of Object.entries(template.variants)) {
     if (!VALID_FRAMEWORKS.has(framework)) {
       result.errors.push(`Template "${label}" has unsupported framework variant "${framework}".`);
@@ -276,13 +283,7 @@ function validateReferencedPaths(template, label, root, result) {
       continue;
     }
 
-    const metadataContext = {
-      framework,
-      metadata: validateVariantPaths(template, framework, variant, label, root, result)
-    };
-    if (typeof variant.seedDataPath !== "string") {
-      familySeedVariantMetadata.push(metadataContext);
-    }
+    validateVariantPath(template, framework, label, root, result);
   }
 
   if (typeof template.seedDataPath === "string") {
@@ -292,7 +293,7 @@ function validateReferencedPaths(template, label, root, result) {
       root,
       `${familyBase}/seed-data`,
       "seedDataPath",
-      familySeedVariantMetadata,
+      [{ scope: "template family", metadata: solutionMetadata }],
       result
     );
   }
@@ -306,16 +307,9 @@ function getFamilyBasePath(template) {
   return `${template.kind}/${template.id}`;
 }
 
-function validateVariantPaths(template, framework, variant, label, root, result) {
+function validateVariantPath(template, framework, label, root, result) {
   const variantBase = `${getFamilyBasePath(template)}/variants/${framework}`;
-  const solutionMetadata = validateSolutionsDirectory(
-    label,
-    root,
-    `${variantBase}/solutions`,
-    variantBase,
-    template.kind === "traditional",
-    result
-  );
+  validateVariantDirectoryContents(label, root, variantBase, result);
   validateWebsiteCodePath(
     template.kind,
     label,
@@ -323,21 +317,26 @@ function validateVariantPaths(template, framework, variant, label, root, result)
     `${variantBase}/website-code`,
     result
   );
-  validatePreviewImages(variant.previewImages, label, root, `${variantBase}/previews`, `variant "${framework}" previewImages`, result);
+}
 
-  if (typeof variant.seedDataPath === "string") {
-    validateSeedDataPath(
-      variant.seedDataPath,
-      label,
-      root,
-      `${variantBase}/seed-data`,
-      `variant "${framework}" seedDataPath`,
-      [{ framework, metadata: solutionMetadata }],
-      result
-    );
+function validateVariantDirectoryContents(label, root, variantBase, result) {
+  const variantPath = path.resolve(root, variantBase);
+  if (!directoryExists(variantPath)) {
+    return;
   }
 
-  return solutionMetadata;
+  if (fs.lstatSync(variantPath).isSymbolicLink()) {
+    result.errors.push(`Template "${label}" variant directory must not be a symbolic link: ${variantBase}`);
+    return;
+  }
+
+  for (const entry of fs.readdirSync(variantPath, { withFileTypes: true })) {
+    if (entry.name !== "website-code" || entry.isSymbolicLink() || !entry.isDirectory()) {
+      result.errors.push(
+        `Template "${label}" variant may contain only the website-code directory: ${entry.name}`
+      );
+    }
+  }
 }
 
 function validatePreviewImages(previewImages, label, root, expectedDirectory, location, result) {
@@ -372,11 +371,12 @@ function validateSolutionsDirectory(
   label,
   root,
   solutionsDirectory,
-  variantBase,
+  familyBase,
   allowPowerPagesComponents,
   result
 ) {
   const metadata = createDataverseMetadata();
+  validateTemplateHasNoSolutionZip(path.resolve(root, familyBase), label, result);
   const solutionsPath = path.resolve(root, solutionsDirectory);
   if (!directoryExists(solutionsPath)) {
     result.errors.push(`Template "${label}" solutions directory does not exist: ${solutionsDirectory}`);
@@ -432,9 +432,7 @@ function validateSolutionsDirectory(
     solutions.push(solution);
     mergeDataverseMetadata(metadata, solution.metadata, label, result);
   }
-
   validateIndependentSiblingSolutions(solutions, uniqueNames, label, result);
-  validateVariantHasNoSolutionZip(path.resolve(root, variantBase), label, result);
   return metadata;
 }
 
@@ -793,14 +791,14 @@ function validateSolutionContents(solutionRoot, currentDirectory, label, allowPo
   }
 }
 
-function validateVariantHasNoSolutionZip(variantPath, label, result) {
-  if (!directoryExists(variantPath)) {
+function validateTemplateHasNoSolutionZip(templatePath, label, result) {
+  if (!directoryExists(templatePath)) {
     return;
   }
 
-  for (const entryPath of findFilesByExtension(variantPath, ".zip")) {
-    const relativePath = path.relative(variantPath, entryPath).split(path.sep).join("/");
-    result.errors.push(`Template "${label}" variant must not contain committed solution zips: ${relativePath}`);
+  for (const entryPath of findFilesByExtension(templatePath, ".zip")) {
+    const relativePath = path.relative(templatePath, entryPath).split(path.sep).join("/");
+    result.errors.push(`Template "${label}" must not contain committed solution zips: ${relativePath}`);
   }
 }
 
@@ -826,6 +824,11 @@ function validateWebsiteCodePath(kind, label, root, expectedDirectory, result) {
   const websiteCodePath = path.resolve(root, expectedDirectory);
   if (!directoryExists(websiteCodePath)) {
     result.errors.push(`Template "${label}" website-code directory does not exist: ${expectedDirectory}`);
+    return;
+  }
+
+  if (fs.lstatSync(websiteCodePath).isSymbolicLink()) {
+    result.errors.push(`Template "${label}" website-code directory must not be a symbolic link: ${expectedDirectory}`);
     return;
   }
 
@@ -1009,7 +1012,7 @@ function validateSeedDataPath(
   root,
   expectedDirectory,
   location,
-  variantMetadata,
+  solutionMetadata,
   result
 ) {
   const seedDataPath = resolveTemplatePath(root, seedDataPathValue, label, result);
@@ -1039,7 +1042,7 @@ function validateSeedDataPath(
       seedData,
       path.dirname(seedDataPath),
       label,
-      variantMetadata,
+      solutionMetadata,
       result
     );
     return;
@@ -1061,7 +1064,7 @@ function isDataverseExportSeedData(seedData) {
   return seedData && typeof seedData === "object" && !Array.isArray(seedData) && Object.hasOwn(seedData, "tables");
 }
 
-function validateDataverseExportSeedData(seedData, seedDataDirectory, label, variantMetadata, result) {
+function validateDataverseExportSeedData(seedData, seedDataDirectory, label, solutionMetadata, result) {
   if (!seedData.tables || typeof seedData.tables !== "object" || Array.isArray(seedData.tables)) {
     result.errors.push(`Template "${label}" Dataverse seed data tables must be an object.`);
     return;
@@ -1074,8 +1077,8 @@ function validateDataverseExportSeedData(seedData, seedDataDirectory, label, var
     }
   }
 
-  for (const { framework, metadata } of variantMetadata ?? []) {
-    validateDataverseSeedAgainstSolutionMetadata(tables, metadata, framework, label, result);
+  for (const { scope, metadata } of solutionMetadata ?? []) {
+    validateDataverseSeedAgainstSolutionMetadata(tables, metadata, scope, label, result);
   }
 
   if (Object.hasOwn(seedData, "fileExports")) {
@@ -1102,14 +1105,14 @@ function validateDataverseSeedTable(tableName, table, label, result) {
   return hasLogicalName && hasEntitySet && hasIdColumn;
 }
 
-function validateDataverseSeedAgainstSolutionMetadata(tables, metadata, framework, label, result) {
+function validateDataverseSeedAgainstSolutionMetadata(tables, metadata, scope, label, result) {
   const seedRecordsByEntitySetAndId = new Map();
   const seedTablesByLogicalName = new Map();
   const tableMetadata = [];
 
   tables.forEach(({ name, table }, tableIndex) => {
     const location = `table ${name}`;
-    const solutionTable = findExactSeedTableMetadata(table, metadata, framework, location, label, result);
+    const solutionTable = findExactSeedTableMetadata(table, metadata, scope, location, label, result);
     tableMetadata.push(solutionTable);
     seedTablesByLogicalName.set(table.logicalName.toLowerCase(), table);
 
@@ -1144,7 +1147,7 @@ function validateDataverseSeedAgainstSolutionMetadata(tables, metadata, framewor
       }
 
       if (solutionTable) {
-        validateDataverseSeedRecordFields(record, solutionTable, recordLocation, framework, label, result);
+        validateDataverseSeedRecordFields(record, solutionTable, recordLocation, scope, label, result);
       }
     });
   });
@@ -1166,7 +1169,7 @@ function validateDataverseSeedAgainstSolutionMetadata(tables, metadata, framewor
         seedTablesByLogicalName,
         tableIndex,
         `table ${name} record[${recordIndex}]`,
-        framework,
+        scope,
         label,
         result
       );
@@ -1174,13 +1177,13 @@ function validateDataverseSeedAgainstSolutionMetadata(tables, metadata, framewor
   });
 }
 
-function findExactSeedTableMetadata(table, metadata, framework, location, label, result) {
+function findExactSeedTableMetadata(table, metadata, scope, location, label, result) {
   const solutionTable = metadata.tablesByLogicalName.get(table.logicalName.toLowerCase());
   if (!solutionTable) {
     if (table.logicalName.includes("_")) {
       result.errors.push(
         `Template "${label}" Dataverse seed data ${location} logicalName "${table.logicalName}" ` +
-        `was not found in variant "${framework}" solution metadata.`
+        `was not found in ${scope} solution metadata.`
       );
       return null;
     }
@@ -1206,7 +1209,7 @@ function findExactSeedTableMetadata(table, metadata, framework, location, label,
   return solutionTable;
 }
 
-function validateDataverseSeedRecordFields(record, solutionTable, location, framework, label, result) {
+function validateDataverseSeedRecordFields(record, solutionTable, location, scope, label, result) {
   for (const propertyName of Object.keys(record)) {
     if (
       propertyName === "@odata.etag" ||
@@ -1233,7 +1236,7 @@ function validateDataverseSeedRecordFields(record, solutionTable, location, fram
       }
       result.errors.push(
         `Template "${label}" Dataverse seed data ${location} property "${propertyName}" ` +
-        `was not found on table "${solutionTable.logicalName}" in variant "${framework}" solution metadata.`
+        `was not found on table "${solutionTable.logicalName}" in ${scope} solution metadata.`
       );
     } else if (propertyName !== attribute.logicalName) {
       result.errors.push(
@@ -1251,7 +1254,7 @@ function validateDataverseSeedRecordLookups(
   seedTablesByLogicalName,
   tableIndex,
   location,
-  framework,
+  scope,
   label,
   result
 ) {
@@ -1270,7 +1273,7 @@ function validateDataverseSeedRecordLookups(
         solutionTable,
         tableIndex,
         location,
-        framework,
+        scope,
         label,
         lookup: null,
         requireSeedRecord: true,
@@ -1294,7 +1297,7 @@ function validateDataverseSeedRecordLookups(
     if (!lookupAttribute || lookupAttribute.type !== "lookup") {
       result.errors.push(
         `Template "${label}" Dataverse seed data ${location} lookup attribute "${rawLookupMatch[1]}" ` +
-        `was not found on table "${solutionTable.logicalName}" in variant "${framework}" solution metadata.`
+        `was not found on table "${solutionTable.logicalName}" in ${scope} solution metadata.`
       );
       continue;
     }
@@ -1326,7 +1329,7 @@ function validateDataverseSeedRecordLookups(
       solutionTable,
       tableIndex,
       location,
-      framework,
+      scope,
       label,
       lookup,
       requireSeedRecord: false,
@@ -1346,7 +1349,7 @@ function validateDataverseLookupReference({
   solutionTable,
   tableIndex,
   location,
-  framework,
+  scope,
   label,
   lookup,
   requireSeedRecord,
@@ -1356,7 +1359,7 @@ function validateDataverseLookupReference({
   if (!lookup) {
     result.errors.push(
       `Template "${label}" Dataverse seed data ${location} lookup "${navigationProperty}" ` +
-      `was not found on table "${solutionTable.logicalName}" in variant "${framework}" relationship metadata.`
+      `was not found on table "${solutionTable.logicalName}" in ${scope} relationship metadata.`
     );
     return;
   }

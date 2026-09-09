@@ -50,7 +50,8 @@ Each entry must match `templates/schemas/templates-manifest.schema.json`.
 SPA template families use this folder path: `templates/spa/<family>/`.
 The folder name must match the manifest `id`, and the `id` must be stable kebab-case.
 Each family can have one variant per framework: `react`, `vue`, `angular`, or `astro`.
-Each framework variant owns its website code and one or more unpacked solutions.
+Each template family owns one shared set of unpacked supporting solutions.
+Framework variants contain only their website code.
 Create `templates/traditional/` when the first traditional installable template ships.
 
 To contribute a template:
@@ -61,29 +62,25 @@ To contribute a template:
 4. Optionally author seed-data JSON files using this shape: `{ "entitySetName": "<plural entity set>", "records": [...] }`.
 5. Create `templates/spa/<family>/` with shared `previews/` and optional `seed-data/` folders.
 6. Put the site export under `templates/spa/<family>/variants/<framework>/website-code/`.
-7. Unpack each supporting solution under `templates/spa/<family>/variants/<framework>/solutions/<solution-unique-name>/`. The folder name must match `Other/Solution.xml`.
+7. Unpack each supporting solution under `templates/spa/<family>/solutions/<solution-unique-name>/`. The folder name must match `Other/Solution.xml`.
 8. Append or update the template family entry in `templates/manifest.json`.
 9. Add the variant under `variants.<framework>`.
 10. Run `node templates/scripts/validate-templates.js`.
 11. Open a pull request and follow the existing CLA bot instructions.
 
 Supporting solutions must be independently importable.
-Do not add dependencies between sibling solutions in the same variant.
+Do not add dependencies between sibling solutions in the same template family.
 Import sibling solutions in case-insensitive lexical unique-name order.
 
 Set `requiredDataverseLanguages` to the Dataverse language LCIDs the template needs before import.
 Use `[1033]` for templates that only require English (United States).
 Add every LCID required by localized solution components.
-Put shared language requirements at the family level.
-Set `variants.<framework>.requiredDataverseLanguages` only when that framework variant differs from the family default.
+Put all language requirements at the family level because every framework variant uses the same supporting solutions.
 
-Preview images listed in the manifest must be `.png` files.
+Preview images listed in the manifest must be `.png` files and live under `templates/spa/<family>/previews/`.
 Do not list placeholder screenshots.
 If screenshots or seed data are not ready, leave `previewImages` empty or omit `seedDataPath`, then add a short README in the template folder that explains what is missing.
-Family preview images live under `templates/spa/<family>/previews/`.
-Variant-specific preview images live under `templates/spa/<family>/variants/<framework>/previews/`.
 Family seed data lives under `templates/spa/<family>/seed-data/`.
-Variant-specific seed data lives under `templates/spa/<family>/variants/<framework>/seed-data/`.
 
 Seed data can use either a simple single-entity shape or a Dataverse export shape.
 
@@ -139,6 +136,5 @@ For example:
 }
 ```
 
-The validator checks that referenced paths resolve under `templates/`, that files use the expected family or variant folders, that seed-data file attachments exist, that the solution zip is real and contains `solution.xml`, and that the solution managed state is readable.
-Managed solution zips are reported as warnings by default.
-If a consuming pipeline requires unmanaged solutions, run `node templates/scripts/validate-templates.js --enforce-unmanaged` and replace managed zips with unmanaged exports before release.
+The validator checks that referenced paths resolve under `templates/`, each framework variant contains only `website-code/`, seed-data file attachments exist, and each family solution is an unpacked unmanaged export with readable metadata.
+It also rejects committed solution ZIPs, symbolic links, generated content, and local-only files.

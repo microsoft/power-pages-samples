@@ -97,8 +97,9 @@ gh release create TAG_NAME --title "Power Pages templates TAG_NAME" --notes-file
 ```
 
 Attach packed solution zips or website code archives only if the user asks for release assets.
-Variant artifacts use `templates/<kind>/<template-id>/variants/<variant>/website-code/` and `solutions/<solution-unique-name>/`.
-When solution zips are requested, discover every direct folder under `solutions/`, sort them by case-insensitive unique name, pack each into a temporary directory with `pac solution pack --packagetype Unmanaged`, attach the results, and remove the temporary directory.
+Website code lives under `templates/<kind>/<template-id>/variants/<variant>/website-code/`.
+Shared supporting solutions live under `templates/<kind>/<template-id>/solutions/<solution-unique-name>/`.
+When solution zips are requested, discover every direct folder under the template family's `solutions/` directory, sort them by case-insensitive unique name, pack each into a temporary directory with `pac solution pack --packagetype Unmanaged`, attach the results, and remove the temporary directory.
 The repository stores the unpacked solution source, so a release can usually link to the immutable tag without duplicating it.
 
 Completion criterion: GitHub shows the release for the tag.
