@@ -2,11 +2,12 @@
 
 This folder contains the 311 Portal template entry for the installable `templates/` catalog.
 
-The checked-in supporting solution source is an unpacked unmanaged export under `variants/react/solutions/311Portal/`.
+The checked-in supporting solution source is an unpacked unmanaged export under `solutions/311Portal/`.
 Its folder name matches the `311Portal` unique name in `Other/Solution.xml`.
 It uses the `spa311` publisher prefix.
 The solution metadata lists a dependency on Dataverse knowledge articles through `msdynce_KnowledgeManagementFeatures`.
-It contains Dataverse artifacts only. The Power Pages website project is stored separately under `variants/react/website-code/`.
+It is shared by every framework variant and contains Dataverse artifacts only.
+The React Power Pages website project is stored separately under `variants/react/website-code/`.
 
 ## Previews
 
@@ -35,12 +36,12 @@ Use these steps if you want to install the template yourself instead of using an
    pac auth create --url https://YOUR-ENVIRONMENT.crm.dynamics.com
    ```
 
-5. Pack and import the React variant's supporting unmanaged solution from the repository root:
+5. Pack and import the template family's supporting unmanaged solution from the repository root:
 
    ```bash
    temp_dir="$(mktemp -d)"
    trap 'rm -rf "$temp_dir"' EXIT
-   pac solution pack --zipfile "$temp_dir/311-portal-unmanaged.zip" --folder templates/spa/311-portal/variants/react/solutions/311Portal --packagetype Unmanaged
+   pac solution pack --zipfile "$temp_dir/311-portal-unmanaged.zip" --folder templates/spa/311-portal/solutions/311Portal --packagetype Unmanaged
    pac solution import --path "$temp_dir/311-portal-unmanaged.zip" --publish-changes
    ```
 

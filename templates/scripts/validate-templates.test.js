@@ -76,20 +76,8 @@ test("requires SPA project files and website export metadata", () => {
   ));
 });
 
-test("accepts variant-specific overrides when they are needed", () => {
+test("rejects variant-specific family metadata", () => {
   const root = createTemplateRoot({
-    seedDataPath: "spa/test-template/seed-data/unused.json",
-    seedData: {
-      schemaVersion: 1,
-      tables: {
-        unused: {
-          logicalName: "custom_unused",
-          entitySet: "custom_unuseds",
-          idColumn: "custom_unusedid",
-          records: []
-        }
-      }
-    },
     variantOverrides: {
       previewImages: ["spa/test-template/variants/react/previews/home-react.png"],
       seedDataPath: "spa/test-template/variants/react/seed-data/accounts.json",
@@ -110,8 +98,15 @@ test("accepts variant-specific overrides when they are needed", () => {
   fs.writeFileSync(path.join(root, "spa/test-template/variants/react/previews/home-react.png"), "png");
 
   const result = validateTemplates({ root });
-  assert.deepEqual(result.errors, []);
-  assert.deepEqual(result.warnings, []);
+  assert(result.errors.some((error) =>
+    error.includes("$.templates[0].variants.react.previewImages is not allowed")
+  ));
+  assert(result.errors.some((error) =>
+    error.includes("$.templates[0].variants.react.seedDataPath is not allowed")
+  ));
+  assert(result.errors.some((error) =>
+    error.includes("$.templates[0].variants.react.requiredDataverseLanguages is not allowed")
+  ));
 });
 
 test("rejects flat template package fields at the family level", () => {
@@ -132,7 +127,7 @@ test("rejects flat template package fields at the family level", () => {
 test("rejects derivable artifact paths in variants", () => {
   const root = createTemplateRoot({
     variantOverrides: {
-      solutionPath: "spa/test-template/variants/react/solutions/TestSolution",
+      solutionPath: "spa/test-template/solutions/TestSolution",
       websiteCodePath: "spa/test-template/variants/react/website-code"
     }
   });
@@ -506,31 +501,12 @@ test("rejects malformed Dataverse export seed data fileExports", () => {
   assert(result.errors.some((error) => error.includes("fileExports[2] file does not exist")));
 });
 
-test("rejects variant override paths outside their framework layout", () => {
-  const root = createTemplateRoot({
-    variantOverrides: {
-      previewImages: ["spa/test-template/previews/react-home.png"],
-      seedDataPath: "spa/test-template/seed-data/react-accounts.json"
-    },
-    variantSeedData: {
-      entitySetName: "accounts",
-      records: []
-    }
-  });
-
-  fs.writeFileSync(path.join(root, "spa/test-template/previews/react-home.png"), "png");
-
-  const result = validateTemplates({ root });
-  assert(result.errors.some((error) => error.includes("variant \"react\" previewImages[0] must live in spa/test-template/variants/react/previews/")));
-  assert(result.errors.some((error) => error.includes("variant \"react\" seedDataPath must live in spa/test-template/variants/react/seed-data/")));
-});
-
-test("requires a derived solutions directory with direct solution folders only", () => {
+test("requires a family solutions directory with direct solution folders only", () => {
   const missingRoot = createTemplateRoot();
-  fs.rmSync(path.join(missingRoot, "spa/test-template/variants/react/solutions"), { recursive: true });
+  fs.rmSync(path.join(missingRoot, "spa/test-template/solutions"), { recursive: true });
   const missingResult = validateTemplates({ root: missingRoot });
   assert(missingResult.errors.some((error) =>
-    error.includes("solutions directory does not exist: spa/test-template/variants/react/solutions")
+    error.includes("solutions directory does not exist: spa/test-template/solutions")
   ));
 
   const emptyRoot = createTemplateRoot({ createSolution: false });
@@ -540,15 +516,19 @@ test("requires a derived solutions directory with direct solution folders only",
   ));
 
   const unexpectedRoot = createTemplateRoot();
-  const unexpectedSolutionsPath = path.join(unexpectedRoot, "spa/test-template/variants/react/solutions");
+  const unexpectedSolutionsPath = path.join(unexpectedRoot, "spa/test-template/solutions");
   fs.writeFileSync(path.join(unexpectedSolutionsPath, "README.txt"), "unexpected");
+  fs.symlinkSync("TestSolution", path.join(unexpectedSolutionsPath, "LinkedSolution"), "dir");
   const unexpectedResult = validateTemplates({ root: unexpectedRoot });
   assert(unexpectedResult.errors.some((error) =>
     error.includes("solutions directory may contain only direct solution folders: README.txt")
   ));
+  assert(unexpectedResult.errors.some((error) =>
+    error.includes("solutions directory may contain only direct solution folders: LinkedSolution")
+  ));
 
   const nestedRoot = createTemplateRoot();
-  const solutionRoot = path.join(nestedRoot, "spa/test-template/variants/react/solutions/TestSolution");
+  const solutionRoot = path.join(nestedRoot, "spa/test-template/solutions/TestSolution");
   fs.mkdirSync(path.join(solutionRoot, "unpacked"), { recursive: true });
   fs.renameSync(path.join(solutionRoot, "Other"), path.join(solutionRoot, "unpacked/Other"));
 
@@ -562,7 +542,7 @@ test("validates every discovered solution and enforces unique independent siblin
     solutionFolderName: "WrongFolder",
     solutionUniqueName: "PrimarySolution"
   });
-  const solutionsPath = path.join(root, "spa/test-template/variants/react/solutions");
+  const solutionsPath = path.join(root, "spa/test-template/solutions");
 
   writeUnpackedSolution(
     path.join(solutionsPath, "DuplicateFolder"),
@@ -587,9 +567,12 @@ test("validates every discovered solution and enforces unique independent siblin
   assert(result.errors.some((error) =>
     error.includes("duplicate case-insensitive unique name \"PrimarySolution\"")
   ));
-  assert(result.errors.some((error) =>
-    error.includes("solution \"DependentSolution\" depends on sibling solution")
-  ));
+  assert.equal(
+    result.errors.filter((error) =>
+      error.includes("solution \"DependentSolution\" depends on sibling solution")
+    ).length,
+    1
+  );
   assert(result.errors.some((error) =>
     error.includes("solution \"ManagedSolution\" is managed")
   ));
@@ -597,7 +580,7 @@ test("validates every discovered solution and enforces unique independent siblin
 
 test("validates solutions in case-insensitive lexical unique-name order", () => {
   const root = createTemplateRoot({ createSolution: false });
-  const solutionsPath = path.join(root, "spa/test-template/variants/react/solutions");
+  const solutionsPath = path.join(root, "spa/test-template/solutions");
   writeUnpackedSolution(
     path.join(solutionsPath, "zetaSolution"),
     defaultSolutionXml("zetaSolution", 1),
@@ -615,22 +598,41 @@ test("validates solutions in case-insensitive lexical unique-name order", () => 
   assert.match(managedErrors[1], /zetaSolution/);
 });
 
-test("rejects committed solution zips anywhere in a variant", () => {
+test("rejects committed solution zips anywhere in a template family", () => {
   const root = createTemplateRoot();
   fs.writeFileSync(
-    path.join(root, "spa/test-template/variants/react/template-unmanaged.zip"),
+    path.join(root, "spa/test-template/template-unmanaged.zip"),
     "not committed"
   );
 
   const result = validateTemplates({ root });
   assert(result.errors.some((error) =>
-    error.includes("variant must not contain committed solution zips: template-unmanaged.zip")
+    error.includes("must not contain committed solution zips: template-unmanaged.zip")
+  ));
+});
+
+test("requires framework variants to contain website-code only", () => {
+  const root = createTemplateRoot();
+  const variantPath = path.join(root, "spa/test-template/variants/react");
+  fs.mkdirSync(path.join(variantPath, "solutions"), { recursive: true });
+  fs.mkdirSync(path.join(variantPath, "previews"), { recursive: true });
+  fs.writeFileSync(path.join(variantPath, "README.md"), "unexpected");
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) =>
+    error.includes("variant may contain only the website-code directory: solutions")
+  ));
+  assert(result.errors.some((error) =>
+    error.includes("variant may contain only the website-code directory: previews")
+  ));
+  assert(result.errors.some((error) =>
+    error.includes("variant may contain only the website-code directory: README.md")
   ));
 });
 
 test("rejects symbolic links and generated or local-only solution files", () => {
   const root = createTemplateRoot();
-  const solutionRoot = path.join(root, "spa/test-template/variants/react/solutions/TestSolution");
+  const solutionRoot = path.join(root, "spa/test-template/solutions/TestSolution");
   fs.symlinkSync("Other/Solution.xml", path.join(solutionRoot, "solution-link.xml"));
   fs.mkdirSync(path.join(solutionRoot, "obj"), { recursive: true });
   fs.writeFileSync(path.join(solutionRoot, "obj/generated.xml"), "<generated />");
@@ -748,7 +750,7 @@ function createTemplateRoot(options = {}) {
   const solutionFolderName = options.solutionFolderName ?? solutionUniqueName;
   const templateFolder = path.join(root, kind, folderId);
   const variantFolder = path.join(templateFolder, "variants", framework);
-  const solutionsPath = path.join(variantFolder, "solutions");
+  const solutionsPath = path.join(templateFolder, "solutions");
   const websiteCodePath = path.join(variantFolder, "website-code");
   fs.mkdirSync(path.join(root, "schemas"), { recursive: true });
   fs.mkdirSync(solutionsPath, { recursive: true });
