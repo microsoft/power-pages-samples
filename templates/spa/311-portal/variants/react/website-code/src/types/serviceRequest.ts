@@ -15,21 +15,21 @@ import type { ContactEntity } from './contact'
 // -- Status Picklist ----------------------------------------------------------
 
 export const ServiceRequestStatusMap = {
-  100000000: 'submitted',
-  100000001: 'reviewed',
-  100000002: 'assigned',
-  100000003: 'in-progress',
-  100000004: 'resolved',
-  100000005: 'closed',
+  490890000: 'submitted',
+  490890001: 'reviewed',
+  490890002: 'assigned',
+  490890003: 'in-progress',
+  490890004: 'resolved',
+  490890005: 'closed',
 } as const
 
 export const ServiceRequestStatusReverse: Record<string, number> = {
-  submitted: 100000000,
-  reviewed: 100000001,
-  assigned: 100000002,
-  'in-progress': 100000003,
-  resolved: 100000004,
-  closed: 100000005,
+  submitted: 490890000,
+  reviewed: 490890001,
+  assigned: 490890002,
+  'in-progress': 490890003,
+  resolved: 490890004,
+  closed: 490890005,
 }
 
 export type RequestStatus = 'submitted' | 'reviewed' | 'assigned' | 'in-progress' | 'resolved' | 'closed'
@@ -40,20 +40,20 @@ export const mapStatusFromPicklist = (value?: number): RequestStatus =>
     : 'submitted'
 
 export const mapStatusToPicklist = (status: RequestStatus): number =>
-  ServiceRequestStatusReverse[status] ?? 100000000
+  ServiceRequestStatusReverse[status] ?? ServiceRequestStatusReverse.submitted
 
 // -- Urgency Picklist ---------------------------------------------------------
 
 export const UrgencyMap = {
-  100000000: 'low',
-  100000001: 'medium',
-  100000002: 'high',
+  490890000: 'low',
+  490890001: 'medium',
+  490890002: 'high',
 } as const
 
 export const UrgencyReverse: Record<string, number> = {
-  low: 100000000,
-  medium: 100000001,
-  high: 100000002,
+  low: 490890000,
+  medium: 490890001,
+  high: 490890002,
 }
 
 export type Urgency = 'low' | 'medium' | 'high'
@@ -64,7 +64,7 @@ export const mapUrgencyFromPicklist = (value?: number): Urgency =>
     : 'medium'
 
 export const mapUrgencyToPicklist = (urgency: Urgency): number =>
-  UrgencyReverse[urgency] ?? 100000001
+  UrgencyReverse[urgency] ?? UrgencyReverse.medium
 
 // -- Raw OData Entity ---------------------------------------------------------
 // Matches Dataverse column logical names exactly.

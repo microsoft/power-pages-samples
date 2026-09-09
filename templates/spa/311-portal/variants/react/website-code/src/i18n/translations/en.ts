@@ -165,7 +165,7 @@ export const en: Record<string, string> = {
   "createRequest.trackYourRequest": "Track Your Request",
   "createRequest.serviceNotFoundDesc": "We couldn't find that service. Browse our catalog to start a request.",
   "createRequest.helpfulArticles": "Before you submit, these articles might help:",
-  "createRequest.apiNote": "Your request may still have been recorded.",
+  "createRequest.apiNote": "We couldn't confirm your submission. Your details have been kept. Check your requests before trying again.",
 
   // Track
   "track.title": "Track Your Request",

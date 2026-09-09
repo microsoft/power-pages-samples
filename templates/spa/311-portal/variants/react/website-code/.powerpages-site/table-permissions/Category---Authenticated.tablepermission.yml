@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+  - 3be828ee-dd81-4de0-8b66-5667449d67aa
+  - 43e715fa-e7a7-41a5-b602-8baad5bfdebd
+append: true
+appendto: false
+create: false
+delete: false
+entitylogicalname: spa311_category
+entityname: Category - Authenticated
+id: 7eff470a-6e34-4593-9238-36a7f10187e4
+read: true
+scope: 756150000
+write: false

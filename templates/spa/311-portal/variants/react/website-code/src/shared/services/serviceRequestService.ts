@@ -15,6 +15,7 @@ import {
   powerPagesFetchResponse,
   extractRecordId,
   buildODataUrl,
+  bindLookup,
   escapeODataString,
   type ODataCollectionResponse,
   type PaginatedResult,
@@ -159,20 +160,19 @@ export const createServiceRequest = async (
   const randomPart = String(Math.floor(10000 + Math.random() * 90000))
   const requestNumber = `SR-${datePart}-${randomPart}`
 
-  // Step 1: Create the record with scalar fields only (no lookup bindings).
-  // Power Pages v2 has a known issue where appendto permission checks fail
-  // for @odata.bind during POST, even when the permission is correctly set.
-  // Store category/service type names in spa311_department as a workaround.
   const department = [input.categoryName, input.serviceTypeName].filter(Boolean).join(' > ') || ''
 
   const body: Record<string, unknown> = {
     spa311_requestnumber: requestNumber,
     spa311_description: input.description,
     spa311_address: input.address,
-    spa311_status: 100000000, // Submitted
+    spa311_status: mapStatusToPicklist('submitted'),
     spa311_urgency: mapUrgencyToPicklist(input.urgency),
     spa311_department: department,
   }
+
+  bindLookup(body, 'spa311_CategoryId', 'spa311_categories', input.categoryId)
+  bindLookup(body, 'spa311_ServiceTypeId', 'spa311_servicetypes', input.serviceTypeId)
 
   // Round lat/lng to 6 decimal places (Dataverse Decimal column precision)
   if (input.latitude !== undefined) body.spa311_latitude = Math.round(input.latitude * 1e6) / 1e6
@@ -182,8 +182,7 @@ export const createServiceRequest = async (
   // NOTE: We intentionally do NOT associate the submitter's contact via
   // `spa311_ContactId@odata.bind`. That association requires AppendTo permission
   // on the contact table (error 90040101/90040106 otherwise), and nothing in the
-  // app filters requests by contact -- tracking is done by request number. Keeping
-  // the create to scalar fields only means it needs just Create on the request table.
+  // app filters requests by contact -- tracking is done by request number.
 
   // Do NOT send `Prefer: return=representation`. That asks the Web API to return
   // every column of the created row, which Power Pages reports as
