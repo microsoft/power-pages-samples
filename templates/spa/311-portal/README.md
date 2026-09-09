@@ -55,6 +55,7 @@ It does not include file exports.
 
 If you import the seed data without an installer, create or upsert records table by table using the order in `seed-data/data.json`.
 Preserve the IDs in each table because later records refer to earlier records by lookup ID.
+Lookup records use the exact `spa311_CategoryId`, `spa311_ServiceTypeId`, and `spa311_ServiceRequestId` navigation properties from the unpacked solution.
 Do not use Dataverse's spreadsheet import for this file because it will not preserve lookup IDs.
 
 8. Install dependencies, build the React project, and upload the code site:

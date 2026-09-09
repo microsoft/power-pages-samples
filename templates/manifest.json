@@ -31,7 +31,7 @@
       "author": "Microsoft",
       "variants": {
         "react": {
-          "templateVersion": "1.0.0.2"
+          "templateVersion": "1.0.0.3"
         }
       }
     },

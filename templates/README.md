@@ -40,6 +40,8 @@ The repository stores each unmanaged solution as reviewable source under the var
 Pack and import every direct solution folder in case-insensitive lexical unique-name order.
 The Power Platform CLI solution import command imports the packed solution only.
 It does not import the JSON seed data.
+Dataverse export seed tables must use the exact logical name, entity set name, primary key, column logical names, and lookup navigation properties from the unpacked solution metadata.
+Write lookups as `<NavigationProperty>@odata.bind` with `/<entitySetName>(<guid>)`, and order parent tables before tables that reference them.
 For SPA templates, the solution contains supporting Dataverse artifacts and does not contain the Power Pages website.
 Traditional solutions may include Power Pages website components.
 
