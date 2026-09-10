@@ -11,25 +11,28 @@ import { getFormattedValue } from '../shared/powerPagesApi'
 import type { ServiceTypeEntity } from './serviceType'
 import type { CategoryEntity } from './category'
 import type { ContactEntity } from './contact'
+import choiceValues from '../../dataverse-choice-values.json'
 
 // -- Status Picklist ----------------------------------------------------------
 
+const statusValues = choiceValues.tables.spa311_servicerequest.spa311_status
+
 export const ServiceRequestStatusMap = {
-  490890000: 'submitted',
-  490890001: 'reviewed',
-  490890002: 'assigned',
-  490890003: 'in-progress',
-  490890004: 'resolved',
-  490890005: 'closed',
+  [statusValues.Submitted]: 'submitted',
+  [statusValues.Reviewed]: 'reviewed',
+  [statusValues.Assigned]: 'assigned',
+  [statusValues['In Progress']]: 'in-progress',
+  [statusValues.Resolved]: 'resolved',
+  [statusValues.Closed]: 'closed',
 } as const
 
 export const ServiceRequestStatusReverse: Record<string, number> = {
-  submitted: 490890000,
-  reviewed: 490890001,
-  assigned: 490890002,
-  'in-progress': 490890003,
-  resolved: 490890004,
-  closed: 490890005,
+  submitted: statusValues.Submitted,
+  reviewed: statusValues.Reviewed,
+  assigned: statusValues.Assigned,
+  'in-progress': statusValues['In Progress'],
+  resolved: statusValues.Resolved,
+  closed: statusValues.Closed,
 }
 
 export type RequestStatus = 'submitted' | 'reviewed' | 'assigned' | 'in-progress' | 'resolved' | 'closed'
@@ -44,16 +47,18 @@ export const mapStatusToPicklist = (status: RequestStatus): number =>
 
 // -- Urgency Picklist ---------------------------------------------------------
 
+const urgencyValues = choiceValues.tables.spa311_servicerequest.spa311_urgency
+
 export const UrgencyMap = {
-  490890000: 'low',
-  490890001: 'medium',
-  490890002: 'high',
+  [urgencyValues.Low]: 'low',
+  [urgencyValues.Medium]: 'medium',
+  [urgencyValues.High]: 'high',
 } as const
 
 export const UrgencyReverse: Record<string, number> = {
-  low: 490890000,
-  medium: 490890001,
-  high: 490890002,
+  low: urgencyValues.Low,
+  medium: urgencyValues.Medium,
+  high: urgencyValues.High,
 }
 
 export type Urgency = 'low' | 'medium' | 'high'

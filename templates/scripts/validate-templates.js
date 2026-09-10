@@ -9,6 +9,7 @@ const VALID_KINDS = new Set(["spa", "traditional"]);
 const VALID_FRAMEWORKS = new Set(["angular", "astro", "none", "react", "vue"]);
 const VALID_AUDIENCES = new Set(["admins", "developers", "makers", "partners"]);
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const DATAVERSE_CHOICE_VALUES_FILE = "dataverse-choice-values.json";
 const FORBIDDEN_WEBSITE_CODE_DIRECTORIES = new Set([
   ".git",
   ".playwright-mcp",
@@ -283,7 +284,7 @@ function validateReferencedPaths(template, label, root, result) {
       continue;
     }
 
-    validateVariantPath(template, framework, label, root, result);
+    validateVariantPath(template, framework, label, root, solutionMetadata, result);
   }
 
   if (typeof template.seedDataPath === "string") {
@@ -307,7 +308,7 @@ function getFamilyBasePath(template) {
   return `${template.kind}/${template.id}`;
 }
 
-function validateVariantPath(template, framework, label, root, result) {
+function validateVariantPath(template, framework, label, root, solutionMetadata, result) {
   const variantBase = `${getFamilyBasePath(template)}/variants/${framework}`;
   validateVariantDirectoryContents(label, root, variantBase, result);
   validateWebsiteCodePath(
@@ -315,6 +316,7 @@ function validateVariantPath(template, framework, label, root, result) {
     label,
     root,
     `${variantBase}/website-code`,
+    solutionMetadata,
     result
   );
 }
@@ -605,6 +607,7 @@ function parseDataverseTableMetadata(entityXml) {
       continue;
     }
     attributes.push({
+      choiceOptionsByLabel: parseDataverseChoiceOptions(attributeMatch[3], type),
       logicalName,
       physicalName: decodeXmlEntities(attributeMatch[2].trim()),
       type: type.toLowerCase()
@@ -635,6 +638,26 @@ function parseDataverseTableMetadata(entityXml) {
     primaryKey: primaryKeyAttribute.logicalName,
     schemaName
   };
+}
+
+function parseDataverseChoiceOptions(attributeXml, type) {
+  if (!["bit", "picklist"].includes(type.toLowerCase())) {
+    return null;
+  }
+
+  const options = new Map();
+  const optionPattern = /<option\b[^>]*\bvalue=(["'])(-?\d+)\1[^>]*>([\s\S]*?)<\/option>/gi;
+  let optionMatch;
+  while ((optionMatch = optionPattern.exec(attributeXml)) !== null) {
+    const englishLabelMatch =
+      /<label\b[^>]*\bdescription=(["'])(.*?)\1[^>]*\blanguagecode=(["'])1033\3/i.exec(optionMatch[3]);
+    const anyLabelMatch = /<label\b[^>]*\bdescription=(["'])(.*?)\1/i.exec(optionMatch[3]);
+    const label = englishLabelMatch?.[2] ?? anyLabelMatch?.[2];
+    if (label !== undefined) {
+      options.set(decodeXmlEntities(label.trim()), Number(optionMatch[2]));
+    }
+  }
+  return options;
 }
 
 function matchXmlText(xml, pattern) {
@@ -820,7 +843,7 @@ function findFilesByExtension(currentDirectory, extension) {
   return matches;
 }
 
-function validateWebsiteCodePath(kind, label, root, expectedDirectory, result) {
+function validateWebsiteCodePath(kind, label, root, expectedDirectory, solutionMetadata, result) {
   const websiteCodePath = path.resolve(root, expectedDirectory);
   if (!directoryExists(websiteCodePath)) {
     result.errors.push(`Template "${label}" website-code directory does not exist: ${expectedDirectory}`);
@@ -849,6 +872,119 @@ function validateWebsiteCodePath(kind, label, root, expectedDirectory, result) {
 
   validateWebsiteCodeContents(websiteCodePath, websiteCodePath, label, result);
   validateWebsiteCodeSourceMetadata(websiteCodePath, label, result);
+  validateWebsiteChoiceValues(websiteCodePath, solutionMetadata, label, result);
+}
+
+function validateWebsiteChoiceValues(websiteCodePath, solutionMetadata, label, result) {
+  const contractPath = path.join(websiteCodePath, DATAVERSE_CHOICE_VALUES_FILE);
+  if (!fileExists(contractPath)) {
+    return;
+  }
+
+  const contract = readJsonFile(contractPath, `Dataverse choice values for template "${label}"`, result);
+  if (!contract) {
+    return;
+  }
+  if (!contract.tables || typeof contract.tables !== "object" || Array.isArray(contract.tables)) {
+    result.errors.push(
+      `Template "${label}" ${DATAVERSE_CHOICE_VALUES_FILE} must contain a tables object.`
+    );
+    return;
+  }
+
+  for (const [tableName, attributes] of Object.entries(contract.tables)) {
+    const table = solutionMetadata.tablesByLogicalName.get(tableName.toLowerCase());
+    const tableLocation = `${DATAVERSE_CHOICE_VALUES_FILE} table "${tableName}"`;
+    if (!table) {
+      result.errors.push(
+        `Template "${label}" ${tableLocation} was not found in solution metadata.`
+      );
+      continue;
+    }
+    if (tableName !== table.logicalName) {
+      result.errors.push(
+        `Template "${label}" ${tableLocation} must exactly match "${table.logicalName}".`
+      );
+    }
+    if (!attributes || typeof attributes !== "object" || Array.isArray(attributes)) {
+      result.errors.push(`Template "${label}" ${tableLocation} must be an object.`);
+      continue;
+    }
+
+    for (const [attributeName, contractOptions] of Object.entries(attributes)) {
+      validateWebsiteChoiceAttribute(
+        table,
+        attributeName,
+        contractOptions,
+        tableLocation,
+        label,
+        result
+      );
+    }
+  }
+}
+
+function validateWebsiteChoiceAttribute(
+  table,
+  attributeName,
+  contractOptions,
+  tableLocation,
+  label,
+  result
+) {
+  const attribute = table.attributesByLogicalName.get(attributeName.toLowerCase());
+  const attributeLocation = `${tableLocation} attribute "${attributeName}"`;
+  if (!attribute) {
+    result.errors.push(
+      `Template "${label}" ${attributeLocation} was not found in solution metadata.`
+    );
+    return;
+  }
+  if (attributeName !== attribute.logicalName) {
+    result.errors.push(
+      `Template "${label}" ${attributeLocation} must exactly match "${attribute.logicalName}".`
+    );
+  }
+  if (!attribute.choiceOptionsByLabel) {
+    result.errors.push(
+      `Template "${label}" ${attributeLocation} does not reference a local choice column.`
+    );
+    return;
+  }
+  if (!contractOptions || typeof contractOptions !== "object" || Array.isArray(contractOptions)) {
+    result.errors.push(`Template "${label}" ${attributeLocation} must be an object.`);
+    return;
+  }
+
+  const contractLabels = new Set(Object.keys(contractOptions));
+  for (const [optionLabel, optionValue] of Object.entries(contractOptions)) {
+    if (!Number.isInteger(optionValue)) {
+      result.errors.push(
+        `Template "${label}" ${attributeLocation} option "${optionLabel}" must be an integer.`
+      );
+      continue;
+    }
+
+    const solutionValue = attribute.choiceOptionsByLabel.get(optionLabel);
+    if (solutionValue === undefined) {
+      result.errors.push(
+        `Template "${label}" ${attributeLocation} option "${optionLabel}" was not found in solution metadata.`
+      );
+    } else if (optionValue !== solutionValue) {
+      result.errors.push(
+        `Template "${label}" ${attributeLocation} option "${optionLabel}" value ${optionValue} ` +
+        `must exactly match solution value ${solutionValue}.`
+      );
+    }
+  }
+
+  for (const optionLabel of attribute.choiceOptionsByLabel.keys()) {
+    if (!contractLabels.has(optionLabel)) {
+      result.errors.push(
+        `Template "${label}" ${attributeLocation} is missing solution option "${optionLabel}".`
+      );
+    }
+  }
 }
 
 function validateWebsiteCodeContents(websiteCodeRoot, currentDirectory, label, result) {
@@ -1242,7 +1378,31 @@ function validateDataverseSeedRecordFields(record, solutionTable, location, scop
       result.errors.push(
         `Template "${label}" Dataverse seed data ${location} property must exactly match "${attribute.logicalName}".`
       );
+    } else {
+      validateDataverseSeedChoiceValue(
+        record[propertyName],
+        attribute,
+        location,
+        scope,
+        label,
+        result
+      );
     }
+  }
+}
+
+function validateDataverseSeedChoiceValue(value, attribute, location, scope, label, result) {
+  if (value === null || !attribute.choiceOptionsByLabel) {
+    return;
+  }
+
+  const validValues = new Set(attribute.choiceOptionsByLabel.values());
+  if (!Number.isInteger(value) || !validValues.has(value)) {
+    const expectedValues = [...validValues].sort((left, right) => left - right).join(", ");
+    result.errors.push(
+      `Template "${label}" Dataverse seed data ${location} property "${attribute.logicalName}" ` +
+      `value ${JSON.stringify(value)} must match a solution choice value in ${scope}: ${expectedValues}.`
+    );
   }
 }
 

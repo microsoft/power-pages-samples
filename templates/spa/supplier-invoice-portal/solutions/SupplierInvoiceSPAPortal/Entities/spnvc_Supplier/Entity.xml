@@ -817,22 +817,22 @@
               <displayname description="Status" languagecode="1033" />
             </displaynames>
             <options>
-              <option value="132140000" ExternalValue="" IsHidden="0">
+              <option value="100000000" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Active" languagecode="1033" />
                 </labels>
               </option>
-              <option value="132140001" ExternalValue="" IsHidden="0">
+              <option value="100000001" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Pending" languagecode="1033" />
                 </labels>
               </option>
-              <option value="132140002" ExternalValue="" IsHidden="0">
+              <option value="100000002" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Inactive" languagecode="1033" />
                 </labels>
               </option>
-              <option value="132140003" ExternalValue="" IsHidden="0">
+              <option value="100000003" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Suspended" languagecode="1033" />
                 </labels>

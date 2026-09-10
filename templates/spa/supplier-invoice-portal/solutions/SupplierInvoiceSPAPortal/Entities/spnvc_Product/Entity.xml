@@ -563,22 +563,22 @@
               <displayname description="Category" languagecode="1033" />
             </displaynames>
             <options>
-              <option value="132140000" ExternalValue="" IsHidden="0">
+              <option value="100000000" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Raw Materials" languagecode="1033" />
                 </labels>
               </option>
-              <option value="132140001" ExternalValue="" IsHidden="0">
+              <option value="100000001" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Components" languagecode="1033" />
                 </labels>
               </option>
-              <option value="132140002" ExternalValue="" IsHidden="0">
+              <option value="100000002" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Finished Goods" languagecode="1033" />
                 </labels>
               </option>
-              <option value="132140003" ExternalValue="" IsHidden="0">
+              <option value="100000003" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Packaging" languagecode="1033" />
                 </labels>

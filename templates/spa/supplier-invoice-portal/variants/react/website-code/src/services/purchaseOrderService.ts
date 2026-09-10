@@ -18,6 +18,7 @@ import {
   type UpdatePurchaseOrderInput,
   type POStatusLabel,
   PO_STATUS,
+  PO_STATUS_VALUE_TO_LABEL,
   mapPurchaseOrderEntity,
 } from '../types/purchaseOrder'
 
@@ -201,19 +202,10 @@ export const getPOCountByStatus = async (): Promise<
 
   const response = await powerPagesFetch<ODataCollectionResponse<Record<string, unknown>>>(url)
 
-  const STATUS_VALUE_TO_LABEL: Record<number, POStatusLabel> = {
-    1: 'Draft',
-    2: 'Issued',
-    3: 'Partially Invoiced',
-    4: 'Fully Invoiced',
-    5: 'Closed',
-    6: 'Cancelled',
-  }
-
   return (response?.value ?? []).map((row) => {
     const statusValue = row['spnvc_postatus'] as number
     return {
-      status: STATUS_VALUE_TO_LABEL[statusValue] ?? 'Draft',
+      status: PO_STATUS_VALUE_TO_LABEL[statusValue] ?? 'Draft',
       statusValue,
       count: row['count'] as number,
     }

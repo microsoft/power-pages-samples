@@ -11,6 +11,7 @@ import {
   DataSummaryApiError,
   type DataSummaryRecommendation,
 } from '../services/aiSummaryService'
+import { INVOICE_STATUS } from '../types/invoice'
 
 const ENTITY_SET = 'spnvc_invoices'
 const REVIEW_QUEUE_SELECT = [
@@ -24,10 +25,11 @@ const REVIEW_QUEUE_SELECT = [
 const REVIEW_QUEUE_EXPAND = [
   'spnvc_SupplierId($select=spnvc_name)',
 ].join(',')
-// Submitted = 2, Under Review = 3 — mirrors the page's existing filter scope.
-// No $top / Prefer: odata.maxpagesize — those are pagination concerns for the UI
+// No $top / Prefer: odata.maxpagesize - those are pagination concerns for the UI
 // table; the summary is bounded by Summarization/Data/ContentSizeLimit.
-const REVIEW_QUEUE_FILTER = 'spnvc_invoicestatus eq 2 or spnvc_invoicestatus eq 3'
+const REVIEW_QUEUE_FILTER =
+  `spnvc_invoicestatus eq ${INVOICE_STATUS.Submitted} ` +
+  `or spnvc_invoicestatus eq ${INVOICE_STATUS['Under Review']}`
 const REVIEW_QUEUE_ORDERBY = 'spnvc_submissiondate asc'
 const REVIEW_QUEUE_INSTRUCTION = 'Summarization/prompt/reviewqueue_summary'
 

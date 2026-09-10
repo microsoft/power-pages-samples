@@ -1,0 +1,29 @@
+{
+  "tables": {
+    "spa311_servicerequest": {
+      "spa311_status": {
+        "Submitted": 100000000,
+        "Reviewed": 100000001,
+        "Assigned": 100000002,
+        "In Progress": 100000003,
+        "Resolved": 100000004,
+        "Closed": 100000005
+      },
+      "spa311_urgency": {
+        "Low": 100000000,
+        "Medium": 100000001,
+        "High": 100000002
+      }
+    },
+    "spa311_statusupdate": {
+      "spa311_status": {
+        "Submitted": 100000000,
+        "Reviewed": 100000001,
+        "Assigned": 100000002,
+        "In Progress": 100000003,
+        "Resolved": 100000004,
+        "Closed": 100000005
+      }
+    }
+  }
+}
