@@ -46,7 +46,7 @@ function mockApi(handler) {
 test('status values match the packaged Dataverse solution in both directions', () => {
     const statuses = ['submitted', 'reviewed', 'assigned', 'in-progress', 'resolved', 'closed']
     for (const [index, status] of statuses.entries()) {
-        const value = 490890000 + index
+        const value = 100000000 + index
         assert.equal(mappings.mapStatusToPicklist(status), value)
         assert.equal(mappings.mapStatusFromPicklist(value), status)
     }
@@ -54,7 +54,7 @@ test('status values match the packaged Dataverse solution in both directions', (
 
 test('urgency values match the packaged Dataverse solution in both directions', () => {
     for (const [index, urgency] of ['low', 'medium', 'high'].entries()) {
-        const value = 490890000 + index
+        const value = 100000000 + index
         assert.equal(mappings.mapUrgencyToPicklist(urgency), value)
         assert.equal(mappings.mapUrgencyFromPicklist(value), urgency)
     }
@@ -67,8 +67,8 @@ for (const [index, urgency] of ['low', 'medium', 'high'].entries()) {
             if (options.method === 'POST') {
                 assert.equal(url, '/_api/spa311_servicerequests')
                 posted = JSON.parse(options.body)
-                assert.equal(posted.spa311_status, 490890000)
-                assert.equal(posted.spa311_urgency, 490890000 + index)
+                assert.equal(posted.spa311_status, 100000000)
+                assert.equal(posted.spa311_urgency, 100000000 + index)
                 assert.equal(posted['spa311_CategoryId@odata.bind'], `/spa311_categories(${input.categoryId})`)
                 assert.equal(posted['spa311_ServiceTypeId@odata.bind'], `/spa311_servicetypes(${input.serviceTypeId})`)
                 assert.match(posted.spa311_requestnumber, /^SR-\d{8}-\d{5}$/)
@@ -140,7 +140,7 @@ test('updates use the corrected choice values and decode the returned status', a
     mockApi((_url, options) => {
         if (options.method === 'PATCH') {
             patched = JSON.parse(options.body)
-            assert.deepEqual(patched, { spa311_status: 490890004, spa311_urgency: 490890002 })
+            assert.deepEqual(patched, { spa311_status: 100000004, spa311_urgency: 100000002 })
             return new Response(null, { status: 204 })
         }
         return Response.json({ ...patched, spa311_servicerequestid: recordId })

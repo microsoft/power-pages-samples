@@ -18,6 +18,7 @@ import {
   type UpdateInvoiceInput,
   type InvoiceStatusLabel,
   INVOICE_STATUS,
+  INVOICE_STATUS_VALUE_TO_LABEL,
   mapInvoiceEntity,
 } from '../types/invoice'
 
@@ -246,20 +247,10 @@ export const getInvoiceCountByStatus = async (): Promise<
 
   const response = await powerPagesFetch<ODataCollectionResponse<Record<string, unknown>>>(url)
 
-  const STATUS_VALUE_TO_LABEL: Record<number, InvoiceStatusLabel> = {
-    1: 'Draft',
-    2: 'Submitted',
-    3: 'Under Review',
-    4: 'Needs Revision',
-    5: 'Approved',
-    6: 'Rejected',
-    7: 'Paid',
-  }
-
   return (response?.value ?? []).map((row) => {
     const statusValue = row['spnvc_invoicestatus'] as number
     return {
-      status: STATUS_VALUE_TO_LABEL[statusValue] ?? 'Draft',
+      status: INVOICE_STATUS_VALUE_TO_LABEL[statusValue] ?? 'Draft',
       statusValue,
       count: row['count'] as number,
     }

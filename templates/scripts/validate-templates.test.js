@@ -346,6 +346,91 @@ test("accepts Dataverse export seed data with fileExports", () => {
   assert.deepEqual(result.errors, []);
 });
 
+test("validates website and seed choice values against solution metadata", () => {
+  const root = createTemplateRoot({
+    solutionTables: [
+      {
+        schemaName: "sample_Request",
+        entitySetName: "sample_requests",
+        primaryKey: "sample_requestid",
+        attributes: [
+          { physicalName: "sample_RequestId", logicalName: "sample_requestid", type: "primarykey" },
+          {
+            physicalName: "sample_Status",
+            logicalName: "sample_status",
+            type: "picklist",
+            choiceOptions: [
+              { label: "Open", value: 100000000 },
+              { label: "Closed", value: 100000001 }
+            ]
+          }
+        ]
+      }
+    ],
+    seedDataPath: "spa/test-template/seed-data/data.json",
+    seedData: {
+      schemaVersion: 1,
+      tables: {
+        requests: {
+          logicalName: "sample_request",
+          entitySet: "sample_requests",
+          idColumn: "sample_requestid",
+          records: [
+            {
+              sample_requestid: "10000000-0000-4000-8000-000000000001",
+              sample_status: 100000000
+            }
+          ]
+        }
+      }
+    }
+  });
+  const websiteCodePath = path.join(root, "spa/test-template/variants/react/website-code");
+  const contractPath = path.join(websiteCodePath, "dataverse-choice-values.json");
+  fs.writeFileSync(contractPath, JSON.stringify({
+    tables: {
+      sample_request: {
+        sample_status: {
+          Open: 100000000,
+          Closed: 100000001
+        }
+      }
+    }
+  }, null, 2));
+
+  assert.deepEqual(validateTemplates({ root }).errors, []);
+
+  const seedPath = path.join(root, "spa/test-template/seed-data/data.json");
+  const seedData = JSON.parse(fs.readFileSync(seedPath, "utf8"));
+  seedData.tables.requests.records[0].sample_status = 42;
+  fs.writeFileSync(seedPath, JSON.stringify(seedData, null, 2));
+
+  const invalidSeedResult = validateTemplates({ root });
+  assert(invalidSeedResult.errors.some((error) =>
+    error.includes('property "sample_status" value 42 must match a solution choice value')
+  ));
+
+  seedData.tables.requests.records[0].sample_status = 100000000;
+  fs.writeFileSync(seedPath, JSON.stringify(seedData, null, 2));
+  fs.writeFileSync(contractPath, JSON.stringify({
+    tables: {
+      sample_request: {
+        sample_status: {
+          Open: 100000001
+        }
+      }
+    }
+  }, null, 2));
+
+  const invalidContractResult = validateTemplates({ root });
+  assert(invalidContractResult.errors.some((error) =>
+    error.includes('option "Open" value 100000001 must exactly match solution value 100000000')
+  ));
+  assert(invalidContractResult.errors.some((error) =>
+    error.includes('is missing solution option "Closed"')
+  ));
+});
+
 test("validates Dataverse seed targets, lookups, records, and dependency order against solution metadata", () => {
   const solutionTables = [
     {
@@ -868,12 +953,27 @@ function writeDataverseMetadata(solutionPath, tables, relationships) {
 }
 
 function dataverseEntityXml(table) {
-  const attributes = table.attributes.map((attribute) => `
+  const attributes = table.attributes.map((attribute) => {
+    const options = (attribute.choiceOptions ?? []).map((option) => `
+              <option value="${option.value}">
+                <labels>
+                  <label description="${option.label}" languagecode="1033" />
+                </labels>
+              </option>`).join("");
+    const optionSet = options ? `
+          <optionset Name="${table.schemaName}_${attribute.logicalName}">
+            <OptionSetType>${attribute.type}</OptionSetType>
+            <options>${options}
+            </options>
+          </optionset>` : "";
+    return `
         <attribute PhysicalName="${attribute.physicalName}">
           <Type>${attribute.type}</Type>
           <Name>${attribute.logicalName}</Name>
           <LogicalName>${attribute.logicalName}</LogicalName>
-        </attribute>`).join("");
+          ${optionSet}
+        </attribute>`;
+  }).join("");
   return `<Entity>
   <Name>${table.schemaName}</Name>
   <EntityInfo>

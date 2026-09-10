@@ -3,6 +3,7 @@
 // Column names verified against actual Dataverse metadata on 2026-03-19.
 
 import { getFormattedValue } from '../services/powerPagesApi'
+import choiceValues from '../../dataverse-choice-values.json'
 
 // -- Raw OData Entity ---------------------------------------------------------
 // Matches Dataverse column logical names exactly.
@@ -33,15 +34,9 @@ export interface InvoiceEntity {
 // -- Invoice Status Option Set ------------------------------------------------
 // Values verified from Dataverse PicklistAttributeMetadata.
 
-export const INVOICE_STATUS = {
-  Draft: 1,
-  Submitted: 2,
-  'Under Review': 3,
-  'Needs Revision': 4,
-  Approved: 5,
-  Rejected: 6,
-  Paid: 7,
-} as const
+export const INVOICE_STATUS = Object.freeze(
+  choiceValues.tables.spnvc_invoice.spnvc_invoicestatus,
+)
 
 export type InvoiceStatusLabel = keyof typeof INVOICE_STATUS
 export type InvoiceStatusValue = typeof INVOICE_STATUS[InvoiceStatusLabel]
@@ -53,7 +48,7 @@ export function isInvoiceLocked(status: string | undefined): boolean {
   return LOCKED_INVOICE_STATUSES.includes(status as InvoiceStatusLabel)
 }
 
-const STATUS_VALUE_TO_LABEL = Object.fromEntries(
+export const INVOICE_STATUS_VALUE_TO_LABEL = Object.fromEntries(
   Object.entries(INVOICE_STATUS).map(([label, value]) => [value, label]),
 ) as Record<number, InvoiceStatusLabel>
 
@@ -115,8 +110,8 @@ export const mapInvoiceEntity = (entity: InvoiceEntity): Invoice => ({
   submissionDate: entity.spnvc_submissiondate ?? '',
   dueDate: entity.spnvc_duedate ?? '',
   amount: entity.spnvc_amount ?? 0,
-  status: STATUS_VALUE_TO_LABEL[entity.spnvc_invoicestatus ?? 0] ?? 'Draft',
-  statusValue: entity.spnvc_invoicestatus ?? 1,
+  status: INVOICE_STATUS_VALUE_TO_LABEL[entity.spnvc_invoicestatus ?? 0] ?? 'Draft',
+  statusValue: entity.spnvc_invoicestatus ?? INVOICE_STATUS.Draft,
   contactId: entity._spnvc_contactid_value,
   contactName:
     getFormattedValue(entity, '_spnvc_contactid_value')

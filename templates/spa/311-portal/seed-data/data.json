@@ -189,8 +189,8 @@
           "spa311_address": "125 King Street East",
           "spa311_latitude": 43.6512,
           "spa311_longitude": -79.3726,
-          "spa311_status": 490890003,
-          "spa311_urgency": 490890002,
+          "spa311_status": 100000003,
+          "spa311_urgency": 100000002,
           "spa311_department": "Transportation",
           "spa311_dateobserved": "2026-07-14T08:30:00Z"
         },
@@ -203,8 +203,8 @@
           "spa311_address": "88 Queen Street West",
           "spa311_latitude": 43.6505,
           "spa311_longitude": -79.3833,
-          "spa311_status": 490890002,
-          "spa311_urgency": 490890001,
+          "spa311_status": 100000002,
+          "spa311_urgency": 100000001,
           "spa311_department": "Transportation",
           "spa311_dateobserved": "2026-07-15T21:10:00Z"
         },
@@ -217,8 +217,8 @@
           "spa311_address": "42 Willow Avenue",
           "spa311_latitude": 43.6647,
           "spa311_longitude": -79.3495,
-          "spa311_status": 490890004,
-          "spa311_urgency": 490890000,
+          "spa311_status": 100000004,
+          "spa311_urgency": 100000000,
           "spa311_department": "Solid Waste",
           "spa311_dateobserved": "2026-07-16T18:00:00Z"
         },
@@ -231,8 +231,8 @@
           "spa311_address": "17 Market Lane",
           "spa311_latitude": 43.6499,
           "spa311_longitude": -79.3708,
-          "spa311_status": 490890001,
-          "spa311_urgency": 490890001,
+          "spa311_status": 100000001,
+          "spa311_urgency": 100000001,
           "spa311_department": "Municipal Licensing",
           "spa311_dateobserved": "2026-07-17T11:45:00Z"
         },
@@ -245,8 +245,8 @@
           "spa311_address": "205 Maple Road",
           "spa311_latitude": 43.6764,
           "spa311_longitude": -79.3901,
-          "spa311_status": 490890002,
-          "spa311_urgency": 490890002,
+          "spa311_status": 100000002,
+          "spa311_urgency": 100000002,
           "spa311_department": "Parks and Forestry",
           "spa311_dateobserved": "2026-07-18T07:20:00Z"
         },
@@ -259,8 +259,8 @@
           "spa311_address": "9 Riverside Park",
           "spa311_latitude": 43.6731,
           "spa311_longitude": -79.4012,
-          "spa311_status": 490890005,
-          "spa311_urgency": 490890000,
+          "spa311_status": 100000005,
+          "spa311_urgency": 100000000,
           "spa311_department": "Parks and Forestry",
           "spa311_dateobserved": "2026-07-18T16:15:00Z"
         },
@@ -273,8 +273,8 @@
           "spa311_address": "310 Harbour Street",
           "spa311_latitude": 43.6426,
           "spa311_longitude": -79.3785,
-          "spa311_status": 490890003,
-          "spa311_urgency": 490890002,
+          "spa311_status": 100000003,
+          "spa311_urgency": 100000002,
           "spa311_department": "Water Services",
           "spa311_dateobserved": "2026-07-19T06:40:00Z"
         },
@@ -287,8 +287,8 @@
           "spa311_address": "71 Cedar Street",
           "spa311_latitude": 43.6598,
           "spa311_longitude": -79.3616,
-          "spa311_status": 490890000,
-          "spa311_urgency": 490890001,
+          "spa311_status": 100000000,
+          "spa311_urgency": 100000001,
           "spa311_department": "Water Services",
           "spa311_dateobserved": "2026-07-20T09:05:00Z"
         },
@@ -301,8 +301,8 @@
           "spa311_address": "156 College Street",
           "spa311_latitude": 43.6583,
           "spa311_longitude": -79.3986,
-          "spa311_status": 490890001,
-          "spa311_urgency": 490890000,
+          "spa311_status": 100000001,
+          "spa311_urgency": 100000000,
           "spa311_department": "Municipal Licensing",
           "spa311_dateobserved": "2026-07-21T22:30:00Z"
         },
@@ -315,8 +315,8 @@
           "spa311_address": "460 Dundas Street West",
           "spa311_latitude": 43.6537,
           "spa311_longitude": -79.4039,
-          "spa311_status": 490890000,
-          "spa311_urgency": 490890000,
+          "spa311_status": 100000000,
+          "spa311_urgency": 100000000,
           "spa311_department": "Transportation",
           "spa311_dateobserved": "2026-07-22T12:10:00Z"
         }
@@ -331,7 +331,7 @@
           "spa311_statusupdateid": "40000000-0000-4000-8000-000000000001",
           "spa311_ServiceRequestId@odata.bind": "/spa311_servicerequests(30000000-0000-4000-8000-000000000001)",
           "spa311_name": "Request received",
-          "spa311_status": 490890000,
+          "spa311_status": 100000000,
           "spa311_updatedate": "2026-07-14T08:35:00Z",
           "spa311_note": "The request was submitted and assigned a tracking number."
         },
@@ -339,7 +339,7 @@
           "spa311_statusupdateid": "40000000-0000-4000-8000-000000000002",
           "spa311_ServiceRequestId@odata.bind": "/spa311_servicerequests(30000000-0000-4000-8000-000000000001)",
           "spa311_name": "Crew assigned",
-          "spa311_status": 490890003,
+          "spa311_status": 100000003,
           "spa311_updatedate": "2026-07-16T09:00:00Z",
           "spa311_note": "A road-maintenance crew has been assigned."
         },
@@ -347,7 +347,7 @@
           "spa311_statusupdateid": "40000000-0000-4000-8000-000000000003",
           "spa311_ServiceRequestId@odata.bind": "/spa311_servicerequests(30000000-0000-4000-8000-000000000002)",
           "spa311_name": "Inspection scheduled",
-          "spa311_status": 490890002,
+          "spa311_status": 100000002,
           "spa311_updatedate": "2026-07-16T10:15:00Z",
           "spa311_note": "A lighting technician will inspect the crossing."
         },
@@ -355,7 +355,7 @@
           "spa311_statusupdateid": "40000000-0000-4000-8000-000000000004",
           "spa311_ServiceRequestId@odata.bind": "/spa311_servicerequests(30000000-0000-4000-8000-000000000003)",
           "spa311_name": "Collection completed",
-          "spa311_status": 490890004,
+          "spa311_status": 100000004,
           "spa311_updatedate": "2026-07-17T14:25:00Z",
           "spa311_note": "The missed recycling collection was completed."
         },
@@ -363,7 +363,7 @@
           "spa311_statusupdateid": "40000000-0000-4000-8000-000000000005",
           "spa311_ServiceRequestId@odata.bind": "/spa311_servicerequests(30000000-0000-4000-8000-000000000004)",
           "spa311_name": "Request reviewed",
-          "spa311_status": 490890001,
+          "spa311_status": 100000001,
           "spa311_updatedate": "2026-07-18T08:50:00Z",
           "spa311_note": "The report was sent to the field-inspection queue."
         },
@@ -371,7 +371,7 @@
           "spa311_statusupdateid": "40000000-0000-4000-8000-000000000006",
           "spa311_ServiceRequestId@odata.bind": "/spa311_servicerequests(30000000-0000-4000-8000-000000000005)",
           "spa311_name": "Forestry review",
-          "spa311_status": 490890002,
+          "spa311_status": 100000002,
           "spa311_updatedate": "2026-07-19T11:00:00Z",
           "spa311_note": "Forestry staff are reviewing the reported clearance issue."
         },
@@ -379,7 +379,7 @@
           "spa311_statusupdateid": "40000000-0000-4000-8000-000000000007",
           "spa311_ServiceRequestId@odata.bind": "/spa311_servicerequests(30000000-0000-4000-8000-000000000006)",
           "spa311_name": "Removal completed",
-          "spa311_status": 490890005,
+          "spa311_status": 100000005,
           "spa311_updatedate": "2026-07-20T13:35:00Z",
           "spa311_note": "The graffiti was removed from the retaining wall."
         },
@@ -387,7 +387,7 @@
           "spa311_statusupdateid": "40000000-0000-4000-8000-000000000008",
           "spa311_ServiceRequestId@odata.bind": "/spa311_servicerequests(30000000-0000-4000-8000-000000000007)",
           "spa311_name": "Emergency repair dispatched",
-          "spa311_status": 490890003,
+          "spa311_status": 100000003,
           "spa311_updatedate": "2026-07-19T07:10:00Z",
           "spa311_note": "Water Services dispatched a repair crew."
         },
@@ -395,7 +395,7 @@
           "spa311_statusupdateid": "40000000-0000-4000-8000-000000000009",
           "spa311_ServiceRequestId@odata.bind": "/spa311_servicerequests(30000000-0000-4000-8000-000000000008)",
           "spa311_name": "Request received",
-          "spa311_status": 490890000,
+          "spa311_status": 100000000,
           "spa311_updatedate": "2026-07-20T09:12:00Z",
           "spa311_note": "The storm-drain request is awaiting review."
         },
@@ -403,7 +403,7 @@
           "spa311_statusupdateid": "40000000-0000-4000-8000-000000000010",
           "spa311_ServiceRequestId@odata.bind": "/spa311_servicerequests(30000000-0000-4000-8000-000000000009)",
           "spa311_name": "Bylaw review",
-          "spa311_status": 490890001,
+          "spa311_status": 100000001,
           "spa311_updatedate": "2026-07-22T09:30:00Z",
           "spa311_note": "The concern was routed to municipal licensing."
         },
@@ -411,7 +411,7 @@
           "spa311_statusupdateid": "40000000-0000-4000-8000-000000000011",
           "spa311_ServiceRequestId@odata.bind": "/spa311_servicerequests(30000000-0000-4000-8000-000000000010)",
           "spa311_name": "Request received",
-          "spa311_status": 490890000,
+          "spa311_status": 100000000,
           "spa311_updatedate": "2026-07-22T12:20:00Z",
           "spa311_note": "The pothole report was submitted for transportation review."
         }

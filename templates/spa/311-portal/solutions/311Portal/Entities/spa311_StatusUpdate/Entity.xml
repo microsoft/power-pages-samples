@@ -631,32 +631,32 @@
               <displayname description="Status" languagecode="1033" />
             </displaynames>
             <options>
-              <option value="490890000" ExternalValue="" IsHidden="0">
+              <option value="100000000" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Submitted" languagecode="1033" />
                 </labels>
               </option>
-              <option value="490890001" ExternalValue="" IsHidden="0">
+              <option value="100000001" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Reviewed" languagecode="1033" />
                 </labels>
               </option>
-              <option value="490890002" ExternalValue="" IsHidden="0">
+              <option value="100000002" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Assigned" languagecode="1033" />
                 </labels>
               </option>
-              <option value="490890003" ExternalValue="" IsHidden="0">
+              <option value="100000003" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="In Progress" languagecode="1033" />
                 </labels>
               </option>
-              <option value="490890004" ExternalValue="" IsHidden="0">
+              <option value="100000004" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Resolved" languagecode="1033" />
                 </labels>
               </option>
-              <option value="490890005" ExternalValue="" IsHidden="0">
+              <option value="100000005" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Closed" languagecode="1033" />
                 </labels>

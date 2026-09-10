@@ -2,6 +2,7 @@
 // TypeScript types for the spnvc_purchaseorder Dataverse table.
 
 import { getFormattedValue } from '../services/powerPagesApi'
+import choiceValues from '../../dataverse-choice-values.json'
 
 // -- Raw OData Entity ---------------------------------------------------------
 
@@ -25,14 +26,9 @@ export interface PurchaseOrderEntity {
 
 // -- PO Status Option Set -----------------------------------------------------
 
-export const PO_STATUS = {
-  Draft: 1,
-  Issued: 2,
-  'Partially Invoiced': 3,
-  'Fully Invoiced': 4,
-  Closed: 5,
-  Cancelled: 6,
-} as const
+export const PO_STATUS = Object.freeze(
+  choiceValues.tables.spnvc_purchaseorder.spnvc_postatus,
+)
 
 export type POStatusLabel = keyof typeof PO_STATUS
 export type POStatusValue = typeof PO_STATUS[POStatusLabel]
@@ -44,7 +40,7 @@ export function isPOLocked(status: string | undefined): boolean {
   return LOCKED_PO_STATUSES.includes(status as POStatusLabel)
 }
 
-const STATUS_VALUE_TO_LABEL = Object.fromEntries(
+export const PO_STATUS_VALUE_TO_LABEL = Object.fromEntries(
   Object.entries(PO_STATUS).map(([label, value]) => [value, label]),
 ) as Record<number, POStatusLabel>
 
@@ -98,8 +94,8 @@ export const mapPurchaseOrderEntity = (entity: PurchaseOrderEntity): PurchaseOrd
     invoicedAmount: 0, // Will be computed from linked invoices
     remainingAmount: totalAmount,
     deliveryDate: entity.spnvc_deliverydate ?? '',
-    status: STATUS_VALUE_TO_LABEL[entity.spnvc_postatus ?? 0] ?? 'Draft',
-    statusValue: entity.spnvc_postatus ?? 1,
+    status: PO_STATUS_VALUE_TO_LABEL[entity.spnvc_postatus ?? 0] ?? 'Draft',
+    statusValue: entity.spnvc_postatus ?? PO_STATUS.Draft,
     supplierId: entity._spnvc_supplierid_value,
     supplierName:
       getFormattedValue(entity, '_spnvc_supplierid_value')
