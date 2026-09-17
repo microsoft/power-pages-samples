@@ -1,0 +1,4 @@
+description: Allowed fields for spnvc_invoicecomment Web API access
+id: 12150609-7a53-4512-8de5-a2cb3cfe86b3
+name: Webapi/spnvc_invoicecomment/fields
+value: _spnvc_authorcontactid_value,_spnvc_contactid_value,_spnvc_invoiceid_value,spnvc_AuthorContactId,spnvc_ContactId,spnvc_InvoiceId,spnvc_authorcontactid,spnvc_commenttext,spnvc_contactid,spnvc_invoicecommentid,spnvc_invoiceid,spnvc_linkedaction,spnvc_name,createdon,modifiedon
