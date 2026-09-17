@@ -1,0 +1,4 @@
+description: Allowed fields for contact Web API access
+id: b4cd0040-ca49-411b-bca4-14f5d87c2705
+name: Webapi/contact/fields
+value: contactid,fullname,firstname,lastname,emailaddress1,telephone1,jobtitle,createdon,modifiedon

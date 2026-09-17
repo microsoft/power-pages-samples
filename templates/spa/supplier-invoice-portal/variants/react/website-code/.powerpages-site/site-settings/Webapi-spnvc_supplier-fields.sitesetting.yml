@@ -1,0 +1,4 @@
+description: Allowed fields for spnvc_supplier Web API access
+id: 3fba3566-d672-41a6-b862-e952eabea2f5
+name: Webapi/spnvc_supplier/fields
+value: spnvc_address,spnvc_email,spnvc_leadtimedays,spnvc_name,spnvc_paymentterms,spnvc_phone,spnvc_rating,spnvc_status,spnvc_supplierid,createdon,modifiedon

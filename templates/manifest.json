@@ -32,6 +32,39 @@
       "variants": {
         "react": {}
       }
+    },
+    {
+      "id": "supplier-invoice-portal",
+      "displayName": "Supplier Invoice Portal",
+      "description": "A Power Pages SPA template for supplier onboarding, purchase orders, invoice submission, invoice review, and invoice tracking.",
+      "kind": "spa",
+      "keywords": [
+        "supplier",
+        "invoice",
+        "portal",
+        "purchase-order",
+        "approval"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "previewImages": [
+        "spa/supplier-invoice-portal/previews/home.png",
+        "spa/supplier-invoice-portal/previews/dashboard.png",
+        "spa/supplier-invoice-portal/previews/list.png",
+        "spa/supplier-invoice-portal/previews/form.png",
+        "spa/supplier-invoice-portal/previews/purchase-orders.png",
+        "spa/supplier-invoice-portal/previews/review.png"
+      ],
+      "seedDataPath": "spa/supplier-invoice-portal/seed-data/data.json",
+      "requiredDataverseLanguages": [
+        1033
+      ],
+      "author": "Microsoft",
+      "variants": {
+        "react": {}
+      }
     }
   ]
 }
