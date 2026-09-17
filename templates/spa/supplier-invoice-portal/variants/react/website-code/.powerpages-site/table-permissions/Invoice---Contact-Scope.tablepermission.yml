@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- 2ab5e3ba-0309-f111-8406-6045bd04a357
+append: true
+appendto: true
+contactrelationship: spnvc_contact_invoice_submitter
+create: true
+delete: true
+entitylogicalname: spnvc_invoice
+entityname: Invoice - Contact Scope
+id: 99689ef3-c7a1-4b92-b600-1e508a5092d7
+read: true
+scope: 756150001
+write: true
