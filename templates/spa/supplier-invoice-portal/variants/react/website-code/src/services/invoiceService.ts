@@ -21,6 +21,7 @@ import {
   INVOICE_STATUS_VALUE_TO_LABEL,
   mapInvoiceEntity,
 } from '../types/invoice'
+import { callServerLogic } from './serverLogicApi'
 
 // -- Constants ----------------------------------------------------------------
 
@@ -238,40 +239,49 @@ export const getInvoiceCount = async (filter?: string): Promise<number> => {
 
 // -- Aggregation: count by status ---------------------------------------------
 
+// The Power Pages *client* Web API rejects $apply=groupby(...)/aggregate(...)
+// with "WebAPI * is not enabled": any request without an explicit $select is
+// treated as selecting all columns, which the (deprecated) wildcard field
+// permission model can no longer satisfy - see
+// https://learn.microsoft.com/power-pages/configure/configure-table-permissions
+// for the Web API field allowlist this depends on. There is no $select
+// workaround because Dataverse validates $select against the base entity's
+// schema, and aggregate/groupby result aliases (e.g. "count") do not exist
+// on that schema. Until the platform ships a fix, the dashboard-aggregates
+// server logic (.powerpages-site/server-logic/dashboard-aggregates) runs the
+// same $apply query server-side via Server.Connector.Dataverse instead: it
+// still enforces table permissions (Supplier: own invoices only, Reviewer:
+// all invoices) but isn't subject to the client Web API's wildcard gate.
 export const getInvoiceCountByStatus = async (): Promise<
   Array<{ status: InvoiceStatusLabel; statusValue: number; count: number }>
 > => {
-  const url = buildODataUrl(ENTITY_SET, {
-    '$apply': 'groupby((spnvc_invoicestatus),aggregate($count as count))',
-  })
+  const response = await callServerLogic<{ counts: Array<{ statusValue: number; count: number }> }>(
+    'dashboard-aggregates',
+    'GET',
+    { stat: 'invoice-status-counts' },
+  )
 
-  const response = await powerPagesFetch<ODataCollectionResponse<Record<string, unknown>>>(url)
-
-  return (response?.value ?? []).map((row) => {
-    const statusValue = row['spnvc_invoicestatus'] as number
-    return {
-      status: INVOICE_STATUS_VALUE_TO_LABEL[statusValue] ?? 'Draft',
-      statusValue,
-      count: row['count'] as number,
-    }
-  })
+  return response.counts.map(({ statusValue, count }) => ({
+    status: INVOICE_STATUS_VALUE_TO_LABEL[statusValue] ?? 'Draft',
+    statusValue,
+    count,
+  }))
 }
 
 // -- Aggregation: amount totals -----------------------------------------------
 
+/**
+ * Returns the sum and average of spnvc_amount across every invoice the current
+ * portal user can see, via the dashboard-aggregates server logic. See the
+ * comment above getInvoiceCountByStatus for why this can't run as a client
+ * Web API $apply query.
+ */
 export const getInvoiceAmountStats = async (): Promise<{ total: number; avg: number }> => {
-  // Power Pages Web API does not support multiple aggregate expressions in a single $apply call.
-  // Split into individual queries to avoid 500 errors.
-  const [sumResponse, avgResponse] = await Promise.all([
-    powerPagesFetch<ODataCollectionResponse<Record<string, unknown>>>(
-      buildODataUrl(ENTITY_SET, { '$apply': 'aggregate(spnvc_amount with sum as total)' })
-    ),
-    powerPagesFetch<ODataCollectionResponse<Record<string, unknown>>>(
-      buildODataUrl(ENTITY_SET, { '$apply': 'aggregate(spnvc_amount with average as avg)' })
-    ),
-  ])
+  const response = await callServerLogic<{ stats: { total: number; avg: number } }>(
+    'dashboard-aggregates',
+    'GET',
+    { stat: 'invoice-amount-stats' },
+  )
 
-  const total = (sumResponse?.value?.[0]?.['total'] as number) ?? 0
-  const avg = (avgResponse?.value?.[0]?.['avg'] as number) ?? 0
-  return { total, avg }
+  return response.stats
 }
