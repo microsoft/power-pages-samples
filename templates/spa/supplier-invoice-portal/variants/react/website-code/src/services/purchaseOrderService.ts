@@ -21,6 +21,7 @@ import {
   PO_STATUS_VALUE_TO_LABEL,
   mapPurchaseOrderEntity,
 } from '../types/purchaseOrder'
+import { callServerLogic } from './serverLogicApi'
 
 // -- Constants ----------------------------------------------------------------
 
@@ -193,21 +194,23 @@ export const deletePurchaseOrder = async (id: string): Promise<void> => {
 
 // -- Count by status ----------------------------------------------------------
 
+// See the comment above getInvoiceCountByStatus in invoiceService.ts for why
+// $apply=groupby(...)/aggregate(...) fails with "WebAPI * is not enabled" from
+// the client, and why the dashboard-aggregates server logic
+// (.powerpages-site/server-logic/dashboard-aggregates) is the supported
+// replacement.
 export const getPOCountByStatus = async (): Promise<
   Array<{ status: POStatusLabel; statusValue: number; count: number }>
 > => {
-  const url = buildODataUrl(ENTITY_SET, {
-    '$apply': 'groupby((spnvc_postatus),aggregate($count as count))',
-  })
+  const response = await callServerLogic<{ counts: Array<{ statusValue: number; count: number }> }>(
+    'dashboard-aggregates',
+    'GET',
+    { stat: 'po-status-counts' },
+  )
 
-  const response = await powerPagesFetch<ODataCollectionResponse<Record<string, unknown>>>(url)
-
-  return (response?.value ?? []).map((row) => {
-    const statusValue = row['spnvc_postatus'] as number
-    return {
-      status: PO_STATUS_VALUE_TO_LABEL[statusValue] ?? 'Draft',
-      statusValue,
-      count: row['count'] as number,
-    }
-  })
+  return response.counts.map(({ statusValue, count }) => ({
+    status: PO_STATUS_VALUE_TO_LABEL[statusValue] ?? 'Draft',
+    statusValue,
+    count,
+  }))
 }

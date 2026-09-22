@@ -1,0 +1,7 @@
+adx_serverlogic_adx_webrole:
+  - 997e7996-e241-4117-9c09-28e90a1fcdbc
+  - c8031dd9-b8d4-435a-87df-3b90748d2fc4
+description: 'Runs OData $apply aggregate/groupby queries for invoice and purchase order dashboard totals, bypassing the deprecated Web API wildcard field-permission gate that blocks $apply from the client.'
+display_name: 'Dashboard Aggregates'
+id: e382d6c8-ec58-4cde-8711-991c980901fc
+name: dashboard-aggregates
