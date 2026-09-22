@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- 997e7996-e241-4117-9c09-28e90a1fcdbc
+append: true
+appendto: true
+contactrelationship: spnvc_contact_invoice_submitter
+create: true
+delete: true
+entitylogicalname: spnvc_invoice
+entityname: Invoice - Supplier Access
+id: cb0c220a-7e81-4056-9dde-666922e9f1a4
+read: true
+scope: 756150001
+write: true
