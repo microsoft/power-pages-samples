@@ -18,7 +18,6 @@ import {
   type UpdateInvoiceInput,
   type InvoiceStatusLabel,
   INVOICE_STATUS,
-  INVOICE_STATUS_VALUE_TO_LABEL,
   mapInvoiceEntity,
 } from '../types/invoice'
 
@@ -238,40 +237,56 @@ export const getInvoiceCount = async (filter?: string): Promise<number> => {
 
 // -- Aggregation: count by status ---------------------------------------------
 
+// The Power Pages Web API rejects `$apply` (OData aggregate/groupby) requests
+// with a "WebAPI * is not enabled" error: the table's `Webapi/<table>/fields`
+// site setting would need to be the wildcard `*` for aggregate to see every
+// column, but that wildcard is blocked (deprecated for security reasons) and
+// there is currently no non-wildcard way to opt a table into `$apply`. Until
+// a runtime fix ships, compute per-status counts with one non-aggregate
+// `$count=true&$top=0` request per status instead.
 export const getInvoiceCountByStatus = async (): Promise<
   Array<{ status: InvoiceStatusLabel; statusValue: number; count: number }>
 > => {
-  const url = buildODataUrl(ENTITY_SET, {
-    '$apply': 'groupby((spnvc_invoicestatus),aggregate($count as count))',
-  })
+  const entries = Object.entries(INVOICE_STATUS) as Array<[InvoiceStatusLabel, number]>
 
-  const response = await powerPagesFetch<ODataCollectionResponse<Record<string, unknown>>>(url)
+  const counts = await Promise.all(
+    entries.map(async ([status, statusValue]) => {
+      const url = buildODataUrl(ENTITY_SET, {
+        '$select': 'spnvc_invoiceid',
+        '$filter': `spnvc_invoicestatus eq ${statusValue}`,
+        '$count': 'true',
+        '$top': '0',
+      })
+      const response = await powerPagesFetch<ODataCollectionResponse<InvoiceEntity>>(url)
+      return { status, statusValue, count: response?.['@odata.count'] ?? 0 }
+    }),
+  )
 
-  return (response?.value ?? []).map((row) => {
-    const statusValue = row['spnvc_invoicestatus'] as number
-    return {
-      status: INVOICE_STATUS_VALUE_TO_LABEL[statusValue] ?? 'Draft',
-      statusValue,
-      count: row['count'] as number,
-    }
-  })
+  return counts
 }
 
 // -- Aggregation: amount totals -----------------------------------------------
 
+// Same restriction as above -- `$apply` aggregate expressions are unavailable
+// without the blocked `Webapi/<table>/fields = *` wildcard, so page through
+// `spnvc_amount` values and sum/average them on the client.
 export const getInvoiceAmountStats = async (): Promise<{ total: number; avg: number }> => {
-  // Power Pages Web API does not support multiple aggregate expressions in a single $apply call.
-  // Split into individual queries to avoid 500 errors.
-  const [sumResponse, avgResponse] = await Promise.all([
-    powerPagesFetch<ODataCollectionResponse<Record<string, unknown>>>(
-      buildODataUrl(ENTITY_SET, { '$apply': 'aggregate(spnvc_amount with sum as total)' })
-    ),
-    powerPagesFetch<ODataCollectionResponse<Record<string, unknown>>>(
-      buildODataUrl(ENTITY_SET, { '$apply': 'aggregate(spnvc_amount with average as avg)' })
-    ),
-  ])
+  let total = 0
+  let count = 0
+  let url: string | undefined = buildODataUrl(ENTITY_SET, {
+    '$select': 'spnvc_amount',
+    '$top': '5000',
+  })
 
-  const total = (sumResponse?.value?.[0]?.['total'] as number) ?? 0
-  const avg = (avgResponse?.value?.[0]?.['avg'] as number) ?? 0
-  return { total, avg }
+  while (url) {
+    const response: ODataCollectionResponse<Record<string, unknown>> | null =
+      await powerPagesFetch<ODataCollectionResponse<Record<string, unknown>>>(url)
+    for (const row of response?.value ?? []) {
+      total += (row['spnvc_amount'] as number) ?? 0
+      count += 1
+    }
+    url = response?.['@odata.nextLink']
+  }
+
+  return { total, avg: count > 0 ? total / count : 0 }
 }

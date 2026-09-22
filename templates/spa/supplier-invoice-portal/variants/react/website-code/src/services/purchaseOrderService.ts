@@ -18,7 +18,6 @@ import {
   type UpdatePurchaseOrderInput,
   type POStatusLabel,
   PO_STATUS,
-  PO_STATUS_VALUE_TO_LABEL,
   mapPurchaseOrderEntity,
 } from '../types/purchaseOrder'
 
@@ -193,21 +192,30 @@ export const deletePurchaseOrder = async (id: string): Promise<void> => {
 
 // -- Count by status ----------------------------------------------------------
 
+// The Power Pages Web API rejects `$apply` (OData aggregate/groupby) requests
+// with a "WebAPI * is not enabled" error: the table's `Webapi/<table>/fields`
+// site setting would need to be the wildcard `*` for aggregate to see every
+// column, but that wildcard is blocked (deprecated for security reasons) and
+// there is currently no non-wildcard way to opt a table into `$apply`. Until
+// a runtime fix ships, compute per-status counts with one non-aggregate
+// `$count=true&$top=0` request per status instead.
 export const getPOCountByStatus = async (): Promise<
   Array<{ status: POStatusLabel; statusValue: number; count: number }>
 > => {
-  const url = buildODataUrl(ENTITY_SET, {
-    '$apply': 'groupby((spnvc_postatus),aggregate($count as count))',
-  })
+  const entries = Object.entries(PO_STATUS) as Array<[POStatusLabel, number]>
 
-  const response = await powerPagesFetch<ODataCollectionResponse<Record<string, unknown>>>(url)
+  const counts = await Promise.all(
+    entries.map(async ([status, statusValue]) => {
+      const url = buildODataUrl(ENTITY_SET, {
+        '$select': 'spnvc_purchaseorderid',
+        '$filter': `spnvc_postatus eq ${statusValue}`,
+        '$count': 'true',
+        '$top': '0',
+      })
+      const response = await powerPagesFetch<ODataCollectionResponse<PurchaseOrderEntity>>(url)
+      return { status, statusValue, count: response?.['@odata.count'] ?? 0 }
+    }),
+  )
 
-  return (response?.value ?? []).map((row) => {
-    const statusValue = row['spnvc_postatus'] as number
-    return {
-      status: PO_STATUS_VALUE_TO_LABEL[statusValue] ?? 'Draft',
-      statusValue,
-      count: row['count'] as number,
-    }
-  })
+  return counts
 }
