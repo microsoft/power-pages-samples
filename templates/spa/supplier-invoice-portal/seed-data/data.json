@@ -34,51 +34,61 @@
         {
           "@odata.etag": "W/\"38059700\"",
           "spnvc_name": "Adventure Works Supply",
+          "spnvc_status": 100000000,
           "spnvc_supplierid": "96223d8d-d926-f111-8341-000d3a5bf33c"
         },
         {
           "@odata.etag": "W/\"38059694\"",
           "spnvc_name": "Contoso Electronics",
+          "spnvc_status": 100000000,
           "spnvc_supplierid": "d9250f46-d926-f111-8341-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059696\"",
           "spnvc_name": "Fabrikam Industrial",
+          "spnvc_status": 100000000,
           "spnvc_supplierid": "952a3168-d926-f111-8341-000d3a58de60"
         },
         {
           "@odata.etag": "W/\"38059706\"",
           "spnvc_name": "Litware Inc",
+          "spnvc_status": 100000000,
           "spnvc_supplierid": "f41a0d9b-d926-f111-8341-000d3a58de60"
         },
         {
           "@odata.etag": "W/\"38059698\"",
           "spnvc_name": "Northwind Traders",
+          "spnvc_status": 100000000,
           "spnvc_supplierid": "66bc0181-d926-f111-8341-000d3a58de60"
         },
         {
           "@odata.etag": "W/\"38059708\"",
           "spnvc_name": "Proseware Inc",
+          "spnvc_status": 100000000,
           "spnvc_supplierid": "5608809e-d926-f111-8341-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059704\"",
           "spnvc_name": "Tailspin Toys",
+          "spnvc_status": 100000000,
           "spnvc_supplierid": "e61a0d9b-d926-f111-8341-000d3a58de60"
         },
         {
           "@odata.etag": "W/\"38059712\"",
           "spnvc_name": "Trey Research",
+          "spnvc_status": 100000000,
           "spnvc_supplierid": "769496a7-d926-f111-8341-000d3a37e531"
         },
         {
           "@odata.etag": "W/\"38059710\"",
           "spnvc_name": "VanArsdel Ltd",
+          "spnvc_status": 100000000,
           "spnvc_supplierid": "8897a8a0-d926-f111-8341-000d3a37e531"
         },
         {
           "@odata.etag": "W/\"38059702\"",
           "spnvc_name": "Wingtip Toys",
+          "spnvc_status": 100000000,
           "spnvc_supplierid": "e3e24992-d926-f111-8341-000d3a36e41e"
         }
       ]
