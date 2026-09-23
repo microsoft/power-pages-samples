@@ -11,7 +11,7 @@ const MOCK_SUPPLIER: PowerPagesUser = {
   lastName: 'Green',
   email: 'chris.green@contoso.com',
   contactId: '00000000-0000-0000-0000-000000000001',
-  userRoles: ['Authenticated Users'],
+  userRoles: ['Authenticated Users', 'Supplier'],
 };
 
 const MOCK_REVIEWER: PowerPagesUser = {
@@ -20,10 +20,13 @@ const MOCK_REVIEWER: PowerPagesUser = {
   lastName: 'Mitchell',
   email: 'sarah.mitchell@contoso.com',
   contactId: '00000000-0000-0000-0000-000000000002',
-  userRoles: ['Authenticated Users', 'Reviewer'],
+  userRoles: ['Authenticated Users', 'Supplier', 'Reviewer'],
 };
 
 export type DevRole = 'supplier' | 'reviewer';
+export type ActiveRoleMode = 'supplier' | 'reviewer';
+
+const ROLE_MODE_STORAGE_KEY = 'supplier-invoice-role-mode';
 
 export function getDevRole(): DevRole {
   if (!isDevelopment) return 'supplier';
@@ -32,6 +35,16 @@ export function getDevRole(): DevRole {
 
 export function setDevRole(role: DevRole): void {
   localStorage.setItem('mock-role', role);
+}
+
+export function getActiveRoleModePreference(): ActiveRoleMode | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const value = localStorage.getItem(ROLE_MODE_STORAGE_KEY);
+  return value === 'supplier' || value === 'reviewer' ? value : undefined;
+}
+
+export function setActiveRoleModePreference(role: ActiveRoleMode): void {
+  localStorage.setItem(ROLE_MODE_STORAGE_KEY, role);
 }
 
 /**

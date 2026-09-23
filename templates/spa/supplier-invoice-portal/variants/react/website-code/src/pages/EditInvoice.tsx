@@ -166,15 +166,15 @@ export default function EditInvoice() {
     )
   }
 
-  // Only allow editing Draft or Needs Revision invoices
-  const canEdit = invoice.status === 'Draft' || invoice.status === 'Needs Revision'
+  // Only allow editing Draft or Rejected invoices
+  const canEdit = invoice.status === 'Draft' || invoice.status === 'Rejected'
   if (!canEdit) {
     return (
       <div style={{ textAlign: 'center', padding: 60 }}>
         <FileText size={48} color="var(--color-text-muted)" aria-hidden="true" style={{ marginBottom: 12 }} />
         <h1 style={{ fontFamily: 'var(--font-heading)', marginBottom: 12 }}>Cannot edit this invoice</h1>
         <p style={{ color: 'var(--color-text-muted)', marginBottom: 20 }}>
-          Only Draft or Needs Revision invoices can be edited.
+          Only Draft or Rejected invoices can be edited.
         </p>
         <button onClick={() => navigate(`/invoices/${id}`)} className="btn-primary">
           Back to Invoice
@@ -246,18 +246,18 @@ export default function EditInvoice() {
         </p>
       </div>
 
-      {/* Revision reason banner */}
-      {invoice.status === 'Needs Revision' && (() => {
-        const revisionEntry = [...invoice.statusHistory].reverse().find(h =>
-          h.status === 'Needs Revision' && h.note
+      {/* Rejection reason banner */}
+      {invoice.status === 'Rejected' && (() => {
+        const rejectionEntry = [...invoice.statusHistory].reverse().find(h =>
+          h.status === 'Rejected' && h.note
         )
-        if (!revisionEntry) return null
+        if (!rejectionEntry) return null
         return (
           <div
             className="animate-in animate-in-1"
             style={{
-              background: 'var(--color-revision-light)',
-              border: '1px solid var(--color-revision)',
+              background: 'var(--color-error-light)',
+              border: '1px solid var(--color-error)',
               borderRadius: 'var(--radius-lg)',
               padding: '14px 18px',
               marginBottom: 20,
@@ -266,15 +266,15 @@ export default function EditInvoice() {
               alignItems: 'flex-start',
             }}
           >
-            <AlertTriangle size={18} color="var(--color-revision)" aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
+            <AlertTriangle size={18} color="var(--color-error)" aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
             <div>
-              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-revision)', marginBottom: 4 }}>
-                Revision Requested
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-error)', marginBottom: 4 }}>
+                Rejection Feedback
               </div>
-              <p style={{ fontSize: '0.85rem', color: '#BF360C', lineHeight: 1.5 }}>
-                {revisionEntry.note}
-                {revisionEntry.author && (
-                  <span style={{ fontWeight: 500 }}> — {revisionEntry.author}</span>
+              <p style={{ fontSize: '0.85rem', color: '#991B1B', lineHeight: 1.5 }}>
+                {rejectionEntry.note}
+                {rejectionEntry.author && (
+                  <span style={{ fontWeight: 500 }}> — {rejectionEntry.author}</span>
                 )}
               </p>
             </div>

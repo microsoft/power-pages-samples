@@ -54,7 +54,7 @@ export const invoices: Invoice[] = [
     statusHistory: [
       { status: 'Draft', date: '2026-01-08' },
       { status: 'Submitted', date: '2026-01-10', author: 'Chris Green', authorInitials: 'CG', note: 'Bulk order for Q1. All items per the agreed catalog pricing.' },
-      { status: 'Under Review', date: '2026-01-12', author: 'Sarah Mitchell', authorInitials: 'SM' },
+      { status: 'Submitted', date: '2026-01-12', author: 'Sarah Mitchell', authorInitials: 'SM' },
       { status: 'Approved', date: '2026-01-20', author: 'Sarah Mitchell', authorInitials: 'SM', note: 'Pricing verified against contract. Approved for payment.' },
       { status: 'Paid', date: '2026-02-10' },
     ],
@@ -81,7 +81,7 @@ export const invoices: Invoice[] = [
     statusHistory: [
       { status: 'Draft', date: '2026-01-13' },
       { status: 'Submitted', date: '2026-01-15' },
-      { status: 'Under Review', date: '2026-01-17' },
+      { status: 'Submitted', date: '2026-01-17' },
       { status: 'Approved', date: '2026-01-28' },
     ],
     comments: [],
@@ -91,7 +91,7 @@ export const invoices: Invoice[] = [
     invoiceNumber: 'INV-2026-003',
     poNumber: 'PO-2026-003',
     amount: 85000,
-    status: 'Under Review',
+    status: 'Submitted',
     submissionDate: '2026-01-22',
     dueDate: '2026-03-01',
     description: 'Annual software licensing renewal — Enterprise suite for 200 seats',
@@ -103,7 +103,7 @@ export const invoices: Invoice[] = [
     statusHistory: [
       { status: 'Draft', date: '2026-01-20' },
       { status: 'Submitted', date: '2026-01-22' },
-      { status: 'Under Review', date: '2026-01-25' },
+      { status: 'Submitted', date: '2026-01-25' },
     ],
     comments: [
       { id: 'c5', author: 'Chris Green', authorInitials: 'CG', date: '2026-01-22T10:30:00', text: 'Annual renewal — same vendor and terms as last year. License expires March 1, please prioritize.', linkedAction: 'Submitted' },
@@ -143,7 +143,7 @@ export const invoices: Invoice[] = [
     statusHistory: [
       { status: 'Draft', date: '2026-02-03' },
       { status: 'Submitted', date: '2026-02-05' },
-      { status: 'Under Review', date: '2026-02-07' },
+      { status: 'Submitted', date: '2026-02-07' },
       { status: 'Rejected', date: '2026-02-10', author: 'Sarah Mitchell', authorInitials: 'SM', note: 'Duplicate submission — already paid as INV-2025-087.' },
     ],
     comments: [
@@ -168,7 +168,7 @@ export const invoices: Invoice[] = [
     statusHistory: [
       { status: 'Draft', date: '2026-02-08' },
       { status: 'Submitted', date: '2026-02-10' },
-      { status: 'Under Review', date: '2026-02-12' },
+      { status: 'Submitted', date: '2026-02-12' },
       { status: 'Approved', date: '2026-02-22' },
       { status: 'Paid', date: '2026-03-10' },
     ],
@@ -190,7 +190,7 @@ export const invoices: Invoice[] = [
     statusHistory: [
       { status: 'Draft', date: '2026-02-16' },
       { status: 'Submitted', date: '2026-02-18' },
-      { status: 'Under Review', date: '2026-02-20' },
+      { status: 'Submitted', date: '2026-02-20' },
       { status: 'Approved', date: '2026-03-01' },
     ],
     comments: [],
@@ -200,7 +200,7 @@ export const invoices: Invoice[] = [
     invoiceNumber: 'INV-2026-008',
     poNumber: 'PO-2026-008',
     amount: 38500,
-    status: 'Under Review',
+    status: 'Submitted',
     submissionDate: '2026-02-25',
     dueDate: '2026-03-25',
     description: 'Security system upgrade — access control panels and CCTV cameras for all floors',
@@ -211,7 +211,7 @@ export const invoices: Invoice[] = [
     statusHistory: [
       { status: 'Draft', date: '2026-02-23' },
       { status: 'Submitted', date: '2026-02-25' },
-      { status: 'Under Review', date: '2026-02-27' },
+      { status: 'Submitted', date: '2026-02-27' },
     ],
     comments: [
       { id: 'c9', author: 'Chris Green', authorInitials: 'CG', date: '2026-02-25T16:00:00', text: 'Urgent — security compliance audit deadline is March 31. Installation needs at least 3 weeks lead time.', linkedAction: 'Submitted' },
@@ -258,7 +258,7 @@ export const invoices: Invoice[] = [
     invoiceNumber: 'INV-2026-011',
     poNumber: 'PO-2026-011',
     amount: 7400,
-    status: 'Needs Revision',
+    status: 'Rejected',
     submissionDate: '2026-03-08',
     dueDate: '2026-04-08',
     description: 'Warehouse shelving installation — heavy-duty steel racking for Building A storage',
@@ -269,8 +269,8 @@ export const invoices: Invoice[] = [
     statusHistory: [
       { status: 'Draft', date: '2026-03-06' },
       { status: 'Submitted', date: '2026-03-08' },
-      { status: 'Under Review', date: '2026-03-10' },
-      { status: 'Needs Revision', date: '2026-03-12', note: 'Missing delivery receipt — please attach proof of delivery and resubmit' },
+      { status: 'Submitted', date: '2026-03-10' },
+      { status: 'Rejected', date: '2026-03-12', note: 'Missing delivery receipt — please attach proof of delivery and resubmit' },
     ],
     comments: [],
   },
@@ -291,14 +291,25 @@ export const invoices: Invoice[] = [
     statusHistory: [
       { status: 'Draft', date: '2026-02-12' },
       { status: 'Submitted', date: '2026-02-14' },
-      { status: 'Under Review', date: '2026-02-16' },
-      { status: 'Needs Revision', date: '2026-02-20', note: 'PO amount does not match contract total — please correct the amount and attach signed contract' },
+      { status: 'Submitted', date: '2026-02-16' },
+      { status: 'Rejected', date: '2026-02-20', note: 'PO amount does not match contract total — please correct the amount and attach signed contract' },
       { status: 'Submitted', date: '2026-02-22' },
-      { status: 'Under Review', date: '2026-02-24' },
+      { status: 'Submitted', date: '2026-02-24' },
       { status: 'Approved', date: '2026-03-05' },
     ],
     comments: [],
   },
+]
+
+export interface MockSupplier {
+  id: string
+  name: string
+}
+
+export const suppliers: MockSupplier[] = [
+  { id: 'SUP-001', name: 'Contoso Supplies Ltd' },
+  { id: 'SUP-002', name: 'Fabrikam Industrial' },
+  { id: 'SUP-003', name: 'Northwind Logistics' },
 ]
 
 export const purchaseOrders: MockPurchaseOrder[] = [
@@ -488,8 +499,6 @@ export function formatDate(dateString: string): string {
 export const statusOrder: InvoiceStatus[] = [
   'Draft',
   'Submitted',
-  'Under Review',
-  'Needs Revision',
   'Approved',
   'Rejected',
   'Paid',

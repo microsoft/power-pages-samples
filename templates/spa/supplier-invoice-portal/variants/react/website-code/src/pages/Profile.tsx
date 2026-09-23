@@ -1,15 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useProfileStats } from '../data/invoiceProvider'
-import { User, Building2, Mail, Phone, MapPin, Bell, Shield } from 'lucide-react'
+import { User, Building2, Mail, Phone, MapPin, Shield } from 'lucide-react'
 import Toast from '../components/Toast'
 import usePageTitle from '../hooks/usePageTitle'
 import { useAuth } from '../hooks/useAuth'
-
-const initialNotifications = {
-  invoiceUpdates: true,
-  paymentConfirmations: true,
-  weeklyDigest: false,
-}
 
 export default function Profile() {
   usePageTitle('My Profile')
@@ -24,13 +18,9 @@ export default function Profile() {
 
   const [showToast, setShowToast] = useState(false)
   const [form, setForm] = useState(initialForm.current)
-  const [notifications, setNotifications] = useState(initialNotifications)
   const savedFormRef = useRef(initialForm.current)
-  const savedNotificationsRef = useRef(initialNotifications)
 
-  const isDirty =
-    JSON.stringify(form) !== JSON.stringify(savedFormRef.current) ||
-    JSON.stringify(notifications) !== JSON.stringify(savedNotificationsRef.current)
+  const isDirty = JSON.stringify(form) !== JSON.stringify(savedFormRef.current)
 
   // Warn before closing tab with unsaved changes
   useEffect(() => {
@@ -47,12 +37,11 @@ export default function Profile() {
   const totalInvoices = profileStats.total
   const totalPaid = profileStats.paid
   const totalPending = profileStats.pending
-  const totalNeedsRevision = profileStats.needsRevision
+  const totalRejected = profileStats.rejected
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault()
     savedFormRef.current = form
-    savedNotificationsRef.current = notifications
     setShowToast(true)
   }
 
@@ -156,7 +145,7 @@ export default function Profile() {
           >
             {[
               { label: 'Total Invoices', value: totalInvoices },
-              { label: 'Needs Revision', value: totalNeedsRevision },
+              { label: 'Rejected', value: totalRejected },
               { label: 'Paid', value: totalPaid },
               { label: 'Pending', value: totalPending },
             ].map((stat) => (
@@ -274,72 +263,8 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Notification Preferences */}
-        <div className="animate-in animate-in-4" style={cardStyle}>
-          <h2 style={sectionTitle}>
-            <Bell size={18} color="var(--color-primary)" aria-hidden="true" />
-            Notification Preferences
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {[
-              {
-                key: 'invoiceUpdates' as const,
-                label: 'Invoice Status Updates',
-                desc: 'Get notified when your invoice status changes',
-              },
-              {
-                key: 'paymentConfirmations' as const,
-                label: 'Payment Confirmations',
-                desc: 'Receive confirmation when payments are processed',
-              },
-              {
-                key: 'weeklyDigest' as const,
-                label: 'Weekly Digest',
-                desc: 'Summary of your invoice activity every Monday',
-              },
-            ].map((pref) => (
-              <label
-                key={pref.key}
-                htmlFor={`pref-${pref.key}`}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 16px',
-                  background: 'var(--color-bg)',
-                  borderRadius: 'var(--radius)',
-                  cursor: 'pointer',
-                  gap: 16,
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>{pref.label}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: 2 }}>
-                    {pref.desc}
-                  </div>
-                </div>
-                <input
-                  id={`pref-${pref.key}`}
-                  type="checkbox"
-                  checked={notifications[pref.key]}
-                  onChange={(e) =>
-                    setNotifications(prev => ({ ...prev, [pref.key]: e.target.checked }))
-                  }
-                  style={{
-                    width: 18,
-                    height: 18,
-                    accentColor: 'var(--color-primary)',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                  }}
-                />
-              </label>
-            ))}
-          </div>
-        </div>
-
         {/* Security */}
-        <div className="animate-in animate-in-5" style={cardStyle}>
+        <div className="animate-in animate-in-4" style={cardStyle}>
           <h2 style={sectionTitle}>
             <Shield size={18} color="var(--color-primary)" aria-hidden="true" />
             Security
@@ -369,7 +294,7 @@ export default function Profile() {
         </div>
 
         {/* Save */}
-        <div className="animate-in animate-in-6" style={{ display: 'flex', gap: 12 }}>
+        <div className="animate-in animate-in-5" style={{ display: 'flex', gap: 12 }}>
           <button type="submit" className="btn-primary">
             Save Changes
           </button>

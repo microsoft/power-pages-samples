@@ -4,8 +4,6 @@ const statusStyles: Record<string, { bg: string; color: string }> = {
   // Invoice statuses
   Draft: { bg: 'var(--color-bg)', color: 'var(--color-text-muted)' },
   Submitted: { bg: 'var(--color-info-light)', color: 'var(--color-status-info-text)' },
-  'Under Review': { bg: 'var(--color-warning-light)', color: 'var(--color-status-warning-text)' },
-  'Needs Revision': { bg: 'var(--color-revision-light)', color: 'var(--color-revision)' },
   Approved: { bg: 'var(--color-success-light)', color: 'var(--color-status-success-text)' },
   Rejected: { bg: 'var(--color-error-light)', color: 'var(--color-status-error-text)' },
   Paid: { bg: 'var(--color-accent-light)', color: 'var(--color-status-accent-text)' },
@@ -23,7 +21,6 @@ export default memo(function StatusBadge({ status }: { status: string }) {
   const s = statusStyles[status] || defaultStyle
   return (
     <span
-      className={status === 'Needs Revision' ? 'badge-pulse' : undefined}
       style={{
         display: 'inline-block',
         padding: '3px 10px',
