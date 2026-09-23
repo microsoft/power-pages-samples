@@ -13,8 +13,6 @@ const allStatuses: Array<InvoiceStatus | 'All'> = [
   'All',
   'Draft',
   'Submitted',
-  'Under Review',
-  'Needs Revision',
   'Approved',
   'Rejected',
   'Paid',

@@ -2,7 +2,12 @@
 // Server-side table permissions enforce actual access control.
 // Always configure table permissions via /power-pages:integrate-webapi.
 
-import { getCurrentUser, isAuthenticated as checkAuthenticated } from '../services/authService';
+import {
+  getActiveRoleModePreference,
+  getCurrentUser,
+  isAuthenticated as checkAuthenticated,
+  type ActiveRoleMode,
+} from '../services/authService';
 
 /**
  * Returns the current user's web roles as an array of strings.
@@ -56,16 +61,27 @@ export function hasElevatedAccess(additionalRoles: string[] = []): boolean {
   return isAdmin() || hasAnyRole(additionalRoles);
 }
 
+export function canSwitchRoleMode(): boolean {
+  return hasRole('Supplier') && hasRole('Reviewer');
+}
+
+export function getActiveRoleMode(): ActiveRoleMode {
+  if (canSwitchRoleMode()) {
+    return getActiveRoleModePreference() ?? 'reviewer';
+  }
+  return hasRole('Reviewer') ? 'reviewer' : 'supplier';
+}
+
 /**
  * Checks if the current user has the Reviewer role.
  */
 export function isReviewer(): boolean {
-  return hasRole('Reviewer');
+  return getActiveRoleMode() === 'reviewer';
 }
 
 /**
  * Checks if the current user is a supplier (not a reviewer).
  */
 export function isSupplier(): boolean {
-  return !hasRole('Reviewer');
+  return getActiveRoleMode() === 'supplier';
 }

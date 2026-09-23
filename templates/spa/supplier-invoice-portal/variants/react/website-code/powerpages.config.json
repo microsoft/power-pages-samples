@@ -43,7 +43,6 @@
     "purchaseOrder-*.js",
     "purchaseOrderProvider-*.js",
     "purchaseOrderService-*.js",
-    "refresh-cw-*.js",
     "search-*.js",
     "send-*.js",
     "shield-*.js",

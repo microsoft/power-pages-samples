@@ -274,7 +274,7 @@
           "_spnvc_purchaseorderid_value": null,
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
-          "spnvc_invoicestatus": 4
+          "spnvc_invoicestatus": 6
         },
         {
           "@odata.etag": "W/\"40766389\"",
@@ -365,7 +365,7 @@
           "_spnvc_purchaseorderid_value": "c7a71336-da26-f111-8341-000d3a36e41e",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 3
+          "spnvc_invoicestatus": 2
         },
         {
           "@odata.etag": "W/\"40766387\"",
@@ -479,7 +479,7 @@
           "_spnvc_purchaseorderid_value": "d7ee956a-da26-f111-8341-000d3a58dd8c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 4
+          "spnvc_invoicestatus": 6
         },
         {
           "@odata.etag": "W/\"40766402\"",
@@ -498,7 +498,7 @@
           "_spnvc_purchaseorderid_value": "0515b442-da26-f111-8341-000d3a58dd8c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 3
+          "spnvc_invoicestatus": 2
         }
       ]
     },
@@ -541,7 +541,7 @@
           "_spnvc_authorcontactid_value": "1c93e537-a823-f111-8341-000d3a36e41e",
           "spnvc_invoicecommentid": "1315c3ba-da26-f111-8341-000d3a5bf33c",
           "spnvc_name": "Review Note",
-          "spnvc_linkedaction": "Under Review",
+          "spnvc_linkedaction": "Submitted",
           "_spnvc_invoiceid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_InvoiceId",
           "_spnvc_invoiceid_value": "943d8283-da26-f111-8341-000d3a58de60",
           "createdon": "2026-03-23T17:07:11Z",
@@ -624,8 +624,8 @@
           "_spnvc_authorcontactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_AuthorContactId",
           "_spnvc_authorcontactid_value": "1c93e537-a823-f111-8341-000d3a36e41e",
           "spnvc_invoicecommentid": "295ab4d4-da26-f111-8341-000d3a58dd8c",
-          "spnvc_name": "Revision Request",
-          "spnvc_linkedaction": "Needs Revision",
+          "spnvc_name": "Rejection Note",
+          "spnvc_linkedaction": "Rejected",
           "_spnvc_invoiceid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_InvoiceId",
           "_spnvc_invoiceid_value": "d9145ca1-da26-f111-8341-000d3a5bf33c",
           "createdon": "2026-03-23T17:08:00Z",
@@ -639,7 +639,7 @@
           "_spnvc_authorcontactid_value": "0c93e537-a823-f111-8341-000d3a36e41e",
           "spnvc_invoicecommentid": "624062d6-da26-f111-8341-000d3a5bf33c",
           "spnvc_name": "Review Note",
-          "spnvc_linkedaction": "Under Review",
+          "spnvc_linkedaction": "Submitted",
           "_spnvc_invoiceid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_InvoiceId",
           "_spnvc_invoiceid_value": "db145ca1-da26-f111-8341-000d3a5bf33c",
           "createdon": "2026-03-23T17:08:06Z",
@@ -653,7 +653,7 @@
           "_spnvc_authorcontactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e",
           "spnvc_invoicecommentid": "eff581a0-e326-f111-8341-000d3a5bf33c",
           "spnvc_name": null,
-          "spnvc_linkedaction": "Needs Revision",
+          "spnvc_linkedaction": "Rejected",
           "_spnvc_invoiceid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_InvoiceId",
           "_spnvc_invoiceid_value": "47b38af1-e126-f111-8341-000d3a5bf33c",
           "createdon": "2026-03-23T18:11:00Z",
@@ -709,7 +709,7 @@
           "_spnvc_authorcontactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e",
           "spnvc_invoicecommentid": "7baee9b8-1128-f111-8341-000d3a37e531",
           "spnvc_name": null,
-          "spnvc_linkedaction": "Needs Revision",
+          "spnvc_linkedaction": "Rejected",
           "_spnvc_invoiceid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_InvoiceId",
           "_spnvc_invoiceid_value": "fdfc8929-0f28-f111-8341-000d3a37e531",
           "createdon": "2026-03-25T06:13:31Z",
@@ -765,7 +765,7 @@
           "_spnvc_authorcontactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e",
           "spnvc_invoicecommentid": "e5a21a34-b12e-f111-88b4-000d3a37e531",
           "spnvc_name": null,
-          "spnvc_linkedaction": "Needs Revision",
+          "spnvc_linkedaction": "Rejected",
           "_spnvc_invoiceid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_InvoiceId",
           "_spnvc_invoiceid_value": "46e2e013-b12e-f111-88b4-000d3a37e531",
           "createdon": "2026-04-02T16:30:14Z",

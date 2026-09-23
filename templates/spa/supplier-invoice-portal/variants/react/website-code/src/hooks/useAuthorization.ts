@@ -5,6 +5,8 @@ import {
   hasRole,
   hasAnyRole,
   hasAllRoles,
+  canSwitchRoleMode,
+  getActiveRoleMode,
   isAdmin,
   isReviewer,
 } from '../utils/authorization';
@@ -21,6 +23,8 @@ export function useAuthorization() {
     hasAllRoles,
     isAuthenticated,
     isAdmin: isAdmin(),
+    canSwitchRoleMode: canSwitchRoleMode(),
+    activeRoleMode: getActiveRoleMode(),
     isReviewer: isReviewer(),
   };
 }

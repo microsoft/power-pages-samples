@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FilePlus, FileText, X, LogOut, User, ChevronUp, LogIn, ClipboardCheck, ShoppingCart } from 'lucide-react'
+import { LayoutDashboard, FilePlus, FileText, X, LogOut, User, ChevronUp, LogIn, ClipboardCheck, ShoppingCart, RefreshCw } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useAuthorization } from '../hooks/useAuthorization'
+import { setActiveRoleModePreference } from '../services/authService'
 import { getInvoiceCountByStatus } from '../services/invoiceService'
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; end: boolean; badgeKey?: string }
@@ -10,7 +11,7 @@ type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; end: b
 const supplierNavItems: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: false },
   { to: '/invoices/new', label: 'Submit Invoice', icon: FilePlus, end: false },
-  { to: '/invoices', label: 'My Invoices', icon: FileText, end: true, badgeKey: 'needsRevision' },
+  { to: '/invoices', label: 'My Invoices', icon: FileText, end: true, badgeKey: 'rejected' },
   { to: '/purchase-orders', label: 'My POs', icon: ShoppingCart, end: true },
 ]
 
@@ -34,7 +35,7 @@ export default function Sidebar({
   const userMenuTriggerRef = useRef<HTMLButtonElement>(null)
   const navigate = useNavigate()
   const { isAuthenticated, isLoading, displayName, initials, login, logout } = useAuth()
-  const { isReviewer } = useAuthorization()
+  const { isReviewer, canSwitchRoleMode, activeRoleMode } = useAuthorization()
   const navItems = useMemo(() => isReviewer ? reviewerNavItems : supplierNavItems, [isReviewer])
 
   // Fetch badge counts
@@ -45,12 +46,12 @@ export default function Sidebar({
     getInvoiceCountByStatus().then((counts) => {
       if (cancelled) return
       const awaitingReview = counts
-        .filter((c) => c.status === 'Submitted' || c.status === 'Under Review')
+        .filter((c) => c.status === 'Submitted')
         .reduce((sum, c) => sum + c.count, 0)
-      const needsRevision = counts
-        .filter((c) => c.status === 'Needs Revision')
+      const rejected = counts
+        .filter((c) => c.status === 'Rejected')
         .reduce((sum, c) => sum + c.count, 0)
-      setBadges({ awaitingReview, needsRevision })
+      setBadges({ awaitingReview, rejected })
     }).catch(() => { /* silent — badges are non-critical */ })
     return () => { cancelled = true }
   }, [isAuthenticated])
@@ -97,6 +98,13 @@ export default function Sidebar({
       e.preventDefault()
       items[items.length - 1].focus()
     }
+
+  }
+
+  function switchRoleMode() {
+    setUserMenuOpen(false)
+    setActiveRoleModePreference(activeRoleMode === 'reviewer' ? 'supplier' : 'reviewer')
+    window.location.reload()
   }
 
   return (
@@ -300,17 +308,15 @@ export default function Sidebar({
                   >
                     {displayName}
                   </div>
-                  {isReviewer && (
-                    <div
-                      style={{
-                        fontSize: '0.7rem',
-                        color: 'rgba(255,255,255,0.5)',
-                        marginTop: 1,
-                      }}
-                    >
-                      Reviewer
-                    </div>
-                  )}
+                  <div
+                    style={{
+                      fontSize: '0.7rem',
+                      color: 'rgba(255,255,255,0.5)',
+                      marginTop: 1,
+                    }}
+                  >
+                    {isReviewer ? 'Reviewer' : 'Supplier'}
+                  </div>
                 </div>
                 <ChevronUp
                   size={14}
@@ -344,6 +350,17 @@ export default function Sidebar({
                     animation: 'scaleIn 0.15s ease-out',
                   }}
                 >
+                  {canSwitchRoleMode && (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={switchRoleMode}
+                      className="menu-item"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      <RefreshCw size={15} aria-hidden="true" /> Switch to {isReviewer ? 'Supplier' : 'Reviewer'}
+                    </button>
+                  )}
                   <button
                     type="button"
                     role="menuitem"

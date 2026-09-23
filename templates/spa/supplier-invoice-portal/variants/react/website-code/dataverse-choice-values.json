@@ -18,8 +18,6 @@
       "spnvc_invoicestatus": {
         "Draft": 1,
         "Submitted": 2,
-        "Under Review": 3,
-        "Needs Revision": 4,
         "Approved": 5,
         "Rejected": 6,
         "Paid": 7

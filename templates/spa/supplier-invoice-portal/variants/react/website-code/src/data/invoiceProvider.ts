@@ -342,7 +342,6 @@ export function useInvoiceDetail(id: string | undefined) {
 export function useDashboardMetrics(isReviewer = false) {
   const [metrics, setMetrics] = useState({
     total: 0,
-    needsRevision: 0,
     pendingReview: 0,
     approved: 0,
     rejected: 0,
@@ -362,7 +361,6 @@ export function useDashboardMetrics(isReviewer = false) {
         const rejected = invoices.filter(i => i.status === 'Rejected').length
         setMetrics({
           total: invoices.length,
-          needsRevision: 0,
           pendingReview: submitted,
           approved,
           rejected,
@@ -372,10 +370,9 @@ export function useDashboardMetrics(isReviewer = false) {
       } else {
         setMetrics({
           total: invoices.length,
-          needsRevision: invoices.filter(i => i.status === 'Needs Revision').length,
-          pendingReview: invoices.filter(i => i.status === 'Submitted' || i.status === 'Under Review').length,
+          rejected: invoices.filter(i => i.status === 'Rejected').length,
+          pendingReview: invoices.filter(i => i.status === 'Submitted').length,
           approved: invoices.filter(i => i.status === 'Approved').length,
-          rejected: 0,
           totalPaid: invoices.filter(i => i.status === 'Paid').reduce((s, i) => s + i.amount, 0),
           totalProcessed: 0,
         })
@@ -399,7 +396,6 @@ export function useDashboardMetrics(isReviewer = false) {
         const paid = countMap['Paid'] || 0
         setMetrics({
           total,
-          needsRevision: 0,
           pendingReview: countMap['Submitted'] || 0,
           approved,
           rejected,
@@ -409,10 +405,9 @@ export function useDashboardMetrics(isReviewer = false) {
       } else {
         setMetrics({
           total,
-          needsRevision: countMap['Needs Revision'] || 0,
-          pendingReview: (countMap['Submitted'] || 0) + (countMap['Under Review'] || 0),
+          rejected: countMap['Rejected'] || 0,
+          pendingReview: countMap['Submitted'] || 0,
           approved: countMap['Approved'] || 0,
-          rejected: 0,
           totalPaid: stats.total,
           totalProcessed: 0,
         })
@@ -442,13 +437,8 @@ export function useRecentInvoices(count = 5, isReviewer = false) {
       const { invoices: mockInvoices } = await import('./mockData')
       let list = [...mockInvoices]
       if (isReviewer) {
-        // Reviewer sees submitted invoices first (FIFO queue), then Under Review
-        list = list.filter(i => i.status === 'Submitted' || i.status === 'Under Review')
+        list = list.filter(i => i.status === 'Submitted')
         list.sort((a, b) => {
-          // Submitted before Under Review
-          if (a.status === 'Submitted' && b.status !== 'Submitted') return -1
-          if (a.status !== 'Submitted' && b.status === 'Submitted') return 1
-          // Within same status, oldest first
           return new Date(a.submissionDate).getTime() - new Date(b.submissionDate).getTime()
         })
       }
@@ -476,7 +466,7 @@ export function useRecentInvoices(count = 5, isReviewer = false) {
         const { INVOICE_STATUS } = await import('../types/invoice')
         const result = await listInvoices({
           pageSize: count,
-          filter: `spnvc_invoicestatus eq ${INVOICE_STATUS['Submitted']} or spnvc_invoicestatus eq ${INVOICE_STATUS['Under Review']}`,
+          filter: `spnvc_invoicestatus eq ${INVOICE_STATUS.Submitted}`,
           orderBy: 'spnvc_submissiondate asc',
         })
         setInvoices(result.items.map(apiInvoiceToItem))
@@ -741,7 +731,7 @@ export function useCreateCommentAction() {
 // ── Profile stats ──
 
 export function useProfileStats() {
-  const [stats, setStats] = useState({ total: 0, paid: 0, pending: 0, needsRevision: 0 })
+  const [stats, setStats] = useState({ total: 0, paid: 0, pending: 0, rejected: 0 })
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -753,8 +743,8 @@ export function useProfileStats() {
         setStats({
           total: invoices.length,
           paid: invoices.filter(i => i.status === 'Paid').length,
-          pending: invoices.filter(i => i.status === 'Submitted' || i.status === 'Under Review').length,
-          needsRevision: invoices.filter(i => i.status === 'Needs Revision').length,
+          pending: invoices.filter(i => i.status === 'Submitted').length,
+          rejected: invoices.filter(i => i.status === 'Rejected').length,
         })
         setIsLoading(false)
         return
@@ -769,8 +759,8 @@ export function useProfileStats() {
         setStats({
           total,
           paid: map['Paid'] || 0,
-          pending: (map['Submitted'] || 0) + (map['Under Review'] || 0),
-          needsRevision: map['Needs Revision'] || 0,
+          pending: map['Submitted'] || 0,
+          rejected: map['Rejected'] || 0,
         })
       } catch { /* zeros */ }
       finally { setIsLoading(false) }
