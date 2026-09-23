@@ -256,6 +256,53 @@ export function useSupplierPOs() {
   return { purchaseOrders, isLoading }
 }
 
+// ── Supplier options for assignment ──
+
+export interface SupplierOption {
+  id: string
+  name: string
+}
+
+export function useAssignableSuppliers() {
+  const [suppliers, setSuppliers] = useState<SupplierOption[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      setIsLoading(true)
+      setError(null)
+
+      if (isDevelopment) {
+        const { suppliers: mockSuppliers } = await import('./mockData')
+        if (cancelled) return
+        setSuppliers(mockSuppliers.map(s => ({ id: s.id, name: s.name })))
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const { listAssignableSuppliers } = await import('../services/supplierService')
+        const result = await listAssignableSuppliers()
+        if (cancelled) return
+        setSuppliers(result.map(s => ({ id: s.id, name: s.name })))
+      } catch (err) {
+        if (cancelled) return
+        setError(err instanceof Error ? err.message : 'Failed to load suppliers')
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  return { suppliers, isLoading, error }
+}
+
 export function useCreatePOAction() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)

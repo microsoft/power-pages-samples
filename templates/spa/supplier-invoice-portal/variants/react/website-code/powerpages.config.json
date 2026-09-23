@@ -46,6 +46,7 @@
     "search-*.js",
     "send-*.js",
     "shield-*.js",
+    "supplierService-*.js",
     "triangle-alert-*.js",
     "upload-*.js",
     "usePageTitle-*.js"

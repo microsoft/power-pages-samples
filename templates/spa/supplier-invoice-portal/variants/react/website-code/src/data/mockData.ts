@@ -301,6 +301,17 @@ export const invoices: Invoice[] = [
   },
 ]
 
+export interface MockSupplier {
+  id: string
+  name: string
+}
+
+export const suppliers: MockSupplier[] = [
+  { id: 'SUP-001', name: 'Contoso Supplies Ltd' },
+  { id: 'SUP-002', name: 'Fabrikam Industrial' },
+  { id: 'SUP-003', name: 'Northwind Logistics' },
+]
+
 export const purchaseOrders: MockPurchaseOrder[] = [
   {
     id: 'PO-001',
