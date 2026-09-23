@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, FilePlus, FileText, X, LogOut, User, ChevronUp, LogIn, ClipboardCheck, ShoppingCart, RefreshCw } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useAuthorization } from '../hooks/useAuthorization'
 import { setActiveRoleModePreference } from '../services/authService'
 import { getInvoiceCountByStatus } from '../services/invoiceService'
+import { useInvoicesChanged } from '../data/invoiceEvents'
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; end: boolean; badgeKey?: string }
 
@@ -40,6 +41,16 @@ export default function Sidebar({
 
   // Fetch badge counts
   const [badges, setBadges] = useState<Record<string, number>>({})
+  const [badgeRefreshToken, setBadgeRefreshToken] = useState(0)
+
+  // Invoices are approved, rejected, and submitted on other routes while this
+  // sidebar stays mounted, so the counts have to be refetched on change instead
+  // of going stale until the next full page load.
+  const handleInvoicesChanged = useCallback(() => {
+    setBadgeRefreshToken((token) => token + 1)
+  }, [])
+  useInvoicesChanged(handleInvoicesChanged)
+
   useEffect(() => {
     if (!isAuthenticated) return
     let cancelled = false
@@ -54,7 +65,7 @@ export default function Sidebar({
       setBadges({ awaitingReview, rejected })
     }).catch(() => { /* silent — badges are non-critical */ })
     return () => { cancelled = true }
-  }, [isAuthenticated])
+  }, [isAuthenticated, badgeRefreshToken])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

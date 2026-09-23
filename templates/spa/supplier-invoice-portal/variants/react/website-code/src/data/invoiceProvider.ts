@@ -9,6 +9,7 @@ import type { Invoice as ApiInvoice, InvoiceStatusLabel } from '../types/invoice
 import type { InvoiceComment as ApiComment } from '../types/invoiceComment'
 import type { InvoiceAttachment as ApiAttachment } from '../types/invoiceAttachment'
 import { getCurrentUser } from '../services/authService'
+import { notifyInvoicesChanged } from './invoiceEvents'
 
 const isDevelopment =
   typeof window !== 'undefined' &&
@@ -509,6 +510,7 @@ export function useCreateInvoiceAction() {
       // Simulate submission
       await new Promise(r => setTimeout(r, 1000))
       setIsSubmitting(false)
+      notifyInvoicesChanged()
       return true
     }
 
@@ -543,11 +545,11 @@ export function useCreateInvoiceAction() {
         ))
       }
 
+      notifyInvoicesChanged()
       return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create invoice')
-      return false
-    } finally {
+      return false    } finally {
       setIsSubmitting(false)
     }
   }, [])
@@ -574,6 +576,7 @@ export function useUpdateInvoiceAction() {
     if (isDevelopment) {
       await new Promise(r => setTimeout(r, 500))
       setIsSubmitting(false)
+      notifyInvoicesChanged()
       return true
     }
 
@@ -586,6 +589,7 @@ export function useUpdateInvoiceAction() {
         description: data.description,
         status: data.status,
       })
+      notifyInvoicesChanged()
       return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update invoice')
