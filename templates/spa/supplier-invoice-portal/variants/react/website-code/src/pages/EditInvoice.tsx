@@ -31,7 +31,9 @@ export default function EditInvoice() {
   // Pre-fill form when both invoice and PO data are loaded
   useEffect(() => {
     if (invoice && !posLoading && !formInitialized) {
-      const matchedPO = availablePOs.find(p => p.poNumber === invoice.poNumber)
+      const matchedPO = availablePOs.find(
+        p => p.id === invoice.purchaseOrderId || p.poNumber === invoice.poNumber,
+      )
       const initial = {
         poNumber: invoice.poNumber || '',
         selectedPOId: matchedPO?.id || '',
@@ -110,6 +112,8 @@ export default function EditInvoice() {
 
     const success = await update(id, {
       poNumber: form.poNumber,
+      purchaseOrderId: form.selectedPOId,
+      supplierId: selectedPO?.supplierId,
       amount: Number(form.amount),
       dueDate: form.dueDate,
       description: form.description,

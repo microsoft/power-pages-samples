@@ -1,0 +1,119 @@
+{
+  "tables": {
+    "spnvc_invoice": {
+      "customColumns": [
+        "spnvc_amount",
+        "spnvc_amount_base",
+        "spnvc_contactid",
+        "spnvc_description",
+        "spnvc_duedate",
+        "spnvc_invoicestatus",
+        "spnvc_name",
+        "spnvc_ponumber",
+        "spnvc_purchaseorderid",
+        "spnvc_submissiondate",
+        "spnvc_supplierid"
+      ]
+    },
+    "spnvc_invoiceattachment": {
+      "customColumns": [
+        "spnvc_contactid",
+        "spnvc_file",
+        "spnvc_filesize",
+        "spnvc_filetype",
+        "spnvc_invoicecommentid",
+        "spnvc_invoiceid",
+        "spnvc_name"
+      ]
+    },
+    "spnvc_invoicecomment": {
+      "customColumns": [
+        "spnvc_authorcontactid",
+        "spnvc_commenttext",
+        "spnvc_contactid",
+        "spnvc_invoiceid",
+        "spnvc_linkedaction",
+        "spnvc_name"
+      ]
+    },
+    "spnvc_purchaseorder": {
+      "customColumns": [
+        "spnvc_deliverydate",
+        "spnvc_description",
+        "spnvc_name",
+        "spnvc_postatus",
+        "spnvc_supplierid",
+        "spnvc_totalamount",
+        "spnvc_totalamount_base"
+      ]
+    },
+    "spnvc_supplier": {
+      "customColumns": [
+        "spnvc_name",
+        "spnvc_status"
+      ]
+    }
+  },
+  "relationships": {
+    "spnvc_contact_invoice_submitter": {
+      "referencingTable": "spnvc_invoice",
+      "referencedTable": "contact",
+      "lookupColumn": "spnvc_contactid",
+      "navigationProperty": "spnvc_ContactId"
+    },
+    "spnvc_contact_invoiceattachment_contact": {
+      "referencingTable": "spnvc_invoiceattachment",
+      "referencedTable": "contact",
+      "lookupColumn": "spnvc_contactid",
+      "navigationProperty": "spnvc_ContactId"
+    },
+    "spnvc_contact_invoicecomment_author": {
+      "referencingTable": "spnvc_invoicecomment",
+      "referencedTable": "contact",
+      "lookupColumn": "spnvc_authorcontactid",
+      "navigationProperty": "spnvc_AuthorContactId"
+    },
+    "spnvc_contact_invoicecomment_contact": {
+      "referencingTable": "spnvc_invoicecomment",
+      "referencedTable": "contact",
+      "lookupColumn": "spnvc_contactid",
+      "navigationProperty": "spnvc_ContactId"
+    },
+    "spnvc_invoice_invoiceattachment": {
+      "referencingTable": "spnvc_invoiceattachment",
+      "referencedTable": "spnvc_invoice",
+      "lookupColumn": "spnvc_invoiceid",
+      "navigationProperty": "spnvc_InvoiceId"
+    },
+    "spnvc_invoice_invoicecomment": {
+      "referencingTable": "spnvc_invoicecomment",
+      "referencedTable": "spnvc_invoice",
+      "lookupColumn": "spnvc_invoiceid",
+      "navigationProperty": "spnvc_InvoiceId"
+    },
+    "spnvc_invoicecomment_invoiceattachment": {
+      "referencingTable": "spnvc_invoiceattachment",
+      "referencedTable": "spnvc_invoicecomment",
+      "lookupColumn": "spnvc_invoicecommentid",
+      "navigationProperty": "spnvc_InvoiceCommentId"
+    },
+    "spnvc_purchaseorder_invoice": {
+      "referencingTable": "spnvc_invoice",
+      "referencedTable": "spnvc_purchaseorder",
+      "lookupColumn": "spnvc_purchaseorderid",
+      "navigationProperty": "spnvc_PurchaseOrderId"
+    },
+    "spnvc_supplier_invoice": {
+      "referencingTable": "spnvc_invoice",
+      "referencedTable": "spnvc_supplier",
+      "lookupColumn": "spnvc_supplierid",
+      "navigationProperty": "spnvc_SupplierId"
+    },
+    "spnvc_supplier_purchaseorder": {
+      "referencingTable": "spnvc_purchaseorder",
+      "referencedTable": "spnvc_supplier",
+      "lookupColumn": "spnvc_supplierid",
+      "navigationProperty": "spnvc_SupplierId"
+    }
+  }
+}

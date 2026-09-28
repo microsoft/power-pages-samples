@@ -498,6 +498,8 @@ export function useCreateInvoiceAction() {
 
   const submit = useCallback(async (data: {
     poNumber: string
+    purchaseOrderId: string
+    supplierId?: string
     amount: number
     dueDate: string
     description: string
@@ -526,6 +528,8 @@ export function useCreateInvoiceAction() {
         status: 'Submitted',
         submissionDate: new Date().toISOString(),
         contactId: user?.contactId,
+        supplierId: data.supplierId,
+        purchaseOrderId: data.purchaseOrderId,
       })
 
       // Upload attached files to the newly created invoice
@@ -565,6 +569,8 @@ export function useUpdateInvoiceAction() {
 
   const update = useCallback(async (id: string, data: {
     poNumber?: string
+    purchaseOrderId?: string
+    supplierId?: string
     amount?: number
     dueDate?: string
     description?: string
@@ -584,6 +590,8 @@ export function useUpdateInvoiceAction() {
       const { updateInvoice } = await import('../services/invoiceService')
       await updateInvoice(id, {
         poNumber: data.poNumber,
+        purchaseOrderId: data.purchaseOrderId,
+        supplierId: data.supplierId,
         amount: data.amount,
         dueDate: data.dueDate,
         description: data.description,

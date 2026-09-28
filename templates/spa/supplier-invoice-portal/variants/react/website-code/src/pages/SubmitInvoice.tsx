@@ -96,6 +96,8 @@ export default function SubmitInvoice() {
 
     const success = await submitInvoice({
       poNumber: form.poNumber,
+      purchaseOrderId: form.selectedPOId,
+      supplierId: selectedPO?.supplierId,
       amount: Number(form.amount),
       dueDate: form.dueDate,
       description: form.description,

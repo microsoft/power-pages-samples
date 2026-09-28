@@ -151,6 +151,9 @@ export const createInvoice = async (payload: CreateInvoiceInput): Promise<Invoic
   if (payload.supplierId) {
     body['spnvc_SupplierId@odata.bind'] = `/spnvc_suppliers(${payload.supplierId})`
   }
+  if (payload.purchaseOrderId) {
+    body['spnvc_PurchaseOrderId@odata.bind'] = `/spnvc_purchaseorders(${payload.purchaseOrderId})`
+  }
 
   const response = await powerPagesFetchResponse(`/_api/${ENTITY_SET}`, {
     method: 'POST',
@@ -201,6 +204,13 @@ export const updateInvoice = async (
       body['spnvc_SupplierId@odata.bind'] = `/spnvc_suppliers(${payload.supplierId})`
     } else {
       body['spnvc_SupplierId@odata.bind'] = null
+    }
+  }
+  if (payload.purchaseOrderId !== undefined) {
+    if (payload.purchaseOrderId) {
+      body['spnvc_PurchaseOrderId@odata.bind'] = `/spnvc_purchaseorders(${payload.purchaseOrderId})`
+    } else {
+      body['spnvc_PurchaseOrderId@odata.bind'] = null
     }
   }
 
