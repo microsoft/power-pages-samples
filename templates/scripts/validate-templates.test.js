@@ -431,6 +431,108 @@ test("validates website and seed choice values against solution metadata", () =>
   ));
 });
 
+test("validates the declared Dataverse solution contract", () => {
+  const root = createTemplateRoot({
+    solutionTables: [
+      {
+        schemaName: "sample_Request",
+        entitySetName: "sample_requests",
+        primaryKey: "sample_requestid",
+        attributes: [
+          {
+            physicalName: "sample_RequestId",
+            logicalName: "sample_requestid",
+            type: "primarykey"
+          },
+          {
+            physicalName: "sample_Name",
+            logicalName: "sample_name",
+            type: "nvarchar",
+            isCustomField: true
+          },
+          {
+            physicalName: "sample_ContactId",
+            logicalName: "sample_contactid",
+            type: "lookup",
+            isCustomField: true
+          },
+          {
+            physicalName: "sample_Unused",
+            logicalName: "sample_unused",
+            type: "nvarchar",
+            isCustomField: true
+          }
+        ]
+      },
+      {
+        schemaName: "sample_Unused",
+        entitySetName: "sample_unusedrecords",
+        primaryKey: "sample_unusedid",
+        attributes: [
+          {
+            physicalName: "sample_UnusedId",
+            logicalName: "sample_unusedid",
+            type: "primarykey"
+          },
+          {
+            physicalName: "sample_Name",
+            logicalName: "sample_name",
+            type: "nvarchar",
+            isCustomField: true
+          }
+        ]
+      }
+    ],
+    solutionRelationships: [
+      {
+        name: "sample_contact_request",
+        sourceSchemaName: "sample_Request",
+        targetSchemaName: "Contact",
+        attributeName: "sample_ContactId",
+        navigationProperty: "sample_ContactId"
+      },
+      {
+        name: "sample_unused_request",
+        sourceSchemaName: "sample_Request",
+        targetSchemaName: "Contact",
+        attributeName: "sample_ContactId",
+        navigationProperty: "sample_UnusedContactId"
+      }
+    ]
+  });
+  const websiteCodePath = path.join(root, "spa/test-template/variants/react/website-code");
+  fs.writeFileSync(
+    path.join(websiteCodePath, "dataverse-solution-contract.json"),
+    JSON.stringify({
+      tables: {
+        sample_request: {
+          customColumns: ["sample_name", "sample_contactid"]
+        }
+      },
+      relationships: {
+        sample_contact_request: {
+          referencingTable: "sample_request",
+          referencedTable: "contact",
+          lookupColumn: "sample_contactid",
+          navigationProperty: "sample_ContactId"
+        }
+      }
+    }, null, 2)
+  );
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) =>
+    error.includes('solution table "sample_unused" is not declared')
+  ));
+  assert(result.errors.some((error) =>
+    error.includes('solution custom column "sample_request.sample_unused" is not declared')
+  ));
+  assert(result.errors.some((error) =>
+    error.includes('solution relationship "sample_unused_request" is not declared')
+  ));
+  assert(!result.errors.some((error) => error.includes("sample_contact_request")));
+});
+
 test("validates Dataverse seed targets, lookups, records, and dependency order against solution metadata", () => {
   const solutionTables = [
     {
@@ -971,6 +1073,7 @@ function dataverseEntityXml(table) {
           <Type>${attribute.type}</Type>
           <Name>${attribute.logicalName}</Name>
           <LogicalName>${attribute.logicalName}</LogicalName>
+          <IsCustomField>${attribute.isCustomField ? 1 : 0}</IsCustomField>
           ${optionSet}
         </attribute>`;
   }).join("");
@@ -988,7 +1091,7 @@ function dataverseEntityXml(table) {
 
 function dataverseRelationshipsXml(relationships) {
   const entries = relationships.map((relationship) => `
-  <EntityRelationship>
+  <EntityRelationship${relationship.name ? ` Name="${relationship.name}"` : ""}>
     <ReferencingEntityName>${relationship.sourceSchemaName}</ReferencingEntityName>
     <ReferencedEntityName>${relationship.targetSchemaName}</ReferencedEntityName>
     <ReferencingAttributeName>${relationship.attributeName}</ReferencingAttributeName>

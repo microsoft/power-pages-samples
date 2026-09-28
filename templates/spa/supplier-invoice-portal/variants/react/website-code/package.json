@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "test": "node --test --test-concurrency=1 tests/invoiceService.test.mjs",
     "build": "tsc -b && vite build && node scripts/postbuild.js",
     "preview": "vite preview"
   },

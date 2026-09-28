@@ -23,6 +23,20 @@ The React Power Pages website project is stored separately under `variants/react
 | --- | --- |
 | ![Supplier Invoice Portal purchase orders](previews/purchase-orders.png) | ![Supplier Invoice Portal review queue](previews/review.png) |
 
+## Data model
+
+The supporting solution contains five custom tables:
+
+- `spnvc_supplier` stores the supplier name and active status used for purchase-order assignment.
+- `spnvc_purchaseorder` stores purchase orders and their supplier lookup.
+- `spnvc_invoice` stores invoices and the exact contact, supplier, and purchase-order lookups used by the site.
+- `spnvc_invoicecomment` stores the invoice discussion thread and its permission-scope contact lookup.
+- `spnvc_invoiceattachment` stores uploaded files and links them to an invoice or comment.
+
+The standard Dataverse `contact` table supplies portal identity and reviewer or supplier ownership.
+The expected custom columns, relationships, and case-sensitive lookup navigation properties are declared in [`dataverse-solution-contract.json`](variants/react/website-code/dataverse-solution-contract.json).
+Template validation rejects solution components that drift from this contract.
+
 ## Use this template manually
 
 Use these steps if you want to install the template yourself instead of using an installer skill.

@@ -8,7 +8,6 @@ import choiceValues from '../../dataverse-choice-values.json'
 export interface SupplierEntity {
   spnvc_supplierid: string
   spnvc_name?: string       // Supplier Name (primary name attribute)
-  spnvc_email?: string      // Contact email
   spnvc_status?: number     // Supplier Status (Picklist)
   // Index signature for OData formatted value annotations
   [key: string]: unknown
@@ -31,7 +30,6 @@ export const SUPPLIER_STATUS_VALUE_TO_LABEL = Object.fromEntries(
 export interface Supplier {
   id: string
   name: string
-  email: string
   status: SupplierStatusLabel | undefined
 }
 
@@ -40,7 +38,6 @@ export interface Supplier {
 export const mapSupplierEntity = (entity: SupplierEntity): Supplier => ({
   id: entity.spnvc_supplierid,
   name: entity.spnvc_name ?? '',
-  email: entity.spnvc_email ?? '',
   status:
     entity.spnvc_status === undefined
       ? undefined

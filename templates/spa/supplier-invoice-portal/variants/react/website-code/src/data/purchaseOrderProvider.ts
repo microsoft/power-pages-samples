@@ -21,6 +21,7 @@ export interface POItem {
   remainingAmount: number
   deliveryDate: string
   status: string
+  supplierId?: string
   supplierName: string
   createdOn: string
 }
@@ -37,6 +38,7 @@ function apiPOToItem(po: PurchaseOrder): POItem {
     remainingAmount: po.remainingAmount,
     deliveryDate: po.deliveryDate,
     status: po.status,
+    supplierId: po.supplierId,
     supplierName: po.supplierName,
     createdOn: po.createdOn,
   }

@@ -238,7 +238,8 @@
         {
           "@odata.etag": "W/\"38066214\"",
           "spnvc_amount": 1200,
-          "_spnvc_supplierid_value": null,
+          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
+          "_spnvc_supplierid_value": "d9250f46-d926-f111-8341-000d3a36e41e",
           "spnvc_description": "Adding sample data. ",
           "spnvc_submissiondate": "2026-03-23T17:58:54Z",
           "spnvc_duedate": "2026-04-10T00:00:00Z",
@@ -247,7 +248,8 @@
           "spnvc_name": "INV-1774288734882",
           "spnvc_invoiceid": "47b38af1-e126-f111-8341-000d3a5bf33c",
           "spnvc_ponumber": "PO-2026-001",
-          "_spnvc_purchaseorderid_value": null,
+          "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
+          "_spnvc_purchaseorderid_value": "f52b7e24-da26-f111-8341-000d3a37e531",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
           "spnvc_invoicestatus": 5
@@ -255,7 +257,8 @@
         {
           "@odata.etag": "W/\"38974672\"",
           "spnvc_amount": 1200,
-          "_spnvc_supplierid_value": null,
+          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
+          "_spnvc_supplierid_value": "769496a7-d926-f111-8341-000d3a37e531",
           "spnvc_description": "initial estimate ",
           "spnvc_submissiondate": "2026-03-25T05:55:07Z",
           "spnvc_duedate": "2026-04-09T00:00:00Z",
@@ -264,7 +267,8 @@
           "spnvc_name": "INV-1774418107292",
           "spnvc_invoiceid": "fdfc8929-0f28-f111-8341-000d3a37e531",
           "spnvc_ponumber": "PO-2026-010",
-          "_spnvc_purchaseorderid_value": null,
+          "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
+          "_spnvc_purchaseorderid_value": "d7ee956a-da26-f111-8341-000d3a58dd8c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
           "spnvc_invoicestatus": 5
@@ -272,7 +276,8 @@
         {
           "@odata.etag": "W/\"39017467\"",
           "spnvc_amount": 1100,
-          "_spnvc_supplierid_value": null,
+          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
+          "_spnvc_supplierid_value": "d9250f46-d926-f111-8341-000d3a36e41e",
           "spnvc_description": "new invoice",
           "spnvc_submissiondate": "2026-04-02T16:29:14Z",
           "spnvc_duedate": "2026-04-22T00:00:00Z",
@@ -281,7 +286,8 @@
           "spnvc_name": "INV-1775147354436",
           "spnvc_invoiceid": "46e2e013-b12e-f111-88b4-000d3a37e531",
           "spnvc_ponumber": "PO-2026-001",
-          "_spnvc_purchaseorderid_value": null,
+          "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
+          "_spnvc_purchaseorderid_value": "f52b7e24-da26-f111-8341-000d3a37e531",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
           "spnvc_invoicestatus": 6
@@ -308,7 +314,8 @@
         {
           "@odata.etag": "W/\"40769402\"",
           "spnvc_amount": 12000,
-          "_spnvc_supplierid_value": null,
+          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
+          "_spnvc_supplierid_value": "8897a8a0-d926-f111-8341-000d3a37e531",
           "spnvc_description": "new PO order",
           "spnvc_submissiondate": "2026-04-24T00:00:00Z",
           "spnvc_duedate": "2026-04-13T00:00:00Z",
@@ -317,7 +324,8 @@
           "spnvc_name": "INV-2026-0011",
           "spnvc_invoiceid": "1036f65e-9c3f-f111-88b4-000d3a58de60",
           "spnvc_ponumber": "PO-2026-009",
-          "_spnvc_purchaseorderid_value": null,
+          "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
+          "_spnvc_purchaseorderid_value": "34831367-da26-f111-8341-000d3a5bf33c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
           "spnvc_invoicestatus": 2
@@ -325,7 +333,8 @@
         {
           "@odata.etag": "W/\"40769405\"",
           "spnvc_amount": 13000,
-          "_spnvc_supplierid_value": null,
+          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
+          "_spnvc_supplierid_value": "8897a8a0-d926-f111-8341-000d3a37e531",
           "spnvc_description": "new comment",
           "spnvc_submissiondate": "2026-04-24T00:00:00Z",
           "spnvc_duedate": "2026-04-29T00:00:00Z",
@@ -334,7 +343,8 @@
           "spnvc_name": "INV-2026-0012",
           "spnvc_invoiceid": "5d8faa86-9c3f-f111-88b4-000d3a58de60",
           "spnvc_ponumber": "PO-2026-009",
-          "_spnvc_purchaseorderid_value": null,
+          "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
+          "_spnvc_purchaseorderid_value": "34831367-da26-f111-8341-000d3a5bf33c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
           "spnvc_invoicestatus": 2

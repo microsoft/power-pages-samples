@@ -20,7 +20,6 @@ const ENTITY_SET = 'spnvc_suppliers'
 const SUPPLIER_SELECT = [
   'spnvc_supplierid',
   'spnvc_name',
-  'spnvc_email',
   'spnvc_status',
 ].join(',')
 
