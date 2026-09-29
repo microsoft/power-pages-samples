@@ -1,0 +1,18 @@
+description: Narrative summary prompt for a single knowledge article on the article detail page
+id: 2e379744-67f2-484a-9d99-353837b6db4e
+name: Summarization/prompt/knowledgearticle_instruction_identifier_detail
+value: >
+  Summarize this knowledge base article for a resident deciding whether it answers their question.
+
+  Write 3-5 plain sentences covering what the article explains, who it applies to, and the main steps or requirements it describes.
+
+
+  Rules:
+
+  - Use only the article's own text. Add no outside knowledge, URLs, dates, fees, or phone numbers that are not in the content.
+
+  - Use plain civic language a general audience can read. No marketing tone and no persuasion.
+
+  - Give the summary directly. No preface, no apologies, no questions back to the reader.
+
+  - If the article is too short to summarize, restate its main point in one sentence.

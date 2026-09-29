@@ -1,17 +1,20 @@
 import { useState, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Search, Paperclip, CheckCircle, X } from 'lucide-react'
+import { Search, Paperclip, CheckCircle, X, Sparkles } from 'lucide-react'
 import Icon, { BookOpen } from '../components/Icon'
 import { z } from 'zod'
 import { useServiceTypeBySlug } from '../shared/hooks/useServiceTypes'
 import { useCreateServiceRequest } from '../shared/hooks/useServiceRequests'
 import { useRelatedArticles } from '../shared/hooks/useArticles'
+import { useSearchSummary } from '../shared/hooks/useAiSummary'
+import { buildServiceTypeSearchQuery } from '../services/aiSummaryService'
 import { useAuth } from '../shared/hooks/useAuth'
 import { useI18n } from '../i18n'
 import Breadcrumbs from '../components/Breadcrumbs'
+import AiSearchSummary from '../components/AiSearchSummary'
 import EmptyState from '../components/EmptyState'
-import { SkeletonDetail } from '../components/Skeleton'
-import LeafletMap from '../components/LeafletMap'
+import { Skeleton, SkeletonDetail } from '../components/Skeleton'
+import LeafletMap, { LONDON_CENTER } from '../components/LeafletMap'
 import { uploadAttachments, validateFile } from '../shared/services/annotationService'
 import { addRecentRequest } from '../shared/recentRequests'
 import './CreateRequest.css'
@@ -68,8 +71,11 @@ export default function CreateRequest() {
   const [description, setDescription] = useState('')
   const [urgency, setUrgency] = useState<'low' | 'medium' | 'high'>('medium')
   const [dateObserved, setDateObserved] = useState('')
-  const [pinLat, setPinLat] = useState(40.7128)
-  const [pinLng, setPinLng] = useState(-74.006)
+  // Default the pin to Trafalgar Square. A submitter who never touches the map still sends
+  // coordinates (serviceRequestService always writes both columns), so the default has to sit
+  // inside the served city or the request lands on the map in the wrong country.
+  const [pinLat, setPinLat] = useState(LONDON_CENTER[0])
+  const [pinLng, setPinLng] = useState(LONDON_CENTER[1])
   const [geocoding, setGeocoding] = useState(false)
   const handleMapClick = useCallback((lat: number, lng: number) => {
     setPinLat(lat)
@@ -104,6 +110,27 @@ export default function CreateRequest() {
   const [email, setEmail] = useState(user?.email ?? '')
   const [phone, setPhone] = useState('')
   const [consent, setConsent] = useState(false)
+
+  // AI-grounded retrieval for the helpful-articles panel, asked only while that panel is on
+  // screen: withholding the query on the later steps and after a dismissal keeps the wizard
+  // from paying for a summary the visitor will never see.
+  const aiArticles = useSearchSummary(
+    step === 'location' && !articlesDismissed ? buildServiceTypeSearchQuery(service) : undefined
+  )
+
+  // The AI summary is the primary content for the panel and the tag-matched list is the
+  // fallback, so exactly one of them shows. Search summary depends on a site-level preview
+  // toggle and on a populated search index; when it yields nothing the visitor still gets the
+  // links they would have had anyway, with no error surfaced, because the AI layer is an
+  // enhancement here and not the feature.
+  //
+  // The placeholder waits for the fallback list to have something in it. Otherwise a visitor
+  // for whom neither source produces anything would watch the panel appear and then vanish,
+  // shifting the wizard under a half-read first step.
+  const showAiArticles = aiArticles.status === 'content'
+  const showArticlesLoading = aiArticles.status === 'loading' && relatedArticles.length > 0
+  const showFallbackArticles =
+    !showAiArticles && !showArticlesLoading && relatedArticles.length > 0
 
   if (serviceLoading) {
     return <SkeletonDetail />
@@ -348,7 +375,8 @@ export default function CreateRequest() {
         </div>
 
         {/* Helpful Articles — shown on first step only */ }
-        { step === 'location' && relatedArticles.length > 0 && !articlesDismissed && (
+        { step === 'location' && !articlesDismissed &&
+          (showAiArticles || showArticlesLoading || showFallbackArticles) && (
           <div className="animate-in animate-in-3" style={ {
             background: 'var(--color-info-bg)',
             borderRadius: 'var(--radius-md)',
@@ -358,21 +386,45 @@ export default function CreateRequest() {
             alignItems: 'flex-start',
             gap: 12,
           } }>
-            <BookOpen size={ 18 } style={ { flexShrink: 0, marginTop: 2, color: 'var(--color-info)' } } />
+            { showAiArticles
+              ? <Sparkles size={ 18 } style={ { flexShrink: 0, marginTop: 2, color: 'var(--color-info)' } } />
+              : <BookOpen size={ 18 } style={ { flexShrink: 0, marginTop: 2, color: 'var(--color-info)' } } /> }
             <div style={ { flex: 1, minWidth: 0 } }>
               <p style={ { fontSize: '0.8125rem', color: 'var(--color-text-muted)', marginBottom: 6 } }>
                 { t('createRequest.helpfulArticles') }
               </p>
-              <div style={ { display: 'flex', flexDirection: 'column', gap: 4 } }>
-                { relatedArticles.map(article => (
-                  <Link
-                    key={ article.id }
-                    to={ `/knowledge/${article.slug}` }
-                    style={ { fontSize: '0.8125rem', color: 'var(--color-primary)', textDecoration: 'none' } }
-                  >
-                    { article.title } &rarr;
-                  </Link>
-                )) }
+              {/* The live region spans all three branches so a summary arriving after the
+                  placeholder is announced, rather than only the fact that work started. */}
+              <div aria-live="polite" aria-busy={ showArticlesLoading }>
+                { showArticlesLoading && (
+                  <div>
+                    <span className="sr-only">{ t('aiSummary.loading') }</span>
+                    <Skeleton height={ 10 } borderRadius={ 5 } style={ { marginBottom: 6 } } />
+                    <Skeleton width="60%" height={ 10 } borderRadius={ 5 } />
+                  </div>
+                ) }
+
+                { showAiArticles && (
+                  <AiSearchSummary
+                    summary={ aiArticles.summary }
+                    citationTitleMapping={ aiArticles.citationTitleMapping }
+                    style={ { fontSize: '0.8125rem' } }
+                  />
+                ) }
+
+                { showFallbackArticles && (
+                  <div style={ { display: 'flex', flexDirection: 'column', gap: 4 } }>
+                    { relatedArticles.map(article => (
+                      <Link
+                        key={ article.id }
+                        to={ `/knowledge/${article.slug}` }
+                        style={ { fontSize: '0.8125rem', color: 'var(--color-primary)', textDecoration: 'none' } }
+                      >
+                        { article.title } &rarr;
+                      </Link>
+                    )) }
+                  </div>
+                ) }
               </div>
             </div>
             <button
@@ -415,9 +467,12 @@ export default function CreateRequest() {
                   pickMode
                   pickLat={ pinLat }
                   pickLng={ pinLng }
-                  center={ [40.7128, -74.006] }
+                  center={ LONDON_CENTER }
                   zoom={ 12 }
                   onClick={ handleMapClick }
+                  showLocate
+                  locateLabel={ t('createRequest.useMyLocation') }
+                  locateErrorLabel={ t('createRequest.locationError') }
                 />
                 <p style={ { fontSize: '0.75rem', color: 'var(--color-text-light)', marginTop: 6 } }>
                   { geocoding ? t('createRequest.detectingAddress') : t('createRequest.mapHint') }

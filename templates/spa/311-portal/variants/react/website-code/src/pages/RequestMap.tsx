@@ -4,7 +4,7 @@ import { useServiceTypes } from '../shared/hooks/useServiceTypes'
 import { useServiceRequests } from '../shared/hooks/useServiceRequests'
 import { useI18n } from '../i18n'
 import type { RequestStatus } from '../types/serviceRequest'
-import LeafletMap, { type MapMarker } from '../components/LeafletMap'
+import LeafletMap, { LONDON_CENTER, type MapMarker } from '../components/LeafletMap'
 import Icon from '../components/Icon'
 import { SkeletonMap } from '../components/Skeleton'
 import './RequestMap.css'
@@ -81,14 +81,20 @@ export default function RequestMap() {
     return latest.id
   }, [filtered])
 
-  const mapMarkers: MapMarker[] = useMemo(() => {
-    const hashToOffset = (id: string, range: number) => {
-      let h = 0
-      for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0
-      return (Math.abs(h) % 1000) / 1000 * range - range / 2
-    }
+  // mapServiceRequestEntity coerces a null spa311_latitude/spa311_longitude to 0, so "has no
+  // location recorded" and "is at 0,0" are indistinguishable downstream. 0,0 is in the Gulf of
+  // Guinea, so treating it as absent is safe for a municipal portal and is the only way to tell
+  // the two apart without changing the domain type's required number fields.
+  const hasRealLocation = (r: { latitude: number; longitude: number }) =>
+    Number.isFinite(r.latitude) &&
+    Number.isFinite(r.longitude) &&
+    !(r.latitude === 0 && r.longitude === 0)
 
-    return filtered.map(r => {
+  const mappable = useMemo(() => filtered.filter(hasRealLocation), [filtered])
+  const unmappableCount = filtered.length - mappable.length
+
+  const mapMarkers: MapMarker[] = useMemo(() => {
+    return mappable.map(r => {
       const st = getServiceTypeByIdFn(r.serviceTypeId)
       const isLatest = r.id === latestRequestId
       const color = isLatest
@@ -98,19 +104,17 @@ export default function RequestMap() {
         : r.urgency === 'high'
         ? '#c0392b'
         : '#1b4965'
-      const lat = r.latitude || (40.7128 + hashToOffset(r.id, 0.12))
-      const lng = r.longitude || (-74.006 + hashToOffset(r.id + 'x', 0.15))
       return {
         id: r.id,
-        lat,
-        lng,
+        lat: r.latitude,
+        lng: r.longitude,
         color,
         radius: isLatest ? 10 : 7,
         title: st?.name || r.serviceTypeName || r.department || 'Service Request',
         popup: `<strong>${st?.name || r.serviceTypeName || r.department || 'Request'}</strong><br/>${r.address || 'No address'}<br/><em>${r.status}</em>${isLatest ? '<br/><strong style="color:#d4853a">Latest</strong>' : ''}`,
       }
     })
-  }, [filtered, getServiceTypeByIdFn, latestRequestId])
+  }, [mappable, getServiceTypeByIdFn, latestRequestId])
 
   if (requestsLoading) {
     return <SkeletonMap />
@@ -122,7 +126,16 @@ export default function RequestMap() {
         <div className="page-header">
           <h1 className="page-title animate-in animate-in-1">{t('requestMap.title')}</h1>
           <p className="page-subtitle animate-in animate-in-2">
-            {totalCount} {language === 'fr' ? 'demandes de service dans la ville' : 'service requests across the city'}. {language === 'fr' ? 'Vie priv\u00e9e prot\u00e9g\u00e9e \u2014 aucune information personnelle n\u2019est affich\u00e9e.' : 'Privacy protected \u2014 no personal information is shown.'}
+            {/* Only claim a count once one has actually been fetched. Rendering the raw
+                totalCount while the request is in flight or has failed printed "0 service
+                requests across the city" directly above the failure card, which reads as a
+                factual statement that the city has none on file. */}
+            {!error && !requestsLoading && (
+              <>
+                {totalCount} {language === 'fr' ? 'demandes de service dans la ville' : 'service requests across the city'}.{' '}
+              </>
+            )}
+            {language === 'fr' ? 'Vie privée protégée — aucune information personnelle n’est affichée.' : 'Privacy protected — no personal information is shown.'}
           </p>
         </div>
 
@@ -133,11 +146,17 @@ export default function RequestMap() {
         )}
 
         {/* Map area */}
+        {unmappableCount > 0 && (
+          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', marginBottom: 12 }}>
+            {t('requestMap.unmappedNotice').replace('{count}', String(unmappableCount))}
+          </p>
+        )}
+
         <div className="reqmap-map animate-in animate-in-3">
           <LeafletMap
             height={420}
             markers={mapMarkers}
-            center={[40.7128, -74.006]}
+            center={LONDON_CENTER}
             zoom={11}
           />
         </div>

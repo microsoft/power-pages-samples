@@ -12,6 +12,7 @@ import {
   buildODataUrl,
   escapeODataString,
   fetchAllPages,
+  isDataverseRecordId,
   type ODataCollectionResponse,
   type PaginatedResult,
 } from '../powerPagesApi'
@@ -154,7 +155,7 @@ export const getArticleById = async (id: string): Promise<KnowledgeArticle | nul
 // -- Get by Slug --------------------------------------------------------------
 
 export const getArticleBySlug = async (slug: string, lang: Language = 'en'): Promise<KnowledgeArticle | null> => {
-  const isRecordId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug)
+  const isRecordId = isDataverseRecordId(slug)
   const slugFilter = isRecordId
     ? `knowledgearticleid eq ${slug}`
     : `articlepublicnumber eq '${escapeODataString(slug)}'`

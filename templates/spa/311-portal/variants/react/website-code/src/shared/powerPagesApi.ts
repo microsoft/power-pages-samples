@@ -64,7 +64,16 @@ const getTokenFromEndpoint = async (): Promise<string | null> => {
   }
 }
 
-const fetchAntiForgeryToken = async (): Promise<string> => {
+/**
+ * Resolve the portal anti-forgery token, cached for TOKEN_TTL_MS.
+ *
+ * Exported so non-OData Power Pages POSTs (e.g. the generative-AI summarization
+ * endpoints in src/services/aiSummaryService.ts) can reuse this cascade and its cache.
+ * Those endpoints must not go through powerPagesFetch/buildPowerPagesHeaders because
+ * they need a different header set, but they still require the same token. A second
+ * implementation would mean a second cache and two independent expiry clocks.
+ */
+export const fetchAntiForgeryToken = async (): Promise<string> => {
   const now = Date.now()
   if (cachedAntiForgeryToken && now - cachedAntiForgeryTimestamp < TOKEN_TTL_MS) {
     return cachedAntiForgeryToken
@@ -354,6 +363,17 @@ export const buildODataUrl = (
 
 export const escapeODataString = (value: string): string =>
   value.replace(/'/g, "''")
+
+/**
+ * True when a string is a Dataverse record id (a GUID) rather than a human-facing key such as
+ * an article public number or a local fixture id.
+ *
+ * Needed wherever a value could be either: a GUID goes into an OData key segment like
+ * `knowledgearticles(<id>)`, while anything else has to be matched with a `$filter` instead.
+ * Passing a non-GUID as a key segment produces an opaque 400 from the server.
+ */
+export const isDataverseRecordId = (value: string): boolean =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
 
 // -- OData Types --------------------------------------------------------------
 

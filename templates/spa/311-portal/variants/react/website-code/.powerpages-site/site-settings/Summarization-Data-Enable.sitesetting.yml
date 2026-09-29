@@ -1,0 +1,4 @@
+description: Enable the Power Pages data summarization API for knowledge article detail and knowledge base list summaries
+id: 0a1feaf8-c71f-4d91-854d-1e0f5a9fc655
+name: Summarization/Data/Enable
+value: true

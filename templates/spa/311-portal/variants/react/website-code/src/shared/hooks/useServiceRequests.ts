@@ -2,6 +2,7 @@
 // React hooks for consuming service request data from the Power Pages Web API.
 
 import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from './useAuth'
 import {
   listServiceRequests,
   getServiceRequestById,
@@ -184,6 +185,7 @@ export function useUpdateServiceRequest() {
 // Fetches counts for dashboard stats. Returns total and resolved counts.
 
 export function useServiceRequestStats() {
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth()
   const [totalCount, setTotalCount] = useState(0)
   const [resolvedCount, setResolvedCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -206,11 +208,36 @@ export function useServiceRequestStats() {
     }
   }, [])
 
+  // The only table permission on spa311_servicerequest is "Service Request - Admin", bound to
+  // the Authenticated Users and Administrators web roles -- Anonymous Users is deliberately not
+  // on it. Both count calls therefore return 403 for a signed-out visitor. This hook runs on the
+  // public home page, so firing them anyway would put two guaranteed 403s in the console and the
+  // site's request telemetry on every anonymous visit. Skip the call instead of catching it, and
+  // let `isAvailable` tell the caller to omit the tiles rather than render a misleading "0".
+  // Revisit if an Anonymous-scoped permission is ever added to that table.
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    if (isAuthLoading) return
 
-  return { totalCount, resolvedCount, isLoading, error, refetch: fetchData }
+    if (!isAuthenticated) {
+      setTotalCount(0)
+      setResolvedCount(0)
+      setError(null)
+      setIsLoading(false)
+      return
+    }
+
+    fetchData()
+  }, [isAuthLoading, isAuthenticated, fetchData])
+
+  return {
+    totalCount,
+    resolvedCount,
+    isLoading: isAuthLoading || isLoading,
+    error,
+    /** False for anonymous visitors, who cannot read spa311_servicerequest at all. */
+    isAvailable: isAuthenticated,
+    refetch: fetchData,
+  }
 }
 
 // Re-export types for convenience

@@ -10,6 +10,7 @@ const VALID_FRAMEWORKS = new Set(["angular", "astro", "none", "react", "vue"]);
 const VALID_AUDIENCES = new Set(["admins", "developers", "makers", "partners"]);
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DATAVERSE_CHOICE_VALUES_FILE = "dataverse-choice-values.json";
+const CODEQL_REPORTS_DIRECTORY = "docs/codeql-reports/";
 const FORBIDDEN_WEBSITE_CODE_DIRECTORIES = new Set([
   ".git",
   ".playwright-mcp",
@@ -1007,7 +1008,7 @@ function validateWebsiteCodeContents(websiteCodeRoot, currentDirectory, label, r
       continue;
     }
 
-    if (isForbiddenWebsiteCodeFile(entry.name) || isEnvironmentSpecificPortalManifest(relativePath)) {
+    if (isForbiddenWebsiteCodeFile(entry, relativePath) || isEnvironmentSpecificPortalManifest(relativePath)) {
       result.errors.push(`Template "${label}" website-code contains excluded file: ${relativePath}`);
     }
 
@@ -1027,11 +1028,21 @@ function isForbiddenLocalFile(fileName) {
     fileName.endsWith(".tsbuildinfo") ||
     fileName.endsWith(".log") ||
     fileName.endsWith(".err") ||
-    fileName.endsWith(".sarif");
+    fileName.toLowerCase().endsWith(".sarif");
 }
 
-function isForbiddenWebsiteCodeFile(fileName) {
-  return isForbiddenLocalFile(fileName);
+function isForbiddenWebsiteCodeFile(entry, relativePath) {
+  if (isAllowedCodeQlReport(entry, relativePath)) {
+    return false;
+  }
+
+  return isForbiddenLocalFile(entry.name);
+}
+
+function isAllowedCodeQlReport(entry, relativePath) {
+  return entry.isFile() &&
+    entry.name.toLowerCase().endsWith(".sarif") &&
+    relativePath.startsWith(CODEQL_REPORTS_DIRECTORY);
 }
 
 function isEnvironmentSpecificPortalManifest(relativePath) {

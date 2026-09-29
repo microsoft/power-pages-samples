@@ -91,7 +91,11 @@ export default function App() {
             <Track />
           </AuthGate>
         } />
-        <Route path="/requests/map" element={<RequestMap />} />
+        <Route path="/requests/map" element={
+          <AuthGate message={t('auth.signInToExploreMap')}>
+            <RequestMap />
+          </AuthGate>
+        } />
         <Route path="/knowledge" element={<Knowledge />} />
         <Route path="/knowledge/:slug" element={<ArticleDetail />} />
         <Route path="/contact" element={<Contact />} />
