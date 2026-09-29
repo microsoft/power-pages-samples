@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- 2ab5e3ba-0309-f111-8406-6045bd04a357
+- 997e7996-e241-4117-9c09-28e90a1fcdbc
+append: false
+appendto: true
+create: false
+delete: false
+entitylogicalname: spnvc_purchaseorder
+entityname: Purchase Order - Read
+id: aed98746-f551-4c8a-85bc-5a8449350083
+read: true
+scope: 756150000
+write: false

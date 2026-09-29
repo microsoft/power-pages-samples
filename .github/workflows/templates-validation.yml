@@ -30,7 +30,7 @@ jobs:
           node-version: "20"
 
       - name: Run template tests
-        run: node --test templates/scripts/validate-templates.test.js
+        run: node --test templates/scripts/validate-templates.test.js templates/scripts/supplier-invoice-postbuild.test.js
 
       - name: Validate templates manifest
         run: node templates/scripts/validate-templates.js

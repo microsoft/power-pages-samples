@@ -1,0 +1,80 @@
+{
+  "tables": {
+    "spnvc_carrier": {
+      "spnvc_isactive": {
+        "Yes": 1,
+        "No": 0
+      }
+    },
+    "spnvc_dealer": {
+      "spnvc_status": {
+        "Active": 100000000,
+        "Onboarding": 100000001,
+        "Inactive": 100000002,
+        "Suspended": 100000003
+      }
+    },
+    "spnvc_invoice": {
+      "spnvc_invoicestatus": {
+        "Draft": 1,
+        "Submitted": 2,
+        "Under Review": 3,
+        "Needs Revision": 4,
+        "Approved": 5,
+        "Rejected": 6,
+        "Paid": 7
+      }
+    },
+    "spnvc_order": {
+      "spnvc_ordertype": {
+        "Purchase": 100000000,
+        "Sales": 100000001
+      },
+      "spnvc_status": {
+        "Pending": 100000000,
+        "Processing": 100000001,
+        "Shipped": 100000002,
+        "Delivered": 100000003,
+        "Cancelled": 100000004
+      }
+    },
+    "spnvc_product": {
+      "spnvc_category": {
+        "Raw Materials": 100000000,
+        "Components": 100000001,
+        "Finished Goods": 100000002,
+        "Packaging": 100000003
+      },
+      "spnvc_isactive": {
+        "Yes": 1,
+        "No": 0
+      }
+    },
+    "spnvc_purchaseorder": {
+      "spnvc_postatus": {
+        "Draft": 1,
+        "Issued": 2,
+        "Partially Invoiced": 3,
+        "Fully Invoiced": 4,
+        "Closed": 5,
+        "Cancelled": 6
+      }
+    },
+    "spnvc_shipment": {
+      "spnvc_status": {
+        "In Transit": 100000000,
+        "Delivered": 100000001,
+        "Delayed": 100000002,
+        "Cancelled": 100000003
+      }
+    },
+    "spnvc_supplier": {
+      "spnvc_status": {
+        "Active": 100000000,
+        "Pending": 100000001,
+        "Inactive": 100000002,
+        "Suspended": 100000003
+      }
+    }
+  }
+}
