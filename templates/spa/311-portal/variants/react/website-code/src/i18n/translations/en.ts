@@ -101,6 +101,7 @@ export const en: Record<string, string> = {
   "auth.signInToContinue": "Sign in to continue.",
   "auth.signInToSubmit": "Sign in to submit a service request. Your account lets us keep you updated on progress.",
   "auth.signInToTrack": "Sign in to track your service requests and view status updates.",
+  "auth.signInToExploreMap": "Sign in to explore service requests across the city.",
 
   // Services page
   "services.title": "Service Catalog",
@@ -133,6 +134,9 @@ export const en: Record<string, string> = {
   "createRequest.addressPlaceholder": "e.g., 425 Main Street or Main St & Oak Ave",
   "createRequest.detectingAddress": "Detecting address...",
   "createRequest.mapHint": "Click the map or drag the pin \u2014 address will be filled automatically.",
+  "createRequest.useMyLocation": "Use my current location",
+  "createRequest.locationError": "Could not get your location. Check that location access is allowed for this site.",
+  "createRequest.mapAriaLabel": "Select the service request location on the map",
   "createRequest.step2Title": "Step 2: Details",
   "createRequest.step2Subtitle": "Tell us more about the issue.",
   "createRequest.descriptionLabel": "Description",
@@ -209,6 +213,26 @@ export const en: Record<string, string> = {
   "articleDetail.browseKnowledgeBase": "Browse Knowledge Base",
   "articleDetail.published": "Published",
   "articleDetail.backToKnowledgeBase": "Back to Knowledge Base",
+
+  // AI Summary
+  "aiSummary.title": "Summary",
+  "aiSummary.loading": "Generating summary\u2026",
+  "aiSummary.empty": "No summary available for this article yet.",
+  "aiSummary.errorGeneric": "We couldn\u2019t generate a summary right now.",
+  "aiSummary.errorTooLarge": "This article is too long to summarize in one pass.",
+  "aiSummary.errorTransient": "The summary service is temporarily unavailable. Please try again.",
+  "aiSummary.disabledTitle": "Summaries are turned off for this site",
+  "aiSummary.disabledDesc": "An administrator needs to enable AI summarization before this feature can be used.",
+  "aiSummary.disabledLink": "Learn how to enable AI summarization",
+  "aiSummary.suggestions": "Ask a follow-up",
+  "aiSummary.copy": "Copy",
+  "aiSummary.copied": "Copied",
+  "aiSummary.copyFailed": "Copy failed",
+  "aiSummary.disclaimer": "AI-generated content may be incorrect",
+  "aiSummary.kbTitle": "AI overview of all published articles",
+  "aiSummary.kbEmpty": "No AI overview is available yet. Browse the published articles below.",
+  "aiSummary.sources": "Sources",
+  "aiSummary.citationAria": "Source {number}: {title}",
 
   // Contact
   "contact.title": "Contact Zava City",
@@ -357,6 +381,10 @@ export const en: Record<string, string> = {
   "requestMap.loadingCategories": "Loading categories...",
   "requestMap.loading": "Loading service requests...",
   "requestMap.error": "Failed to load requests:",
+  "requestMap.unmappedNotice": "{count} request(s) have no recorded location and aren\u2019t shown on the map.",
+  "requestMap.mapAriaLabel": "Map of service requests",
+  "requestMap.noAddress": "No address",
+  "requestMap.latest": "Latest",
 
   // Zod validation messages
   "validation.addressMin": "Please enter a valid address",

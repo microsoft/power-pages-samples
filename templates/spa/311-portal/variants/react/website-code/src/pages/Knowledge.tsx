@@ -2,7 +2,13 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { FileText } from 'lucide-react'
 import { useArticles } from '../shared/hooks/useArticles'
+import { useAiSummary } from '../shared/hooks/useAiSummary'
+import {
+  fetchKnowledgeBaseSummary,
+  KNOWLEDGE_ARTICLE_ENTITY_SET,
+} from '../services/aiSummaryService'
 import { useI18n } from '../i18n'
+import AiSummaryCard from '../components/AiSummaryCard'
 import EmptyState from '../components/EmptyState'
 import { SkeletonCards } from '../components/Skeleton'
 import './Knowledge.css'
@@ -15,6 +21,14 @@ export default function Knowledge() {
   const [showAllTags, setShowAllTags] = useState(false)
   const { articles, isLoading, error, filterArticles } = useArticles()
   const { t, language } = useI18n()
+
+  // Summarizes every published article, not the filtered view: searchQuery and activeTags are
+  // applied client-side, so there is no server-side query that matches what the visitor has
+  // narrowed to. Passing the entity set name as the subject keeps it constant across renders,
+  // which is what stops the hook from re-summarizing on each keystroke or tag click. The
+  // heading (aiSummary.kbTitle) states the scope so the card does not read as a description of
+  // the filtered results.
+  const aiSummary = useAiSummary(KNOWLEDGE_ARTICLE_ENTITY_SET, fetchKnowledgeBaseSummary)
 
   const filtered = useMemo(() => {
     return filterArticles(searchQuery, activeTags)
@@ -62,8 +76,17 @@ export default function Knowledge() {
           </p>
         </div>
 
+        {/* AI overview: scoped to the whole published knowledge base, so it stays visible and
+            unchanged while the visitor filters the list below. */}
+        <AiSummaryCard
+          {...aiSummary}
+          className="animate-in animate-in-3"
+          titleKey="aiSummary.kbTitle"
+          emptyKey="aiSummary.kbEmpty"
+        />
+
         {/* Search */}
-        <div className="kb-search animate-in animate-in-3">
+        <div className="kb-search animate-in animate-in-4">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-light)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -78,7 +101,7 @@ export default function Knowledge() {
         </div>
 
         {/* Tags */}
-        <div className="kb-tags animate-in animate-in-4">
+        <div className="kb-tags animate-in animate-in-5">
           {visibleTags.map(tag => (
             <button
               type="button"

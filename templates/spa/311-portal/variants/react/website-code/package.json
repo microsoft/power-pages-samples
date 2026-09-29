@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "test": "node --test --test-concurrency=1 tests/serviceRequests.test.mjs tests/articles.test.mjs",
+    "test": "node --test --test-concurrency=1 tests/serviceRequests.test.mjs tests/articles.test.mjs tests/aiSearchSummary.test.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",
+    "@types/leaflet.markercluster": "^1.5.6",
     "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3",
     "lucide-react": "^0.575.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

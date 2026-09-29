@@ -1,11 +1,14 @@
 import { useParams, Link } from 'react-router-dom'
-import { Search, ClipboardList, Info, Clock } from 'lucide-react'
+import { Search, ClipboardList, Info, Clock, Sparkles } from 'lucide-react'
 import { useServiceTypeBySlug } from '../shared/hooks/useServiceTypes'
 import { useRelatedArticles } from '../shared/hooks/useArticles'
+import { useSearchSummary } from '../shared/hooks/useAiSummary'
+import { buildServiceTypeSearchQuery } from '../services/aiSummaryService'
 import { useI18n } from '../i18n'
+import AiSearchSummary from '../components/AiSearchSummary'
 import Breadcrumbs from '../components/Breadcrumbs'
 import EmptyState from '../components/EmptyState'
-import { SkeletonDetail } from '../components/Skeleton'
+import { Skeleton, SkeletonDetail } from '../components/Skeleton'
 import Icon, { BookOpen } from '../components/Icon'
 
 export default function ServiceDetail() {
@@ -13,6 +16,10 @@ export default function ServiceDetail() {
   const { serviceType: service, isLoading, error } = useServiceTypeBySlug(slug)
   const { t } = useI18n()
   const { articles: relatedArticles } = useRelatedArticles(service?.slug)
+  // AI-grounded retrieval over the search index, which answers the question the visitor
+  // actually has rather than listing whatever articles carry a matching tag. The hook holds
+  // the request until the service type resolves.
+  const aiArticles = useSearchSummary(buildServiceTypeSearchQuery(service))
 
   if (isLoading) {
     return <SkeletonDetail />
@@ -48,6 +55,20 @@ export default function ServiceDetail() {
   }
 
   const category = service.category
+
+  // The AI summary is the primary surface for this block and the tag-matched list is the
+  // fallback, so exactly one of them shows. Search summary depends on a site-level preview
+  // toggle and on a populated search index, and neither is something this page can assume:
+  // when it yields nothing the visitor still gets the links they would have had anyway,
+  // with no error surfaced, because the AI layer is an enhancement here and not the feature.
+  //
+  // The placeholder waits for the fallback list to have something in it. Otherwise a visitor
+  // for whom neither source produces anything would watch the whole block appear and then
+  // vanish, shoving the rest of the row as it went.
+  const showAiArticles = aiArticles.status === 'content'
+  const showArticlesLoading = aiArticles.status === 'loading' && relatedArticles.length > 0
+  const showFallbackArticles =
+    !showAiArticles && !showArticlesLoading && relatedArticles.length > 0
 
   return (
     <div className="page">
@@ -125,22 +146,47 @@ export default function ServiceDetail() {
             {t('serviceDetail.createRequest')}
           </Link>
 
-          {relatedArticles.length > 0 && (
+          {(showAiArticles || showArticlesLoading || showFallbackArticles) && (
             <div style={{ flex: 1, minWidth: 200 }}>
               <h2 style={{ fontSize: '0.875rem', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-muted)' }}>
-                <BookOpen size={16} /> {t('serviceDetail.relatedArticles')}
+                {showAiArticles ? <Sparkles size={16} /> : <BookOpen size={16} />} {t('serviceDetail.relatedArticles')}
               </h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {relatedArticles.map(article => (
-                  <Link
-                    key={article.id}
-                    to={`/knowledge/${article.slug}`}
-                    style={{ fontSize: '0.875rem', color: 'var(--color-primary)', textDecoration: 'none' }}
-                  >
-                    {article.title} &rarr;
-                  </Link>
-                ))}
+
+              {/* The live region spans all three branches so a summary arriving after the
+                  placeholder is announced, rather than only the fact that work started. */}
+              <div aria-live="polite" aria-busy={showArticlesLoading}>
+                {showArticlesLoading && (
+                  <div>
+                    <span className="sr-only">{t('aiSummary.loading')}</span>
+                    <Skeleton height={10} borderRadius={5} style={{ marginBottom: 6 }} />
+                    <Skeleton height={10} borderRadius={5} style={{ marginBottom: 6 }} />
+                    <Skeleton width="60%" height={10} borderRadius={5} />
+                  </div>
+                )}
+
+                {showAiArticles && (
+                  <AiSearchSummary
+                    summary={aiArticles.summary}
+                    citationTitleMapping={aiArticles.citationTitleMapping}
+                    style={{ fontSize: '0.875rem' }}
+                  />
+                )}
+
+                {showFallbackArticles && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {relatedArticles.map(article => (
+                      <Link
+                        key={article.id}
+                        to={`/knowledge/${article.slug}`}
+                        style={{ fontSize: '0.875rem', color: 'var(--color-primary)', textDecoration: 'none' }}
+                      >
+                        {article.title} &rarr;
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
+
               <Link to="/knowledge" style={{ fontSize: '0.8125rem', color: 'var(--color-text-light)', textDecoration: 'none', marginTop: 6, display: 'inline-block' }}>
                 {t('serviceDetail.browseAllArticles')}
               </Link>

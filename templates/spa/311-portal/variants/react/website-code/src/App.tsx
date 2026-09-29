@@ -41,7 +41,10 @@ function ScrollToTop() {
       isInitialRender.current = false
       return
     }
-    document.getElementById('main-content')?.focus()
+    // Keep keyboard focus on the new route without letting the browser scroll the main landmark
+    // underneath the sticky header. React Strict Mode also reruns this effect in development,
+    // so preventScroll keeps the initial page from opening partway down the hero.
+    document.getElementById('main-content')?.focus({ preventScroll: true })
   }, [pathname])
   return null
 }
@@ -91,7 +94,11 @@ export default function App() {
             <Track />
           </AuthGate>
         } />
-        <Route path="/requests/map" element={<RequestMap />} />
+        <Route path="/requests/map" element={
+          <AuthGate message={t('auth.signInToExploreMap')}>
+            <RequestMap />
+          </AuthGate>
+        } />
         <Route path="/knowledge" element={<Knowledge />} />
         <Route path="/knowledge/:slug" element={<ArticleDetail />} />
         <Route path="/contact" element={<Contact />} />
