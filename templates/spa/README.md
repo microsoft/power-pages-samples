@@ -8,7 +8,6 @@ Use this index to choose the template that best matches the scenario you want to
 | Preview | Template family | Variants | Scenario | Includes |
 | --- | --- | --- | --- | --- |
 | <img src="311-portal/previews/home.png" alt="311 Portal home page" width="220" /> | [311 Portal](311-portal/) | React + Vite | Citizen service requests and 311 support | Supporting unmanaged solution, downloadable website code, Dataverse seed data, service request map, knowledge base, contact flow, and preview images. |
-| <img src="supplier-invoice-portal/previews/home.png" alt="Supplier Invoice Portal home page" width="220" /> | [Supplier Invoice Portal](supplier-invoice-portal/) | React + Vite | Supplier invoices and purchase orders | Supporting unmanaged solution, downloadable website code, Dataverse seed data, file-column seed files, invoice workflows, reviewer queue, and preview images. |
 
 ## Common workflow
 
