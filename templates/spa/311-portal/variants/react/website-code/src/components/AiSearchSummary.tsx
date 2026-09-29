@@ -13,7 +13,6 @@ import { useI18n } from '../i18n'
 import { renderInline } from '../shared/markdown'
 import {
   extractKnowledgeArticleId,
-  normalizeCitationUrl,
   parseSummaryWithCitations,
   type SummaryPart,
 } from '../services/aiSummaryService'
@@ -38,16 +37,7 @@ interface CitationLinkProps {
  * this app cannot route itself.
  */
 function CitationLink({ url, ariaLabel, title, style, children }: CitationLinkProps) {
-  const safeUrl = normalizeCitationUrl(url)
-  if (!safeUrl) {
-    return (
-      <span aria-label={ariaLabel} title={title} style={style}>
-        {children}
-      </span>
-    )
-  }
-
-  const articleId = extractKnowledgeArticleId(safeUrl)
+  const articleId = extractKnowledgeArticleId(url)
 
   if (articleId) {
     return (
@@ -59,7 +49,7 @@ function CitationLink({ url, ariaLabel, title, style, children }: CitationLinkPr
 
   return (
     <a
-      href={safeUrl}
+      href={url}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={ariaLabel}

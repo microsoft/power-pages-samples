@@ -23,11 +23,7 @@ export default function Home() {
     isLoading: statsLoading,
     isAvailable: statsAvailable,
   } = useServiceRequestStats()
-  const {
-    serviceTypes,
-    isLoading: serviceTypesLoading,
-    error: serviceTypesError,
-  } = useServiceTypes()
+  const { serviceTypes, isLoading: serviceTypesLoading } = useServiceTypes()
   const { t } = useI18n()
 
   const stats = [
@@ -41,11 +37,9 @@ export default function Home() {
           { value: statsLoading ? '...' : String(resolvedCount), label: t('home.statResolvedThisMonth') },
         ]
       : []),
-    // spa311_servicetype is readable anonymously, so this count is live for every visitor.
-    // If the API is unavailable, omit the tile instead of presenting a failed read as zero.
-    ...(!serviceTypesError
-      ? [{ value: serviceTypesLoading ? '...' : String(serviceTypes.length), label: t('home.statServiceTypes') }]
-      : []),
+    // spa311_servicetype is readable anonymously, so this count is live for every visitor. It
+    // was previously hardcoded to '34' while the catalog listed 9, contradicting /services.
+    { value: serviceTypesLoading ? '...' : String(serviceTypes.length), label: t('home.statServiceTypes') },
     { value: '< 5 days', label: t('home.statAvgResolution') },
   ]
 

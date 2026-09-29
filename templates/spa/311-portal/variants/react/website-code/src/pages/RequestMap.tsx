@@ -111,15 +111,10 @@ export default function RequestMap() {
         color,
         radius: isLatest ? 10 : 7,
         title: st?.name || r.serviceTypeName || r.department || 'Service Request',
-        popup: {
-          title: st?.name || r.serviceTypeName || r.department || 'Request',
-          address: r.address || t('requestMap.noAddress'),
-          status: r.status,
-          badge: isLatest ? t('requestMap.latest') : undefined,
-        },
+        popup: `<strong>${st?.name || r.serviceTypeName || r.department || 'Request'}</strong><br/>${r.address || 'No address'}<br/><em>${r.status}</em>${isLatest ? '<br/><strong style="color:#d4853a">Latest</strong>' : ''}`,
       }
     })
-  }, [mappable, getServiceTypeByIdFn, latestRequestId, t])
+  }, [mappable, getServiceTypeByIdFn, latestRequestId])
 
   if (requestsLoading) {
     return <SkeletonMap />
@@ -163,7 +158,6 @@ export default function RequestMap() {
             markers={mapMarkers}
             center={LONDON_CENTER}
             zoom={11}
-            ariaLabel={t('requestMap.mapAriaLabel')}
           />
         </div>
 

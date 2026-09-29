@@ -2,7 +2,7 @@
 // Presentation for a generative-AI summary produced by useAiSummary.
 
 import { useEffect, useState } from 'react'
-import { Check, ChevronDown, Copy, ExternalLink, Sparkles } from 'lucide-react'
+import { Check, ChevronDown, Copy, ExternalLink, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react'
 import { useI18n } from '../i18n'
 import { Skeleton } from './Skeleton'
 import { SummaryMarkdown } from '../shared/markdown'
@@ -62,18 +62,20 @@ export default function AiSummaryCard({
 }: AiSummaryCardProps) {
   const { t } = useI18n()
   const [isExpanded, setIsExpanded] = useState(true)
-  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle')
+  const [didCopy, setDidCopy] = useState(false)
+  const [feedback, setFeedback] = useState<'up' | 'down' | null>(null)
 
-  // A fresh summary invalidates the copy confirmation from the previous text.
+  // A fresh summary invalidates both the "copied" confirmation and any prior rating.
   useEffect(() => {
-    setCopyStatus('idle')
+    setDidCopy(false)
+    setFeedback(null)
   }, [summary])
 
   useEffect(() => {
-    if (copyStatus === 'idle') return
-    const timer = setTimeout(() => setCopyStatus('idle'), 2000)
+    if (!didCopy) return
+    const timer = setTimeout(() => setDidCopy(false), 2000)
     return () => clearTimeout(timer)
-  }, [copyStatus])
+  }, [didCopy])
 
   // The hook is idle only before a record id exists; the page has nothing to summarize yet.
   if (status === 'idle') return null
@@ -81,9 +83,10 @@ export default function AiSummaryCard({
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(summary)
-      setCopyStatus('copied')
+      setDidCopy(true)
     } catch {
-      setCopyStatus('error')
+      // Clipboard access is denied outside secure contexts and in some embedded browsers.
+      // The summary text stays selectable, so failing quietly is better than an error dialog.
     }
   }
 
@@ -263,20 +266,35 @@ export default function AiSummaryCard({
                     borderTop: '1px solid var(--color-border-light)',
                   }}
                 >
+                  <button type="button" onClick={handleCopy} style={iconButtonStyle}>
+                    {didCopy ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+                    {didCopy ? t('aiSummary.copied') : t('aiSummary.copy')}
+                  </button>
                   <button
                     type="button"
-                    onClick={handleCopy}
-                    aria-live="polite"
-                    style={iconButtonStyle}
+                    onClick={() => setFeedback(prev => (prev === 'up' ? null : 'up'))}
+                    aria-pressed={feedback === 'up'}
+                    aria-label={t('aiSummary.helpful')}
+                    title={t('aiSummary.helpful')}
+                    style={{
+                      ...iconButtonStyle,
+                      color: feedback === 'up' ? 'var(--color-accent)' : iconButtonStyle.color,
+                    }}
                   >
-                    {copyStatus === 'copied'
-                      ? <Check size={14} aria-hidden="true" />
-                      : <Copy size={14} aria-hidden="true" />}
-                    {copyStatus === 'copied'
-                      ? t('aiSummary.copied')
-                      : copyStatus === 'error'
-                        ? t('aiSummary.copyFailed')
-                        : t('aiSummary.copy')}
+                    <ThumbsUp size={14} aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFeedback(prev => (prev === 'down' ? null : 'down'))}
+                    aria-pressed={feedback === 'down'}
+                    aria-label={t('aiSummary.notHelpful')}
+                    title={t('aiSummary.notHelpful')}
+                    style={{
+                      ...iconButtonStyle,
+                      color: feedback === 'down' ? 'var(--color-accent)' : iconButtonStyle.color,
+                    }}
+                  >
+                    <ThumbsDown size={14} aria-hidden="true" />
                   </button>
                   <span
                     style={{

@@ -26,12 +26,7 @@ export interface MapMarker {
   color?: string
   radius?: number
   title?: string
-  popup?: {
-    title: string
-    address: string
-    status: string
-    badge?: string
-  }
+  popup?: string
 }
 
 interface LeafletMapProps {
@@ -49,7 +44,6 @@ interface LeafletMapProps {
   /** Localized strings for the locate control, so this component stays i18n-agnostic. */
   locateLabel?: string
   locateErrorLabel?: string
-  ariaLabel?: string
 }
 
 export default function LeafletMap({
@@ -64,7 +58,6 @@ export default function LeafletMap({
   showLocate = false,
   locateLabel = 'Use my current location',
   locateErrorLabel = 'Could not get your location',
-  ariaLabel = 'Interactive map',
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
@@ -122,16 +115,11 @@ export default function LeafletMap({
       options: { position: 'topleft' as L.ControlPosition },
       onAdd() {
         const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control')
-        const button = L.DomUtil.create('button', '', container) as HTMLButtonElement
-        button.type = 'button'
+        const button = L.DomUtil.create('a', '', container) as HTMLAnchorElement
+        button.href = '#'
         button.title = locateLabel
+        button.setAttribute('role', 'button')
         button.setAttribute('aria-label', locateLabel)
-        button.style.width = '30px'
-        button.style.height = '30px'
-        button.style.padding = '0'
-        button.style.border = 'none'
-        button.style.background = '#fff'
-        button.style.cursor = 'pointer'
         button.style.display = 'flex'
         button.style.alignItems = 'center'
         button.style.justifyContent = 'center'
@@ -155,7 +143,7 @@ export default function LeafletMap({
     map.addControl(control)
 
     const clearBusy = () => {
-      const button = control.getContainer()?.querySelector('button')
+      const button = control.getContainer()?.querySelector('a')
       if (button) (button as HTMLElement).style.opacity = '1'
     }
 
@@ -197,31 +185,8 @@ export default function LeafletMap({
         fillColor: m.color || '#1b4965',
         fillOpacity: 0.85,
       })
-      if (m.popup) {
-        // Leaflet treats string popup content as HTML. Build DOM nodes with textContent so
-        // Dataverse values such as the address cannot inject markup or script into the map.
-        const popup = document.createElement('div')
-        const title = document.createElement('strong')
-        title.textContent = m.popup.title
-        popup.append(title, document.createElement('br'))
-        popup.append(document.createTextNode(m.popup.address), document.createElement('br'))
-        const status = document.createElement('em')
-        status.textContent = m.popup.status
-        popup.append(status)
-        if (m.popup.badge) {
-          popup.append(document.createElement('br'))
-          const badge = document.createElement('strong')
-          badge.style.color = '#d4853a'
-          badge.textContent = m.popup.badge
-          popup.append(badge)
-        }
-        circleMarker.bindPopup(popup)
-      }
-      if (m.title) {
-        const tooltip = document.createElement('span')
-        tooltip.textContent = m.title
-        circleMarker.bindTooltip(tooltip)
-      }
+      if (m.popup) circleMarker.bindPopup(m.popup)
+      if (m.title) circleMarker.bindTooltip(m.title)
       layers.push(circleMarker)
     }
     // addLayers (plural) batches the cluster rebuild into one pass; adding one at a time
@@ -250,7 +215,6 @@ export default function LeafletMap({
   return (
     <div
       ref={containerRef}
-      aria-label={ariaLabel}
       style={{
         height: typeof height === 'number' ? `${height}px` : height,
         width: '100%',

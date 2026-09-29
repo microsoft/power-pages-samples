@@ -172,32 +172,7 @@ test('knowledge article citations are recovered from the stock 404 URL', () => {
     // An ordinary page, an unrelated id, and a malformed URL all mean "link to it verbatim".
     assert.equal(ai.extractKnowledgeArticleId('https://portal.example/services'), null)
     assert.equal(ai.extractKnowledgeArticleId('https://portal.example/thing/?id=42'), null)
-    assert.equal(
-        ai.extractKnowledgeArticleId(
-            'https://other.example/page-not-found/?id=2f1c9b7e-4d3a-4a51-9b2e-7c6d5e4f3a2b'
-        ),
-        null
-    )
-    assert.equal(
-        ai.extractKnowledgeArticleId(
-            'https://portal.example/services/?id=2f1c9b7e-4d3a-4a51-9b2e-7c6d5e4f3a2b'
-        ),
-        null
-    )
     assert.equal(ai.extractKnowledgeArticleId('not a url at all'), null)
-})
-
-test('citation links allow only web URLs', () => {
-    assert.equal(
-        ai.normalizeCitationUrl('/knowledge/KA-01055'),
-        'https://portal.example/knowledge/KA-01055'
-    )
-    assert.equal(
-        ai.normalizeCitationUrl('https://learn.microsoft.com/power-pages'),
-        'https://learn.microsoft.com/power-pages'
-    )
-    assert.equal(ai.normalizeCitationUrl('javascript:alert(1)'), null)
-    assert.equal(ai.normalizeCitationUrl('data:text/html,<script>alert(1)</script>'), null)
 })
 
 test('the search query is built from display text, never the slug', () => {

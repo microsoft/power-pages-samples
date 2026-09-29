@@ -41,10 +41,7 @@ function ScrollToTop() {
       isInitialRender.current = false
       return
     }
-    // Keep keyboard focus on the new route without letting the browser scroll the main landmark
-    // underneath the sticky header. React Strict Mode also reruns this effect in development,
-    // so preventScroll keeps the initial page from opening partway down the hero.
-    document.getElementById('main-content')?.focus({ preventScroll: true })
+    document.getElementById('main-content')?.focus()
   }, [pathname])
   return null
 }

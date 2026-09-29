@@ -11,7 +11,7 @@
 // different header set, so the request is built explicitly with raw fetch below.
 // Only the anti-forgery token cascade is shared, so there is exactly one token cache.
 
-import { fetchAntiForgeryToken, isDataverseRecordId } from '../shared/powerPagesApi'
+import { fetchAntiForgeryToken } from '../shared/powerPagesApi'
 
 // -- Types --------------------------------------------------------------------
 
@@ -533,21 +533,6 @@ export const parseSummaryWithCitations = (summary: string): SummaryPart[] => {
 }
 
 /**
- * Resolve a citation URL and reject schemes that browsers can execute as code.
- *
- * Search summaries are model-generated and their citation URLs must be treated as untrusted.
- * React escapes link text but does not make a `javascript:` href safe.
- */
-export const normalizeCitationUrl = (url: string): string | null => {
-  try {
-    const parsed = new URL(url, window.location.origin)
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : null
-  } catch {
-    return null
-  }
-}
-
-/**
  * Recover the knowledge article id from a citation URL, or null when the URL is an ordinary page.
  *
  * On a code site the search service still points citations at the stock Power Pages knowledge
@@ -561,15 +546,14 @@ export const normalizeCitationUrl = (url: string): string | null => {
  * belongs to some other page and must be left alone.
  */
 export const extractKnowledgeArticleId = (url: string): string | null => {
-  const safeUrl = normalizeCitationUrl(url)
-  if (!safeUrl) return null
-
-  const parsed = new URL(safeUrl)
-  const pagePath = parsed.pathname.replace(/\/+$/, '')
-  if (parsed.origin !== window.location.origin || pagePath !== '/page-not-found') return null
-
-  const id = parsed.searchParams.get('id')
-  return id && isDataverseRecordId(id) ? id : null
+  try {
+    const parsed = new URL(url, window.location.origin)
+    const id = parsed.searchParams.get('id')
+    if (id && /^[0-9a-f-]{36}$/i.test(id)) return id
+  } catch {
+    // Relative or malformed URLs are not citations we can rewrite.
+  }
+  return null
 }
 
 // -- Service type article search ----------------------------------------------

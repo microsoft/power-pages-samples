@@ -234,8 +234,8 @@ export function useServiceRequestStats() {
     resolvedCount,
     isLoading: isAuthLoading || isLoading,
     error,
-    /** False when the visitor cannot read the table or the count request failed. */
-    isAvailable: isAuthenticated && !error,
+    /** False for anonymous visitors, who cannot read spa311_servicerequest at all. */
+    isAvailable: isAuthenticated,
     refetch: fetchData,
   }
 }

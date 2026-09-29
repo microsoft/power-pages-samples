@@ -136,7 +136,6 @@ export const en: Record<string, string> = {
   "createRequest.mapHint": "Click the map or drag the pin \u2014 address will be filled automatically.",
   "createRequest.useMyLocation": "Use my current location",
   "createRequest.locationError": "Could not get your location. Check that location access is allowed for this site.",
-  "createRequest.mapAriaLabel": "Select the service request location on the map",
   "createRequest.step2Title": "Step 2: Details",
   "createRequest.step2Subtitle": "Tell us more about the issue.",
   "createRequest.descriptionLabel": "Description",
@@ -227,7 +226,8 @@ export const en: Record<string, string> = {
   "aiSummary.suggestions": "Ask a follow-up",
   "aiSummary.copy": "Copy",
   "aiSummary.copied": "Copied",
-  "aiSummary.copyFailed": "Copy failed",
+  "aiSummary.helpful": "This summary was helpful",
+  "aiSummary.notHelpful": "This summary was not helpful",
   "aiSummary.disclaimer": "AI-generated content may be incorrect",
   "aiSummary.kbTitle": "AI overview of all published articles",
   "aiSummary.kbEmpty": "No AI overview is available yet. Browse the published articles below.",
@@ -382,9 +382,6 @@ export const en: Record<string, string> = {
   "requestMap.loading": "Loading service requests...",
   "requestMap.error": "Failed to load requests:",
   "requestMap.unmappedNotice": "{count} request(s) have no recorded location and aren\u2019t shown on the map.",
-  "requestMap.mapAriaLabel": "Map of service requests",
-  "requestMap.noAddress": "No address",
-  "requestMap.latest": "Latest",
 
   // Zod validation messages
   "validation.addressMin": "Please enter a valid address",

@@ -473,7 +473,6 @@ export default function CreateRequest() {
                   showLocate
                   locateLabel={ t('createRequest.useMyLocation') }
                   locateErrorLabel={ t('createRequest.locationError') }
-                  ariaLabel={ t('createRequest.mapAriaLabel') }
                 />
                 <p style={ { fontSize: '0.75rem', color: 'var(--color-text-light)', marginTop: 6 } }>
                   { geocoding ? t('createRequest.detectingAddress') : t('createRequest.mapHint') }

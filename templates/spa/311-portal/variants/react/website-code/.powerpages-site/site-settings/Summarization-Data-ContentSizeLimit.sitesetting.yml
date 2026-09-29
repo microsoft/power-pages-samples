@@ -1,4 +1,4 @@
 description: Raise the 100000-character summarization input cap to 200000 so the knowledge base list summary is not silently truncated
-id: 0393a59f-de80-4e1c-b1e0-870dffbc1a3e
+id: bc7cc912-a5d0-4115-b9e7-1bd4b6560ee5
 name: Summarization/Data/ContentSizeLimit
 value: 200000
