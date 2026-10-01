@@ -18,6 +18,7 @@ import type {
   UpdateInvoiceInput,
   InvoiceStatusLabel,
 } from '../types/invoice'
+import { notifyInvoicesChanged } from '../data/invoiceEvents'
 import type { PaginatedResult } from '../services/powerPagesApi'
 
 // -- useInvoices (list) -------------------------------------------------------
@@ -116,6 +117,7 @@ export function useCreateInvoice() {
     setError(null)
     try {
       const result = await createInvoice(input)
+      notifyInvoicesChanged()
       return result
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create invoice')
@@ -142,6 +144,7 @@ export function useUpdateInvoice() {
     setError(null)
     try {
       const result = await updateInvoice(id, input)
+      notifyInvoicesChanged()
       return result
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update invoice')
@@ -165,6 +168,7 @@ export function useDeleteInvoice() {
     setError(null)
     try {
       await deleteInvoice(id)
+      notifyInvoicesChanged()
       return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete invoice')

@@ -12,7 +12,7 @@ type SortDir = 'asc' | 'desc'
 export default function ReviewQueue() {
   usePageTitle('Review Queue')
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Submitted' | 'Under Review'>('All')
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Submitted'>('All')
   const [sortKey, setSortKey] = useState<SortKey>('submissionDate')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [isSummaryOpen, setIsSummaryOpen] = useState(true)
@@ -29,7 +29,6 @@ export default function ReviewQueue() {
 
   const filterStatus = statusFilter === 'All' ? undefined : statusFilter
 
-  // Fetch submitted + under review invoices
   const { invoices: allInvoices, isLoading, error, refetch } = useInvoiceList({
     status: filterStatus,
     search: search.trim() || undefined,
@@ -38,9 +37,9 @@ export default function ReviewQueue() {
     pageSize: 50,
   })
 
-  // If no specific filter, show only Submitted + Under Review
+  // If no specific filter, show only invoices waiting for review.
   const filtered = statusFilter === 'All'
-    ? allInvoices.filter(i => i.status === 'Submitted' || i.status === 'Under Review')
+    ? allInvoices.filter(i => i.status === 'Submitted')
     : allInvoices
 
   function handleSort(key: SortKey) {
@@ -138,7 +137,7 @@ export default function ReviewQueue() {
           <select
             id="queue-status-filter"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as 'All' | 'Submitted' | 'Under Review')}
+            onChange={(e) => setStatusFilter(e.target.value as 'All' | 'Submitted')}
             style={{
               paddingLeft: 34,
               paddingRight: 14,
@@ -153,7 +152,6 @@ export default function ReviewQueue() {
           >
             <option value="All">All Queue</option>
             <option value="Submitted">Submitted</option>
-            <option value="Under Review">Under Review</option>
           </select>
         </div>
 

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Permissions Audit — Supplier Invoice Portal</title>
+<style>
+:root {
+  --bg:#faf9f8; --surface:#ffffff; --surface2:#f3f2f1; --surface3:#edebe9;
+  --border:#e1dfdd; --border-light:#c8c6c4;
+  --text:#323130; --text-dim:#605e5c; --text-bright:#201f1e;
+  --accent:#0078d4; --accent-bg:#0078d40a; --accent-border:#0078d425;
+  --critical:#d13438; --critical-bg:#d134380a; --critical-border:#d1343825;
+  --warning:#ca5010; --warning-bg:#ca50100a; --warning-border:#ca501025;
+  --pass:#107c10; --pass-bg:#107c100a; --pass-border:#107c1025;
+  --info:#0078d4; --info-bg:#0078d40a; --info-border:#0078d425;
+  --purple:#8764b8; --purple-bg:#8764b80a; --purple-border:#8764b825;
+  --mono:'Cascadia Code','Consolas',monospace;
+  --sans:'Segoe UI','Segoe UI Web (West European)',-apple-system,system-ui,sans-serif;
+  --radius:8px; --radius-sm:4px;
+  --shadow-4:0 1.6px 3.6px 0 rgba(0,0,0,0.132),0 0.3px 0.9px 0 rgba(0,0,0,0.108);
+  --shadow-8:0 3.2px 7.2px 0 rgba(0,0,0,0.132),0 0.6px 1.8px 0 rgba(0,0,0,0.108);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;}
+
+
+/* Top Bar */
+.topbar{z-index:100;background:var(--surface);box-shadow:var(--shadow-4);padding:14px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.logo{width:36px;height:36px;border-radius:var(--radius);background:linear-gradient(135deg,#0078d4,#5c2d91);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;font-family:var(--mono);letter-spacing:-0.5px;}
+.topbar-title{font-size:16px;font-weight:700;color:var(--text-bright);}
+.topbar-sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
+
+/* Layout */
+.layout{display:flex;min-height:calc(100vh - 61px);}
+
+/* Sidebar */
+.sidebar{width:200px;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;flex-shrink:0;}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:11px 22px;background:none;border:none;border-left:2px solid transparent;color:var(--text-dim);font-size:13px;font-weight:500;cursor:pointer;font-family:var(--sans);text-align:left;transition:all 0.15s;position:relative;}
+.nav-btn:hover{color:var(--text);background:var(--surface2);}
+.nav-btn.active{color:var(--accent);font-weight:600;border-left-color:var(--accent);background:var(--accent-bg);}
+.nav-btn .nav-icon{font-size:15px;opacity:0.5;width:18px;text-align:center;}
+.nav-btn.active .nav-icon{opacity:0.9;}
+.nav-badge{position:absolute;right:14px;font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:8px;font-weight:700;}
+
+/* Content */
+.content{flex:1;padding:32px 40px;max-width:960px;}
+.section{display:none;}
+.section.active{display:block;animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+h2{font-size:21px;font-weight:800;color:var(--text-bright);letter-spacing:-0.3px;margin-bottom:5px;}
+.section-desc{font-size:13px;color:var(--text-dim);margin-bottom:20px;}
+h3{font-size:15px;font-weight:700;color:var(--text-bright);margin-top:24px;margin-bottom:12px;}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:10px;transition:box-shadow 0.2s;}
+.card:hover{box-shadow:var(--shadow-4);}
+
+/* Stats Grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 16px;text-align:center;position:relative;overflow:hidden;box-shadow:var(--shadow-4);}
+.stat-card::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:40px;height:2px;border-radius:0 0 2px 2px;}
+.stat-num{font-size:28px;font-weight:800;font-family:var(--mono);line-height:1;}
+.stat-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:6px;}
+
+/* Severity badges */
+.severity{font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;font-family:var(--mono);display:inline-block;text-transform:uppercase;letter-spacing:0.5px;}
+.severity-critical{color:var(--critical);background:var(--critical-bg);border:1px solid var(--critical-border);}
+.severity-warning{color:var(--warning);background:var(--warning-bg);border:1px solid var(--warning-border);}
+.severity-info{color:var(--info);background:var(--info-bg);border:1px solid var(--info-border);}
+.severity-pass{color:var(--pass);background:var(--pass-bg);border:1px solid var(--pass-border);}
+
+/* Finding cards */
+.finding-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;transition:box-shadow 0.2s;overflow:hidden;}
+.finding-card:hover{box-shadow:var(--shadow-4);}
+.finding-header{display:flex;align-items:flex-start;gap:12px;padding:16px 20px;cursor:pointer;-webkit-user-select:none;user-select:none;}
+.finding-header:hover{background:var(--surface2);}
+.finding-title{font-size:14px;font-weight:600;color:var(--text-bright);flex:1;}
+.finding-table{font-size:11px;color:var(--accent);background:var(--accent-bg);padding:1px 6px;border-radius:3px;border:1px solid var(--accent-border);font-family:var(--mono);}
+.finding-chevron{color:var(--text-dim);font-size:12px;transition:transform 0.2s;flex-shrink:0;margin-top:3px;}
+.finding-card.expanded .finding-chevron{transform:rotate(90deg);}
+.finding-body{display:none;padding:0 20px 16px;border-top:1px solid var(--border);}
+.finding-card.expanded .finding-body{display:block;animation:fadeIn 0.2s ease;}
+
+/* Field label */
+.field-label{font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+
+/* Reasoning & fix blocks */
+.reasoning-block{background:var(--surface2);border-left:2px solid var(--accent);border-radius:var(--radius-sm);padding:10px 14px;margin-top:10px;font-size:12px;color:var(--text);line-height:1.7;}
+.fix-block{background:var(--pass-bg);border-left:2px solid var(--pass);border-radius:var(--radius-sm);padding:10px 14px;margin-top:8px;font-size:12px;color:var(--text);line-height:1.7;}
+.fix-block strong{color:var(--pass);}
+
+/* Scope Tags */
+.scope-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;font-family:var(--mono);display:inline-block;text-align:center;min-width:58px;}
+.scope-Global{color:var(--critical);background:var(--critical-bg);border:1px solid var(--critical-border);}
+.scope-Contact{color:var(--pass);background:var(--pass-bg);border:1px solid var(--pass-border);}
+.scope-Account{color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);}
+.scope-Parent{color:var(--purple);background:var(--purple-bg);border:1px solid var(--purple-border);}
+.scope-Self{color:var(--text-dim);background:var(--surface2);border:1px solid var(--border);}
+
+/* Privilege Chips */
+.priv{font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;font-family:var(--mono);}
+.priv-on{color:var(--pass);background:var(--pass-bg);}
+.priv-off{color:var(--text-dim);background:var(--surface2);opacity:0.5;}
+
+/* Inventory table */
+.inv-table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0;}
+.inv-table th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-dim);padding:10px 12px;border-bottom:2px solid var(--border);}
+.inv-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
+.inv-table tr:last-child td{border-bottom:none;}
+.inv-table tr:hover td{background:var(--surface2);}
+
+/* Filter buttons */
+.filter-bar{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-btn{padding:5px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text-dim);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all 0.15s;}
+.filter-btn:hover{border-color:var(--border-light);color:var(--text);}
+.filter-btn.active{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent);}
+.filter-count{font-family:var(--mono);font-size:10px;margin-left:4px;opacity:0.7;}
+
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .content{padding:20px 16px;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<div id="mainApp">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">PP</div>
+      <div>
+        <div class="topbar-title">Permissions Audit Report</div>
+        <div class="topbar-sub">Supplier Invoice Portal</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <button class="nav-btn active" data-tab="overview"><span class="nav-icon">&#9673;</span> Overview</button>
+      <button class="nav-btn" data-tab="findings"><span class="nav-icon">&#9888;</span> Findings
+        <span class="nav-badge" id="navFindingsCount" style="background:var(--critical-bg);color:var(--critical);"></span>
+      </button>
+      <button class="nav-btn" data-tab="inventory"><span class="nav-icon">&#9638;</span> Inventory</button>
+    </div>
+
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <div class="section active" id="tab-overview">
+        <h2>Audit Overview</h2>
+        <p class="section-desc">Security audit of table permissions for the Supplier Invoice Portal Power Pages site. Special focus on mspp_ web role associations for Enhanced Data Model compliance and the AppendTo chain for the contact table.</p>
+
+        <div class="stats-grid">
+          <div class="stat-card" style="--accent-color:var(--critical)"><div class="stat-num" style="color:var(--critical)" id="statCritical">0</div><div class="stat-label">Critical</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:var(--warning)" id="statWarning">0</div><div class="stat-label">Warning</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:var(--info)" id="statInfo">0</div><div class="stat-label">Info</div></div>
+          <div class="stat-card"><div class="stat-num" style="color:var(--pass)" id="statPassed">0</div><div class="stat-label">Passed</div></div>
+        </div>
+
+        <h3>Audit Summary</h3>
+        <div class="card" id="summaryBox" style="line-height:1.75;">CRITICAL: All 13 table permissions on this site have ZERO mspp_entitypermission_webrole associations in Dataverse. The YAML files define adx_entitypermission_webrole references, but this Enhanced Data Model site reads from mspp_entitypermission_webrole at runtime. This means NO permissions are effective -- every Web API call will fail with 403 errors. Additionally, there is a duplicate 'Authenticated Users' web role in mspp_webroles. The permission CRUD flags and scope configurations are correctly defined in the YAML files, but they have no effect until the mspp_ web role associations are created. The user's specific error about contact AppendTo during invoice creation is a direct consequence of this systemic issue.</div>
+
+      </div>
+
+      <!-- FINDINGS -->
+      <div class="section" id="tab-findings">
+        <h2>Findings</h2>
+        <p class="section-desc" id="findingsDesc"></p>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div class="filter-bar" id="filterBar" style="margin-bottom:0;"></div>
+          <button class="filter-btn" id="expandAllBtn" onclick="toggleExpandAll()" style="white-space:nowrap;">Expand All</button>
+        </div>
+        <div id="findingsContainer" style="margin-top:16px;"></div>
+      </div>
+
+      <!-- INVENTORY -->
+      <div class="section" id="tab-inventory">
+        <h2>Permissions Inventory</h2>
+        <p class="section-desc" id="invDesc"></p>
+
+        <h3>Legend</h3>
+        <div class="card" style="margin-bottom:16px;">
+          <div style="display:flex;gap:32px;flex-wrap:wrap;">
+            <div>
+              <div class="field-label" style="margin-bottom:6px;">Scope</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <span class="scope-tag scope-Global">Global</span>
+                <span class="scope-tag scope-Contact">Contact</span>
+                <span class="scope-tag scope-Account">Account</span>
+                <span class="scope-tag scope-Parent">Parent</span>
+                <span class="scope-tag scope-Self">Self</span>
+              </div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:6px;line-height:1.6;">
+                <strong>Global</strong> — all records &nbsp;|&nbsp;
+                <strong>Contact</strong> — user's contact &nbsp;|&nbsp;
+                <strong>Account</strong> — user's account &nbsp;|&nbsp;
+                <strong>Parent</strong> — via parent table &nbsp;|&nbsp;
+                <strong>Self</strong> — own record only
+              </div>
+            </div>
+            <div>
+              <div class="field-label" style="margin-bottom:6px;">Privileges</div>
+              <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;">
+                <div style="display:flex;align-items:center;gap:6px;"><span class="priv priv-on">R</span><strong style="color:var(--text-bright);">Read</strong><span style="color:var(--text-dim);">— Retrieve and view records</span></div>
+                <div style="display:flex;align-items:center;gap:6px;"><span class="priv priv-on">C</span><strong style="color:var(--text-bright);">Create</strong><span style="color:var(--text-dim);">— Add new records</span></div>
+                <div style="display:flex;align-items:center;gap:6px;"><span class="priv priv-on">W</span><strong style="color:var(--text-bright);">Write</strong><span style="color:var(--text-dim);">— Update existing records (includes file uploads via PATCH)</span></div>
+                <div style="display:flex;align-items:center;gap:6px;"><span class="priv priv-on">D</span><strong style="color:var(--text-bright);">Delete</strong><span style="color:var(--text-dim);">— Remove records</span></div>
+                <div style="display:flex;align-items:center;gap:6px;"><span class="priv priv-on">A</span><strong style="color:var(--text-bright);">Append</strong><span style="color:var(--text-dim);">— Attach this record to another via a lookup</span></div>
+                <div style="display:flex;align-items:center;gap:6px;"><span class="priv priv-on">AT</span><strong style="color:var(--text-bright);">AppendTo</strong><span style="color:var(--text-dim);">— Allow other records to reference this one via a lookup</span></div>
+              </div>
+              <div style="font-size:11px;color:var(--text-dim);margin-top:8px;">
+                <span class="priv priv-on" style="font-size:8px;">R</span> enabled &nbsp;
+                <span class="priv priv-off" style="font-size:8px;">R</span> disabled
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="invContainer"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// Data populated by the audit-permissions skill
+const SITE_NAME = "Supplier Invoice Portal";
+
+const FINDINGS = [{"id":"f0","severity":"critical","title":"ALL 13 permissions have ZERO mspp_ web role associations","table":null,"scope":null,"permission":"All permissions","reasoning":"Direct query of the mspp_entitypermission_webrole intersection table in Dataverse confirms that every single one of the 13 mspp_entitypermission records for this website (ID: 2bea4a71-0a1c-4a6f-96cd-b6e7878d112c) has zero web role associations. The YAML files specify adx_entitypermission_webrole arrays, but this site uses the Enhanced Data Model which reads from mspp_entitypermission_webrole. The deploy tooling appears to create adx_ associations instead of mspp_ associations. Without these associations, no permission grants any access at all.","fix":"For each of the 13 permissions, create mspp_entitypermission_webrole associations via the Dataverse Web API. For each permission, POST to /api/data/v9.2/mspp_entitypermissions(<permissionId>)/mspp_entitypermission_webrole/$ref with the appropriate mspp_webrole URI. The role IDs in mspp_webroles match the IDs in the YAML files: Supplier=997e7996-e241-4117-9c09-28e90a1fcdbc, Reviewer=c8031dd9-b8d4-435a-87df-3b90748d2fc4, Authenticated Users=2ab5e3ba-0309-f111-8406-6045bd04a357.","details":"Verified by querying: GET mspp_entitypermissions(<id>)/mspp_entitypermission_webrole for all 13 permissions. All returned {\"value\":[]}. Permission IDs checked: 99689ef3 (Invoice-Contact Scope), 8ffb8cc4 (Contact-Read), 361bb4a3 (PO-Reviewer), d5172b66 (Comment-Reviewer), aed98746 (PO-Read), cb0c220a (Invoice-Supplier), e82591a8 (Supplier-Read), cbd92278 (Attachment-Parent), 535a5911 (Attachment-Supplier), 01f92b58 (Comment-Supplier), e9979df3 (Comment-Parent), 43822015 (Attachment-Reviewer), 76266883 (Invoice-Reviewer)."},{"id":"f1","severity":"critical","title":"Contact AppendTo has no effective web role association","table":"contact","scope":"Global (756150000)","permission":"Contact - Read","reasoning":"The user's error 'EntityPermissionAppendToIsMissingDuringAssociationChange: You don't have permission to associate or disassociate table contact to spnvc_invoice' is caused by the Contact-Read permission (8ffb8cc4-2d4e-4b09-ad60-1f9026a88230) having appendto:true in the YAML but ZERO mspp_entitypermission_webrole associations in Dataverse. The invoiceService.ts creates invoices with spnvc_ContactId@odata.bind = /contacts(<id>) (line 145), which requires appendto on the contact table. The permission exists with the right flags but is not linked to any role.","fix":"Create mspp_entitypermission_webrole associations for Contact-Read (8ffb8cc4) linking it to both Authenticated Users (2ab5e3ba) and Supplier (997e7996) roles, matching what the YAML file specifies.","details":"Code references: src/services/invoiceService.ts line 145: body['spnvc_ContactId@odata.bind'] = /contacts(${payload.contactId}). Also line 190 (update). Also src/services/invoiceCommentService.ts line 127: body['spnvc_AuthorContactId@odata.bind'] = /contacts(${payload.authorContactId}). The contact table is also $expanded in INVOICE_EXPAND and COMMENT_EXPAND."},{"id":"f2","severity":"critical","title":"Invoice - Contact Scope permission has no effective web role","table":"spnvc_invoice","scope":"Contact (756150001)","permission":"Invoice - Contact Scope","reasoning":"The Invoice - Contact Scope permission (99689ef3) is intended for the Authenticated Users role and grants full CRUD + append/appendto on invoices scoped to the current contact via spnvc_contact_invoice_submitter. However, it has zero mspp_entitypermission_webrole associations. This is one of the primary permissions enabling supplier users to create/read/update/delete their own invoices.","fix":"Create mspp_entitypermission_webrole association linking Invoice-Contact Scope (99689ef3) to Authenticated Users (2ab5e3ba).","details":"YAML specifies: adx_entitypermission_webrole: [2ab5e3ba-0309-f111-8406-6045bd04a357]. Scope: Contact (756150001), contactrelationship: spnvc_contact_invoice_submitter. All CRUD enabled."},{"id":"f3","severity":"critical","title":"Invoice - Supplier Access permission has no effective web role","table":"spnvc_invoice","scope":"Contact (756150001)","permission":"Invoice - Supplier Access","reasoning":"The Invoice - Supplier Access permission (cb0c220a) is intended for the Supplier role and grants full CRUD + append/appendto. It serves as the parent permission for Invoice Comment - Supplier Access and Invoice Attachment - Supplier Access (parent-scope children). Without the mspp_ web role association, the entire Supplier permission chain is broken.","fix":"Create mspp_entitypermission_webrole association linking Invoice-Supplier Access (cb0c220a) to Supplier (997e7996).","details":"YAML specifies: adx_entitypermission_webrole: [997e7996-e241-4117-9c09-28e90a1fcdbc]. This is the parent for child permissions 01f92b58 (Comment-Supplier) and 535a5911 (Attachment-Supplier)."},{"id":"f4","severity":"critical","title":"Invoice - Reviewer Access permission has no effective web role","table":"spnvc_invoice","scope":"Global (756150000)","permission":"Invoice - Reviewer Access","reasoning":"The Invoice - Reviewer Access permission (76266883) is intended for the Reviewer role and grants read + write + append/appendto on all invoices globally. Without the mspp_ web role association, reviewers cannot read or update any invoices. This is also the parent for Invoice Comment - Reviewer Access and Invoice Attachment - Reviewer Access.","fix":"Create mspp_entitypermission_webrole association linking Invoice-Reviewer Access (76266883) to Reviewer (c8031dd9).","details":"YAML specifies: adx_entitypermission_webrole: [c8031dd9-b8d4-435a-87df-3b90748d2fc4]. This is the parent for child permissions d5172b66 (Comment-Reviewer) and 43822015 (Attachment-Reviewer)."},{"id":"f5","severity":"critical","title":"Invoice Comment - Supplier Access has no effective web role","table":"spnvc_invoicecomment","scope":"Parent (756150003)","permission":"Invoice Comment - Supplier Access","reasoning":"Parent-scope permission (01f92b58) for invoice comments under Invoice-Supplier Access. The mspp_ web role association is missing. Without it, suppliers cannot read or create comments on their invoices.","fix":"Create mspp_entitypermission_webrole association linking Invoice Comment - Supplier Access (01f92b58) to Supplier (997e7996).","details":"YAML specifies: adx_entitypermission_webrole: [997e7996]. Parent: cb0c220a (Invoice-Supplier Access). Relationship: spnvc_invoice_invoicecomment. Code: invoiceCommentService.ts creates comments with POST and binds to invoice + contact."},{"id":"f6","severity":"critical","title":"Invoice Comment - Reviewer Access has no effective web role","table":"spnvc_invoicecomment","scope":"Parent (756150003)","permission":"Invoice Comment - Reviewer Access","reasoning":"Parent-scope permission (d5172b66) for invoice comments under Invoice-Reviewer Access. The mspp_ web role association is missing. Without it, reviewers cannot read or create comments.","fix":"Create mspp_entitypermission_webrole association linking Invoice Comment - Reviewer Access (d5172b66) to Reviewer (c8031dd9).","details":"YAML specifies: adx_entitypermission_webrole: [c8031dd9]. Parent: 76266883 (Invoice-Reviewer Access). Relationship: spnvc_invoice_invoicecomment."},{"id":"f7","severity":"critical","title":"Invoice Comment - Parent Scope has no effective web role","table":"spnvc_invoicecomment","scope":"Parent (756150003)","permission":"Invoice Comment - Parent Scope","reasoning":"Parent-scope permission (e9979df3) for invoice comments under Invoice-Contact Scope. The mspp_ web role association is missing. Without it, authenticated users cannot read or create comments on their own invoices.","fix":"Create mspp_entitypermission_webrole association linking Invoice Comment - Parent Scope (e9979df3) to Authenticated Users (2ab5e3ba).","details":"YAML specifies: adx_entitypermission_webrole: [2ab5e3ba]. Parent: 99689ef3 (Invoice-Contact Scope). Relationship: spnvc_invoice_invoicecomment."},{"id":"f8","severity":"critical","title":"Invoice Attachment - Supplier Access has no effective web role","table":"spnvc_invoiceattachment","scope":"Parent (756150003)","permission":"Invoice Attachment - Supplier Access","reasoning":"Parent-scope permission (535a5911) for attachments under Invoice-Supplier Access. The mspp_ web role association is missing. Without it, suppliers cannot upload, read, or delete attachments. The code uses file upload (uploadFileColumn) which requires write permission.","fix":"Create mspp_entitypermission_webrole association linking Invoice Attachment - Supplier Access (535a5911) to Supplier (997e7996).","details":"YAML specifies: adx_entitypermission_webrole: [997e7996]. Parent: cb0c220a (Invoice-Supplier Access). Relationship: spnvc_invoice_invoiceattachment. Code: invoiceAttachmentService.ts uses POST (create), DELETE, and uploadFileColumn (PATCH for file upload)."},{"id":"f9","severity":"critical","title":"Invoice Attachment - Reviewer Access has no effective web role","table":"spnvc_invoiceattachment","scope":"Parent (756150003)","permission":"Invoice Attachment - Reviewer Access","reasoning":"Parent-scope permission (43822015) for attachments under Invoice-Reviewer Access. Only grants read. The mspp_ web role association is missing. Without it, reviewers cannot view attachments.","fix":"Create mspp_entitypermission_webrole association linking Invoice Attachment - Reviewer Access (43822015) to Reviewer (c8031dd9).","details":"YAML specifies: adx_entitypermission_webrole: [c8031dd9]. Parent: 76266883 (Invoice-Reviewer Access). Relationship: spnvc_invoice_invoiceattachment."},{"id":"f10","severity":"critical","title":"Invoice Attachment - Parent Scope has no effective web role","table":"spnvc_invoiceattachment","scope":"Parent (756150003)","permission":"Invoice Attachment - Parent Scope","reasoning":"Parent-scope permission (cbd92278) for attachments under Invoice-Contact Scope. The mspp_ web role association is missing. Without it, authenticated users cannot manage attachments on their own invoices.","fix":"Create mspp_entitypermission_webrole association linking Invoice Attachment - Parent Scope (cbd92278) to Authenticated Users (2ab5e3ba).","details":"YAML specifies: adx_entitypermission_webrole: [2ab5e3ba]. Parent: 99689ef3 (Invoice-Contact Scope). Relationship: spnvc_invoice_invoiceattachment."},{"id":"f11","severity":"critical","title":"Purchase Order - Reviewer Access has no effective web role","table":"spnvc_purchaseorder","scope":"Global (756150000)","permission":"Purchase Order - Reviewer Access","reasoning":"The PO - Reviewer Access permission (361bb4a3) grants full CRUD + append/appendto globally. The mspp_ web role association is missing. Without it, reviewers cannot create, read, update, or delete purchase orders.","fix":"Create mspp_entitypermission_webrole association linking PO-Reviewer Access (361bb4a3) to Reviewer (c8031dd9).","details":"YAML specifies: adx_entitypermission_webrole: [c8031dd9]. Code: purchaseOrderService.ts uses POST (create), PATCH (update), DELETE, and binds spnvc_SupplierId@odata.bind."},{"id":"f12","severity":"critical","title":"Purchase Order - Read has no effective web role","table":"spnvc_purchaseorder","scope":"Global (756150000)","permission":"Purchase Order - Read","reasoning":"The PO - Read permission (aed98746) grants read + appendto globally for Authenticated Users and Supplier roles. The mspp_ web role association is missing. Without it, these users cannot view purchase orders or have invoices linked to POs.","fix":"Create mspp_entitypermission_webrole associations linking PO-Read (aed98746) to both Authenticated Users (2ab5e3ba) and Supplier (997e7996).","details":"YAML specifies: adx_entitypermission_webrole: [2ab5e3ba, 997e7996]. The appendto flag enables invoice creation with spnvc_PurchaseOrderId@odata.bind linking to POs. Code: invoiceService.ts references _spnvc_purchaseorderid_value in data model manifest."},{"id":"f13","severity":"critical","title":"Supplier - Read has no effective web role","table":"spnvc_supplier","scope":"Global (756150000)","permission":"Supplier - Read","reasoning":"The Supplier - Read permission (e82591a8) grants read + appendto globally. The mspp_ web role association is missing. Without it, no users can view suppliers or create records that bind to suppliers (spnvc_SupplierId@odata.bind in invoiceService.ts line 148 and purchaseOrderService.ts line 130).","fix":"Create mspp_entitypermission_webrole associations linking Supplier-Read (e82591a8) to both Authenticated Users (2ab5e3ba) and Supplier (997e7996).","details":"YAML specifies: adx_entitypermission_webrole: [2ab5e3ba, 997e7996]. The supplier table is $expanded in INVOICE_EXPAND and PO_EXPAND for display purposes."},{"id":"f14","severity":"warning","title":"Duplicate Authenticated Users web role in mspp_webroles","table":null,"scope":null,"permission":null,"reasoning":"There are two mspp_webrole records named 'Authenticated Users' for this website: ID 2ab5e3ba-0309-f111-8406-6045bd04a357 (authenticatedusersrole=true) and ID 96c2f999-9d7a-42c3-ad6c-916704b35404 (authenticatedusersrole=true). The YAML files reference 2ab5e3ba. The duplicate (96c2f999) may have been created by a previous deployment or site provisioning and could cause ambiguity.","fix":"Deactivate or delete the duplicate Authenticated Users role (96c2f999-9d7a-42c3-ad6c-916704b35404). Ensure all permission associations use the correct role ID (2ab5e3ba).","details":"Both roles have authenticatedusersrole=true. The 96c2f999 role was created on 2026-03-18, while 2ab5e3ba was created on 2026-03-22. The YAML web-roles/Authenticated-Users.webrole.yml references 2ab5e3ba."},{"id":"f15","severity":"warning","title":"Invoice - Reviewer Access uses Global scope with write enabled","table":"spnvc_invoice","scope":"Global (756150000)","permission":"Invoice - Reviewer Access","reasoning":"The Invoice - Reviewer Access permission uses Global scope with write:true. This means any user with the Reviewer role can update any invoice in the system, not just invoices assigned to them. While this may be intentional for a reviewer workflow, it is a broader access level than typically needed.","fix":"Consider whether reviewers should only be able to update invoices in specific statuses. If so, the scope or application logic should restrict this further.","details":"Permission 76266883 has scope=756150000 (Global), read:true, write:true, create:false, delete:false. This grants reviewers the ability to PATCH any invoice record."},{"id":"f16","severity":"warning","title":"Purchase Order - Reviewer Access uses Global scope with full CRUD + delete","table":"spnvc_purchaseorder","scope":"Global (756150000)","permission":"Purchase Order - Reviewer Access","reasoning":"The PO - Reviewer Access permission uses Global scope with create, read, write, and delete all enabled. This grants very broad access. Any reviewer can create, modify, or delete any purchase order.","fix":"Review whether reviewers need delete access on POs. Consider restricting to create+read+write if deletion is not part of the workflow.","details":"Permission 361bb4a3 has scope=756150000 (Global) with all CRUD flags enabled. Code: purchaseOrderService.ts has deletePurchaseOrder function."},{"id":"f17","severity":"warning","title":"Invoice - Supplier Access and Invoice - Contact Scope grant delete access","table":"spnvc_invoice","scope":"Contact (756150001)","permission":"Invoice - Supplier Access, Invoice - Contact Scope","reasoning":"Both contact-scoped invoice permissions grant delete:true. The code does have a deleteInvoice function (invoiceService.ts line 216), but allowing suppliers to delete invoices may not be desirable depending on the business workflow. Typically, invoices should not be deletable once submitted.","fix":"Consider disabling delete:true if the business process requires invoice records to be retained for audit trail. Alternatively, the application UI may already prevent deletion of submitted invoices.","details":"Invoice - Supplier Access (cb0c220a) and Invoice - Contact Scope (99689ef3) both have delete:true. The deleteInvoice function exists at invoiceService.ts:216."},{"id":"f18","severity":"info","title":"Invoice PurchaseOrder lookup requires appendto on spnvc_purchaseorder","table":"spnvc_purchaseorder","scope":"Global (756150000)","permission":"Purchase Order - Read","reasoning":"The data model manifest shows spnvc_invoice has a spnvc_purchaseorderid lookup to spnvc_purchaseorder. While the PO-Read permission has appendto:true (correctly), the invoiceService.ts code does not currently use spnvc_PurchaseOrderId@odata.bind in the create or update functions. The appendto flag is correctly set for future use.","fix":"No action needed. The appendto flag is correctly configured for when invoice-to-PO linking is implemented.","details":"Data model manifest: spnvc_purchaseorderid is a Lookup column on spnvc_invoice targeting spnvc_purchaseorder. The PO-Read permission has appendto:true."},{"id":"f19","severity":"info","title":"Invoice Attachment has lookup to spnvc_invoicecomment (appendto correctly set)","table":"spnvc_invoicecomment","scope":"Parent (756150003)","permission":"Invoice Comment - Supplier Access, Invoice Comment - Reviewer Access, Invoice Comment - Parent Scope","reasoning":"The spnvc_invoiceattachment table has a spnvc_invoicecommentid lookup targeting spnvc_invoicecomment. All three invoice comment permissions have appendto:true, correctly enabling attachment records to be linked to comments.","fix":"No action needed. AppendTo is correctly configured on all invoice comment permissions.","details":"invoiceAttachmentService.ts line 149: body['spnvc_InvoiceCommentId@odata.bind'] = /spnvc_invoicecomments(${payload.commentId}). All comment permissions have appendto:true."}];
+// Each finding: { id, severity (critical|warning|info|pass), title, table, scope, permission, reasoning, fix, details }
+
+const INVENTORY = [{"name":"Invoice - Contact Scope","table":"spnvc_invoice","scope":"Contact","roles":["Authenticated Users (YAML only - no mspp_ association)"],"read":true,"create":true,"write":true,"delete":true,"append":true,"appendto":true},{"name":"Invoice - Supplier Access","table":"spnvc_invoice","scope":"Contact","roles":["Supplier (YAML only - no mspp_ association)"],"read":true,"create":true,"write":true,"delete":true,"append":true,"appendto":true},{"name":"Invoice - Reviewer Access","table":"spnvc_invoice","scope":"Global","roles":["Reviewer (YAML only - no mspp_ association)"],"read":true,"create":false,"write":true,"delete":false,"append":true,"appendto":true},{"name":"Invoice Comment - Parent Scope","table":"spnvc_invoicecomment","scope":"Parent","roles":["Authenticated Users (YAML only - no mspp_ association)"],"read":true,"create":true,"write":false,"delete":false,"append":true,"appendto":true},{"name":"Invoice Comment - Supplier Access","table":"spnvc_invoicecomment","scope":"Parent","roles":["Supplier (YAML only - no mspp_ association)"],"read":true,"create":true,"write":false,"delete":false,"append":true,"appendto":true},{"name":"Invoice Comment - Reviewer Access","table":"spnvc_invoicecomment","scope":"Parent","roles":["Reviewer (YAML only - no mspp_ association)"],"read":true,"create":true,"write":false,"delete":false,"append":true,"appendto":true},{"name":"Invoice Attachment - Parent Scope","table":"spnvc_invoiceattachment","scope":"Parent","roles":["Authenticated Users (YAML only - no mspp_ association)"],"read":true,"create":true,"write":true,"delete":true,"append":true,"appendto":true},{"name":"Invoice Attachment - Supplier Access","table":"spnvc_invoiceattachment","scope":"Parent","roles":["Supplier (YAML only - no mspp_ association)"],"read":true,"create":true,"write":true,"delete":true,"append":true,"appendto":true},{"name":"Invoice Attachment - Reviewer Access","table":"spnvc_invoiceattachment","scope":"Parent","roles":["Reviewer (YAML only - no mspp_ association)"],"read":true,"create":false,"write":false,"delete":false,"append":false,"appendto":false},{"name":"Purchase Order - Reviewer Access","table":"spnvc_purchaseorder","scope":"Global","roles":["Reviewer (YAML only - no mspp_ association)"],"read":true,"create":true,"write":true,"delete":true,"append":true,"appendto":true},{"name":"Purchase Order - Read","table":"spnvc_purchaseorder","scope":"Global","roles":["Authenticated Users (YAML only - no mspp_ association)","Supplier (YAML only - no mspp_ association)"],"read":true,"create":false,"write":false,"delete":false,"append":false,"appendto":true},{"name":"Contact - Read","table":"contact","scope":"Global","roles":["Authenticated Users (YAML only - no mspp_ association)","Supplier (YAML only - no mspp_ association)"],"read":true,"create":false,"write":false,"delete":false,"append":false,"appendto":true},{"name":"Supplier - Read","table":"spnvc_supplier","scope":"Global","roles":["Authenticated Users (YAML only - no mspp_ association)","Supplier (YAML only - no mspp_ association)"],"read":true,"create":false,"write":false,"delete":false,"append":false,"appendto":true}];
+// Each item: { name, table, scope, roles, read, create, write, delete, append, appendto }
+
+// Tab navigation
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// Severity config
+const sevConfig = {
+  critical: { color: 'var(--critical)', label: 'CRITICAL', icon: '\u2716' },
+  warning:  { color: 'var(--warning)',  label: 'WARNING',  icon: '\u26A0' },
+  info:     { color: 'var(--info)',     label: 'INFO',     icon: '\u2139' },
+  pass:     { color: 'var(--pass)',     label: 'PASSED',   icon: '\u2714' }
+};
+
+const scopeNames = { 756150000:'Global', 756150001:'Contact', 756150002:'Account', 756150003:'Parent', 756150004:'Self' };
+function scopeName(s) { return scopeNames[s] || s; }
+
+// Stats
+const criticalCount = FINDINGS.filter(f => f.severity === 'critical').length;
+const warningCount = FINDINGS.filter(f => f.severity === 'warning').length;
+const infoCount = FINDINGS.filter(f => f.severity === 'info').length;
+const passCount = FINDINGS.filter(f => f.severity === 'pass').length;
+const issueCount = criticalCount + warningCount + infoCount;
+
+document.getElementById('statCritical').textContent = criticalCount;
+document.getElementById('statWarning').textContent = warningCount;
+document.getElementById('statInfo').textContent = infoCount;
+document.getElementById('statPassed').textContent = passCount;
+document.getElementById('navFindingsCount').textContent = issueCount > 0 ? issueCount : '';
+
+document.getElementById('findingsDesc').textContent =
+  FINDINGS.length + ' check' + (FINDINGS.length !== 1 ? 's' : '') +
+  ' \u2014 ' + criticalCount + ' critical, ' + warningCount + ' warning, ' + infoCount + ' info, ' + passCount + ' passed.';
+
+document.getElementById('invDesc').textContent =
+  INVENTORY.length + ' table permission' + (INVENTORY.length !== 1 ? 's' : '') + ' currently configured.';
+
+// Filter bar
+let activeFilter = 'all';
+function renderFilterBar() {
+  const c = document.getElementById('filterBar');
+  const counts = { all: FINDINGS.length, critical: criticalCount, warning: warningCount, info: infoCount, pass: passCount };
+  const labels = { all: 'All', critical: 'Critical', warning: 'Warning', info: 'Info', pass: 'Passed' };
+  let html = '';
+  Object.entries(labels).forEach(([key, label]) => {
+    if (counts[key] === 0 && key !== 'all') return;
+    html += `<button class="filter-btn ${activeFilter === key ? 'active' : ''}" onclick="setFilter('${key}')">${label}<span class="filter-count">${counts[key]}</span></button>`;
+  });
+  c.innerHTML = html;
+}
+function setFilter(f) {
+  activeFilter = f;
+  renderFilterBar();
+  renderFindings();
+}
+
+// Render findings
+function renderFindings() {
+  const c = document.getElementById('findingsContainer');
+  const filtered = activeFilter === 'all' ? FINDINGS : FINDINGS.filter(f => f.severity === activeFilter);
+
+  // Sort: critical first, then warning, info, pass
+  const order = { critical: 0, warning: 1, info: 2, pass: 3 };
+  const sorted = [...filtered].sort((a, b) => (order[a.severity] ?? 99) - (order[b.severity] ?? 99));
+
+  let html = '';
+  sorted.forEach(f => {
+    const sev = sevConfig[f.severity] || sevConfig.info;
+    html += `<div class="finding-card" id="finding-${f.id}">
+      <div class="finding-header" onclick="document.getElementById('finding-${f.id}').classList.toggle('expanded')">
+        <span class="severity severity-${f.severity}">${sev.label}</span>
+        <span class="finding-title">${f.title}</span>
+        ${f.table ? `<span class="finding-table">${f.table}</span>` : ''}
+        <span class="finding-chevron">&#9654;</span>
+      </div>
+      <div class="finding-body">
+        ${f.permission ? `<div style="margin-top:10px;font-size:12px;"><span class="field-label">Permission:</span> <span style="font-weight:600;color:var(--text-bright)">${f.permission}</span></div>` : ''}
+        ${f.scope ? `<div style="margin-top:6px;font-size:12px;"><span class="field-label">Scope:</span> <span class="scope-tag scope-${scopeName(f.scope)}" style="font-size:10px;padding:1px 6px;min-width:auto;">${scopeName(f.scope)}</span></div>` : ''}
+        ${f.details ? `<div style="margin-top:10px;font-size:12px;color:var(--text);line-height:1.7;">${f.details}</div>` : ''}
+        ${f.reasoning ? `<div style="margin-top:10px;"><div class="field-label">Reasoning</div><div class="reasoning-block">${f.reasoning}</div></div>` : ''}
+        ${f.fix ? `<div style="margin-top:8px;"><div class="field-label">Suggested Fix</div><div class="fix-block"><strong>Fix:</strong> ${f.fix}</div></div>` : ''}
+      </div>
+    </div>`;
+  });
+
+  if (sorted.length === 0) {
+    html = '<div style="text-align:center;padding:40px;color:var(--text-dim);font-size:14px;">No findings for this filter.</div>';
+  }
+  c.innerHTML = html;
+}
+
+// Expand/Collapse All
+let allExpanded = false;
+function toggleExpandAll() {
+  allExpanded = !allExpanded;
+  document.querySelectorAll('.finding-card').forEach(c => {
+    if (allExpanded) c.classList.add('expanded');
+    else c.classList.remove('expanded');
+  });
+  document.getElementById('expandAllBtn').textContent = allExpanded ? 'Collapse All' : 'Expand All';
+}
+
+// Render inventory
+function renderInventory() {
+  const c = document.getElementById('invContainer');
+  if (INVENTORY.length === 0) {
+    c.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);font-size:14px;">No table permissions configured.</div>';
+    return;
+  }
+  const privs = ['Read','Create','Write','Delete','Append','AppendTo'];
+  let html = '<table class="inv-table"><thead><tr><th>Permission Name</th><th>Table</th><th>Scope</th><th>Roles</th><th>Privileges</th></tr></thead><tbody>';
+  INVENTORY.forEach(p => {
+    const flags = { Read: p.read, Create: p.create, Write: p.write, Delete: p.delete, Append: p.append, AppendTo: p.appendto };
+    html += `<tr>
+      <td style="font-weight:600;color:var(--text-bright)">${p.name}</td>
+      <td><code style="font-size:11px;color:var(--accent);background:var(--accent-bg);padding:1px 5px;border-radius:3px;border:1px solid var(--accent-border);">${p.table}</code></td>
+      <td><span class="scope-tag scope-${scopeName(p.scope)}" style="font-size:9px;padding:1px 6px;min-width:auto;">${scopeName(p.scope)}</span></td>
+      <td style="font-size:12px;">${Array.isArray(p.roles) ? p.roles.join(', ') : p.roles}</td>
+      <td style="display:flex;gap:3px;flex-wrap:wrap;">${privs.map(pr => `<span class="priv ${flags[pr] ? 'priv-on' : 'priv-off'}">${pr[0]}${pr === 'AppendTo' ? 'T' : ''}</span>`).join('')}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  c.innerHTML = html;
+}
+
+// Init
+renderFilterBar();
+renderFindings();
+renderInventory();
+</script>
+<footer style="position:fixed;bottom:0;left:0;right:0;text-align:center;padding:10px;font-size:12px;color:#605e5c;border-top:1px solid #c8c6c4;background:#ffffff;z-index:100;">AI-generated content may be incorrect</footer>
+</body>
+</html>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Send, X, AlertTriangle } from 'lucide-react'
-import { useCreatePOAction } from '../data/purchaseOrderProvider'
+import { useCreatePOAction, useAssignableSuppliers } from '../data/purchaseOrderProvider'
 import ActionDialog from '../components/ActionDialog'
 import usePageTitle from '../hooks/usePageTitle'
 import { useAuthorization } from '../hooks/useAuthorization'
@@ -11,9 +11,11 @@ export default function CreatePurchaseOrder() {
   const navigate = useNavigate()
   const { isReviewer } = useAuthorization()
   const { submit, isSubmitting, error } = useCreatePOAction()
+  const { suppliers, isLoading: suppliersLoading, error: suppliersError } = useAssignableSuppliers()
 
   const [form, setForm] = useState({
     poNumber: '',
+    supplierId: '',
     totalAmount: '',
     deliveryDate: '',
     description: '',
@@ -24,6 +26,7 @@ export default function CreatePurchaseOrder() {
 
   const isDirty =
     form.poNumber !== '' ||
+    form.supplierId !== '' ||
     form.totalAmount !== '' ||
     form.deliveryDate !== '' ||
     form.description !== ''
@@ -47,6 +50,7 @@ export default function CreatePurchaseOrder() {
   function validate() {
     const errs: Record<string, string> = {}
     if (!form.poNumber.trim()) errs.poNumber = 'PO Number is required'
+    if (!form.supplierId) errs.supplierId = 'Select a supplier'
     if (!form.totalAmount || Number(form.totalAmount) <= 0) errs.totalAmount = 'Enter a valid amount'
     return errs
   }
@@ -55,6 +59,9 @@ export default function CreatePurchaseOrder() {
     const fieldErrors: Record<string, string> = {}
     if (field === 'poNumber' && !form.poNumber.trim()) {
       fieldErrors.poNumber = 'PO Number is required'
+    }
+    if (field === 'supplierId' && !form.supplierId) {
+      fieldErrors.supplierId = 'Select a supplier'
     }
     if (field === 'totalAmount' && form.totalAmount !== '' && Number(form.totalAmount) <= 0) {
       fieldErrors.totalAmount = 'Enter a valid amount'
@@ -88,6 +95,7 @@ export default function CreatePurchaseOrder() {
       description: form.description.trim(),
       totalAmount: parseFloat(form.totalAmount),
       deliveryDate: form.deliveryDate || '',
+      supplierId: form.supplierId,
     })
 
     if (success) {
@@ -210,6 +218,62 @@ export default function CreatePurchaseOrder() {
               style={{ color: 'var(--color-error)', fontSize: '0.8rem', marginTop: 4 }}
             >
               {errors.poNumber}
+            </p>
+          )}
+        </div>
+
+        {/* Supplier */}
+        <div>
+          <label
+            htmlFor="supplierId"
+            style={{
+              display: 'block',
+              fontSize: '0.85rem',
+              fontWeight: 500,
+              marginBottom: 6,
+            }}
+          >
+            Supplier <span style={{ color: 'var(--color-error)' }}>*</span>
+          </label>
+          <select
+            key={errors.supplierId ? `sup-${shakeKey}` : 'sup'}
+            id="supplierId"
+            value={form.supplierId}
+            disabled={suppliersLoading || !!suppliersError}
+            onChange={(e) => {
+              setForm(prev => ({ ...prev, supplierId: e.target.value }))
+              if (errors.supplierId && e.target.value) {
+                setErrors((prev) => { const next = { ...prev }; delete next.supplierId; return next })
+              }
+            }}
+            onBlur={() => validateField('supplierId')}
+            aria-required="true"
+            aria-invalid={!!errors.supplierId}
+            aria-describedby={
+              suppliersError ? 'supplierId-error' : errors.supplierId ? 'supplierId-error' : undefined
+            }
+            className={inputClassName('supplierId')}
+            style={{
+              ...inputStyle('supplierId'),
+              cursor: suppliersLoading || suppliersError ? 'not-allowed' : 'pointer',
+            }}
+          >
+            <option value="">
+              {suppliersLoading ? 'Loading suppliers...' : 'Select a supplier'}
+            </option>
+            {suppliers.map((supplier) => (
+              <option key={supplier.id} value={supplier.id}>
+                {supplier.name}
+              </option>
+            ))}
+          </select>
+          {(suppliersError || errors.supplierId) && (
+            <p
+              id="supplierId-error"
+              role="alert"
+              style={{ color: 'var(--color-error)', fontSize: '0.8rem', marginTop: 4 }}
+            >
+              {suppliersError ? 'Could not load suppliers. Please refresh and try again.' : errors.supplierId}
             </p>
           )}
         </div>

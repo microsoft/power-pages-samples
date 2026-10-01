@@ -78,16 +78,10 @@
       </Addresses>
     </Publisher>
     <RootComponents>
-      <RootComponent type="1" schemaName="spnvc_carrier" behavior="0" />
-      <RootComponent type="1" schemaName="spnvc_dealer" behavior="0" />
       <RootComponent type="1" schemaName="spnvc_invoice" behavior="0" />
       <RootComponent type="1" schemaName="spnvc_invoiceattachment" behavior="0" />
       <RootComponent type="1" schemaName="spnvc_invoicecomment" behavior="0" />
-      <RootComponent type="1" schemaName="spnvc_order" behavior="0" />
-      <RootComponent type="1" schemaName="spnvc_orderlineitem" behavior="0" />
-      <RootComponent type="1" schemaName="spnvc_product" behavior="0" />
       <RootComponent type="1" schemaName="spnvc_purchaseorder" behavior="0" />
-      <RootComponent type="1" schemaName="spnvc_shipment" behavior="0" />
       <RootComponent type="1" schemaName="spnvc_supplier" behavior="0" />
     </RootComponents>
     <MissingDependencies />

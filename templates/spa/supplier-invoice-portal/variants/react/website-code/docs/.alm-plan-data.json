@@ -1,0 +1,594 @@
+{
+  "SITE_NAME": "Supplier Invoice Portal",
+  "GENERATED_AT": "2026-06-02T12:49:56.824Z",
+  "STRATEGY": "manual",
+  "EXPORT_TYPE": "unmanaged",
+  "APPROVAL_MODE": "N/A — dev-only, no deployment",
+  "HAS_ENV_VARS": false,
+  "SOLUTION_DONE": false,
+  "PIPELINE_DONE": false,
+  "PLAN_STATUS": "In Execution",
+  "LAST_INVOCATION_AT": "2026-06-02T12:51:55.370Z",
+  "APPROVED_BY": "Neeraj Nandwana",
+  "APPROVAL_DATE": "2026-06-02T12:51:10.902Z",
+  "stages": [
+    {
+      "label": "Dev",
+      "envUrl": "https://org8e8f5664.crm.dynamics.com/",
+      "envName": "PPCC 2025",
+      "type": "source"
+    }
+  ],
+  "steps": [
+    {
+      "name": "Setup solution",
+      "status": "pending",
+      "skip": false
+    }
+  ],
+  "pipelineMeta": null,
+  "risks": [
+    {
+      "type": "info",
+      "message": "A Dataverse solution will be created (or an existing one reused) for this site. The publisher prefix is irreversible once chosen — confirm carefully during setup-solution."
+    },
+    {
+      "type": "info",
+      "message": "18 auth-related site settings (Authentication/* and AzureAD/*) detected with values. setup-solution will ask which to back with environment variables so each stage can use different values. Skip any you do not need to vary per stage."
+    },
+    {
+      "type": "info",
+      "message": "7 credential-style site settings (ConsumerKey / ClientId / ClientSecret / etc.) detected. setup-solution will run a single bulk prompt to handle all of them — auto-classify by name, all-as-Secret, all-as-String, skip-all, or per-credential."
+    },
+    {
+      "type": "info",
+      "message": "This plan is dev-only — no pipeline or deployment. When you are ready to promote to other environments, re-run /power-pages:plan-alm and choose Power Platform Pipelines or Manual export/import."
+    }
+  ],
+  "solutionContents": {
+    "tables": [
+      "spnvc_invoice",
+      "spnvc_purchaseorder",
+      "spnvc_invoicecomment",
+      "spnvc_invoiceattachment",
+      "spnvc_supplier",
+      "spnvc_visaapplication",
+      "contact"
+    ],
+    "botComponents": [],
+    "siteSettings": {
+      "keepAsIs": [
+        {
+          "name": "CodeSite/Enabled"
+        },
+        {
+          "name": "CustomerSupport/DisplayAllUserActivitiesOnTimeline"
+        },
+        {
+          "name": "Footer/OutputCache/Enabled"
+        },
+        {
+          "name": "Header/OutputCache/Enabled"
+        },
+        {
+          "name": "Header/ShowAllProfileNavigationLinks"
+        },
+        {
+          "name": "HTTP/X-Frame-Options"
+        },
+        {
+          "name": "KnowledgeManagement/DisplayNotes"
+        },
+        {
+          "name": "KnowledgeManagement/NotesFilter"
+        },
+        {
+          "name": "MultiLanguage/DisplayLanguageCodeInURL"
+        },
+        {
+          "name": "MultiLanguage/MaximumDepthToClone"
+        },
+        {
+          "name": "OnlineDomains"
+        },
+        {
+          "name": "Profile/Enabled"
+        },
+        {
+          "name": "Profile/ForceSignUp"
+        },
+        {
+          "name": "Profile/ShowMarketingOptionsPanel"
+        },
+        {
+          "name": "Search/Enabled"
+        },
+        {
+          "name": "Search/FacetedView"
+        },
+        {
+          "name": "search/filters"
+        },
+        {
+          "name": "Search/IndexNotesAttachments"
+        },
+        {
+          "name": "Search/IndexQueryName"
+        },
+        {
+          "name": "search/query"
+        },
+        {
+          "name": "Search/RecordTypeFacetsEntities"
+        },
+        {
+          "name": "Site/AI/Skills/ActivateSite"
+        },
+        {
+          "name": "Site/AI/Skills/AddAiWebapi"
+        },
+        {
+          "name": "Site/AI/Skills/AddCloudFlow"
+        },
+        {
+          "name": "Site/AI/Skills/AddSampleData"
+        },
+        {
+          "name": "Site/AI/Skills/AuditPermissions"
+        },
+        {
+          "name": "Site/AI/Skills/CreateSite"
+        },
+        {
+          "name": "Site/AI/Skills/CreateWebroles"
+        },
+        {
+          "name": "Site/AI/Skills/DeploySite"
+        },
+        {
+          "name": "Site/AI/Skills/IntegrateWebApi"
+        },
+        {
+          "name": "Site/AI/Skills/SetupAuth"
+        },
+        {
+          "name": "Site/AI/Skills/SetupDatamodel"
+        },
+        {
+          "name": "Site/AI/Tools/AuthoringTool"
+        },
+        {
+          "name": "Site/BootstrapV5Enabled"
+        },
+        {
+          "name": "Summarization/Data/Enable"
+        },
+        {
+          "name": "Summarization/prompt/invoice_summary"
+        },
+        {
+          "name": "Summarization/prompt/myinvoices_summary"
+        },
+        {
+          "name": "Summarization/prompt/purchaseorder_summary"
+        },
+        {
+          "name": "Summarization/prompt/reviewqueue_summary"
+        },
+        {
+          "name": "ThemeFeature"
+        },
+        {
+          "name": "Webapi/contact/enabled"
+        },
+        {
+          "name": "Webapi/contact/fields"
+        },
+        {
+          "name": "Webapi/spnvc_invoice/enabled"
+        },
+        {
+          "name": "Webapi/spnvc_invoice/fields"
+        },
+        {
+          "name": "Webapi/spnvc_invoiceattachment/enabled"
+        },
+        {
+          "name": "Webapi/spnvc_invoiceattachment/fields"
+        },
+        {
+          "name": "Webapi/spnvc_invoicecomment/enabled"
+        },
+        {
+          "name": "Webapi/spnvc_invoicecomment/fields"
+        },
+        {
+          "name": "Webapi/spnvc_purchaseorder/enabled"
+        },
+        {
+          "name": "Webapi/spnvc_purchaseorder/fields"
+        },
+        {
+          "name": "Webapi/spnvc_supplier/enabled"
+        },
+        {
+          "name": "Webapi/spnvc_supplier/fields"
+        },
+        {
+          "name": "Webapi/spnvc_visaapplication/enabled"
+        },
+        {
+          "name": "Webapi/spnvc_visaapplication/fields"
+        },
+        {
+          "name": "Webapi/error/innererror"
+        }
+      ],
+      "authNoValue": [
+        {
+          "name": "Authentication/OpenAuth/Facebook/AppId"
+        },
+        {
+          "name": "Authentication/Registration/LoginButtonAuthenticationType"
+        },
+        {
+          "name": "Authentication/Registration/TermsPublicationDate"
+        }
+      ],
+      "promoteToEnvVar": [
+        {
+          "name": "Authentication/LoginThrottling/IpAddressTimeoutTimeSpan",
+          "value": "00:10:00"
+        },
+        {
+          "name": "Authentication/LoginThrottling/MaxAttemptsTimeLimitTimeSpan",
+          "value": "00:03:00"
+        },
+        {
+          "name": "Authentication/LoginThrottling/MaxInvaildAttemptsFromIPAddress",
+          "value": "1000"
+        },
+        {
+          "name": "Authentication/LoginTrackingEnabled",
+          "value": "False"
+        },
+        {
+          "name": "Authentication/OpenIdConnect/AzureAD/Caption",
+          "value": "Microsoft Entra ID"
+        },
+        {
+          "name": "Authentication/OpenIdConnect/AzureAD/RebrandDisclaimerEnabled",
+          "value": "false"
+        },
+        {
+          "name": "Authentication/Registration/AzureADLoginEnabled",
+          "value": "true"
+        },
+        {
+          "name": "Authentication/Registration/DenyMinors",
+          "value": "false"
+        },
+        {
+          "name": "Authentication/Registration/DenyMinorsWithoutParentalConsent",
+          "value": "false"
+        },
+        {
+          "name": "Authentication/Registration/EmailConfirmationEnabled",
+          "value": "true"
+        },
+        {
+          "name": "Authentication/Registration/Enabled",
+          "value": "true"
+        },
+        {
+          "name": "Authentication/Registration/ExternalLoginEnabled",
+          "value": "true"
+        },
+        {
+          "name": "Authentication/Registration/InvitationEnabled",
+          "value": "true"
+        },
+        {
+          "name": "Authentication/Registration/LocalLoginDeprecated",
+          "value": "False"
+        },
+        {
+          "name": "Authentication/Registration/LocalLoginEnabled",
+          "value": "true"
+        },
+        {
+          "name": "Authentication/Registration/OpenRegistrationEnabled",
+          "value": "true"
+        },
+        {
+          "name": "Authentication/Registration/ProfileRedirectEnabled",
+          "value": "\"false\""
+        },
+        {
+          "name": "Authentication/Registration/TermsAgreementEnabled",
+          "value": "false"
+        }
+      ],
+      "credentialNeedsDecision": [
+        {
+          "name": "Authentication/OpenAuth/Facebook/AppSecret",
+          "value": ""
+        },
+        {
+          "name": "Authentication/OpenAuth/LinkedIn/ConsumerKey",
+          "value": ""
+        },
+        {
+          "name": "Authentication/OpenAuth/LinkedIn/ConsumerSecret",
+          "value": ""
+        },
+        {
+          "name": "Authentication/OpenAuth/Microsoft/ClientId",
+          "value": ""
+        },
+        {
+          "name": "Authentication/OpenAuth/Microsoft/ClientSecret",
+          "value": ""
+        },
+        {
+          "name": "Authentication/OpenAuth/Twitter/ConsumerKey",
+          "value": ""
+        },
+        {
+          "name": "Authentication/OpenAuth/Twitter/ConsumerSecret",
+          "value": ""
+        }
+      ]
+    }
+  },
+  "sizeAnalysis": {
+    "totalSizeMB": {
+      "value": 4.4,
+      "tier": "green"
+    },
+    "componentCount": {
+      "value": 365,
+      "tier": "green"
+    },
+    "schemaAttrCount": {
+      "value": 1169,
+      "tier": "green"
+    },
+    "tableCount": {
+      "value": 19,
+      "tier": "yellow"
+    },
+    "webFilesAggregateMB": {
+      "value": 0,
+      "tier": "green"
+    },
+    "envVarCount": {
+      "value": 0,
+      "tier": "green"
+    }
+  },
+  "assetAdvisory": {
+    "enabled": true,
+    "candidates": [],
+    "recommendation": null
+  },
+  "splitStrategy": "single",
+  "appliedStrategies": [
+    "single"
+  ],
+  "compositeSubPartitioned": false,
+  "proposedSolutions": [
+    {
+      "uniqueName": "SupplierInvoicePortal",
+      "displayName": "Supplier Invoice Portal",
+      "order": 1,
+      "componentTypes": [
+        "All"
+      ],
+      "description": "All components packaged in a single managed solution. Estimated size is within recommended thresholds.",
+      "sizeMB": 4.4,
+      "componentCount": 365,
+      "components": []
+    }
+  ],
+  "recommendations": [],
+  "envVars": [],
+  "plannedEnvVarCount": 25,
+  "breakdown": {
+    "tables": 3.2,
+    "webFiles": 0,
+    "siteSettings": 0,
+    "cloudFlows": 0,
+    "webRolesAndPermissions": 0,
+    "envVars": 0,
+    "otherMetadata": 1.1
+  },
+  "estimationMethod": "metadata-based",
+  "estimationAccuracyPct": 15,
+  "truncationSuspected": false,
+  "truncationWarnings": [],
+  "webFilesDiskMeasuredMB": 0.5,
+  "webFilesDiskMeasuredPath": "dist",
+  "webFileSampleSize": 6,
+  "rawDiscovery": {
+    "estimate": {
+      "siteName": "Supplier Invoice Portal",
+      "publisherPrefix": "spnvc",
+      "solutionId": null,
+      "totalSizeMB": 4.4,
+      "componentCountSiteTotal": 365,
+      "componentCountSiteActionable": 236,
+      "componentCountInSolution": null,
+      "orphansOnSite": null,
+      "botCountScoped": 2,
+      "botComponentCountScoped": 30,
+      "bundleChunkCount": 129,
+      "bundleChunkNote": "129 hashed bundle chunks (Vite/Rollup) on the site — 0 are in the solution, 129 are orphans from prior pac pages upload-code-site runs. Cleanable via dedicated cleanup pass.",
+      "inSolution": null,
+      "tableCount": 19,
+      "schemaAttrCount": 1169,
+      "webFilesAggregateMB": 0,
+      "webFilesIndividual": [],
+      "webFileCount": 6,
+      "webFileSampleSize": 6,
+      "webFilesDiskMeasuredMB": 0.5,
+      "webFilesDiskMeasuredPath": "dist",
+      "webFilesDiskFileCount": 45,
+      "cloudFlowCount": 0,
+      "botCount": 2,
+      "envVarCount": 0,
+      "envVarCountScope": "publisher-prefix",
+      "envVarCountTenantWide": 0,
+      "mediaRatio": 0.31,
+      "siteType": "code-site",
+      "tables": [
+        {
+          "logicalName": "spnvc_invoice",
+          "attributeCount": 51
+        },
+        {
+          "logicalName": "spnvc_purchaseorder",
+          "attributeCount": 44
+        },
+        {
+          "logicalName": "spnvc_invoicecomment",
+          "attributeCount": 43
+        },
+        {
+          "logicalName": "spnvc_invoiceattachment",
+          "attributeCount": 45
+        },
+        {
+          "logicalName": "contact",
+          "attributeCount": 369
+        },
+        {
+          "logicalName": "spnvc_supplier",
+          "attributeCount": 44
+        },
+        {
+          "logicalName": "spnvc_carrier",
+          "attributeCount": 37
+        },
+        {
+          "logicalName": "spnvc_case",
+          "attributeCount": 62
+        },
+        {
+          "logicalName": "spnvc_casefeedback",
+          "attributeCount": 42
+        },
+        {
+          "logicalName": "spnvc_dealer",
+          "attributeCount": 54
+        },
+        {
+          "logicalName": "spnvc_document",
+          "attributeCount": 36
+        },
+        {
+          "logicalName": "spnvc_drawing",
+          "attributeCount": 40
+        },
+        {
+          "logicalName": "spnvc_drawingshare",
+          "attributeCount": 40
+        },
+        {
+          "logicalName": "spnvc_order",
+          "attributeCount": 47
+        },
+        {
+          "logicalName": "spnvc_orderlineitem",
+          "attributeCount": 45
+        },
+        {
+          "logicalName": "spnvc_product",
+          "attributeCount": 48
+        },
+        {
+          "logicalName": "spnvc_property",
+          "attributeCount": 45
+        },
+        {
+          "logicalName": "spnvc_shipment",
+          "attributeCount": 45
+        },
+        {
+          "logicalName": "spnvc_timelineentry",
+          "attributeCount": 32
+        }
+      ],
+      "breakdown": {
+        "tables": 3.2,
+        "webFiles": 0,
+        "siteSettings": 0,
+        "cloudFlows": 0,
+        "webRolesAndPermissions": 0,
+        "envVars": 0,
+        "otherMetadata": 1.1
+      },
+      "estimationMethod": "metadata-based",
+      "estimationAccuracyPct": 15,
+      "truncationSuspected": false,
+      "truncationWarnings": [],
+      "ppcGroundTruthCount": 312
+    },
+    "splitPlan": {
+      "sizeAnalysis": {
+        "totalSizeMB": {
+          "value": 4.4,
+          "tier": "green"
+        },
+        "componentCount": {
+          "value": 365,
+          "tier": "green"
+        },
+        "schemaAttrCount": {
+          "value": 1169,
+          "tier": "green"
+        },
+        "tableCount": {
+          "value": 19,
+          "tier": "yellow"
+        },
+        "webFilesAggregateMB": {
+          "value": 0,
+          "tier": "green"
+        },
+        "envVarCount": {
+          "value": 0,
+          "tier": "green"
+        }
+      },
+      "assetAdvisory": {
+        "enabled": true,
+        "candidates": [],
+        "recommendation": null
+      },
+      "splitStrategy": "single",
+      "appliedStrategies": [
+        "single"
+      ],
+      "compositeSubPartitioned": false,
+      "proposedSolutions": [
+        {
+          "uniqueName": "SupplierInvoicePortal",
+          "displayName": "Supplier Invoice Portal",
+          "order": 1,
+          "componentTypes": [
+            "All"
+          ],
+          "description": "All components packaged in a single managed solution. Estimated size is within recommended thresholds.",
+          "sizeMB": 4.4,
+          "componentCount": 365,
+          "components": []
+        }
+      ],
+      "recommendations": [],
+      "truncationSuspected": false,
+      "truncationWarnings": []
+    },
+    "hostResolution": null
+  }
+}

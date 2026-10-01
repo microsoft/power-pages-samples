@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { FileText, Clock, CheckCircle, DollarSign, Plus, AlertTriangle, XCircle, ClipboardCheck } from 'lucide-react'
+import { FileText, Clock, CheckCircle, DollarSign, Plus, XCircle } from 'lucide-react'
 import usePageTitle from '../hooks/usePageTitle'
 import { useCountUp } from '../hooks/useCountUp'
 import { useAuth } from '../hooks/useAuth'
@@ -32,14 +32,6 @@ export default function Dashboard() {
           color: 'var(--color-warning)',
           bg: 'var(--color-warning-light)',
           filterPath: '/review',
-        },
-        {
-          label: 'Under Review',
-          value: m.total - m.pendingReview - m.totalProcessed,
-          icon: ClipboardCheck,
-          color: 'var(--color-info)',
-          bg: 'var(--color-info-light)',
-          filterPath: '/invoices?status=Under+Review',
         },
         {
           label: 'Approved',
@@ -77,20 +69,20 @@ export default function Dashboard() {
         filterPath: '/invoices',
       },
       {
-        label: 'Needs Revision',
-        value: m.needsRevision,
-        icon: AlertTriangle,
-        color: 'var(--color-revision)',
-        bg: 'var(--color-revision-light)',
-        filterPath: '/invoices?status=Needs+Revision',
+        label: 'Rejected',
+        value: m.rejected,
+        icon: XCircle,
+        color: 'var(--color-error)',
+        bg: 'var(--color-error-light)',
+        filterPath: '/invoices?status=Rejected',
       },
       {
-        label: 'Pending Review',
+        label: 'Submitted',
         value: m.pendingReview,
         icon: Clock,
         color: 'var(--color-warning)',
         bg: 'var(--color-warning-light)',
-        filterPath: '/invoices?status=Under+Review',
+        filterPath: '/invoices?status=Submitted',
       },
       {
         label: 'Approved',

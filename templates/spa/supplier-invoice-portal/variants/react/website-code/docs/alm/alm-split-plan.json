@@ -1,0 +1,55 @@
+{
+  "sizeAnalysis": {
+    "totalSizeMB": {
+      "value": 4.4,
+      "tier": "green"
+    },
+    "componentCount": {
+      "value": 365,
+      "tier": "green"
+    },
+    "schemaAttrCount": {
+      "value": 1169,
+      "tier": "green"
+    },
+    "tableCount": {
+      "value": 19,
+      "tier": "yellow"
+    },
+    "webFilesAggregateMB": {
+      "value": 0,
+      "tier": "green"
+    },
+    "envVarCount": {
+      "value": 0,
+      "tier": "green"
+    }
+  },
+  "assetAdvisory": {
+    "enabled": true,
+    "candidates": [],
+    "recommendation": null
+  },
+  "splitStrategy": "single",
+  "appliedStrategies": [
+    "single"
+  ],
+  "compositeSubPartitioned": false,
+  "proposedSolutions": [
+    {
+      "uniqueName": "SupplierInvoicePortal",
+      "displayName": "Supplier Invoice Portal",
+      "order": 1,
+      "componentTypes": [
+        "All"
+      ],
+      "description": "All components packaged in a single managed solution. Estimated size is within recommended thresholds.",
+      "sizeMB": 4.4,
+      "componentCount": 365,
+      "components": []
+    }
+  ],
+  "recommendations": [],
+  "truncationSuspected": false,
+  "truncationWarnings": []
+}

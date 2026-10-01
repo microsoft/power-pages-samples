@@ -306,7 +306,7 @@ export default function PurchaseOrderDetail() {
           <div
             className="progress-bar-fill"
             style={{
-              width: `${po.totalAmount > 0 ? Math.min(100, (po.invoicedAmount / po.totalAmount) * 100) : 0}%`,
+              transform: `scaleX(${po.totalAmount > 0 ? Math.min(1, po.invoicedAmount / po.totalAmount) : 0})`,
               background: po.invoicedAmount >= po.totalAmount ? 'var(--color-success)' : 'var(--color-warning)',
             }}
           />

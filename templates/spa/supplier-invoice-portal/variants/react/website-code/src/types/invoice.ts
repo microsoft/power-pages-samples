@@ -86,6 +86,7 @@ export interface CreateInvoiceInput {
   status?: InvoiceStatusLabel
   contactId?: string
   supplierId?: string
+  purchaseOrderId?: string
 }
 
 export interface UpdateInvoiceInput {
@@ -98,6 +99,7 @@ export interface UpdateInvoiceInput {
   status?: InvoiceStatusLabel
   contactId?: string | null
   supplierId?: string | null
+  purchaseOrderId?: string | null
 }
 
 // -- Entity-to-Domain Mapper --------------------------------------------------

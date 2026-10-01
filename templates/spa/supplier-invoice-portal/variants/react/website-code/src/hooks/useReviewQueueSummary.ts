@@ -1,6 +1,6 @@
 // src/hooks/useReviewQueueSummary.ts
 // React hook that wraps the Data Summarization API for the reviewer queue —
-// a collection scope over spnvc_invoice filtered to Submitted (2) + Under Review (3).
+// a collection scope over spnvc_invoice filtered to Submitted (2).
 //
 // Surface: same as the single-record hooks, plus the scope is baked in so the
 // call site stays a one-liner.
@@ -27,9 +27,7 @@ const REVIEW_QUEUE_EXPAND = [
 ].join(',')
 // No $top / Prefer: odata.maxpagesize - those are pagination concerns for the UI
 // table; the summary is bounded by Summarization/Data/ContentSizeLimit.
-const REVIEW_QUEUE_FILTER =
-  `spnvc_invoicestatus eq ${INVOICE_STATUS.Submitted} ` +
-  `or spnvc_invoicestatus eq ${INVOICE_STATUS['Under Review']}`
+const REVIEW_QUEUE_FILTER = `spnvc_invoicestatus eq ${INVOICE_STATUS.Submitted}`
 const REVIEW_QUEUE_ORDERBY = 'spnvc_submissiondate asc'
 const REVIEW_QUEUE_INSTRUCTION = 'Summarization/prompt/reviewqueue_summary'
 

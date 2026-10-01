@@ -59,7 +59,7 @@ function renderSummaryWithCitations(summary: string): ReactNode[] {
 
 const SAMPLE_QUESTIONS = [
   'What are the approval thresholds for invoices over $10,000?',
-  'When should I mark an invoice as Needs Revision vs Rejected?',
+  'When should I approve or reject an invoice?',
   'What are the Net 60 payment-term rules?',
   'How do I escalate a dispute with a supplier?',
 ]

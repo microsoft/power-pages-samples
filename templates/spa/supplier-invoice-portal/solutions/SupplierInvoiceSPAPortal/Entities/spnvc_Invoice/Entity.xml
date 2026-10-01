@@ -798,16 +798,6 @@
                   <label description="Submitted" languagecode="1033" />
                 </labels>
               </option>
-              <option value="3" ExternalValue="" IsHidden="0">
-                <labels>
-                  <label description="Under Review" languagecode="1033" />
-                </labels>
-              </option>
-              <option value="4" ExternalValue="" IsHidden="0">
-                <labels>
-                  <label description="Needs Revision" languagecode="1033" />
-                </labels>
-              </option>
               <option value="5" ExternalValue="" IsHidden="0">
                 <labels>
                   <label description="Approved" languagecode="1033" />

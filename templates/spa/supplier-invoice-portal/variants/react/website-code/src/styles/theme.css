@@ -19,8 +19,6 @@
   --color-error-light: #FEF2F2;
   --color-info: #2D5A3D;
   --color-info-light: #E6F0EA;
-  --color-revision: #9A3412;
-  --color-revision-light: #FFF3E0;
 
   /* Status badge text colors */
   --color-status-info-text: #1E3E2B;
@@ -324,11 +322,6 @@ table {
   flex-shrink: 0;
 }
 
-/* Needs Revision badge pulse — limited to 3 cycles to avoid distraction */
-.badge-pulse {
-  animation: subtlePulse 2s ease-in-out 3;
-}
-
 /* Metric count-up entry */
 .count-up {
   animation: countIn 0.4s ease-out both;
@@ -615,9 +608,11 @@ table {
   overflow: hidden;
 }
 .progress-bar-fill {
+  width: 100%;
   height: 100%;
   border-radius: 3px;
-  transition: width 0.6s ease;
+  transform-origin: left center;
+  transition: transform 0.6s ease;
 }
 
 /* Character counter */

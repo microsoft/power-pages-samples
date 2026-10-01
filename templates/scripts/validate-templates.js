@@ -10,6 +10,7 @@ const VALID_FRAMEWORKS = new Set(["angular", "astro", "none", "react", "vue"]);
 const VALID_AUDIENCES = new Set(["admins", "developers", "makers", "partners"]);
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DATAVERSE_CHOICE_VALUES_FILE = "dataverse-choice-values.json";
+const DATAVERSE_SOLUTION_CONTRACT_FILE = "dataverse-solution-contract.json";
 const CODEQL_REPORTS_DIRECTORY = "docs/codeql-reports/";
 const FORBIDDEN_WEBSITE_CODE_DIRECTORIES = new Set([
   ".git",
@@ -546,6 +547,7 @@ function decodeXmlEntities(value) {
 
 function createDataverseMetadata() {
   return {
+    relationshipsByName: new Map(),
     tablesByEntitySet: new Map(),
     tablesByLogicalName: new Map(),
     tablesBySchemaName: new Map()
@@ -609,6 +611,7 @@ function parseDataverseTableMetadata(entityXml) {
     }
     attributes.push({
       choiceOptionsByLabel: parseDataverseChoiceOptions(attributeMatch[3], type),
+      isCustomField: matchXmlText(attributeMatch[3], /<IsCustomField>\s*([^<]+?)\s*<\/IsCustomField>/i) === "1",
       logicalName,
       physicalName: decodeXmlEntities(attributeMatch[2].trim()),
       type: type.toLowerCase()
@@ -686,10 +689,14 @@ function addDataverseTable(metadata, table, label, result) {
 }
 
 function addDataverseRelationships(metadata, relationshipsXml, label, result) {
-  const relationshipPattern = /<EntityRelationship\b[^>]*>([\s\S]*?)<\/EntityRelationship>/gi;
+  const relationshipPattern = /<EntityRelationship\b([^>]*)>([\s\S]*?)<\/EntityRelationship>/gi;
   let relationshipMatch;
   while ((relationshipMatch = relationshipPattern.exec(relationshipsXml)) !== null) {
-    const relationshipXml = relationshipMatch[1];
+    const relationshipNameMatch = /\bName=(["'])(.*?)\1/i.exec(relationshipMatch[1]);
+    const relationshipName = relationshipNameMatch
+      ? decodeXmlEntities(relationshipNameMatch[2].trim())
+      : null;
+    const relationshipXml = relationshipMatch[2];
     const sourceSchemaName = matchXmlText(
       relationshipXml,
       /<ReferencingEntityName>\s*([^<]+?)\s*<\/ReferencingEntityName>/i
@@ -732,6 +739,26 @@ function addDataverseRelationships(metadata, relationshipsXml, label, result) {
     sourceTable.lookupsByAttributeLogicalName.set(attribute.logicalName.toLowerCase(), lookup);
     if (navigationProperty) {
       sourceTable.lookupsByNavigationProperty.set(navigationProperty.toLowerCase(), lookup);
+    }
+
+    if (relationshipName) {
+      const targetTable = metadata.tablesBySchemaName.get(targetSchemaName.toLowerCase());
+      const relationship = {
+        attributeLogicalName: attribute.logicalName,
+        name: relationshipName,
+        navigationProperty,
+        sourceLogicalName: sourceTable.logicalName,
+        targetLogicalName: targetTable?.logicalName ?? targetSchemaName.toLowerCase()
+      };
+      const normalizedName = relationshipName.toLowerCase();
+      const existing = metadata.relationshipsByName.get(normalizedName);
+      if (existing && JSON.stringify(existing) !== JSON.stringify(relationship)) {
+        result.errors.push(
+          `Template "${label}" solutions contain conflicting Dataverse relationship metadata for "${relationshipName}".`
+        );
+      } else {
+        metadata.relationshipsByName.set(normalizedName, relationship);
+      }
     }
   }
 }
@@ -779,6 +806,17 @@ function mergeDataverseMetadata(target, source, label, result) {
       continue;
     }
     addDataverseTable(target, table, label, result);
+  }
+
+  for (const [name, relationship] of source.relationshipsByName) {
+    const existing = target.relationshipsByName.get(name);
+    if (existing && JSON.stringify(existing) !== JSON.stringify(relationship)) {
+      result.errors.push(
+        `Template "${label}" solutions contain conflicting Dataverse relationship metadata for "${relationship.name}".`
+      );
+    } else {
+      target.relationshipsByName.set(name, relationship);
+    }
   }
 }
 
@@ -873,7 +911,164 @@ function validateWebsiteCodePath(kind, label, root, expectedDirectory, solutionM
 
   validateWebsiteCodeContents(websiteCodePath, websiteCodePath, label, result);
   validateWebsiteCodeSourceMetadata(websiteCodePath, label, result);
+  validateWebsiteSolutionContract(websiteCodePath, solutionMetadata, label, result);
   validateWebsiteChoiceValues(websiteCodePath, solutionMetadata, label, result);
+}
+
+function validateWebsiteSolutionContract(websiteCodePath, solutionMetadata, label, result) {
+  const contractPath = path.join(websiteCodePath, DATAVERSE_SOLUTION_CONTRACT_FILE);
+  if (!fileExists(contractPath)) {
+    return;
+  }
+
+  const contract = readJsonFile(
+    contractPath,
+    `Dataverse solution contract for template "${label}"`,
+    result
+  );
+  if (!contract) {
+    return;
+  }
+  if (!contract.tables || typeof contract.tables !== "object" || Array.isArray(contract.tables)) {
+    result.errors.push(
+      `Template "${label}" ${DATAVERSE_SOLUTION_CONTRACT_FILE} must contain a tables object.`
+    );
+    return;
+  }
+  if (
+    !contract.relationships ||
+    typeof contract.relationships !== "object" ||
+    Array.isArray(contract.relationships)
+  ) {
+    result.errors.push(
+      `Template "${label}" ${DATAVERSE_SOLUTION_CONTRACT_FILE} must contain a relationships object.`
+    );
+    return;
+  }
+
+  const contractTableNames = new Set(Object.keys(contract.tables).map((name) => name.toLowerCase()));
+  for (const table of solutionMetadata.tablesByLogicalName.values()) {
+    if (!contractTableNames.has(table.logicalName.toLowerCase())) {
+      result.errors.push(
+        `Template "${label}" solution table "${table.logicalName}" is not declared in ` +
+        `${DATAVERSE_SOLUTION_CONTRACT_FILE}.`
+      );
+    }
+  }
+
+  for (const [tableName, tableContract] of Object.entries(contract.tables)) {
+    const location = `${DATAVERSE_SOLUTION_CONTRACT_FILE} table "${tableName}"`;
+    const table = solutionMetadata.tablesByLogicalName.get(tableName.toLowerCase());
+    if (!table) {
+      result.errors.push(`Template "${label}" ${location} was not found in solution metadata.`);
+      continue;
+    }
+    if (tableName !== table.logicalName) {
+      result.errors.push(
+        `Template "${label}" ${location} must exactly match "${table.logicalName}".`
+      );
+    }
+    if (
+      !tableContract ||
+      typeof tableContract !== "object" ||
+      Array.isArray(tableContract) ||
+      !Array.isArray(tableContract.customColumns)
+    ) {
+      result.errors.push(`Template "${label}" ${location} must contain a customColumns array.`);
+      continue;
+    }
+
+    const expectedColumns = new Set();
+    for (const columnName of tableContract.customColumns) {
+      if (typeof columnName !== "string" || columnName.length === 0) {
+        result.errors.push(
+          `Template "${label}" ${location} customColumns must contain non-empty strings.`
+        );
+        continue;
+      }
+      const normalizedName = columnName.toLowerCase();
+      if (expectedColumns.has(normalizedName)) {
+        result.errors.push(
+          `Template "${label}" ${location} customColumns contains duplicate "${columnName}".`
+        );
+        continue;
+      }
+      expectedColumns.add(normalizedName);
+      const attribute = table.attributesByLogicalName.get(normalizedName);
+      if (!attribute || !attribute.isCustomField) {
+        result.errors.push(
+          `Template "${label}" ${location} custom column "${columnName}" was not found in solution metadata.`
+        );
+      } else if (columnName !== attribute.logicalName) {
+        result.errors.push(
+          `Template "${label}" ${location} custom column "${columnName}" must exactly match ` +
+          `"${attribute.logicalName}".`
+        );
+      }
+    }
+
+    for (const attribute of table.attributesByLogicalName.values()) {
+      if (attribute.isCustomField && !expectedColumns.has(attribute.logicalName.toLowerCase())) {
+        result.errors.push(
+          `Template "${label}" solution custom column "${table.logicalName}.${attribute.logicalName}" ` +
+          `is not declared in ${DATAVERSE_SOLUTION_CONTRACT_FILE}.`
+        );
+      }
+    }
+  }
+
+  const publisherPrefixes = new Set(
+    [...solutionMetadata.tablesByLogicalName.values()]
+      .map((table) => table.logicalName.split("_", 1)[0].toLowerCase())
+      .filter(Boolean)
+  );
+  const solutionRelationships = [...solutionMetadata.relationshipsByName.values()].filter(
+    (relationship) => [...publisherPrefixes].some(
+      (prefix) => relationship.name.toLowerCase().startsWith(`${prefix}_`)
+    )
+  );
+  const contractRelationshipNames = new Set(
+    Object.keys(contract.relationships).map((name) => name.toLowerCase())
+  );
+  for (const relationship of solutionRelationships) {
+    if (!contractRelationshipNames.has(relationship.name.toLowerCase())) {
+      result.errors.push(
+        `Template "${label}" solution relationship "${relationship.name}" is not declared in ` +
+        `${DATAVERSE_SOLUTION_CONTRACT_FILE}.`
+      );
+    }
+  }
+
+  for (const [relationshipName, relationshipContract] of Object.entries(contract.relationships)) {
+    const location = `${DATAVERSE_SOLUTION_CONTRACT_FILE} relationship "${relationshipName}"`;
+    const relationship = solutionMetadata.relationshipsByName.get(relationshipName.toLowerCase());
+    if (!relationship) {
+      result.errors.push(`Template "${label}" ${location} was not found in solution metadata.`);
+      continue;
+    }
+    if (relationshipName !== relationship.name) {
+      result.errors.push(
+        `Template "${label}" ${location} must exactly match "${relationship.name}".`
+      );
+    }
+    if (!relationshipContract || typeof relationshipContract !== "object" || Array.isArray(relationshipContract)) {
+      result.errors.push(`Template "${label}" ${location} must be an object.`);
+      continue;
+    }
+
+    for (const [field, actualValue] of [
+      ["referencingTable", relationship.sourceLogicalName],
+      ["referencedTable", relationship.targetLogicalName],
+      ["lookupColumn", relationship.attributeLogicalName],
+      ["navigationProperty", relationship.navigationProperty]
+    ]) {
+      if (relationshipContract[field] !== actualValue) {
+        result.errors.push(
+          `Template "${label}" ${location} ${field} must exactly match ${JSON.stringify(actualValue)}.`
+        );
+      }
+    }
+  }
 }
 
 function validateWebsiteChoiceValues(websiteCodePath, solutionMetadata, label, result) {

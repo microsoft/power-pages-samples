@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   Building2, Calendar, FileText, Hash, Paperclip, Download, Trash2, Eye,
   Send, RotateCcw, XCircle, Edit3, AlertTriangle, CheckCircle2, Check,
-  ThumbsUp, ThumbsDown, MessageSquare, Sparkles, RefreshCw, Bell,
+  ThumbsUp, ThumbsDown, Sparkles, RefreshCw, Bell,
 } from 'lucide-react'
 import { formatCurrency, formatDate, useInvoiceDetail, useUpdateInvoiceAction, useCreateCommentAction, downloadAttachment, deleteAttachment } from '../data/invoiceProvider'
 import { statusOrder, getCurrentMockUser } from '../data/mockData'
@@ -26,28 +26,19 @@ import { useSendReviewerReminder } from '../hooks/useSendReviewerReminder'
 const timelineSteps: { label: string; statuses: InvoiceStatus[] }[] = [
   { label: 'Draft', statuses: ['Draft'] },
   { label: 'Submitted', statuses: ['Submitted'] },
-  { label: 'Under Review', statuses: ['Under Review'] },
   { label: 'Approved', statuses: ['Approved'] },
   { label: 'Paid', statuses: ['Paid'] },
 ]
 
-type TimelineState = 'completed' | 'current' | 'upcoming' | 'rejected' | 'needsRevision'
+type TimelineState = 'completed' | 'current' | 'upcoming' | 'rejected'
 
 function getTimelineState(
   currentStatus: InvoiceStatus,
   stepStatuses: InvoiceStatus[]
 ): TimelineState {
   if (currentStatus === 'Rejected') {
-    const rejectedIndex = statusOrder.indexOf('Rejected')
-    const stepIndex = statusOrder.indexOf(stepStatuses[0])
-    if (stepIndex < rejectedIndex - 2) return 'completed'
-    if (stepStatuses[0] === 'Under Review') return 'rejected'
-    return 'upcoming'
-  }
-  if (currentStatus === 'Needs Revision') {
-    const stepName = stepStatuses[0]
-    if (stepName === 'Draft' || stepName === 'Submitted') return 'completed'
-    if (stepName === 'Under Review') return 'needsRevision'
+    if (stepStatuses[0] === 'Draft') return 'completed'
+    if (stepStatuses[0] === 'Submitted') return 'rejected'
     return 'upcoming'
   }
   const currentIndex = statusOrder.indexOf(currentStatus)
@@ -62,7 +53,6 @@ const stateColors: Record<TimelineState, { dot: string; line: string; text: stri
   current: { dot: 'var(--color-primary)', line: 'var(--color-border)', text: 'var(--color-primary)' },
   upcoming: { dot: 'var(--color-border)', line: 'var(--color-border)', text: 'var(--color-text-muted)' },
   rejected: { dot: 'var(--color-error)', line: 'var(--color-border)', text: 'var(--color-error)' },
-  needsRevision: { dot: 'var(--color-revision)', line: 'var(--color-border)', text: 'var(--color-revision)' },
 }
 
 /* ── Action dialog configs ── */
@@ -125,15 +115,6 @@ const actionConfigs: Record<string, ActionConfig> = {
     toastMessage: 'Invoice rejected',
     linkedAction: 'Rejected',
   },
-  requestRevision: {
-    title: 'Request Revision',
-    description: 'This will send the invoice back to the supplier for revision. Please describe what needs to be changed.',
-    confirmLabel: 'Request Revision',
-    noteRequired: true,
-    notePlaceholder: 'e.g. Missing delivery receipt, incorrect amount...',
-    toastMessage: 'Revision requested',
-    linkedAction: 'Needs Revision',
-  },
 }
 
 /* ── Status Alert Banner ── */
@@ -184,50 +165,6 @@ function StatusAlertBanner({ invoice, onAction, isReviewer }: {
               </button>
               <button onClick={() => onAction('resubmit')} className="btn-primary-sm" style={{ fontSize: '0.8rem', padding: '6px 14px' }}>
                 <RotateCcw size={13} aria-hidden="true" /> Resubmit Invoice
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  if (invoice.status === 'Needs Revision') {
-    return (
-      <div
-        role="alert"
-        className="animate-in"
-        style={{
-          background: 'var(--color-revision-light)',
-          border: '1px solid var(--color-revision)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '16px 20px',
-          marginBottom: 20,
-          display: 'flex',
-          gap: 14,
-          alignItems: 'flex-start',
-        }}
-      >
-        <AlertTriangle size={20} color="var(--color-revision)" aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--color-revision)', marginBottom: 4 }}>
-            Revision Requested
-          </div>
-          {lastEntry?.note && (
-            <p style={{ fontSize: '0.875rem', color: '#BF360C', lineHeight: 1.5, marginBottom: isReviewer ? 0 : 10 }}>
-              {lastEntry.note}
-              {lastEntry.author && (
-                <span style={{ color: 'var(--color-revision)', fontWeight: 500 }}> — {lastEntry.author}</span>
-              )}
-            </p>
-          )}
-          {!isReviewer && (
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => onAction('edit')} className="btn-outline-sm" style={{ fontSize: '0.8rem', padding: '6px 14px' }}>
-                <Edit3 size={13} aria-hidden="true" /> Edit Invoice
-              </button>
-              <button onClick={() => onAction('resubmit')} className="btn-primary-sm" style={{ fontSize: '0.8rem', padding: '6px 14px' }}>
-                <Send size={13} aria-hidden="true" /> Resubmit
               </button>
             </div>
           )}
@@ -379,7 +316,6 @@ export default function InvoiceDetail() {
       withdraw: 'Draft',
       approve: 'Approved',
       reject: 'Rejected',
-      requestRevision: 'Needs Revision',
     }
     const targetStatus = statusMap[activeAction]
 
@@ -506,7 +442,7 @@ export default function InvoiceDetail() {
   ]
 
   const currentActionConfig = activeAction ? actionConfigs[activeAction] : null
-  const hasAlertBanner = ['Rejected', 'Needs Revision'].includes(invoice.status)
+  const hasAlertBanner = invoice.status === 'Rejected'
 
   return (
     <div style={{ maxWidth: 800 }}>
@@ -576,14 +512,11 @@ export default function InvoiceDetail() {
 
         {/* Actions — role-dependent */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
-          {/* Reviewer actions: shown for Submitted and Under Review */}
-          {isReviewer && (invoice.status === 'Submitted' || invoice.status === 'Under Review') && (
+          {/* Reviewer actions: shown for submitted invoices */}
+          {isReviewer && invoice.status === 'Submitted' && (
             <>
               <button onClick={() => setActiveAction('approve')} className="btn-primary-sm">
                 <ThumbsUp size={15} aria-hidden="true" /> Approve
-              </button>
-              <button onClick={() => setActiveAction('requestRevision')} className="btn-outline-sm">
-                <MessageSquare size={15} aria-hidden="true" /> Request Revision
               </button>
               <button onClick={() => setActiveAction('reject')} className="btn-outline-sm" style={{ color: 'var(--color-error)', borderColor: 'var(--color-error)' }}>
                 <ThumbsDown size={15} aria-hidden="true" /> Reject
@@ -609,7 +542,7 @@ export default function InvoiceDetail() {
                   <XCircle size={15} aria-hidden="true" /> Withdraw
                 </button>
               )}
-              {(invoice.status === 'Submitted' || invoice.status === 'Under Review') && (
+              {invoice.status === 'Submitted' && (
                 <button
                   onClick={handleSendReviewerReminder}
                   disabled={isReminderSending}
@@ -625,7 +558,7 @@ export default function InvoiceDetail() {
         </div>
       </div>
 
-      {/* ── 3. Status Alert Banner (Rejected / Needs Revision / Approved / Paid) ── */}
+      {/* ── 3. Status Alert Banner (Rejected / Approved / Paid) ── */}
       <StatusAlertBanner invoice={invoice} onAction={handleBannerAction} isReviewer={isReviewer} />
 
       {/* ── 4. Horizontal Status Stepper ── */}
@@ -650,17 +583,15 @@ export default function InvoiceDetail() {
             const state = getTimelineState(invoice.status, step.statuses)
             const colors = stateColors[state]
             const isLast = i === timelineSteps.length - 1
-            const showRejected = invoice.status === 'Rejected' && step.label === 'Under Review'
-            const showNeedsRevision = invoice.status === 'Needs Revision' && step.label === 'Under Review'
-            const isHighlighted = state === 'current' || state === 'rejected' || state === 'needsRevision'
+            const showRejected = invoice.status === 'Rejected' && step.label === 'Submitted'
+            const isHighlighted = state === 'current' || state === 'rejected'
 
             const historyEntry = invoice.statusHistory?.find((h) => {
               if (showRejected && h.status === 'Rejected') return true
-              if (showNeedsRevision && h.status === 'Needs Revision') return true
               return h.status === step.statuses[0]
             })
 
-            const label = showRejected ? 'Rejected' : showNeedsRevision ? 'Needs Revision' : step.label
+            const label = showRejected ? 'Rejected' : step.label
 
             // Dot size
             const dotSize = isHighlighted ? 28 : 24
@@ -689,9 +620,7 @@ export default function InvoiceDetail() {
                       boxShadow: isHighlighted
                         ? state === 'current'
                           ? '0 0 0 4px rgba(45, 90, 61, 0.15)'
-                          : state === 'rejected'
-                            ? '0 0 0 4px rgba(197, 48, 48, 0.12)'
-                            : '0 0 0 4px rgba(230, 81, 0, 0.12)'
+                          : '0 0 0 4px rgba(197, 48, 48, 0.12)'
                         : 'none',
                       transition: 'all 0.3s ease',
                     }}

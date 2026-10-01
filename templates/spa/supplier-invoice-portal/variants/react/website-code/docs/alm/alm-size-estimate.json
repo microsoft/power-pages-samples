@@ -1,0 +1,123 @@
+{
+  "siteName": "Supplier Invoice Portal",
+  "publisherPrefix": "spnvc",
+  "solutionId": null,
+  "totalSizeMB": 4.4,
+  "componentCountSiteTotal": 365,
+  "componentCountSiteActionable": 236,
+  "componentCountInSolution": null,
+  "orphansOnSite": null,
+  "botCountScoped": 2,
+  "botComponentCountScoped": 30,
+  "bundleChunkCount": 129,
+  "bundleChunkNote": "129 hashed bundle chunks (Vite/Rollup) on the site — 0 are in the solution, 129 are orphans from prior pac pages upload-code-site runs. Cleanable via dedicated cleanup pass.",
+  "inSolution": null,
+  "tableCount": 19,
+  "schemaAttrCount": 1169,
+  "webFilesAggregateMB": 0,
+  "webFilesIndividual": [],
+  "webFileCount": 6,
+  "webFileSampleSize": 6,
+  "webFilesDiskMeasuredMB": 0.5,
+  "webFilesDiskMeasuredPath": "dist",
+  "webFilesDiskFileCount": 45,
+  "cloudFlowCount": 0,
+  "botCount": 2,
+  "envVarCount": 0,
+  "envVarCountScope": "publisher-prefix",
+  "envVarCountTenantWide": 0,
+  "mediaRatio": 0.31,
+  "siteType": "code-site",
+  "tables": [
+    {
+      "logicalName": "spnvc_invoice",
+      "attributeCount": 51
+    },
+    {
+      "logicalName": "spnvc_purchaseorder",
+      "attributeCount": 44
+    },
+    {
+      "logicalName": "spnvc_invoicecomment",
+      "attributeCount": 43
+    },
+    {
+      "logicalName": "spnvc_invoiceattachment",
+      "attributeCount": 45
+    },
+    {
+      "logicalName": "contact",
+      "attributeCount": 369
+    },
+    {
+      "logicalName": "spnvc_supplier",
+      "attributeCount": 44
+    },
+    {
+      "logicalName": "spnvc_carrier",
+      "attributeCount": 37
+    },
+    {
+      "logicalName": "spnvc_case",
+      "attributeCount": 62
+    },
+    {
+      "logicalName": "spnvc_casefeedback",
+      "attributeCount": 42
+    },
+    {
+      "logicalName": "spnvc_dealer",
+      "attributeCount": 54
+    },
+    {
+      "logicalName": "spnvc_document",
+      "attributeCount": 36
+    },
+    {
+      "logicalName": "spnvc_drawing",
+      "attributeCount": 40
+    },
+    {
+      "logicalName": "spnvc_drawingshare",
+      "attributeCount": 40
+    },
+    {
+      "logicalName": "spnvc_order",
+      "attributeCount": 47
+    },
+    {
+      "logicalName": "spnvc_orderlineitem",
+      "attributeCount": 45
+    },
+    {
+      "logicalName": "spnvc_product",
+      "attributeCount": 48
+    },
+    {
+      "logicalName": "spnvc_property",
+      "attributeCount": 45
+    },
+    {
+      "logicalName": "spnvc_shipment",
+      "attributeCount": 45
+    },
+    {
+      "logicalName": "spnvc_timelineentry",
+      "attributeCount": 32
+    }
+  ],
+  "breakdown": {
+    "tables": 3.2,
+    "webFiles": 0,
+    "siteSettings": 0,
+    "cloudFlows": 0,
+    "webRolesAndPermissions": 0,
+    "envVars": 0,
+    "otherMetadata": 1.1
+  },
+  "estimationMethod": "metadata-based",
+  "estimationAccuracyPct": 15,
+  "truncationSuspected": false,
+  "truncationWarnings": [],
+  "ppcGroundTruthCount": 312
+}
