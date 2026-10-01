@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- 997e7996-e241-4117-9c09-28e90a1fcdbc
+append: true
+appendto: true
+contactrelationship: spnvc_contact_invoiceattachment_contact
+create: true
+delete: true
+entitylogicalname: spnvc_invoiceattachment
+entityname: Invoice Attachment - Supplier Access
+id: 535a5911-0546-4e72-8963-9b56467e2353
+read: true
+scope: 756150001
+write: true
