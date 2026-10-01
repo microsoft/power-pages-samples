@@ -1,12 +1,12 @@
 adx_entitypermission_webrole:
-- 3be828ee-dd81-4de0-8b66-5667449d67aa
+- ed7add57-ddbb-42f7-9e93-bd6712ef898d
 append: false
 appendto: true
 create: false
 delete: false
 entitylogicalname: contact
 entityname: Contact - Self
-id: 87a56419-807e-4c66-ac28-8426dce4fbbc
+id: da6b9d2f-e136-41db-b483-5e3649d32965
 read: true
 scope: 756150004
 write: true

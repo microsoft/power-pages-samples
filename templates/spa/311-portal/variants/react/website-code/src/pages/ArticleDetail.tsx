@@ -2,9 +2,14 @@ import { useParams, Link } from 'react-router-dom'
 import { useMemo, type ReactNode } from 'react'
 import { FileText } from 'lucide-react'
 import { useArticleBySlug } from '../shared/hooks/useArticles'
+import { useAiSummary } from '../shared/hooks/useAiSummary'
+import { fetchArticleSummary } from '../services/aiSummaryService'
+import { renderInline } from '../shared/markdown'
+import { isDataverseRecordId } from '../shared/powerPagesApi'
 import { knowledgeArticles as localArticles } from '../data/articles'
 import { serviceTypes } from '../data/categories'
 import { useI18n } from '../i18n'
+import AiSummaryCard from '../components/AiSummaryCard'
 import Breadcrumbs from '../components/Breadcrumbs'
 import EmptyState from '../components/EmptyState'
 import { SkeletonDetail } from '../components/Skeleton'
@@ -27,6 +32,15 @@ export default function ArticleDetail() {
     const service = serviceTypes.find(s => s.id === serviceId)
     return service?.slug ?? null
   }, [slug])
+
+  // The route param is a public article number, not a Dataverse GUID, so the summary has to
+  // wait for the article fetch to resolve the real record id. The id is also checked because
+  // useArticleBySlug falls back to the bundled static articles when the Web API is
+  // unreachable, and those carry ids like 'ka-01' that the summarization endpoint would
+  // reject with an opaque 400. Passing undefined keeps the hook idle and hides the card.
+  const summarizableArticleId =
+    article?.id && isDataverseRecordId(article.id) ? article.id : undefined
+  const aiSummary = useAiSummary(summarizableArticleId, fetchArticleSummary)
 
   if (isLoading) {
     return <SkeletonDetail />
@@ -61,12 +75,6 @@ export default function ArticleDetail() {
           />
         </div>
       </div>
-    )
-  }
-
-  function renderInline(text: string) {
-    return text.split(/\*\*(.*?)\*\*/).map((part, i) =>
-      i % 2 === 1 ? <strong key={i}>{part}</strong> : part
     )
   }
 
@@ -139,13 +147,15 @@ export default function ArticleDetail() {
             </p>
           </header>
 
-          <div className="card animate-in animate-in-2" style={{ padding: 40 }}>
+          <AiSummaryCard {...aiSummary} className="animate-in animate-in-2" />
+
+          <div className="card animate-in animate-in-3" style={{ padding: 40 }}>
             <div style={{ fontSize: '0.9375rem', color: 'var(--color-text)' }}>
               {renderContent(article.content)}
             </div>
           </div>
 
-          <div className="animate-in animate-in-3" style={{ marginTop: 32, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <div className="animate-in animate-in-4" style={{ marginTop: 32, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <Link to={relatedServiceSlug ? `/request/new/${relatedServiceSlug}` : '/services'} className="btn btn-accent">
               {t('serviceDetail.createRequest')}
             </Link>

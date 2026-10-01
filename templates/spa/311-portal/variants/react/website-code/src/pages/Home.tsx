@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import SearchBar from '../components/SearchBar'
 import { useServiceRequestStats } from '../shared/hooks/useServiceRequests'
+import { useServiceTypes } from '../shared/hooks/useServiceTypes'
 import { useI18n } from '../i18n'
 import Icon from '../components/Icon'
 import { FileText, Clock, Grid3X3 } from '../components/Icon'
@@ -16,13 +17,29 @@ const popularTopics = [
 ]
 
 export default function Home() {
-  const { totalCount, resolvedCount, isLoading: statsLoading } = useServiceRequestStats()
+  const {
+    totalCount,
+    resolvedCount,
+    isLoading: statsLoading,
+    isAvailable: statsAvailable,
+  } = useServiceRequestStats()
+  const { serviceTypes, isLoading: serviceTypesLoading } = useServiceTypes()
   const { t } = useI18n()
 
   const stats = [
-    { value: statsLoading ? '...' : String(totalCount), label: t('home.statActiveRequests') },
-    { value: statsLoading ? '...' : String(resolvedCount), label: t('home.statResolvedThisMonth') },
-    { value: '34', label: t('home.statServiceTypes') },
+    // Request counts read spa311_servicerequest, which anonymous visitors have no table
+    // permission for. Omit both tiles when signed out rather than rendering "0", which would
+    // claim the city has no requests on file. The grid uses auto-fit so a shorter list still
+    // fills the row.
+    ...(statsAvailable
+      ? [
+          { value: statsLoading ? '...' : String(totalCount), label: t('home.statActiveRequests') },
+          { value: statsLoading ? '...' : String(resolvedCount), label: t('home.statResolvedThisMonth') },
+        ]
+      : []),
+    // spa311_servicetype is readable anonymously, so this count is live for every visitor. It
+    // was previously hardcoded to '34' while the catalog listed 9, contradicting /services.
+    { value: serviceTypesLoading ? '...' : String(serviceTypes.length), label: t('home.statServiceTypes') },
     { value: '< 5 days', label: t('home.statAvgResolution') },
   ]
 

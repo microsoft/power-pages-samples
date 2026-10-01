@@ -855,6 +855,50 @@ test("rejects generated and local-only files in website-code directories", () =>
   assert(result.errors.some((error) => error.includes("excluded file: .powerpages-site/.portalconfig/source.crm.dynamics.com-manifest.yml")));
 });
 
+test("allows SARIF reports in the website-code CodeQL reports directory", () => {
+  const root = createTemplateRoot();
+  const reportsPath = path.join(
+    root,
+    "spa/test-template/variants/react/website-code/docs/codeql-reports"
+  );
+  fs.mkdirSync(reportsPath, { recursive: true });
+  fs.writeFileSync(path.join(reportsPath, "codeql-results.sarif"), "{\"version\":\"2.1.0\"}");
+
+  const result = validateTemplates({ root });
+  assert.deepEqual(result.errors, []);
+});
+
+test("rejects SARIF reports elsewhere in website-code", () => {
+  const root = createTemplateRoot();
+  const websiteCodePath = path.join(root, "spa/test-template/variants/react/website-code");
+  fs.mkdirSync(path.join(websiteCodePath, "docs/codeql-reports-archive"), { recursive: true });
+  fs.writeFileSync(path.join(websiteCodePath, "codeql-results.sarif"), "{\"version\":\"2.1.0\"}");
+  fs.writeFileSync(
+    path.join(websiteCodePath, "docs/codeql-reports-archive/codeql-results.sarif"),
+    "{\"version\":\"2.1.0\"}"
+  );
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("excluded file: codeql-results.sarif")));
+  assert(result.errors.some((error) =>
+    error.includes("excluded file: docs/codeql-reports-archive/codeql-results.sarif")
+  ));
+});
+
+test("rejects SARIF symlinks in the website-code CodeQL reports directory", () => {
+  const root = createTemplateRoot();
+  const websiteCodePath = path.join(root, "spa/test-template/variants/react/website-code");
+  const reportsPath = path.join(websiteCodePath, "docs/codeql-reports");
+  fs.mkdirSync(reportsPath, { recursive: true });
+  fs.writeFileSync(path.join(websiteCodePath, "outside.sarif"), "{\"version\":\"2.1.0\"}");
+  fs.symlinkSync("../../outside.sarif", path.join(reportsPath, "linked.sarif"));
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) =>
+    error.includes("website-code must not contain symbolic links: docs/codeql-reports/linked.sarif")
+  ));
+});
+
 test("rejects wildcard Web API field settings in modular layout", () => {
   const root = createTemplateRoot();
   const sitePath = path.join(root, "spa/test-template/variants/react/website-code/.powerpages-site");

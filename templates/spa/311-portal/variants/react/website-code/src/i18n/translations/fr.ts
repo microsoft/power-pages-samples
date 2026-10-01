@@ -101,6 +101,7 @@ export const fr: Record<string, string> = {
   "auth.signInToContinue": "Connectez-vous pour continuer.",
   "auth.signInToSubmit": "Connectez-vous pour soumettre une demande de service. Votre compte nous permet de vous tenir inform\u00e9 de l\u2019avancement.",
   "auth.signInToTrack": "Connectez-vous pour suivre vos demandes de service et consulter les mises \u00e0 jour.",
+  "auth.signInToExploreMap": "Connectez-vous pour explorer les demandes de service dans la ville.",
 
   // Services page
   "services.title": "Catalogue de services",
@@ -133,6 +134,8 @@ export const fr: Record<string, string> = {
   "createRequest.addressPlaceholder": "ex.\u00a0: 425 rue Principale ou rue Principale et av. Ch\u00eane",
   "createRequest.detectingAddress": "D\u00e9tection de l\u2019adresse...",
   "createRequest.mapHint": "Cliquez sur la carte ou d\u00e9placez l\u2019\u00e9pingle \u2014 l\u2019adresse sera remplie automatiquement.",
+  "createRequest.useMyLocation": "Utiliser ma position actuelle",
+  "createRequest.locationError": "Impossible d\u2019obtenir votre position. V\u00e9rifiez que l\u2019acc\u00e8s \u00e0 la localisation est autoris\u00e9 pour ce site.",
   "createRequest.step2Title": "\u00c9tape 2\u00a0: D\u00e9tails",
   "createRequest.step2Subtitle": "Dites-nous en plus sur le probl\u00e8me.",
   "createRequest.descriptionLabel": "Description",
@@ -209,6 +212,27 @@ export const fr: Record<string, string> = {
   "articleDetail.browseKnowledgeBase": "Parcourir la base de connaissances",
   "articleDetail.published": "Publi\u00e9",
   "articleDetail.backToKnowledgeBase": "Retour \u00e0 la base de connaissances",
+
+  // R\u00e9sum\u00e9 par IA
+  "aiSummary.title": "R\u00e9sum\u00e9",
+  "aiSummary.loading": "G\u00e9n\u00e9ration du r\u00e9sum\u00e9\u2026",
+  "aiSummary.empty": "Aucun r\u00e9sum\u00e9 n\u2019est encore disponible pour cet article.",
+  "aiSummary.errorGeneric": "Nous n\u2019avons pas pu g\u00e9n\u00e9rer de r\u00e9sum\u00e9 pour le moment.",
+  "aiSummary.errorTooLarge": "Cet article est trop long pour \u00eatre r\u00e9sum\u00e9 en une seule fois.",
+  "aiSummary.errorTransient": "Le service de r\u00e9sum\u00e9 est temporairement indisponible. Veuillez r\u00e9essayer.",
+  "aiSummary.disabledTitle": "Les r\u00e9sum\u00e9s sont d\u00e9sactiv\u00e9s pour ce site",
+  "aiSummary.disabledDesc": "Un administrateur doit activer le r\u00e9sum\u00e9 par IA avant que cette fonctionnalit\u00e9 puisse \u00eatre utilis\u00e9e.",
+  "aiSummary.disabledLink": "D\u00e9couvrir comment activer le r\u00e9sum\u00e9 par IA",
+  "aiSummary.suggestions": "Poser une question compl\u00e9mentaire",
+  "aiSummary.copy": "Copier",
+  "aiSummary.copied": "Copi\u00e9",
+  "aiSummary.helpful": "Ce r\u00e9sum\u00e9 a \u00e9t\u00e9 utile",
+  "aiSummary.notHelpful": "Ce r\u00e9sum\u00e9 n\u2019a pas \u00e9t\u00e9 utile",
+  "aiSummary.disclaimer": "Le contenu g\u00e9n\u00e9r\u00e9 par IA peut \u00eatre inexact",
+  "aiSummary.kbTitle": "Aper\u00e7u IA de tous les articles publi\u00e9s",
+  "aiSummary.kbEmpty": "Aucun aper\u00e7u IA n\u2019est disponible pour le moment. Parcourez les articles publi\u00e9s ci-dessous.",
+  "aiSummary.sources": "Sources",
+  "aiSummary.citationAria": "Source {number}\u00a0: {title}",
 
   // Contact
   "contact.title": "Contacter la Ville de Zava",
@@ -357,6 +381,7 @@ export const fr: Record<string, string> = {
   "requestMap.loadingCategories": "Chargement des cat\u00e9gories...",
   "requestMap.loading": "Chargement des demandes de service...",
   "requestMap.error": "Erreur de chargement des demandes\u00a0:",
+  "requestMap.unmappedNotice": "{count} demande(s) n\u2019ont aucune position enregistr\u00e9e et ne sont pas affich\u00e9es sur la carte.",
 
   // Zod validation messages
   "validation.addressMin": "Veuillez entrer une adresse valide",
