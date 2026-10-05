@@ -44,3 +44,43 @@ test('revoked Reviewer assignment is not replaced by its Company Name or all Acc
   assert.deepEqual(result.errors, [])
   assert.match(result.warnings[0], /no assignments/)
 })
+
+test('existing active memberships diagnose Standard and unset Category before hidden-grid troubleshooting', () => {
+  const data = clone()
+  const assigned = data.tables.contacts.records[1]['spnvc_account_contact@odata.bind']
+    .map(bind => /^\/accounts\(([^)]+)\)$/.exec(bind)[1])
+  const accounts = assigned.map(id => data.tables.suppliers.records.find(account => account.accountid === id))
+  accounts[0].accountcategorycode = 2
+  accounts[1].accountcategorycode = null
+  const roles = { reviewers: [reviewer] }
+  const result = validateAssignments(data, roles)
+  assert.equal(result.errors.length, 2)
+  assert.ok(result.errors.some(error => error.includes(accounts[0].accountid) && error.includes('Standard (2)')))
+  assert.ok(result.errors.some(error => error.includes(accounts[1].accountid) && error.includes('not set')))
+  for (const error of result.errors) {
+    assert.match(error, /Supplier \(132140000\)/)
+    assert.match(error, /hidden from the Active supplier accounts view/)
+    assert.doesNotMatch(error, /state must be Active/)
+  }
+  assert.deepEqual(data.tables.contacts.records[1]['spnvc_account_contact@odata.bind'],
+    seed.tables.contacts.records[1]['spnvc_account_contact@odata.bind'], 'diagnosis must never alter associations')
+  for (const account of accounts) account.accountcategorycode = 132140000
+  assert.deepEqual(validateAssignments(data, roles).errors, [])
+})
+
+test('Company Name diagnostics distinguish Category from inactive Account state without changing affiliation', () => {
+  const data = clone()
+  const company = data.tables.contacts.records[0]['parentcustomerid_account@odata.bind']
+  const id = /^\/accounts\(([^)]+)\)$/.exec(company)[1]
+  const account = data.tables.suppliers.records.find(account => account.accountid === id)
+  account.accountcategorycode = 2
+  let errors = validateAssignments(data, { suppliers: [supplier] }).errors
+  assert.ok(errors.some(error => error.includes('Company Name') && error.includes('Category is Standard (2)')))
+  assert.ok(errors.every(error => !error.includes('state must be Active')))
+  account.accountcategorycode = 132140000
+  account.statecode = 1
+  errors = validateAssignments(data, { suppliers: [supplier] }).errors
+  assert.ok(errors.some(error => error.includes('Company Name') && error.includes('state must be Active (0); actual state is 1')))
+  assert.ok(errors.every(error => !error.includes('Category is')))
+  assert.equal(data.tables.contacts.records[0]['parentcustomerid_account@odata.bind'], company)
+})

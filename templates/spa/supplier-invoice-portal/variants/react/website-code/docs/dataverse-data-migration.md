@@ -118,6 +118,14 @@ The solution requires that first-party enhanced Contact form from Power Pages Ru
 Open that form in Power Pages Management and use the grid's native Add Existing Account and Remove commands.
 Remove unlinks an N:N assignment without deleting the Account.
 The default grid view selects active Supplier Accounts; administrators must still review assignment consistency.
+Before assigning a business, verify its Account Category is Supplier (`132140000`) and its state is Active (`0`).
+The native Add Existing lookup's Recent list can still offer Standard or uncategorized Accounts.
+An association created from Recent may persist without appearing in the filtered grid.
+An empty grid after Add Existing therefore does not prove the association failed.
+Inspect the exact Account's Category, state and N:N membership before retrying.
+Only correct Category after confirming the business is intended to be a Supplier; preserve unrelated fields and associations.
+Refresh the grid after that correction rather than recreating an existing link.
+The local assignment validator distinguishes Category and state errors for both memberships and Company Name.
 If the target uses another Contact form, or a customization hides the General tab or its controls, review the form layers and app form selection before provisioning.
 Publish the affected Account and Contact customizations after unmanaged import.
 Table-level publication also publishes other pending customizations on those tables; obtain the environment owner's consent before doing so.
@@ -126,6 +134,7 @@ Administrators maintain valid Supplier categories, active Account state, and Com
 The scalar Company Name lookup provides one supplier affiliation; native N:N still allows multiple reviewer assignments.
 Filtered views and local configuration validation assist administration but are not Dataverse-wide enforcement of every administrator or API edit.
 There is no plug-in or preview authorization feature.
+The template does not override Account-wide Add Existing commands or claim that view selection enforces all lookup paths.
 Status-based invoice editing restrictions remain UI behavior, not a row-status rule enforced by table permissions.
 
 ## Microsoft references

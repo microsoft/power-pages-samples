@@ -5,6 +5,8 @@ import { resolve } from 'node:path'
 const defaultSeed = fileURLToPath(new URL('../../../../seed-data/data.json', import.meta.url))
 const choices = JSON.parse(readFileSync(new URL('../dataverse-choice-values.json', import.meta.url), 'utf8'))
 const category = choices.tables.account.accountcategorycode.Supplier
+const categoryNames = new Map(Object.entries(choices.tables.account.accountcategorycode)
+  .map(([name, value]) => [value, name]))
 const bindId = value => typeof value === 'string'
   ? /^\/accounts\(([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\)$/i.exec(value)?.[1].toLowerCase()
   : undefined
@@ -27,8 +29,15 @@ export function validateAssignments(seed, { suppliers = [], reviewers = [] } = {
   const validAccount = (id, label) => {
     const account = byId.get(id)
     if (!account) errors.push(`${label} references an Account absent from the configuration.`)
-    else if (account.accountcategorycode !== category || account.statecode !== 0) {
-      errors.push(`${label} must reference an active Supplier-category Account.`)
+    else {
+      if (account.accountcategorycode !== category) {
+        const value = account.accountcategorycode
+        const actual = value == null ? 'not set' : `${categoryNames.get(value) ?? 'unrecognized choice'} (${value})`
+        errors.push(`${label} Account ${id} Category is ${actual}; expected Supplier (${category}). This Account is hidden from the Active supplier accounts view. Verify the business classification before changing Category.`)
+      }
+      if (account.statecode !== 0) {
+        errors.push(`${label} Account ${id} state must be Active (0); actual state is ${account.statecode ?? 'not set'}. This Account is hidden from the Active supplier accounts view.`)
+      }
     }
   }
   for (const id of new Set([...suppliers, ...reviewers].map(id => id.toLowerCase()))) {

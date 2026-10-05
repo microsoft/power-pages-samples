@@ -118,6 +118,13 @@ The <strong>Assigned supplier accounts</strong> Related menu remains available.
 Administrators use native Add Existing Account/Remove commands and the shipped <strong>Active supplier accounts</strong> view.
 Remove unlinks the assignment without deleting the Account.
 The solution does not replace the first-party app, sitemap or standard Account views.</p>
+<p>Verify each intended business has Account Category Supplier (<code>132140000</code>) and Active state (<code>0</code>) before assignment.
+The native lookup's Recent list can offer Accounts outside the filtered view.
+Selecting a Standard or uncategorized Account may create a membership that the grid does not display.
+Check Category, state and existing membership before repeating Add Existing.
+After an approved Category correction, refresh the grid without recreating the association.
+The assignment validator reports Category and state separately, including Company Name errors.
+Recent selections and view selection do not enforce every administrator lookup path.</p>
 <p>Supplier Company Name must reference an active Supplier Account, and that Account must also be an N:N member for target-binding AppendTo.
 Supplier-only Contacts must not have extra memberships; dual-role Contacts may have additional reviewer assignments.
 These are administrator-maintained configuration rules, checked by <code>scripts/validate-assignments.mjs</code>, not a new Dataverse plug-in.</p></section>

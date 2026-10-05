@@ -58,22 +58,30 @@ It preserves Company Name, existing controls, handlers, localizations and form s
 It requires the installed first-party enhanced Contact form from Power Pages Runtime Core.
 It does not replace Microsoft's Management app, sitemap or unrelated Account views.
 
-1. In Power Pages Management, open **Security > Contacts** and the Contact's **Portal Contact (Enhanced)** form.
-2. For a Reviewer, open the **General** tab's **Assigned Supplier Accounts** subgrid.
+1. Review each intended business Account first.
+   Set **Account Category** to **Supplier** (`132140000`) and confirm the Account is **Active**.
+   Do not reclassify a customer merely to make it appear in the grid.
+2. In Power Pages Management, open **Security > Contacts** and the Contact's **Portal Contact (Enhanced)** form.
+3. For a Reviewer, open the **General** tab's **Assigned Supplier Accounts** subgrid.
    Use **Add Existing Account** and the **Active supplier accounts** view to associate the businesses this Contact may review.
    The equivalent **Related > Assigned supplier accounts** navigation remains available.
    Use **Remove** to revoke an assignment, then verify access after the portal cache refresh.
-3. For a Supplier, set **Company Name** to one active Supplier Account.
+4. For a Supplier, set **Company Name** to one active Supplier Account.
    Also associate that same Account in **Assigned supplier accounts** so Company validation and Invoice Account lookup binding have scoped Read/AppendTo eligibility.
    A supplier-only Contact must not have extra memberships.
-4. For a Contact with both roles, Company Name remains its single supplier affiliation.
+5. For a Contact with both roles, Company Name remains its single supplier affiliation.
    N:N membership may include additional reviewer businesses.
    Permissions are additive across assigned roles; switching the UI role mode does not revoke server privileges.
-5. Assign the appropriate site web roles from the Contact's **Web Roles** section.
+6. Assign the appropriate site web roles from the Contact's **Web Roles** section.
    Account assignments do not assign web roles automatically.
 
 Administrators maintain the category, active-state, and Company Name/membership consistency rules.
 The filtered view assists selection; it is not a universal restriction on administrator API edits.
+The native lookup's **Recent** list can offer Accounts outside the filtered view.
+Selecting one can create an N:N association while the grid remains empty because its Category or state does not match.
+If Add Existing closes but no row appears, check the Account's Category, state and existing membership before repeating the action.
+Refresh the grid after an approved Category correction; the existing association does not need to be recreated.
+Do not treat Recent selections as proof of Supplier eligibility.
 There is no new plug-in, Global Account permission, primary-contact requirement, or enhanced-authorization dependency.
 The template denies Account and Contact Append while granting only the target AppendTo needed by business-record lookups.
 Account Read exposes minimal identity/category/state fields for associated Accounts.
@@ -84,6 +92,7 @@ Run `npm run assignments:validate` from `website-code/` to check the shipped sam
 For an administrator-exported snapshot, run `scripts/validate-assignments.mjs` with `--input=<file>` and explicit `--supplier-contact=<guid>` / `--reviewer-contact=<guid>` arguments from that site's role assignments.
 The snapshot uses the seed/export table shape and collection-valued Account bind arrays.
 This local check does not mutate or audit a live environment.
+It reports the specific Account and whether Category or state excludes it, including Company Name diagnostics.
 
 Power Pages documents a [known OData GET issue with N:N/Parent permission chains](https://learn.microsoft.com/power-pages/configure/web-api-overview#known-issues).
 The data services use FetchXML with typed, XML-escaped filters and paging cookies.
