@@ -2,7 +2,7 @@
   "siteName": "Supplier Invoice Portal",
   "source": "Repository metadata",
   "customTableCount": 4,
-  "segmentedStandardTableCount": 1,
+  "segmentedStandardTableCount": 2,
   "tables": [
     {
       "logicalName": "spnvc_invoice",
@@ -161,6 +161,11 @@
           "type": "picklist"
         }
       ]
+    },
+    {
+      "logicalName": "contact",
+      "kind": "Segmented standard table",
+      "columns": []
     }
   ]
 }

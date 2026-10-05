@@ -25,7 +25,7 @@ The React Power Pages website project is stored separately under `variants/react
 
 ## Data model
 
-The supporting solution contains four custom tables and one segmented standard-table customization:
+The supporting solution contains four custom tables and segmented Account and Contact customizations:
 
 - `account` represents the supplier business.
   The solution adds Supplier (`132140000`) to the existing Account Category (`accountcategorycode`) choice.
@@ -51,13 +51,17 @@ The [data model plan](variants/react/website-code/docs/data-model-plan.html) inc
 
 ## Assign contacts in Power Pages Management
 
-The solution ships the native `spnvc_account_contact` N:N relationship and an **Active supplier accounts** view.
+The solution ships the native `spnvc_account_contact` N:N relationship, an **Active supplier accounts** view, and an **Assigned Supplier Accounts** subgrid on the existing **Portal Contact (Enhanced)** form.
 The relationship's Contact-side associated menu is **Assigned supplier accounts**.
-It extends native related navigation without copying or replacing Microsoft's Management app, Contact forms, sitemap, or unrelated Account views.
+The Contact form component is a native unmanaged differential export containing only the added section and subgrid.
+It preserves Company Name, existing controls, handlers, localizations and form security conditions instead of copying the full source form.
+It requires the installed first-party enhanced Contact form from Power Pages Runtime Core.
+It does not replace Microsoft's Management app, sitemap or unrelated Account views.
 
-1. In Power Pages Management, open **Security > Contacts** and the Contact's **Portal Contact (Enhanced Form)**.
-2. For a Reviewer, open **Related > Assigned supplier accounts**.
-   Use **Add Existing Account**, select the **Active supplier accounts** view, and associate the businesses this Contact may review.
+1. In Power Pages Management, open **Security > Contacts** and the Contact's **Portal Contact (Enhanced)** form.
+2. For a Reviewer, open the **General** tab's **Assigned Supplier Accounts** subgrid.
+   Use **Add Existing Account** and the **Active supplier accounts** view to associate the businesses this Contact may review.
+   The equivalent **Related > Assigned supplier accounts** navigation remains available.
    Use **Remove** to revoke an assignment, then verify access after the portal cache refresh.
 3. For a Supplier, set **Company Name** to one active Supplier Account.
    Also associate that same Account in **Assigned supplier accounts** so Company validation and Invoice Account lookup binding have scoped Read/AppendTo eligibility.
@@ -99,7 +103,7 @@ Use these steps if you want to install the template yourself instead of using an
 
 1. Install the [Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction).
 2. Allow `*.js` files by removing it from `Blocked Attachments` in `Privacy + Security` settings for your environment from Power Pages Admin Center.
-3. Make sure English (LCID 1033) is installed in the target Dataverse environment.
+3. Make sure English (LCID 1033), Power Pages Management and its **Portal Contact (Enhanced)** form are installed in the target Dataverse environment.
 4. Sign in to the target environment:
 
    ```bash
@@ -115,7 +119,7 @@ Use these steps if you want to install the template yourself instead of using an
    pac solution import --path "$temp_dir/supplier-invoice-spa-portal-unmanaged.zip" --publish-changes
    ```
 
-6. Confirm the four custom tables and the Supplier Account Category option exist in the target environment.
+6. Confirm the four custom tables, Supplier Account Category option, Active supplier accounts view and Contact form subgrid exist in the target environment.
    Check for a conflicting preexisting `132140000` option before importing.
 7. Import `seed-data/data.json` after the solution import completes.
    The Power Platform CLI solution import command does not import this JSON file.

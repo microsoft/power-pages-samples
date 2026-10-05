@@ -510,6 +510,39 @@ test("rejects unknown seed fields and invalid categories on segmented Accounts",
   assert(errors.some(error => error.includes('property "spnvc_missing" was not found')));
 });
 
+test("form-only Contact metadata preserves standard seed fields and Account company bindings", () => {
+  const accountId = "11111111-1111-4111-8111-111111111111";
+  const seedData = {
+    tables: {
+      suppliers: {
+        logicalName: "account", entitySet: "accounts", idColumn: "accountid",
+        records: [{ accountid: accountId, name: "Supplier" }],
+      },
+      contacts: {
+        logicalName: "contact", entitySet: "contacts", idColumn: "contactid",
+        records: [{
+          contactid: "22222222-2222-4222-8222-222222222222",
+          firstname: "Sample", lastname: "Contact", emailaddress1: "sample@example.com",
+          "parentcustomerid_account@odata.bind": `/accounts(${accountId})`,
+        }],
+      },
+    },
+  };
+  const root = createTemplateRoot({
+    solutionTables: [{ schemaName: "Contact", entitySetName: "contacts", attributes: [] }],
+    seedDataPath: "spa/test-template/seed-data/data.json",
+    seedData,
+  });
+  assert.deepEqual(validateTemplates({ root }).errors, []);
+  seedData.tables.contacts.records[0].spnvc_missing = "not shipped";
+  fs.writeFileSync(path.join(root, "spa/test-template/seed-data/data.json"), JSON.stringify(seedData));
+  assert(validateTemplates({ root }).errors.some(error => error.includes('property "spnvc_missing" was not found')));
+  delete seedData.tables.contacts.records[0].spnvc_missing;
+  seedData.tables.contacts.records[0]["parentcustomerid_account@odata.bind"] = `/contacts(${accountId})`;
+  fs.writeFileSync(path.join(root, "spa/test-template/seed-data/data.json"), JSON.stringify(seedData));
+  assert(validateTemplates({ root }).errors.some(error => error.includes('must target entity set "accounts"')));
+});
+
 test("validates native N:N seed collection bindings and exact relationship contracts", () => {
   const accountId = "11111111-1111-4111-8111-111111111111";
   const contactId = "22222222-2222-4222-8222-222222222222";

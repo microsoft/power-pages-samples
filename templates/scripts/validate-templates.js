@@ -24,6 +24,26 @@ const STANDARD_TABLE_DEPENDENCIES = {
       ["StateCode", "statecode", "state"],
       ["StatusCode", "statuscode", "status"],
     ]
+  },
+  contact: {
+    entitySetName: "contacts",
+    primaryKey: "contactid",
+    attributes: [
+      ["ContactId", "contactid", "primarykey"],
+      ["FirstName", "firstname", "nvarchar"],
+      ["LastName", "lastname", "nvarchar"],
+      ["EMailAddress1", "emailaddress1", "nvarchar"],
+      ["ParentCustomerId", "parentcustomerid", "customer"],
+    ],
+    // A form-only Contact component does not export unchanged Company Name
+    // metadata. Only the standard Account navigation is supplied here.
+    // https://learn.microsoft.com/power-apps/developer/data-platform/reference/entities/contact#contact_customer_accounts
+    lookups: [{
+      attributeLogicalName: "parentcustomerid",
+      attributePhysicalName: "ParentCustomerId",
+      navigationProperty: "parentcustomerid_account",
+      targetSchemaName: "Account",
+    }]
   }
 };
 const CODEQL_REPORTS_DIRECTORY = "docs/codeql-reports/";
@@ -663,8 +683,10 @@ function parseDataverseTableMetadata(entityXml) {
     ),
     entitySetName,
     logicalName,
-    lookupsByAttributeLogicalName: new Map(),
-    lookupsByNavigationProperty: new Map(),
+    lookupsByAttributeLogicalName: new Map((standardTable?.lookups ?? [])
+      .map(lookup => [lookup.attributeLogicalName.toLowerCase(), lookup])),
+    lookupsByNavigationProperty: new Map((standardTable?.lookups ?? [])
+      .map(lookup => [lookup.navigationProperty.toLowerCase(), lookup])),
     primaryKey: primaryKeyAttribute.logicalName,
     shippedAttributes,
     schemaName

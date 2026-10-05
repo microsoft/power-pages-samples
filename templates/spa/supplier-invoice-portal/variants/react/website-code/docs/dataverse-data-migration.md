@@ -6,7 +6,7 @@ The custom choice value follows the solution publisher's `13214` option-value pr
 New purchase orders require an active Supplier Account (`statecode=0`).
 Existing financial records may still refer to inactive suppliers for historical display.
 
-The Account customization includes only the Category column.
+The Account customization includes the Category column, native N:N relationship and filtered Management view.
 It does not recreate the Account table, ship unrelated Account forms or views, or add custom versions of standard name, phone, email, address, or state columns.
 Review the Category option value for collisions with target-environment customizations before importing.
 
@@ -109,11 +109,18 @@ No live import, deployment, or destructive migration is authorized or performed 
 
 ## Management customization and configuration limits
 
-The solution ships the N:N Contact associated menu **Assigned supplier accounts** and a separate **Active supplier accounts** public view.
-It relies on the installed Management app's Contact page and native Related navigation; it does not replace a first-party app definition or invent a Contact form ID.
-Open the standard **Portal Contact (Enhanced Form)** in Power Pages Management, then use Related, Add Existing, and Remove.
-If an environment has customized that form to hide Related navigation, review its own form layer before enabling the workflow.
-The template does not overwrite that customization.
+The solution adds an **Assigned Supplier Accounts** subgrid to the **General** tab of the existing **Portal Contact (Enhanced)** form (`c1c97961-2d42-4103-abf8-2fe2bdf38224`).
+It also ships the N:N Contact associated menu **Assigned supplier accounts** and a separate **Active supplier accounts** public view.
+The form component is a native unmanaged differential export with one added section and control.
+Company Name remains the single supplier affiliation; the grid manages the separate N:N memberships.
+Existing controls, events, libraries, localizations and form security conditions remain in the installed base form.
+The solution requires that first-party enhanced Contact form from Power Pages Runtime Core and does not clone or replace the Management app or sitemap.
+Open that form in Power Pages Management and use the grid's native Add Existing Account and Remove commands.
+Remove unlinks an N:N assignment without deleting the Account.
+The default grid view selects active Supplier Accounts; administrators must still review assignment consistency.
+If the target uses another Contact form, or a customization hides the General tab or its controls, review the form layers and app form selection before provisioning.
+Publish the affected Account and Contact customizations after unmanaged import.
+Table-level publication also publishes other pending customizations on those tables; obtain the environment owner's consent before doing so.
 
 Administrators maintain valid Supplier categories, active Account state, and Company Name/membership consistency.
 The scalar Company Name lookup provides one supplier affiliation; native N:N still allows multiple reviewer assignments.
@@ -130,6 +137,7 @@ Status-based invoice editing restrictions remain UI behavior, not a row-status r
 - [Power Pages table permissions](https://learn.microsoft.com/power-pages/security/table-permissions)
 - [N:N associated navigation display options](https://learn.microsoft.com/power-apps/maker/data-platform/create-edit-nn-relationships-solution-explorer#edit-display-options)
 - [Management Contact form and enhanced-model web role administration](https://learn.microsoft.com/power-pages/security/create-web-roles#from-the-contact-enhanced-data-model)
+- [Native differential form export and form solution layers](https://learn.microsoft.com/power-platform/alm/form-alm)
 - [Association on creation](https://learn.microsoft.com/power-apps/developer/data-platform/webapi/create-entity-web-api#associate-table-rows-on-create)
 - [Collection-valued associations and absolute `$ref` targets](https://learn.microsoft.com/power-apps/developer/data-platform/webapi/associate-disassociate-entities-using-web-api#using-collection-valued-navigation-properties)
 - [Portal association permission error codes](https://learn.microsoft.com/power-pages/configure/web-api-http-requests-handle-errors#error-codes)

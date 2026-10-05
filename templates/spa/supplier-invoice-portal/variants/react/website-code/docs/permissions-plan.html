@@ -84,8 +84,11 @@ The runtime rejects a missing/inaccessible, inactive, or non-Supplier Company an
 Membership/category/state consistency is administrator-managed.
 The existing status-based UI locks remain UI rules; table permissions do not enforce invoice-status transitions.
 Live authorization, cache propagation after revocation, and $ref denial require separate target-environment validation.</p></section><section><h2>Provisioning and existing installations</h2>
-<p>The fresh-install solution contains four custom tables and the segmented Account Category customization.
+<p>The fresh-install solution contains four custom tables, segmented Account metadata and an additive enhanced Contact form component.
 Invoices and POs use the new <code>spnvc_supplieraccountid</code> lookup and case-sensitive <code>spnvc_SupplierAccountId</code> navigation property.</p>
+<p>After unmanaged import, publish the affected tables and verify the Active supplier accounts view and General tab's Assigned Supplier Accounts subgrid.
+Table-level publication includes other pending customizations on those tables and requires the environment owner's consent.
+The standard Company Name lookup remains unchanged.</p>
 <p>Existing lookup columns cannot be treated as retargeted by editing solution XML.
 An existing installation needs an explicit, reviewed supplier-to-Account mapping and backfill of the new lookups before the new site is deployed.
 An unmanaged solution update does not delete retired schema or migrate data.</p>

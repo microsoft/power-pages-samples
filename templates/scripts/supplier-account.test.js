@@ -63,7 +63,7 @@ test("solution relationship reference manifest declares each schema name once", 
   assert.deepEqual(duplicates, [], "duplicate references produce duplicate definitions in the installable ZIP");
 });
 
-test("packed solution has unique relationship definitions", (t) => {
+test("packed solution includes unique relationships, the Supplier view and differential Contact form", (t) => {
   const available = spawnSync("pac", ["help"], { encoding: "utf8" });
   if (available.error?.code === "ENOENT") {
     t.skip("PAC CLI is not installed; source manifest uniqueness is tested separately");
@@ -88,6 +88,33 @@ test("packed solution has unique relationship definitions", (t) => {
   assert.ok(names.includes("spnvc_account_purchaseorder"));
   assert.deepEqual(names.filter((name, index) => names.indexOf(name) !== index), [],
     "a warning-free pack must not repeat relationship definitions");
+  const account = /<Entity>\s*<Name\b[^>]*>Account<\/Name>([\s\S]*?)<\/Entity>/.exec(extracted.stdout)?.[1];
+  assert.ok(account, "segmented Account component must be packed");
+  const view = /<savedquery>([\s\S]*?<savedqueryid>\{e590060a-418f-5de4-93d3-98e2bf5e8b57\}<\/savedqueryid>[\s\S]*?)<\/savedquery>/.exec(account)?.[1];
+  assert.ok(view, "the Management view must materialize inside packed Account customizations, not only exist as a source file");
+  assert.match(view, /LocalizedName description="Active supplier accounts"/);
+  assert.match(view, /<entity name="account">/);
+  assert.match(view, /attribute="accountcategorycode" operator="eq" value="132140000"/);
+  assert.match(view, /attribute="statecode" operator="eq" value="0"/);
+  assert.match(view, /<grid\b[^>]*object="1"/);
+  assert.match(view, /<row\b[^>]*id="accountid"/);
+  assert.match(view, /<cell name="name"/);
+  assert.match(view, /<isdefault>0<\/isdefault>/);
+  const manifest = spawnSync("unzip", ["-p", zip, "solution.xml"], { encoding: "utf8" });
+  assert.equal(manifest.status, 0, manifest.stderr);
+  assert.match(manifest.stdout, /RootComponent type="1" schemaName="account" behavior="2"/);
+  assert.doesNotMatch(manifest.stdout, /schemaName="account" behavior="0"/,
+    "including a view must not transport the complete standard Account table");
+  const contact = /<Entity>\s*<Name\b[^>]*>Contact<\/Name>([\s\S]*?)<\/Entity>/.exec(extracted.stdout)?.[1];
+  assert.ok(contact, "the Management Contact form component must materialize in the installable ZIP");
+  assert.match(contact, /<formid>\{c1c97961-2d42-4103-abf8-2fe2bdf38224\}<\/formid>/);
+  assert.match(contact, /name="spnvc_assigned_supplier_accounts_section"[^>]*solutionaction="Added"/);
+  assert.match(contact, /<RelationshipName>spnvc_account_contact<\/RelationshipName>/);
+  assert.match(contact, /<ViewId>\{E590060A-418F-5DE4-93D3-98E2BF5E8B57\}<\/ViewId>/);
+  assert.match(manifest.stdout, /RootComponent type="1" schemaName="contact" behavior="2"/);
+  assert.match(manifest.stdout, /Required type="60"[^>]*solution="PowerPages_RuntimeCore[^"]*"[^>]*id="\{c1c97961-2d42-4103-abf8-2fe2bdf38224\}"/);
+  assert.doesNotMatch(contact, /<DisplayConditions>|datafieldname="parentcustomerid"|<formLibraries>|<events>/,
+    "native differential transport must not copy unrelated controls, role IDs or handlers from the source environment");
 });
 
 test("native Account Contact membership is a shipped N:N relationship, not a recreated business table", () => {
@@ -158,7 +185,7 @@ test("seed Accounts precede contacts and preserve supplier relationships by exac
   }
 });
 
-test("Management association navigation and filtered view ship without replacing first-party forms or app", () => {
+test("Management ships an additive subgrid on the existing enhanced Contact form", () => {
   const xml = read(path.join(solution, "Other/Relationships/Account.xml"));
   assert.match(xml, /CustomLabel description="Assigned supplier accounts"/);
   assert.match(xml, /NavPaneDisplayOption>UseLabel</);
@@ -168,7 +195,30 @@ test("Management association navigation and filtered view ship without replacing
   assert.match(view, /attribute="statecode" operator="eq" value="0"/);
   assert.match(view, /<isdefault>0<\/isdefault>/);
   assert.equal(fs.existsSync(path.join(solution, "AppModules")), false);
-  assert.equal(fs.existsSync(path.join(solution, "Entities/Contact/FormXml")), false);
+  const formPath = path.join(solution, "Entities/Contact/FormXml/main/{c1c97961-2d42-4103-abf8-2fe2bdf38224}.xml");
+  assert.ok(fs.existsSync(formPath), "ship the actual enhanced Management form, not only related navigation");
+  const form = read(formPath);
+  assert.match(form, /description="Portal Contact \(Enhanced\)"/);
+  assert.match(form, /tab name="general"/);
+  assert.match(form, /description="Assigned Supplier Accounts"/);
+  assert.match(form, /solutionaction="Added"/);
+  assert.match(form, /classid="\{E7A81278-8635-4D9E-8D4D-59480B391C5B\}"/);
+  assert.match(form, /<TargetEntityType>account<\/TargetEntityType>/);
+  assert.match(form, /<RelationshipName>spnvc_account_contact<\/RelationshipName>/);
+  assert.match(form, /<ViewId>\{E590060A-418F-5DE4-93D3-98E2BF5E8B57\}<\/ViewId>/);
+  assert.doesNotMatch(form.replace('xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"', ""),
+    /<DisplayConditions>|<formLibraries>|<events>|https?:\/\/|ShowNew|ShowRemove/);
+  assert.equal([...form.matchAll(/<control\b/g)].length, 1, "transport only the new control");
+  assert.equal([...form.matchAll(/<section\b/g)].length, 1, "transport only the new section");
+  const contract = json(path.join(website, "dataverse-solution-contract.json"));
+  assert.deepEqual(contract.tables.contact, { customColumns: [] });
+  assert.deepEqual(contract.forms.contact, {
+    id: "c1c97961-2d42-4103-abf8-2fe2bdf38224",
+    name: "Portal Contact (Enhanced)",
+    relationship: "spnvc_account_contact",
+    defaultViewId: "e590060a-418f-5de4-93d3-98e2bf5e8b57",
+    transport: "differential",
+  });
 });
 
 test("Supplier PO and Account access is relationship-scoped, never global", () => {

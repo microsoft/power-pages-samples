@@ -160,6 +160,11 @@
             "type": "picklist"
           }
         ]
+      },
+      {
+        "logicalName": "contact",
+        "kind": "Segmented standard table",
+        "columns": []
       }
     ],
     "relationships": [
@@ -248,6 +253,15 @@
         "intersectTable": "spnvc_account_contact",
         "firstNavigationProperty": "spnvc_account_contact",
         "secondNavigationProperty": "spnvc_account_contact"
+      }
+    },
+    "forms": {
+      "contact": {
+        "id": "c1c97961-2d42-4103-abf8-2fe2bdf38224",
+        "name": "Portal Contact (Enhanced)",
+        "relationship": "spnvc_account_contact",
+        "defaultViewId": "e590060a-418f-5de4-93d3-98e2bf5e8b57",
+        "transport": "differential"
       }
     },
     "choices": {

@@ -51,5 +51,6 @@
       </attributes>
     </entity>
   </EntityInfo>
+  <SavedQueries />
   <RibbonDiffXml />
 </Entity>

@@ -20,7 +20,7 @@ const tables = Object.entries(contract.tables).map(([logicalName, table]) => {
       logicalName: /<LogicalName>([^<]+)<\/LogicalName>/.exec(match[1])?.[1],
       type: /<Type>([^<]+)<\/Type>/.exec(match[1])?.[1],
     })).filter(column => [...table.customColumns, ...(table.standardColumns ?? [])].includes(column.logicalName))
-  return { logicalName, kind: logicalName === 'account' ? 'Segmented standard table' : 'Custom table', columns }
+  return { logicalName, kind: ['account', 'contact'].includes(logicalName) ? 'Segmented standard table' : 'Custom table', columns }
 })
 const relationships = [
   ...Object.entries(contract.relationships).map(([name, relationship]) => ({ name, ...relationship })),
@@ -30,7 +30,7 @@ const relationships = [
     lookupColumn: 'parentcustomerid', navigationProperty: 'parentcustomerid_account',
   },
 ]
-const model = { tables, relationships, manyToManyRelationships: contract.manyToManyRelationships, choices: choices.tables }
+const model = { tables, relationships, manyToManyRelationships: contract.manyToManyRelationships, forms: contract.forms, choices: choices.tables }
 const permissionRows = (modelOnly ? [] : permissions).map(permission => {
   const field = key => new RegExp(`^${key}: (.+)$`, 'm').exec(permission)?.[1] ?? ''
   if (!contract.tables[field('entitylogicalname')] && field('entitylogicalname') !== 'contact') {
@@ -137,16 +137,21 @@ ${tables.map(table => `<details open><summary>${escape(table.logicalName)} - ${t
 <table><thead><tr><th>Shipped column</th><th>Type</th></tr></thead><tbody>${table.columns.map(column =>
   `<tr><td><code>${escape(column.logicalName)}</code></td><td>${escape(column.type)}</td></tr>`).join('')}</tbody></table></details>`).join('')}
 <p>The segmented Account solution component contains the customized Category column, native Account-Contact relationship, and Active supplier accounts Management view.
-Unchanged Account keys, name, state and standard Contact metadata remain platform dependencies.</p></section>
+The segmented Contact component adds only the Management form section.
+Unchanged Account keys, name, state and standard Contact columns remain platform dependencies.</p></section>
 <section><h2>Relationships</h2><div class="scroll"><table><thead><tr><th>Relationship</th><th>Source -> target</th><th>Lookup / navigation property</th></tr></thead><tbody>${relationships.map(relation =>
   `<tr><td><code>${escape(relation.name)}</code></td><td>${escape(relation.referencingTable)} -> ${escape(relation.referencedTable)}</td><td><code>${escape(relation.lookupColumn)}<br>${escape(relation.navigationProperty)}</code></td></tr>`).join('')}</tbody></table></div>
 <p>Deleting an Account removes its invoice and PO links, rather than cascading deletion of financial records.
 Account reassignment, sharing and ownership changes do not cascade to those records.</p></section>
 <section><h2>Reviewer assignments and administrator workflow</h2>
 <p><code>spnvc_account_contact</code> is a native Account-Contact N:N relationship with collection navigation on both sides and a platform-managed intersect.
-The shipped relationship exposes <strong>Assigned supplier accounts</strong> under a Contact's Related navigation in Power Pages Management.
-Administrators use Add Existing/Remove and the shipped <strong>Active supplier accounts</strong> view.
-The solution does not replace the first-party app, forms, sitemap or standard Account views.</p>
+The solution adds an <strong>Assigned Supplier Accounts</strong> subgrid on the General tab of the existing <strong>Portal Contact (Enhanced)</strong> form.
+The native unmanaged differential form component contains only the added section and control, preserving Company Name, existing controls, libraries, handlers, localizations and security conditions.
+The first-party form from Power Pages Runtime Core must already be installed.
+The <strong>Assigned supplier accounts</strong> Related menu remains available.
+Administrators use native Add Existing Account/Remove commands and the shipped <strong>Active supplier accounts</strong> view.
+Remove unlinks the assignment without deleting the Account.
+The solution does not replace the first-party app, sitemap or standard Account views.</p>
 <p>Supplier Company Name must reference an active Supplier Account, and that Account must also be an N:N member for target-binding AppendTo.
 Supplier-only Contacts must not have extra memberships; dual-role Contacts may have additional reviewer assignments.
 These are administrator-maintained configuration rules, checked by <code>scripts/validate-assignments.mjs</code>, not a new Dataverse plug-in.</p></section>
@@ -175,8 +180,11 @@ The existing status-based UI locks remain UI rules; table permissions do not enf
 Live authorization, cache propagation after revocation, and $ref denial require separate target-environment validation.</p></section>`
 
 const migrationHtml = `<section><h2>Provisioning and existing installations</h2>
-<p>The fresh-install solution contains four custom tables and the segmented Account Category customization.
+<p>The fresh-install solution contains four custom tables, segmented Account metadata and an additive enhanced Contact form component.
 Invoices and POs use the new <code>spnvc_supplieraccountid</code> lookup and case-sensitive <code>spnvc_SupplierAccountId</code> navigation property.</p>
+<p>After unmanaged import, publish the affected tables and verify the Active supplier accounts view and General tab's Assigned Supplier Accounts subgrid.
+Table-level publication includes other pending customizations on those tables and requires the environment owner's consent.
+The standard Company Name lookup remains unchanged.</p>
 <p>Existing lookup columns cannot be treated as retargeted by editing solution XML.
 An existing installation needs an explicit, reviewed supplier-to-Account mapping and backfill of the new lookups before the new site is deployed.
 An unmanaged solution update does not delete retired schema or migrate data.</p>
@@ -208,7 +216,7 @@ for (const [file, title, body] of [
 for (const [file, value] of [
   ['.alm-plan-data.json', { siteName: 'Supplier Invoice Portal', strategy: 'Fresh install or reviewed data migration', model }],
   ['alm/alm-plan-context.json', { siteName: 'Supplier Invoice Portal', source: 'Repository metadata', model, ...(modelOnly ? {} : { permissions: permissionRows }) }],
-  ['alm/alm-size-estimate.json', { siteName: 'Supplier Invoice Portal', source: 'Repository metadata', customTableCount: 4, segmentedStandardTableCount: 1, tables }],
+  ['alm/alm-size-estimate.json', { siteName: 'Supplier Invoice Portal', source: 'Repository metadata', customTableCount: 4, segmentedStandardTableCount: 2, tables }],
   ['alm/alm-split-plan.json', { solution: 'SupplierInvoiceSPAPortal', sharedSupportingSolution: true, websiteIncluded: false, tableNames: tables.map(table => table.logicalName) }],
 ]) writeFileSync(join(root, 'docs', file), JSON.stringify(value, null, 2) + '\n')
 console.log(`Regenerated ${modelOnly ? 'model and provisioning' : 'model, permission and provisioning'} documentation from source metadata.`)
