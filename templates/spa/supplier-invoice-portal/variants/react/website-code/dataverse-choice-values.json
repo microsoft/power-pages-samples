@@ -19,12 +19,11 @@
         "Cancelled": 6
       }
     },
-    "spnvc_supplier": {
-      "spnvc_status": {
-        "Active": 100000000,
-        "Pending": 100000001,
-        "Inactive": 100000002,
-        "Suspended": 100000003
+    "account": {
+      "accountcategorycode": {
+        "Preferred Customer": 1,
+        "Standard": 2,
+        "Supplier": 132140000
       }
     }
   }

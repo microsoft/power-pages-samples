@@ -32,12 +32,10 @@ const PURCHASE_ORDER_SUMMARY_SELECT = [
   'spnvc_totalamount',
   'spnvc_deliverydate',
   'spnvc_postatus',
+  '_spnvc_supplieraccountid_value',
 ].join(',')
 // Nav property casing verified against Dataverse metadata
 // (ReferencedEntityNavigationPropertyName on the ManyToOne relationship).
-const PURCHASE_ORDER_SUMMARY_EXPAND = [
-  'spnvc_SupplierId($select=spnvc_name)',
-].join(',')
 const PURCHASE_ORDER_SUMMARY_INSTRUCTION = 'Summarization/prompt/purchaseorder_summary'
 
 export interface UsePurchaseOrderSummaryResult {
@@ -97,7 +95,6 @@ export function usePurchaseOrderSummary(
           entitySet: ENTITY_SET,
           id: purchaseOrderId,
           select: PURCHASE_ORDER_SUMMARY_SELECT,
-          expand: PURCHASE_ORDER_SUMMARY_EXPAND,
           // On the initial call, send the instruction identifier. On a refinement,
           // the server wants the opaque Config token in `RecommendationConfig` and
           // nothing in `InstructionIdentifier`.

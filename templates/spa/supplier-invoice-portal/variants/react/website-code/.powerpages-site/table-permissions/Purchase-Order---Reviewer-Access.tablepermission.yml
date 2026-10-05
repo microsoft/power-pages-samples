@@ -7,6 +7,8 @@ delete: true
 entitylogicalname: spnvc_purchaseorder
 entityname: Purchase Order - Reviewer Access
 id: 361bb4a3-aa40-487d-8329-23a3c2f00fc0
+parententitypermission: e82591a8-9fd5-4665-a975-855df52d839f
+parentrelationship: spnvc_account_purchaseorder
 read: true
-scope: 756150000
+scope: 756150003
 write: true

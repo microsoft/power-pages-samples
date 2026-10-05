@@ -13,7 +13,7 @@ export default function EditInvoice() {
   const { invoice, isLoading: invoiceLoading } = useInvoiceDetail(id)
   usePageTitle(invoice ? `Edit ${invoice.invoiceNumber}` : 'Edit Invoice')
   const { update, isSubmitting } = useUpdateInvoiceAction()
-  const { purchaseOrders: availablePOs, isLoading: posLoading } = useSupplierPOs()
+  const { purchaseOrders: availablePOs, isLoading: posLoading, error: posError } = useSupplierPOs()
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [toastVariant, setToastVariant] = useState<'success' | 'error'>('success')
   const [formInitialized, setFormInitialized] = useState(false)
@@ -60,7 +60,7 @@ export default function EditInvoice() {
 
   function validate() {
     const errs: Record<string, string> = {}
-    if (!form.selectedPOId) errs.poNumber = 'Please select a purchase order'
+    if (!selectedPO?.supplierId) errs.poNumber = posError || 'Please select an available supplier purchase order'
     if (!form.amount || Number(form.amount) <= 0) errs.amount = 'Enter a valid amount'
     if (!form.dueDate) errs.dueDate = 'Due date is required'
     return errs

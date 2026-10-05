@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- 997e7996-e241-4117-9c09-28e90a1fcdbc
+append: false
+appendto: true
+contactrelationship: spnvc_account_contact
+create: false
+delete: false
+entitylogicalname: account
+entityname: Account - Supplier Binding
+id: ca087a10-8484-5f27-b0e9-56d5635b67cc
+read: true
+scope: 756150001
+write: false

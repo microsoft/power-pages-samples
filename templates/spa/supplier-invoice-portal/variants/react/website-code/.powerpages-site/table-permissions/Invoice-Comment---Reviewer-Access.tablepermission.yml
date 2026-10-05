@@ -7,6 +7,8 @@ delete: false
 entitylogicalname: spnvc_invoicecomment
 entityname: Invoice Comment - Reviewer Access
 id: d5172b66-1a1d-40c3-95f9-4ed1f9ac1d60
+parententitypermission: 76266883-f351-4a13-b654-d6b464f2c699
+parentrelationship: spnvc_invoice_invoicecomment
 read: true
-scope: 756150000
+scope: 756150003
 write: false

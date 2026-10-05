@@ -223,11 +223,18 @@ export function useInvoiceList(params?: {
         dueDate: 'spnvc_duedate',
       }
 
-      let filter: string | undefined
+      let filter: import('../services/fetchXmlApi').FetchFilter | undefined
       if (status && status !== 'All') {
         const { INVOICE_STATUS } = await import('../types/invoice')
         const statusVal = INVOICE_STATUS[status as InvoiceStatusLabel]
-        if (statusVal) filter = `spnvc_invoicestatus eq ${statusVal}`
+        if (statusVal) filter = { attribute: 'spnvc_invoicestatus', operator: 'eq', value: statusVal }
+      }
+      const { isReviewer } = await import('../utils/authorization')
+      if (!isReviewer()) {
+        const [{ getSupplierCompanyId }, { and, eq }] = await Promise.all([
+          import('../services/supplierAffiliationService'), import('../services/fetchXmlApi'),
+        ])
+        filter = and(filter, eq('spnvc_supplieraccountid', await getSupplierCompanyId()))
       }
 
       const result = await listInvoices({
@@ -240,6 +247,8 @@ export function useInvoiceList(params?: {
       setInvoices(result.items.map(apiInvoiceToItem))
       setTotalCount(result.totalCount)
     } catch (err) {
+      setInvoices([])
+      setTotalCount(0)
       setError(err instanceof Error ? err.message : 'Failed to fetch invoices')
     } finally {
       setIsLoading(false)
@@ -301,11 +310,19 @@ export function useInvoiceDetail(id: string | undefined) {
 
       const [invoiceResult, commentsResult, attachmentsResult] = await Promise.all([
         getApi(id),
-        listCommentsByInvoiceId(id).catch(() => ({ items: [] as ApiComment[], totalCount: 0 })),
-        listAttachmentsByInvoice(id).catch(() => ({ items: [] as ApiAttachment[], totalCount: 0 })),
+        listCommentsByInvoiceId(id),
+        listAttachmentsByInvoice(id),
       ])
 
       if (invoiceResult) {
+        const { isReviewer } = await import('../utils/authorization')
+        if (!isReviewer()) {
+          const { getSupplierCompanyId } = await import('../services/supplierAffiliationService')
+          if (invoiceResult.supplierId !== await getSupplierCompanyId()) {
+            setInvoice(null)
+            return
+          }
+        }
         const item = apiInvoiceToItem(invoiceResult)
         // Merge comments with their linked attachments
         item.comments = commentsResult.items.map(c => {
@@ -327,6 +344,7 @@ export function useInvoiceDetail(id: string | undefined) {
         setInvoice(null)
       }
     } catch (err) {
+      setInvoice(null)
       setError(err instanceof Error ? err.message : 'Failed to fetch invoice')
     } finally {
       setIsLoading(false)
@@ -467,7 +485,7 @@ export function useRecentInvoices(count = 5, isReviewer = false) {
         const { INVOICE_STATUS } = await import('../types/invoice')
         const result = await listInvoices({
           pageSize: count,
-          filter: `spnvc_invoicestatus eq ${INVOICE_STATUS.Submitted}`,
+          filter: { attribute: 'spnvc_invoicestatus', operator: 'eq', value: INVOICE_STATUS.Submitted },
           orderBy: 'spnvc_submissiondate asc',
         })
         setInvoices(result.items.map(apiInvoiceToItem))
@@ -673,7 +691,7 @@ export function useCreateCommentAction() {
     text: string,
     linkedAction?: string,
     files?: { file: File; name: string; size: string; type: string }[],
-    invoiceContactId?: string,
+    _invoiceContactId?: string,
   ): Promise<'success' | 'partial' | false> => {
     setIsSubmitting(true)
 
@@ -688,10 +706,9 @@ export function useCreateCommentAction() {
       const user = getCurrentUser()
 
       // 1. Create the comment record
-      // contactId binds the invoice OWNER's contact for contact-scope permission resolution.
-      // This must be the invoice owner (not the current user) so that
-      // both supplier and reviewer comments are visible to the supplier.
-      const ownerContactId = invoiceContactId || user?.contactId
+      // Child access now follows the Invoice, so Contact provenance can stay
+      // with the caller and requires only Self Contact AppendTo.
+      const ownerContactId = user?.contactId
       const comment = await createInvoiceComment({
         commentText: text,
         invoiceId,

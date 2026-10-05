@@ -1,19 +1,9 @@
 // Server Logic: dashboard-aggregates
-// Purpose: Runs OData $apply aggregate/groupby queries against Dataverse directly
-// (via Server.Connector.Dataverse) so the invoice/PO dashboard can show status
-// counts and amount totals.
-//
-// Why this exists: the Power Pages *client* Web API rejects every $apply request
-// with "WebAPI * is not enabled". It injects a synthetic wildcard (entity, "*")
-// field-permission requirement whenever a GET has no $select, and $apply responses
-// never carry $select (their columns are aggregate aliases like "count" or "total",
-// which don't exist on the base entity schema, so $select can't reference them
-// either). See https://learn.microsoft.com/power-pages/configure/configure-table-permissions
-// for that Web API field allowlist. Server logic isn't subject to that gate: it
-// still enforces table permissions (Supplier: own invoices only via the
-// spnvc_contact_invoice_submitter relationship; Reviewer: all invoices), but it
-// talks to Dataverse directly rather than through the client Web API, so the
-// same $apply queries that fail from the browser succeed here.
+// Aggregate aliases are not table columns in the client Web API field allowlist.
+// The protected Dataverse connector runs FetchXML aggregates under the caller's
+// table permissions: Supplier Company Name Account and reviewer N:N assignments.
+// FetchXML also avoids OData's documented N:N/Parent permission-chain issue:
+// https://learn.microsoft.com/power-pages/configure/web-api-overview#known-issues
 // API URL: https://<site-url>/_api/serverlogics/dashboard-aggregates?stat=<stat>
 
 function get() {
@@ -79,13 +69,21 @@ function runQuery(entitySetName, query) {
 // script validator rejects unnamed function literals as a prohibited pattern;
 // a for-loop needs no callback at all.
 function getStatusCounts(entitySetName, statusField) {
-    var query = "$apply=groupby((" + statusField + "),aggregate($count as recordcount))";
+    // FetchXML avoids the documented OData/N:N permission-chain query failure.
+    // The connector still applies the caller's Account/Parent table permissions.
+    // https://learn.microsoft.com/power-pages/configure/web-api-overview#known-issues
+    var entityName = entitySetName === "spnvc_invoices" ? "spnvc_invoice" : "spnvc_purchaseorder";
+    var xml = '<fetch aggregate="true"><entity name="' + entityName + '">' +
+        '<attribute name="' + statusField + '" alias="statusValue" groupby="true" />' +
+        '<attribute name="' + entityName + 'id" alias="recordcount" aggregate="count" />' +
+        '</entity></fetch>';
+    var query = "fetchXml=" + encodeURIComponent(xml);
     var body = runQuery(entitySetName, query);
     var rows = body.value || [];
 
     var results = [];
     for (var i = 0; i < rows.length; i++) {
-        results.push({ statusValue: rows[i][statusField], count: rows[i].recordcount });
+        results.push({ statusValue: rows[i].statusValue, count: rows[i].recordcount });
     }
     return results;
 }
@@ -96,8 +94,12 @@ function getStatusCounts(entitySetName, statusField) {
 // rejected multiple aggregate expressions in a single $apply call with a 500 --
 // keeping the same split here avoids re-introducing that failure mode.
 function getInvoiceAmountStats() {
-    var sumBody = runQuery("spnvc_invoices", "$apply=aggregate(spnvc_amount with sum as total)");
-    var avgBody = runQuery("spnvc_invoices", "$apply=aggregate(spnvc_amount with average as avg)");
+    var sumXml = '<fetch aggregate="true"><entity name="spnvc_invoice">' +
+        '<attribute name="spnvc_amount" alias="total" aggregate="sum" /></entity></fetch>';
+    var avgXml = '<fetch aggregate="true"><entity name="spnvc_invoice">' +
+        '<attribute name="spnvc_amount" alias="avg" aggregate="avg" /></entity></fetch>';
+    var sumBody = runQuery("spnvc_invoices", "fetchXml=" + encodeURIComponent(sumXml));
+    var avgBody = runQuery("spnvc_invoices", "fetchXml=" + encodeURIComponent(avgXml));
 
     var total = (sumBody.value && sumBody.value[0] && sumBody.value[0].total) || 0;
     var avg = (avgBody.value && avgBody.value[0] && avgBody.value[0].avg) || 0;

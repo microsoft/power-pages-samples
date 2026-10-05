@@ -11,6 +11,21 @@ const VALID_AUDIENCES = new Set(["admins", "developers", "makers", "partners"]);
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DATAVERSE_CHOICE_VALUES_FILE = "dataverse-choice-values.json";
 const DATAVERSE_SOLUTION_CONTRACT_FILE = "dataverse-solution-contract.json";
+// Segmented standard tables omit unchanged columns, including the primary key.
+// Only known platform columns can fill these gaps; custom columns still require
+// solution metadata. https://learn.microsoft.com/power-platform/alm/segmented-solutions-alm
+const STANDARD_TABLE_DEPENDENCIES = {
+  account: {
+    entitySetName: "accounts",
+    primaryKey: "accountid",
+    attributes: [
+      ["AccountId", "accountid", "primarykey"],
+      ["Name", "name", "nvarchar"],
+      ["StateCode", "statecode", "state"],
+      ["StatusCode", "statuscode", "status"],
+    ]
+  }
+};
 const CODEQL_REPORTS_DIRECTORY = "docs/codeql-reports/";
 const FORBIDDEN_WEBSITE_CODE_DIRECTORIES = new Set([
   ".git",
@@ -547,6 +562,7 @@ function decodeXmlEntities(value) {
 
 function createDataverseMetadata() {
   return {
+    manyToManyRelationshipsByName: new Map(),
     relationshipsByName: new Map(),
     tablesByEntitySet: new Map(),
     tablesByLogicalName: new Map(),
@@ -596,7 +612,9 @@ function readSolutionDataverseMetadata(solutionPath, label, result) {
 
 function parseDataverseTableMetadata(entityXml) {
   const schemaName = matchXmlText(entityXml, /<Entity\b[\s\S]*?<Name\b[^>]*>\s*([^<]+?)\s*<\/Name>/i);
-  const entitySetName = matchXmlText(entityXml, /<EntitySetName>\s*([^<]+?)\s*<\/EntitySetName>/i);
+  const standardTable = STANDARD_TABLE_DEPENDENCIES[schemaName?.toLowerCase()];
+  const entitySetName = matchXmlText(entityXml, /<EntitySetName>\s*([^<]+?)\s*<\/EntitySetName>/i)
+    ?? standardTable?.entitySetName;
   const attributes = [];
   const attributePattern = /<attribute\b[^>]*\bPhysicalName=(["'])(.*?)\1[^>]*>([\s\S]*?)<\/attribute>/gi;
   let attributeMatch;
@@ -618,6 +636,14 @@ function parseDataverseTableMetadata(entityXml) {
     });
   }
 
+  const shippedAttributes = new Set(attributes.map(attribute => attribute.logicalName));
+  if (standardTable) {
+    for (const [physicalName, logicalName, type] of standardTable.attributes) {
+      if (!shippedAttributes.has(logicalName)) {
+        attributes.push({ physicalName, logicalName, type, isCustomField: false, choiceOptionsByLabel: null });
+      }
+    }
+  }
   const primaryKeyAttribute = attributes.find((attribute) => attribute.type === "primarykey");
   if (!schemaName || !entitySetName || !primaryKeyAttribute || !primaryKeyAttribute.logicalName.endsWith("id")) {
     return null;
@@ -640,6 +666,7 @@ function parseDataverseTableMetadata(entityXml) {
     lookupsByAttributeLogicalName: new Map(),
     lookupsByNavigationProperty: new Map(),
     primaryKey: primaryKeyAttribute.logicalName,
+    shippedAttributes,
     schemaName
   };
 }
@@ -697,6 +724,10 @@ function addDataverseRelationships(metadata, relationshipsXml, label, result) {
       ? decodeXmlEntities(relationshipNameMatch[2].trim())
       : null;
     const relationshipXml = relationshipMatch[2];
+    if (matchXmlText(relationshipXml, /<EntityRelationshipType>\s*([^<]+?)\s*<\/EntityRelationshipType>/i) === "ManyToMany") {
+      addDataverseManyToManyRelationship(metadata, relationshipName, relationshipXml, label, result);
+      continue;
+    }
     const sourceSchemaName = matchXmlText(
       relationshipXml,
       /<ReferencingEntityName>\s*([^<]+?)\s*<\/ReferencingEntityName>/i
@@ -763,6 +794,49 @@ function addDataverseRelationships(metadata, relationshipsXml, label, result) {
   }
 }
 
+function addDataverseManyToManyRelationship(metadata, name, xml, label, result) {
+  const firstSchemaName = matchXmlText(xml, /<FirstEntityName>\s*([^<]+?)\s*<\/FirstEntityName>/i);
+  const secondSchemaName = matchXmlText(xml, /<SecondEntityName>\s*([^<]+?)\s*<\/SecondEntityName>/i);
+  const intersectTable = matchXmlText(xml, /<IntersectEntityName>\s*([^<]+?)\s*<\/IntersectEntityName>/i);
+  const navigationProperties = new Map();
+  // Native N:N exports use AssociationRoleOrdinal (1/2), not the 1:N
+  // RelationshipRoleType. The intersect is platform-managed, not a seed table.
+  // https://learn.microsoft.com/power-apps/maker/data-platform/create-edit-nn-relationships
+  for (const role of xml.matchAll(/<EntityRelationshipRole\b[^>]*>([\s\S]*?)<\/EntityRelationshipRole>/gi)) {
+    const ordinal = matchXmlText(role[1], /<AssociationRoleOrdinal>\s*([^<]+?)\s*<\/AssociationRoleOrdinal>/i);
+    const property = matchXmlText(role[1], /<NavigationPropertyName>\s*([^<]+?)\s*<\/NavigationPropertyName>/i);
+    if (navigationProperties.has(ordinal)) {
+      result.errors.push(`Template "${label}" many-to-many relationship "${name}" has duplicate role ordinal "${ordinal}".`);
+    }
+    navigationProperties.set(ordinal, property);
+  }
+  if (!name || !firstSchemaName || !secondSchemaName || !intersectTable ||
+      !navigationProperties.get("1") || !navigationProperties.get("2")) {
+    result.errors.push(`Template "${label}" many-to-many relationship "${name ?? "<missing name>"}" has incomplete metadata.`);
+    return;
+  }
+  for (const schemaName of [firstSchemaName, secondSchemaName]) {
+    if (schemaName.includes("_") && !metadata.tablesBySchemaName.has(schemaName.toLowerCase())) {
+      result.errors.push(`Template "${label}" many-to-many relationship "${name}" references missing custom table "${schemaName}".`);
+    }
+  }
+  const relationship = {
+    name,
+    firstTable: metadata.tablesBySchemaName.get(firstSchemaName.toLowerCase())?.logicalName ?? firstSchemaName.toLowerCase(),
+    secondTable: metadata.tablesBySchemaName.get(secondSchemaName.toLowerCase())?.logicalName ?? secondSchemaName.toLowerCase(),
+    intersectTable,
+    firstNavigationProperty: navigationProperties.get("1"),
+    secondNavigationProperty: navigationProperties.get("2")
+  };
+  const key = name.toLowerCase();
+  const existing = metadata.manyToManyRelationshipsByName.get(key);
+  if (existing && JSON.stringify(existing) !== JSON.stringify(relationship)) {
+    result.errors.push(`Template "${label}" solutions contain conflicting many-to-many relationship metadata for "${name}".`);
+  } else {
+    metadata.manyToManyRelationshipsByName.set(key, relationship);
+  }
+}
+
 function findReferencingNavigationProperty(relationshipXml) {
   const rolePattern = /<EntityRelationshipRole\b[^>]*>([\s\S]*?)<\/EntityRelationshipRole>/gi;
   let roleMatch;
@@ -794,6 +868,7 @@ function mergeDataverseMetadata(target, source, label, result) {
       for (const [name, attribute] of table.attributesByLogicalName) {
         existing.attributesByLogicalName.set(name, attribute);
       }
+      for (const name of table.shippedAttributes) existing.shippedAttributes.add(name);
       for (const [name, attribute] of table.attributesByPhysicalName) {
         existing.attributesByPhysicalName.set(name, attribute);
       }
@@ -816,6 +891,14 @@ function mergeDataverseMetadata(target, source, label, result) {
       );
     } else {
       target.relationshipsByName.set(name, relationship);
+    }
+  }
+  for (const [name, relationship] of source.manyToManyRelationshipsByName) {
+    const existing = target.manyToManyRelationshipsByName.get(name);
+    if (existing && JSON.stringify(existing) !== JSON.stringify(relationship)) {
+      result.errors.push(`Template "${label}" solutions contain conflicting many-to-many relationship metadata for "${relationship.name}".`);
+    } else {
+      target.manyToManyRelationshipsByName.set(name, relationship);
     }
   }
 }
@@ -1015,6 +1098,29 @@ function validateWebsiteSolutionContract(websiteCodePath, solutionMetadata, labe
         );
       }
     }
+
+    const standardColumns = tableContract.standardColumns ?? [];
+    if (!Array.isArray(standardColumns) || standardColumns.some(column => typeof column !== "string")) {
+      result.errors.push(`Template "${label}" ${location} standardColumns must be an array of strings.`);
+      continue;
+    }
+    if (new Set(standardColumns).size !== standardColumns.length) {
+      result.errors.push(`Template "${label}" ${location} standardColumns must not contain duplicates.`);
+    }
+    for (const column of standardColumns) {
+      const attribute = table.attributesByLogicalName.get(column);
+      if (!table.shippedAttributes.has(column) || !attribute || attribute.isCustomField) {
+        result.errors.push(`Template "${label}" ${location} standard column "${column}" was not found in shipped solution metadata.`);
+      }
+    }
+    if (STANDARD_TABLE_DEPENDENCIES[tableName]) {
+      for (const column of table.shippedAttributes) {
+        const attribute = table.attributesByLogicalName.get(column);
+        if (!attribute.isCustomField && !standardColumns.includes(column)) {
+          result.errors.push(`Template "${label}" solution standard column "${tableName}.${column}" is not declared in ${DATAVERSE_SOLUTION_CONTRACT_FILE}.`);
+        }
+      }
+    }
   }
 
   const publisherPrefixes = new Set(
@@ -1067,6 +1173,28 @@ function validateWebsiteSolutionContract(websiteCodePath, solutionMetadata, labe
           `Template "${label}" ${location} ${field} must exactly match ${JSON.stringify(actualValue)}.`
         );
       }
+    }
+  }
+  const manyToManyContracts = contract.manyToManyRelationships ?? {};
+  if (!manyToManyContracts || typeof manyToManyContracts !== "object" || Array.isArray(manyToManyContracts)) {
+    result.errors.push(`Template "${label}" ${DATAVERSE_SOLUTION_CONTRACT_FILE} manyToManyRelationships must be an object.`);
+    return;
+  }
+  for (const relationship of solutionMetadata.manyToManyRelationshipsByName.values()) {
+    const expected = manyToManyContracts[relationship.name];
+    if (!expected || typeof expected !== "object" || Array.isArray(expected)) {
+      result.errors.push(`Template "${label}" solution many-to-many relationship "${relationship.name}" is not declared in ${DATAVERSE_SOLUTION_CONTRACT_FILE}.`);
+      continue;
+    }
+    for (const field of ["firstTable", "secondTable", "intersectTable", "firstNavigationProperty", "secondNavigationProperty"]) {
+      if (expected[field] !== relationship[field]) {
+        result.errors.push(`Template "${label}" many-to-many relationship "${relationship.name}" ${field} must exactly match ${JSON.stringify(relationship[field])}.`);
+      }
+    }
+  }
+  for (const name of Object.keys(manyToManyContracts)) {
+    if (solutionMetadata.manyToManyRelationshipsByName.get(name.toLowerCase())?.name !== name) {
+      result.errors.push(`Template "${label}" many-to-many relationship "${name}" was not found with that exact name in solution metadata.`);
     }
   }
 }
@@ -1496,27 +1624,71 @@ function validateDataverseSeedAgainstSolutionMetadata(tables, metadata, scope, l
 
   tables.forEach(({ name, table }, tableIndex) => {
     const solutionTable = tableMetadata[tableIndex];
-    if (!solutionTable) {
-      return;
-    }
     table.records.forEach((record, recordIndex) => {
       if (!record || typeof record !== "object" || Array.isArray(record)) {
         return;
       }
-      validateDataverseSeedRecordLookups(
+      const recordLocation = `table ${name} record[${recordIndex}]`;
+      validateDataverseSeedCollectionLookups(record, table.logicalName, metadata,
+        seedRecordsByEntitySetAndId, seedTablesByLogicalName, tableIndex, recordLocation, label, result);
+      if (solutionTable) validateDataverseSeedRecordLookups(
         record,
         solutionTable,
         metadata,
         seedRecordsByEntitySetAndId,
         seedTablesByLogicalName,
         tableIndex,
-        `table ${name} record[${recordIndex}]`,
+        recordLocation,
         scope,
         label,
         result
       );
     });
   });
+}
+
+function validateDataverseSeedCollectionLookups(record, logicalName, metadata, recordsById, seedTables, tableIndex, location, label, result) {
+  for (const [property, value] of Object.entries(record)) {
+    if (!property.endsWith("@odata.bind")) continue;
+    const navigation = property.slice(0, -"@odata.bind".length);
+    const relationship = [...metadata.manyToManyRelationshipsByName.values()].find(relation =>
+      (relation.firstTable === logicalName && relation.firstNavigationProperty.toLowerCase() === navigation.toLowerCase()) ||
+      (relation.secondTable === logicalName && relation.secondNavigationProperty.toLowerCase() === navigation.toLowerCase()));
+    if (!Array.isArray(value) && !relationship) continue;
+    if (!relationship) {
+      result.errors.push(`Template "${label}" Dataverse seed data ${location} collection lookup "${navigation}" was not found in relationship metadata.`);
+      continue;
+    }
+    const fromFirst = relationship.firstTable === logicalName &&
+      relationship.firstNavigationProperty.toLowerCase() === navigation.toLowerCase();
+    const expectedNavigation = fromFirst ? relationship.firstNavigationProperty : relationship.secondNavigationProperty;
+    const targetLogicalName = fromFirst ? relationship.secondTable : relationship.firstTable;
+    if (navigation !== expectedNavigation || !Array.isArray(value)) {
+      result.errors.push(`Template "${label}" Dataverse seed data ${location} collection lookup must use exact navigation "${expectedNavigation}" with an array of bindings.`);
+      continue;
+    }
+    const targetTable = metadata.tablesByLogicalName.get(targetLogicalName) ?? seedTables.get(targetLogicalName);
+    const expectedSet = targetTable?.entitySetName ?? targetTable?.entitySet;
+    const seen = new Set();
+    for (const reference of value) {
+      const bind = parseODataBind(reference);
+      if (!bind || bind.entitySetName !== expectedSet) {
+        result.errors.push(`Template "${label}" Dataverse seed data ${location} collection lookup "${navigation}" must target /${expectedSet ?? targetLogicalName}(<guid>).`);
+        continue;
+      }
+      const key = getSeedRecordKey(bind.entitySetName, bind.id);
+      const targetRecord = recordsById.get(key);
+      if (seen.has(key)) {
+        result.errors.push(`Template "${label}" Dataverse seed data ${location} collection lookup "${navigation}" duplicates record ${bind.id}.`);
+      }
+      seen.add(key);
+      if (!targetRecord || targetRecord.logicalName !== targetLogicalName) {
+        result.errors.push(`Template "${label}" Dataverse seed data ${location} collection lookup "${navigation}" references record ${bind.id}, which is not present in the target seed table.`);
+      } else if (targetRecord.tableIndex >= tableIndex) {
+        result.errors.push(`Template "${label}" Dataverse seed data ${location} collection lookup "${navigation}" references ${targetRecord.location}, which must appear in an earlier table.`);
+      }
+    }
+  }
 }
 
 function findExactSeedTableMetadata(table, metadata, scope, location, label, result) {
@@ -1627,6 +1799,11 @@ function validateDataverseSeedRecordLookups(
   for (const [propertyName, value] of Object.entries(record)) {
     if (propertyName.endsWith("@odata.bind")) {
       const navigationProperty = propertyName.slice(0, -"@odata.bind".length);
+      if ([...metadata.manyToManyRelationshipsByName.values()].some(relationship =>
+        (relationship.firstTable === solutionTable.logicalName && relationship.firstNavigationProperty.toLowerCase() === navigationProperty.toLowerCase()) ||
+        (relationship.secondTable === solutionTable.logicalName && relationship.secondNavigationProperty.toLowerCase() === navigationProperty.toLowerCase()))) {
+        continue;
+      }
       const bind = parseODataBind(value);
       validateDataverseLookupReference({
         bind,

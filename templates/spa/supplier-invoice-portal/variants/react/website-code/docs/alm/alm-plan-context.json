@@ -1,288 +1,446 @@
 {
-  "generatedAt": "2026-06-02T12:50:13.976Z",
   "siteName": "Supplier Invoice Portal",
-  "siteSettings": {
-    "keepAsIs": [
+  "source": "Repository metadata",
+  "model": {
+    "tables": [
       {
-        "name": "CodeSite/Enabled"
+        "logicalName": "spnvc_invoice",
+        "kind": "Custom table",
+        "columns": [
+          {
+            "logicalName": "spnvc_amount",
+            "type": "money"
+          },
+          {
+            "logicalName": "spnvc_amount_base",
+            "type": "money"
+          },
+          {
+            "logicalName": "spnvc_contactid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_description",
+            "type": "ntext"
+          },
+          {
+            "logicalName": "spnvc_duedate",
+            "type": "datetime"
+          },
+          {
+            "logicalName": "spnvc_invoicestatus",
+            "type": "picklist"
+          },
+          {
+            "logicalName": "spnvc_name",
+            "type": "nvarchar"
+          },
+          {
+            "logicalName": "spnvc_ponumber",
+            "type": "nvarchar"
+          },
+          {
+            "logicalName": "spnvc_purchaseorderid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_submissiondate",
+            "type": "datetime"
+          },
+          {
+            "logicalName": "spnvc_supplieraccountid",
+            "type": "lookup"
+          }
+        ]
       },
       {
-        "name": "CustomerSupport/DisplayAllUserActivitiesOnTimeline"
+        "logicalName": "spnvc_invoiceattachment",
+        "kind": "Custom table",
+        "columns": [
+          {
+            "logicalName": "spnvc_contactid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_file",
+            "type": "file"
+          },
+          {
+            "logicalName": "spnvc_filesize",
+            "type": "nvarchar"
+          },
+          {
+            "logicalName": "spnvc_filetype",
+            "type": "nvarchar"
+          },
+          {
+            "logicalName": "spnvc_invoicecommentid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_invoiceid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_name",
+            "type": "nvarchar"
+          }
+        ]
       },
       {
-        "name": "Footer/OutputCache/Enabled"
+        "logicalName": "spnvc_invoicecomment",
+        "kind": "Custom table",
+        "columns": [
+          {
+            "logicalName": "spnvc_authorcontactid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_commenttext",
+            "type": "ntext"
+          },
+          {
+            "logicalName": "spnvc_contactid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_invoiceid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_linkedaction",
+            "type": "nvarchar"
+          },
+          {
+            "logicalName": "spnvc_name",
+            "type": "nvarchar"
+          }
+        ]
       },
       {
-        "name": "Header/OutputCache/Enabled"
+        "logicalName": "spnvc_purchaseorder",
+        "kind": "Custom table",
+        "columns": [
+          {
+            "logicalName": "spnvc_deliverydate",
+            "type": "datetime"
+          },
+          {
+            "logicalName": "spnvc_description",
+            "type": "ntext"
+          },
+          {
+            "logicalName": "spnvc_name",
+            "type": "nvarchar"
+          },
+          {
+            "logicalName": "spnvc_postatus",
+            "type": "picklist"
+          },
+          {
+            "logicalName": "spnvc_supplieraccountid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_totalamount",
+            "type": "money"
+          },
+          {
+            "logicalName": "spnvc_totalamount_base",
+            "type": "money"
+          }
+        ]
       },
       {
-        "name": "Header/ShowAllProfileNavigationLinks"
-      },
-      {
-        "name": "HTTP/X-Frame-Options"
-      },
-      {
-        "name": "KnowledgeManagement/DisplayNotes"
-      },
-      {
-        "name": "KnowledgeManagement/NotesFilter"
-      },
-      {
-        "name": "MultiLanguage/DisplayLanguageCodeInURL"
-      },
-      {
-        "name": "MultiLanguage/MaximumDepthToClone"
-      },
-      {
-        "name": "OnlineDomains"
-      },
-      {
-        "name": "Profile/Enabled"
-      },
-      {
-        "name": "Profile/ForceSignUp"
-      },
-      {
-        "name": "Profile/ShowMarketingOptionsPanel"
-      },
-      {
-        "name": "Search/Enabled"
-      },
-      {
-        "name": "Search/FacetedView"
-      },
-      {
-        "name": "search/filters"
-      },
-      {
-        "name": "Search/IndexNotesAttachments"
-      },
-      {
-        "name": "Search/IndexQueryName"
-      },
-      {
-        "name": "search/query"
-      },
-      {
-        "name": "Search/RecordTypeFacetsEntities"
-      },
-      {
-        "name": "Site/AI/Skills/ActivateSite"
-      },
-      {
-        "name": "Site/AI/Skills/AddAiWebapi"
-      },
-      {
-        "name": "Site/AI/Skills/AddCloudFlow"
-      },
-      {
-        "name": "Site/AI/Skills/AddSampleData"
-      },
-      {
-        "name": "Site/AI/Skills/AuditPermissions"
-      },
-      {
-        "name": "Site/AI/Skills/CreateSite"
-      },
-      {
-        "name": "Site/AI/Skills/CreateWebroles"
-      },
-      {
-        "name": "Site/AI/Skills/DeploySite"
-      },
-      {
-        "name": "Site/AI/Skills/IntegrateWebApi"
-      },
-      {
-        "name": "Site/AI/Skills/SetupAuth"
-      },
-      {
-        "name": "Site/AI/Skills/SetupDatamodel"
-      },
-      {
-        "name": "Site/AI/Tools/AuthoringTool"
-      },
-      {
-        "name": "Site/BootstrapV5Enabled"
-      },
-      {
-        "name": "Summarization/Data/Enable"
-      },
-      {
-        "name": "Summarization/prompt/invoice_summary"
-      },
-      {
-        "name": "Summarization/prompt/myinvoices_summary"
-      },
-      {
-        "name": "Summarization/prompt/purchaseorder_summary"
-      },
-      {
-        "name": "Summarization/prompt/reviewqueue_summary"
-      },
-      {
-        "name": "ThemeFeature"
-      },
-      {
-        "name": "Webapi/contact/enabled"
-      },
-      {
-        "name": "Webapi/contact/fields"
-      },
-      {
-        "name": "Webapi/spnvc_invoice/enabled"
-      },
-      {
-        "name": "Webapi/spnvc_invoice/fields"
-      },
-      {
-        "name": "Webapi/spnvc_invoiceattachment/enabled"
-      },
-      {
-        "name": "Webapi/spnvc_invoiceattachment/fields"
-      },
-      {
-        "name": "Webapi/spnvc_invoicecomment/enabled"
-      },
-      {
-        "name": "Webapi/spnvc_invoicecomment/fields"
-      },
-      {
-        "name": "Webapi/spnvc_purchaseorder/enabled"
-      },
-      {
-        "name": "Webapi/spnvc_purchaseorder/fields"
-      },
-      {
-        "name": "Webapi/spnvc_supplier/enabled"
-      },
-      {
-        "name": "Webapi/spnvc_supplier/fields"
-      },
-      {
-        "name": "Webapi/spnvc_visaapplication/enabled"
-      },
-      {
-        "name": "Webapi/spnvc_visaapplication/fields"
-      },
-      {
-        "name": "Webapi/error/innererror"
+        "logicalName": "account",
+        "kind": "Segmented standard table",
+        "columns": [
+          {
+            "logicalName": "accountcategorycode",
+            "type": "picklist"
+          }
+        ]
       }
     ],
-    "authNoValue": [
+    "relationships": [
       {
-        "name": "Authentication/OpenAuth/Facebook/AppId"
+        "name": "spnvc_contact_invoice_submitter",
+        "referencingTable": "spnvc_invoice",
+        "referencedTable": "contact",
+        "lookupColumn": "spnvc_contactid",
+        "navigationProperty": "spnvc_ContactId"
       },
       {
-        "name": "Authentication/Registration/LoginButtonAuthenticationType"
+        "name": "spnvc_contact_invoiceattachment_contact",
+        "referencingTable": "spnvc_invoiceattachment",
+        "referencedTable": "contact",
+        "lookupColumn": "spnvc_contactid",
+        "navigationProperty": "spnvc_ContactId"
       },
       {
-        "name": "Authentication/Registration/TermsPublicationDate"
+        "name": "spnvc_contact_invoicecomment_author",
+        "referencingTable": "spnvc_invoicecomment",
+        "referencedTable": "contact",
+        "lookupColumn": "spnvc_authorcontactid",
+        "navigationProperty": "spnvc_AuthorContactId"
+      },
+      {
+        "name": "spnvc_contact_invoicecomment_contact",
+        "referencingTable": "spnvc_invoicecomment",
+        "referencedTable": "contact",
+        "lookupColumn": "spnvc_contactid",
+        "navigationProperty": "spnvc_ContactId"
+      },
+      {
+        "name": "spnvc_invoice_invoiceattachment",
+        "referencingTable": "spnvc_invoiceattachment",
+        "referencedTable": "spnvc_invoice",
+        "lookupColumn": "spnvc_invoiceid",
+        "navigationProperty": "spnvc_InvoiceId"
+      },
+      {
+        "name": "spnvc_invoice_invoicecomment",
+        "referencingTable": "spnvc_invoicecomment",
+        "referencedTable": "spnvc_invoice",
+        "lookupColumn": "spnvc_invoiceid",
+        "navigationProperty": "spnvc_InvoiceId"
+      },
+      {
+        "name": "spnvc_invoicecomment_invoiceattachment",
+        "referencingTable": "spnvc_invoiceattachment",
+        "referencedTable": "spnvc_invoicecomment",
+        "lookupColumn": "spnvc_invoicecommentid",
+        "navigationProperty": "spnvc_InvoiceCommentId"
+      },
+      {
+        "name": "spnvc_purchaseorder_invoice",
+        "referencingTable": "spnvc_invoice",
+        "referencedTable": "spnvc_purchaseorder",
+        "lookupColumn": "spnvc_purchaseorderid",
+        "navigationProperty": "spnvc_PurchaseOrderId"
+      },
+      {
+        "name": "spnvc_account_invoice",
+        "referencingTable": "spnvc_invoice",
+        "referencedTable": "account",
+        "lookupColumn": "spnvc_supplieraccountid",
+        "navigationProperty": "spnvc_SupplierAccountId"
+      },
+      {
+        "name": "spnvc_account_purchaseorder",
+        "referencingTable": "spnvc_purchaseorder",
+        "referencedTable": "account",
+        "lookupColumn": "spnvc_supplieraccountid",
+        "navigationProperty": "spnvc_SupplierAccountId"
+      },
+      {
+        "name": "contact_customer_accounts (standard dependency)",
+        "referencingTable": "contact",
+        "referencedTable": "account",
+        "lookupColumn": "parentcustomerid",
+        "navigationProperty": "parentcustomerid_account"
       }
     ],
-    "promoteToEnvVar": [
-      {
-        "name": "Authentication/LoginThrottling/IpAddressTimeoutTimeSpan",
-        "value": "00:10:00"
-      },
-      {
-        "name": "Authentication/LoginThrottling/MaxAttemptsTimeLimitTimeSpan",
-        "value": "00:03:00"
-      },
-      {
-        "name": "Authentication/LoginThrottling/MaxInvaildAttemptsFromIPAddress",
-        "value": "1000"
-      },
-      {
-        "name": "Authentication/LoginTrackingEnabled",
-        "value": "False"
-      },
-      {
-        "name": "Authentication/OpenIdConnect/AzureAD/Caption",
-        "value": "Microsoft Entra ID"
-      },
-      {
-        "name": "Authentication/OpenIdConnect/AzureAD/RebrandDisclaimerEnabled",
-        "value": "false"
-      },
-      {
-        "name": "Authentication/Registration/AzureADLoginEnabled",
-        "value": "true"
-      },
-      {
-        "name": "Authentication/Registration/DenyMinors",
-        "value": "false"
-      },
-      {
-        "name": "Authentication/Registration/DenyMinorsWithoutParentalConsent",
-        "value": "false"
-      },
-      {
-        "name": "Authentication/Registration/EmailConfirmationEnabled",
-        "value": "true"
-      },
-      {
-        "name": "Authentication/Registration/Enabled",
-        "value": "true"
-      },
-      {
-        "name": "Authentication/Registration/ExternalLoginEnabled",
-        "value": "true"
-      },
-      {
-        "name": "Authentication/Registration/InvitationEnabled",
-        "value": "true"
-      },
-      {
-        "name": "Authentication/Registration/LocalLoginDeprecated",
-        "value": "False"
-      },
-      {
-        "name": "Authentication/Registration/LocalLoginEnabled",
-        "value": "true"
-      },
-      {
-        "name": "Authentication/Registration/OpenRegistrationEnabled",
-        "value": "true"
-      },
-      {
-        "name": "Authentication/Registration/ProfileRedirectEnabled",
-        "value": "\"false\""
-      },
-      {
-        "name": "Authentication/Registration/TermsAgreementEnabled",
-        "value": "false"
+    "manyToManyRelationships": {
+      "spnvc_account_contact": {
+        "firstTable": "account",
+        "secondTable": "contact",
+        "intersectTable": "spnvc_account_contact",
+        "firstNavigationProperty": "spnvc_account_contact",
+        "secondNavigationProperty": "spnvc_account_contact"
       }
-    ],
-    "excluded": [
-      {
-        "name": "Authentication/OpenAuth/Facebook/AppSecret",
-        "value": ""
+    },
+    "choices": {
+      "spnvc_invoice": {
+        "spnvc_invoicestatus": {
+          "Draft": 1,
+          "Submitted": 2,
+          "Approved": 5,
+          "Rejected": 6,
+          "Paid": 7
+        }
       },
-      {
-        "name": "Authentication/OpenAuth/LinkedIn/ConsumerKey",
-        "value": ""
+      "spnvc_purchaseorder": {
+        "spnvc_postatus": {
+          "Draft": 1,
+          "Issued": 2,
+          "Partially Invoiced": 3,
+          "Fully Invoiced": 4,
+          "Closed": 5,
+          "Cancelled": 6
+        }
       },
-      {
-        "name": "Authentication/OpenAuth/LinkedIn/ConsumerSecret",
-        "value": ""
-      },
-      {
-        "name": "Authentication/OpenAuth/Microsoft/ClientId",
-        "value": ""
-      },
-      {
-        "name": "Authentication/OpenAuth/Microsoft/ClientSecret",
-        "value": ""
-      },
-      {
-        "name": "Authentication/OpenAuth/Twitter/ConsumerKey",
-        "value": ""
-      },
-      {
-        "name": "Authentication/OpenAuth/Twitter/ConsumerSecret",
-        "value": ""
+      "account": {
+        "accountcategorycode": {
+          "Preferred Customer": 1,
+          "Standard": 2,
+          "Supplier": 132140000
+        }
       }
-    ]
-  }
+    }
+  },
+  "permissions": [
+    {
+      "name": "Account - Reviewer Assignments",
+      "table": "account",
+      "scope": "756150001",
+      "relationship": "spnvc_account_contact",
+      "privileges": [
+        "read",
+        "appendto"
+      ],
+      "roles": [
+        "c8031dd9-b8d4-435a-87df-3b90748d2fc4"
+      ]
+    },
+    {
+      "name": "Account - Supplier Binding",
+      "table": "account",
+      "scope": "756150001",
+      "relationship": "spnvc_account_contact",
+      "privileges": [
+        "read",
+        "appendto"
+      ],
+      "roles": [
+        "997e7996-e241-4117-9c09-28e90a1fcdbc"
+      ]
+    },
+    {
+      "name": "Contact - Self",
+      "table": "contact",
+      "scope": "756150004",
+      "relationship": "",
+      "privileges": [
+        "read",
+        "appendto"
+      ],
+      "roles": [
+        "997e7996-e241-4117-9c09-28e90a1fcdbc",
+        "c8031dd9-b8d4-435a-87df-3b90748d2fc4"
+      ]
+    },
+    {
+      "name": "Invoice - Reviewer Access",
+      "table": "spnvc_invoice",
+      "scope": "756150003",
+      "relationship": "spnvc_account_invoice",
+      "privileges": [
+        "read",
+        "write",
+        "append",
+        "appendto"
+      ],
+      "roles": [
+        "c8031dd9-b8d4-435a-87df-3b90748d2fc4"
+      ]
+    },
+    {
+      "name": "Invoice - Supplier Access",
+      "table": "spnvc_invoice",
+      "scope": "756150002",
+      "relationship": "spnvc_account_invoice",
+      "privileges": [
+        "read",
+        "create",
+        "write",
+        "delete",
+        "append",
+        "appendto"
+      ],
+      "roles": [
+        "997e7996-e241-4117-9c09-28e90a1fcdbc"
+      ]
+    },
+    {
+      "name": "Invoice Attachment - Reviewer Access",
+      "table": "spnvc_invoiceattachment",
+      "scope": "756150003",
+      "relationship": "spnvc_invoice_invoiceattachment",
+      "privileges": [
+        "read",
+        "delete"
+      ],
+      "roles": [
+        "c8031dd9-b8d4-435a-87df-3b90748d2fc4"
+      ]
+    },
+    {
+      "name": "Invoice Attachment - Supplier Access",
+      "table": "spnvc_invoiceattachment",
+      "scope": "756150003",
+      "relationship": "spnvc_invoice_invoiceattachment",
+      "privileges": [
+        "read",
+        "create",
+        "write",
+        "delete",
+        "append",
+        "appendto"
+      ],
+      "roles": [
+        "997e7996-e241-4117-9c09-28e90a1fcdbc"
+      ]
+    },
+    {
+      "name": "Invoice Comment - Reviewer Access",
+      "table": "spnvc_invoicecomment",
+      "scope": "756150003",
+      "relationship": "spnvc_invoice_invoicecomment",
+      "privileges": [
+        "read",
+        "create",
+        "append",
+        "appendto"
+      ],
+      "roles": [
+        "c8031dd9-b8d4-435a-87df-3b90748d2fc4"
+      ]
+    },
+    {
+      "name": "Invoice Comment - Supplier Access",
+      "table": "spnvc_invoicecomment",
+      "scope": "756150003",
+      "relationship": "spnvc_invoice_invoicecomment",
+      "privileges": [
+        "read",
+        "create",
+        "append",
+        "appendto"
+      ],
+      "roles": [
+        "997e7996-e241-4117-9c09-28e90a1fcdbc"
+      ]
+    },
+    {
+      "name": "Purchase Order - Read",
+      "table": "spnvc_purchaseorder",
+      "scope": "756150002",
+      "relationship": "spnvc_account_purchaseorder",
+      "privileges": [
+        "read",
+        "appendto"
+      ],
+      "roles": [
+        "997e7996-e241-4117-9c09-28e90a1fcdbc"
+      ]
+    },
+    {
+      "name": "Purchase Order - Reviewer Access",
+      "table": "spnvc_purchaseorder",
+      "scope": "756150003",
+      "relationship": "spnvc_account_purchaseorder",
+      "privileges": [
+        "read",
+        "create",
+        "write",
+        "delete",
+        "append",
+        "appendto"
+      ],
+      "roles": [
+        "c8031dd9-b8d4-435a-87df-3b90748d2fc4"
+      ]
+    }
+  ]
 }

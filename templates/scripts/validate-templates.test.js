@@ -431,6 +431,137 @@ test("validates website and seed choice values against solution metadata", () =>
   ));
 });
 
+test("validates segmented Account columns without shipping unchanged standard metadata", () => {
+  const root = createTemplateRoot({
+    solutionTables: [{
+      schemaName: "Account",
+      entitySetName: "accounts",
+      attributes: [{
+        physicalName: "AccountCategoryCode",
+        logicalName: "accountcategorycode",
+        type: "picklist",
+        choiceOptions: [
+          { label: "Preferred Customer", value: 1 },
+          { label: "Standard", value: 2 },
+          { label: "Supplier", value: 132140000 }
+        ]
+      }]
+    }],
+    seedDataPath: "spa/test-template/seed-data/accounts.json",
+    seedData: {
+      tables: {
+        suppliers: {
+          logicalName: "account",
+          entitySet: "accounts",
+          idColumn: "accountid",
+          records: [{
+            accountid: "11111111-1111-4111-8111-111111111111",
+            name: "Sample supplier",
+            accountcategorycode: 132140000,
+            statecode: 0
+          }]
+        }
+      }
+    }
+  });
+  const website = path.join(root, "spa/test-template/variants/react/website-code");
+  const contractFile = path.join(website, "dataverse-solution-contract.json");
+  const contract = { tables: { account: { customColumns: [], standardColumns: ["accountcategorycode"] } }, relationships: {} };
+  fs.writeFileSync(contractFile, JSON.stringify(contract));
+  assert.deepEqual(validateTemplates({ root }).errors, []);
+
+  contract.tables.account.standardColumns.push("name");
+  fs.writeFileSync(contractFile, JSON.stringify(contract));
+  assert(validateTemplates({ root }).errors.some(error => error.includes('standard column "name" was not found')));
+
+  contract.tables.account.standardColumns = [];
+  contract.tables.account.customColumns = ["spnvc_missing"];
+  fs.writeFileSync(contractFile, JSON.stringify(contract));
+  const errors = validateTemplates({ root }).errors;
+  assert(errors.some(error => error.includes('custom column "spnvc_missing" was not found')));
+  assert(errors.some(error => error.includes('standard column "account.accountcategorycode" is not declared')));
+});
+
+test("rejects unknown seed fields and invalid categories on segmented Accounts", () => {
+  const root = createTemplateRoot({
+    solutionTables: [{
+      schemaName: "Account",
+      entitySetName: "accounts",
+      attributes: [{
+        physicalName: "AccountCategoryCode", logicalName: "accountcategorycode", type: "picklist",
+        choiceOptions: [{ label: "Supplier", value: 132140000 }]
+      }]
+    }],
+    seedDataPath: "spa/test-template/seed-data/accounts.json",
+    seedData: {
+      tables: {
+        suppliers: {
+          logicalName: "account", entitySet: "accounts", idColumn: "accountid",
+          records: [{
+            accountid: "11111111-1111-4111-8111-111111111111",
+            name: "Sample supplier", accountcategorycode: 3, spnvc_missing: "not a standard dependency"
+          }]
+        }
+      }
+    }
+  });
+  const errors = validateTemplates({ root }).errors;
+  assert(errors.some(error => error.includes('value 3 must match a solution choice value')));
+  assert(errors.some(error => error.includes('property "spnvc_missing" was not found')));
+});
+
+test("validates native N:N seed collection bindings and exact relationship contracts", () => {
+  const accountId = "11111111-1111-4111-8111-111111111111";
+  const contactId = "22222222-2222-4222-8222-222222222222";
+  const relationship = {
+    name: "sample_account_contact", firstTable: "account", secondTable: "contact",
+    intersectTable: "sample_account_contact", firstNavigationProperty: "sample_account_contact",
+    secondNavigationProperty: "sample_account_contact"
+  };
+  const seedData = {
+    tables: {
+      accounts: { logicalName: "account", entitySet: "accounts", idColumn: "accountid", records: [{ accountid: accountId }] },
+      contacts: { logicalName: "contact", entitySet: "contacts", idColumn: "contactid",
+        records: [{ contactid: contactId, "sample_account_contact@odata.bind": [`/accounts(${accountId})`] }] }
+    }
+  };
+  const root = createTemplateRoot({
+    solutionRelationships: [relationship],
+    seedDataPath: "spa/test-template/seed-data/data.json",
+    seedData
+  });
+  const contractFile = path.join(root, "spa/test-template/variants/react/website-code/dataverse-solution-contract.json");
+  const contract = { tables: {}, relationships: {}, manyToManyRelationships: { sample_account_contact: {
+    firstTable: relationship.firstTable, secondTable: relationship.secondTable,
+    intersectTable: relationship.intersectTable, firstNavigationProperty: relationship.firstNavigationProperty,
+    secondNavigationProperty: relationship.secondNavigationProperty
+  } } };
+  fs.writeFileSync(contractFile, JSON.stringify(contract));
+  assert.deepEqual(validateTemplates({ root }).errors, []);
+  const seedPath = path.join(root, "spa/test-template/seed-data/data.json");
+  const record = seedData.tables.contacts.records[0];
+  for (const [binding, expected] of [
+    [`/accounts(${accountId})`, "array of bindings"],
+    [[`/contacts(${contactId})`], "must target /accounts"],
+    [["/accounts(not-a-guid)"], "must target /accounts"],
+    [[`/accounts(${contactId})`], "not present in the target seed table"],
+    [[`/accounts(${accountId})`, `/accounts(${accountId})`], "duplicates record"]
+  ]) {
+    record["sample_account_contact@odata.bind"] = binding;
+    fs.writeFileSync(seedPath, JSON.stringify(seedData));
+    assert(validateTemplates({ root }).errors.some(error => error.includes(expected)), expected);
+  }
+  record["sample_account_contact@odata.bind"] = [`/accounts(${accountId})`];
+  seedData.tables = { contacts: seedData.tables.contacts, accounts: seedData.tables.accounts };
+  fs.writeFileSync(seedPath, JSON.stringify(seedData));
+  assert(validateTemplates({ root }).errors.some(error => error.includes("earlier table")));
+  seedData.tables = { accounts: seedData.tables.accounts, contacts: seedData.tables.contacts };
+  fs.writeFileSync(seedPath, JSON.stringify(seedData));
+  contract.manyToManyRelationships.sample_account_contact.secondNavigationProperty = "incorrect_case";
+  fs.writeFileSync(contractFile, JSON.stringify(contract));
+  assert(validateTemplates({ root }).errors.some(error => error.includes("secondNavigationProperty must exactly match")));
+});
+
 test("validates the declared Dataverse solution contract", () => {
   const root = createTemplateRoot({
     solutionTables: [
@@ -1134,7 +1265,23 @@ function dataverseEntityXml(table) {
 }
 
 function dataverseRelationshipsXml(relationships) {
-  const entries = relationships.map((relationship) => `
+  const entries = relationships.map((relationship) => relationship.intersectTable ? `
+  <EntityRelationship Name="${relationship.name}">
+    <EntityRelationshipType>ManyToMany</EntityRelationshipType>
+    <FirstEntityName>${relationship.firstTable}</FirstEntityName>
+    <SecondEntityName>${relationship.secondTable}</SecondEntityName>
+    <IntersectEntityName>${relationship.intersectTable}</IntersectEntityName>
+    <EntityRelationshipRoles>
+      <EntityRelationshipRole>
+        <NavigationPropertyName>${relationship.firstNavigationProperty}</NavigationPropertyName>
+        <AssociationRoleOrdinal>1</AssociationRoleOrdinal>
+      </EntityRelationshipRole>
+      <EntityRelationshipRole>
+        <NavigationPropertyName>${relationship.secondNavigationProperty}</NavigationPropertyName>
+        <AssociationRoleOrdinal>2</AssociationRoleOrdinal>
+      </EntityRelationshipRole>
+    </EntityRelationshipRoles>
+  </EntityRelationship>` : `
   <EntityRelationship${relationship.name ? ` Name="${relationship.name}"` : ""}>
     <ReferencingEntityName>${relationship.sourceSchemaName}</ReferencingEntityName>
     <ReferencedEntityName>${relationship.targetSchemaName}</ReferencedEntityName>

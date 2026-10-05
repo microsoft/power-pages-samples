@@ -12,7 +12,7 @@
         "spnvc_ponumber",
         "spnvc_purchaseorderid",
         "spnvc_submissiondate",
-        "spnvc_supplierid"
+        "spnvc_supplieraccountid"
       ]
     },
     "spnvc_invoiceattachment": {
@@ -42,16 +42,25 @@
         "spnvc_description",
         "spnvc_name",
         "spnvc_postatus",
-        "spnvc_supplierid",
+        "spnvc_supplieraccountid",
         "spnvc_totalamount",
         "spnvc_totalamount_base"
       ]
     },
-    "spnvc_supplier": {
-      "customColumns": [
-        "spnvc_name",
-        "spnvc_status"
+    "account": {
+      "customColumns": [],
+      "standardColumns": [
+        "accountcategorycode"
       ]
+    }
+  },
+  "manyToManyRelationships": {
+    "spnvc_account_contact": {
+      "firstTable": "account",
+      "secondTable": "contact",
+      "intersectTable": "spnvc_account_contact",
+      "firstNavigationProperty": "spnvc_account_contact",
+      "secondNavigationProperty": "spnvc_account_contact"
     }
   },
   "relationships": {
@@ -103,17 +112,17 @@
       "lookupColumn": "spnvc_purchaseorderid",
       "navigationProperty": "spnvc_PurchaseOrderId"
     },
-    "spnvc_supplier_invoice": {
+    "spnvc_account_invoice": {
       "referencingTable": "spnvc_invoice",
-      "referencedTable": "spnvc_supplier",
-      "lookupColumn": "spnvc_supplierid",
-      "navigationProperty": "spnvc_SupplierId"
+      "referencedTable": "account",
+      "lookupColumn": "spnvc_supplieraccountid",
+      "navigationProperty": "spnvc_SupplierAccountId"
     },
-    "spnvc_supplier_purchaseorder": {
+    "spnvc_account_purchaseorder": {
       "referencingTable": "spnvc_purchaseorder",
-      "referencedTable": "spnvc_supplier",
-      "lookupColumn": "spnvc_supplierid",
-      "navigationProperty": "spnvc_SupplierId"
+      "referencedTable": "account",
+      "lookupColumn": "spnvc_supplieraccountid",
+      "navigationProperty": "spnvc_SupplierAccountId"
     }
   }
 }

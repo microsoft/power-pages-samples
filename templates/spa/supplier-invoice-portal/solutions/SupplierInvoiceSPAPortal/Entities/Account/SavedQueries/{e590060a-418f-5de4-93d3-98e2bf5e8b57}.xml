@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>0</isdefault>
+    <savedqueryid>{e590060a-418f-5de4-93d3-98e2bf5e8b57}</savedqueryid>
+    <querytype>0</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="account">
+          <attribute name="accountid" />
+          <attribute name="name" />
+          <attribute name="accountcategorycode" />
+          <attribute name="statecode" />
+          <order attribute="name" descending="false" />
+          <filter type="and">
+            <condition attribute="accountcategorycode" operator="eq" value="132140000" />
+            <condition attribute="statecode" operator="eq" value="0" />
+          </filter>
+        </entity>
+      </fetch>
+    </fetchxml>
+    <layoutxml>
+      <grid name="resultset" object="1" jump="name" select="1" icon="1" preview="1">
+        <row name="result" id="accountid">
+          <cell name="name" width="300" />
+          <cell name="accountcategorycode" width="150" />
+          <cell name="statecode" width="100" />
+        </row>
+      </grid>
+    </layoutxml>
+    <IntroducedVersion>1.1.0.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Active supplier accounts" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="Active Supplier-category Accounts for administrator-managed portal assignments. This view filters selection and does not replace Dataverse authorization or enforce category on every administrator API edit." languagecode="1033" />
+    </Descriptions>
+  </savedquery>
+</savedqueries>

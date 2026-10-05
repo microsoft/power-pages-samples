@@ -8,11 +8,9 @@ import {
   powerPagesFetchResponse,
   parseResponseBody,
   extractRecordId,
-  buildODataUrl,
   fetchFileColumnUrl,
   uploadFileColumn,
   deleteFileColumn,
-  type ODataCollectionResponse,
   type PaginatedResult,
 } from './powerPagesApi'
 import {
@@ -21,6 +19,7 @@ import {
   type CreateInvoiceAttachmentInput,
   mapInvoiceAttachmentEntity,
 } from '../types/invoiceAttachment'
+import { buildFetchXmlUrl, fetchXmlCollection, fetchXmlRecord, and, eq, type FetchFilter } from './fetchXmlApi'
 
 // -- Constants ----------------------------------------------------------------
 
@@ -38,18 +37,15 @@ const ATTACHMENT_SELECT = [
   'modifiedon',
 ].join(',')
 
-// $expand is intentionally omitted. Power Pages injects internal permission-chain
-// columns (e.g. _spnvc_contactid_value from the invoice's contact-scope) into the
-// query when $expand references a parent-scoped entity, causing 400 errors.
-// Display names are already available via OData formatted-value annotations
-// (returned by the Prefer header), so $expand is not needed.
+// Lookup annotations supply names without expanding related Contacts/Invoices
+// across Parent/N:N permission chains.
 
 // -- List Parameters ----------------------------------------------------------
 
 export interface InvoiceAttachmentListParams {
   pageSize?: number
   nextLink?: string
-  filter?: string
+  filter?: FetchFilter
   orderBy?: string
   invoiceId?: string
   commentId?: string
@@ -65,25 +61,23 @@ export const listInvoiceAttachments = async (
   // Build $filter combining any custom filter with optional invoiceId / commentId
   let filter = params?.filter
   if (params?.invoiceId) {
-    const invoiceFilter = `_spnvc_invoiceid_value eq ${params.invoiceId}`
-    filter = filter ? `(${filter}) and (${invoiceFilter})` : invoiceFilter
+    filter = and(filter, eq('spnvc_invoiceid', params.invoiceId))
   }
   if (params?.commentId) {
-    const commentFilter = `_spnvc_invoicecommentid_value eq ${params.commentId}`
-    filter = filter ? `(${filter}) and (${commentFilter})` : commentFilter
+    filter = and(filter, eq('spnvc_invoicecommentid', params.commentId))
   }
 
   // If we have a nextLink from a previous response, use it directly.
   // Dataverse does NOT support $skip -- pagination uses @odata.nextLink cursors.
-  const url = params?.nextLink ?? buildODataUrl(ENTITY_SET, {
-    '$select': ATTACHMENT_SELECT,
-    '$orderby': params?.orderBy ?? 'createdon desc',
-    '$count': 'true',
-    '$top': String(pageSize),
-    '$filter': filter,
+  const url = params?.nextLink ?? buildFetchXmlUrl(ENTITY_SET, {
+    select: ATTACHMENT_SELECT,
+    orderBy: params?.orderBy ?? 'createdon desc',
+    count: true,
+    pageSize,
+    filter,
   })
 
-  const response = await powerPagesFetch<ODataCollectionResponse<InvoiceAttachmentEntity>>(url)
+  const response = await fetchXmlCollection<InvoiceAttachmentEntity>(url)
 
   return {
     items: (response?.value ?? []).map(mapInvoiceAttachmentEntity),
@@ -115,12 +109,8 @@ export const listAttachmentsByComment = async (
 export const getInvoiceAttachmentById = async (
   id: string,
 ): Promise<InvoiceAttachment | null> => {
-  const url = buildODataUrl(`${ENTITY_SET}(${id})`, {
-    '$select': ATTACHMENT_SELECT,
-  })
-
   try {
-    const entity = await powerPagesFetch<InvoiceAttachmentEntity>(url)
+    const entity = await fetchXmlRecord<InvoiceAttachmentEntity>(ENTITY_SET, id, ATTACHMENT_SELECT)
     return entity ? mapInvoiceAttachmentEntity(entity) : null
   } catch (err) {
     console.error(`[invoiceAttachmentService] getInvoiceAttachmentById(${id}) failed:`, err)
@@ -147,7 +137,7 @@ export const createInvoiceAttachment = async (
     body['spnvc_InvoiceCommentId@odata.bind'] = `/spnvc_invoicecomments(${payload.commentId})`
   }
 
-  // Bind the invoice owner's contact for parent-scope permission resolution.
+  // The contact is provenance only; authorization follows the parent Invoice.
   if (payload.contactId) {
     body['spnvc_ContactId@odata.bind'] = `/contacts(${payload.contactId})`
   }
@@ -223,16 +213,16 @@ export const deleteAttachmentFile = async (id: string): Promise<void> => {
 // -- Count helper -------------------------------------------------------------
 
 export const getInvoiceAttachmentCount = async (
-  filter?: string,
+  filter?: FetchFilter,
 ): Promise<number> => {
-  const url = buildODataUrl(ENTITY_SET, {
-    '$select': 'spnvc_invoiceattachmentid',
-    '$filter': filter,
-    '$count': 'true',
-    '$top': '0',
+  const url = buildFetchXmlUrl(ENTITY_SET, {
+    select: 'spnvc_invoiceattachmentid',
+    filter,
+    count: true,
+    pageSize: 1,
   })
 
-  const response = await powerPagesFetch<ODataCollectionResponse<InvoiceAttachmentEntity>>(url)
+  const response = await fetchXmlCollection<InvoiceAttachmentEntity>(url)
   return response?.['@odata.count'] ?? 0
 }
 
@@ -241,5 +231,5 @@ export const getInvoiceAttachmentCount = async (
 export const getAttachmentCountByInvoice = async (
   invoiceId: string,
 ): Promise<number> => {
-  return getInvoiceAttachmentCount(`_spnvc_invoiceid_value eq ${invoiceId}`)
+  return getInvoiceAttachmentCount(eq('spnvc_invoiceid', invoiceId))
 }

@@ -2,7 +2,7 @@
 // TypeScript types for the spnvc_invoicecomment Dataverse table.
 // Column names verified against actual Dataverse metadata on 2026-03-19.
 
-import { getFormattedValue } from '../services/powerPagesApi'
+import { getLookupId, getLookupName } from '../services/powerPagesApi'
 
 // -- Raw OData Entity ---------------------------------------------------------
 // Matches Dataverse column logical names exactly.
@@ -59,14 +59,14 @@ export const mapInvoiceCommentEntity = (entity: InvoiceCommentEntity): InvoiceCo
   title: entity.spnvc_name ?? '',
   commentText: entity.spnvc_commenttext ?? '',
   linkedAction: entity.spnvc_linkedaction ?? '',
-  invoiceId: entity._spnvc_invoiceid_value,
+  invoiceId: getLookupId(entity, 'spnvc_invoiceid'),
   invoiceName:
-    getFormattedValue(entity, '_spnvc_invoiceid_value')
+    getLookupName(entity, 'spnvc_invoiceid')
     ?? entity.spnvc_InvoiceId?.spnvc_name
     ?? '',
-  authorContactId: entity._spnvc_authorcontactid_value,
+  authorContactId: getLookupId(entity, 'spnvc_authorcontactid'),
   authorName:
-    getFormattedValue(entity, '_spnvc_authorcontactid_value')
+    getLookupName(entity, 'spnvc_authorcontactid')
     ?? entity.spnvc_AuthorContactId?.fullname
     ?? '',
   createdOn: entity.createdon ?? '',

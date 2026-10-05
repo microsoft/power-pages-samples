@@ -40,17 +40,19 @@ test('invoice creation binds the selected purchase order, supplier, and submitte
       })
     }
 
-    assert.ok(url.startsWith(`/_api/spnvc_invoices(${recordId})?`))
-    return Response.json({
+    assert.ok(url.startsWith('/_api/spnvc_invoices?'))
+    const xml = new URL(url, 'https://portal.example').searchParams.get('fetchXml')
+    assert.ok(xml.includes(`<condition attribute="spnvc_invoiceid" operator="eq" value="${recordId}"/>`))
+    return Response.json({ value: [{
       spnvc_invoiceid: recordId,
       spnvc_name: posted.spnvc_name,
       spnvc_ponumber: posted.spnvc_ponumber,
       spnvc_amount: posted.spnvc_amount,
       spnvc_invoicestatus: posted.spnvc_invoicestatus,
       _spnvc_contactid_value: contactId,
-      _spnvc_supplierid_value: supplierId,
+      _spnvc_supplieraccountid_value: supplierId,
       _spnvc_purchaseorderid_value: purchaseOrderId,
-    })
+    }] })
   })
 
   const created = await service.createInvoice({
@@ -64,7 +66,7 @@ test('invoice creation binds the selected purchase order, supplier, and submitte
   })
 
   assert.equal(posted['spnvc_ContactId@odata.bind'], `/contacts(${contactId})`)
-  assert.equal(posted['spnvc_SupplierId@odata.bind'], `/spnvc_suppliers(${supplierId})`)
+  assert.equal(posted['spnvc_SupplierAccountId@odata.bind'], `/accounts(${supplierId})`)
   assert.equal(
     posted['spnvc_PurchaseOrderId@odata.bind'],
     `/spnvc_purchaseorders(${purchaseOrderId})`,

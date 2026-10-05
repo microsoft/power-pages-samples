@@ -310,8 +310,20 @@ export interface PaginatedResult<T> {
 export const getFormattedValue = (
   record: Record<string, unknown>,
   logicalName: string,
-): string | undefined =>
-  record[`${logicalName}@OData.Community.Display.V1.FormattedValue`] as string | undefined
+): string | undefined => {
+  const value = record[`${logicalName}@OData.Community.Display.V1.FormattedValue`]
+  return typeof value === 'string' ? value : undefined
+}
+
+// FetchXML can return SDK logical lookup names instead of OData's _name_value
+// properties. Support both without confusing a primary key for a relationship.
+export const getLookupId = (record: Record<string, unknown>, name: string): string | undefined => {
+  const value = record[`_${name}_value`] ?? record[name]
+  return typeof value === 'string' ? value : undefined
+}
+
+export const getLookupName = (record: Record<string, unknown>, name: string): string | undefined =>
+  getFormattedValue(record, `_${name}_value`) ?? getFormattedValue(record, name)
 
 // -- Pagination Helper --------------------------------------------------------
 

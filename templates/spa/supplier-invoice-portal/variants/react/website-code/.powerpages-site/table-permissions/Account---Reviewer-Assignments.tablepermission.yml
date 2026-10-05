@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- c8031dd9-b8d4-435a-87df-3b90748d2fc4
+append: false
+appendto: true
+contactrelationship: spnvc_account_contact
+create: false
+delete: false
+entitylogicalname: account
+entityname: Account - Reviewer Assignments
+id: e82591a8-9fd5-4665-a975-855df52d839f
+read: true
+scope: 756150001
+write: false

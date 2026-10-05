@@ -2,12 +2,9 @@
 // Read + Create service for the spnvc_invoicecomment Dataverse table via Power Pages Web API.
 
 import {
-  powerPagesFetch,
   powerPagesFetchResponse,
   parseResponseBody,
   extractRecordId,
-  buildODataUrl,
-  type ODataCollectionResponse,
   type PaginatedResult,
 } from './powerPagesApi'
 import {
@@ -16,6 +13,7 @@ import {
   type CreateInvoiceCommentInput,
   mapInvoiceCommentEntity,
 } from '../types/invoiceComment'
+import { buildFetchXmlUrl, fetchXmlCollection, fetchXmlRecord, eq, type FetchFilter } from './fetchXmlApi'
 
 // -- Constants ----------------------------------------------------------------
 
@@ -32,18 +30,15 @@ const COMMENT_SELECT = [
   'modifiedon',
 ].join(',')
 
-// $expand is intentionally omitted. Power Pages injects internal permission-chain
-// columns (e.g. _spnvc_contactid_value from the invoice's contact-scope) into the
-// query when $expand references a parent-scoped entity, causing 400 errors.
-// Display names are already available via OData formatted-value annotations
-// (returned by the Prefer header), so $expand is not needed.
+// Lookup annotations supply names without expanding related Contacts/Invoices
+// across Parent/N:N permission chains.
 
 // -- List Parameters ----------------------------------------------------------
 
 export interface InvoiceCommentListParams {
   pageSize?: number
   nextLink?: string
-  filter?: string
+  filter?: FetchFilter
   orderBy?: string
 }
 
@@ -56,15 +51,15 @@ export const listInvoiceComments = async (
 
   // If we have a nextLink from a previous response, use it directly.
   // Dataverse does NOT support $skip -- pagination uses @odata.nextLink cursors.
-  const url = params?.nextLink ?? buildODataUrl(ENTITY_SET, {
-    '$select': COMMENT_SELECT,
-    '$orderby': params?.orderBy ?? 'createdon asc',
-    '$count': 'true',
-    '$top': String(pageSize),
-    '$filter': params?.filter,
+  const url = params?.nextLink ?? buildFetchXmlUrl(ENTITY_SET, {
+    select: COMMENT_SELECT,
+    orderBy: params?.orderBy ?? 'createdon asc',
+    count: true,
+    pageSize,
+    filter: params?.filter,
   })
 
-  const response = await powerPagesFetch<ODataCollectionResponse<InvoiceCommentEntity>>(url)
+  const response = await fetchXmlCollection<InvoiceCommentEntity>(url)
 
   return {
     items: (response?.value ?? []).map(mapInvoiceCommentEntity),
@@ -81,19 +76,15 @@ export const listCommentsByInvoiceId = async (
 ): Promise<PaginatedResult<InvoiceComment>> => {
   return listInvoiceComments({
     ...params,
-    filter: `_spnvc_invoiceid_value eq ${invoiceId}`,
+    filter: eq('spnvc_invoiceid', invoiceId),
   })
 }
 
 // -- Get by ID ----------------------------------------------------------------
 
 export const getInvoiceCommentById = async (id: string): Promise<InvoiceComment | null> => {
-  const url = buildODataUrl(`${ENTITY_SET}(${id})`, {
-    '$select': COMMENT_SELECT,
-  })
-
   try {
-    const entity = await powerPagesFetch<InvoiceCommentEntity>(url)
+    const entity = await fetchXmlRecord<InvoiceCommentEntity>(ENTITY_SET, id, COMMENT_SELECT)
     return entity ? mapInvoiceCommentEntity(entity) : null
   } catch (err) {
     console.error(`[invoiceCommentService] getInvoiceCommentById(${id}) failed:`, err)
@@ -124,9 +115,7 @@ export const createInvoiceComment = async (
     body['spnvc_AuthorContactId@odata.bind'] = `/contacts(${payload.authorContactId})`
   }
 
-  // Bind the invoice owner's contact for parent-scope permission resolution.
-  // Power Pages requires this column on the child entity to resolve
-  // Parent scope → Contact scope permission chains.
+  // The contact is provenance only; authorization follows the parent Invoice.
   if (payload.contactId) {
     body['spnvc_ContactId@odata.bind'] = `/contacts(${payload.contactId})`
   }
@@ -153,20 +142,20 @@ export const createInvoiceComment = async (
 
 // -- Count helper -------------------------------------------------------------
 
-export const getInvoiceCommentCount = async (filter?: string): Promise<number> => {
-  const url = buildODataUrl(ENTITY_SET, {
-    '$select': 'spnvc_invoicecommentid',
-    '$filter': filter,
-    '$count': 'true',
-    '$top': '0',
+export const getInvoiceCommentCount = async (filter?: FetchFilter): Promise<number> => {
+  const url = buildFetchXmlUrl(ENTITY_SET, {
+    select: 'spnvc_invoicecommentid',
+    filter,
+    count: true,
+    pageSize: 1,
   })
 
-  const response = await powerPagesFetch<ODataCollectionResponse<InvoiceCommentEntity>>(url)
+  const response = await fetchXmlCollection<InvoiceCommentEntity>(url)
   return response?.['@odata.count'] ?? 0
 }
 
 // -- Count comments for an invoice --------------------------------------------
 
 export const getCommentCountForInvoice = async (invoiceId: string): Promise<number> => {
-  return getInvoiceCommentCount(`_spnvc_invoiceid_value eq ${invoiceId}`)
+  return getInvoiceCommentCount(eq('spnvc_invoiceid', invoiceId))
 }

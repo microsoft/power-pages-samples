@@ -2,7 +2,7 @@
 // TypeScript types for the spnvc_invoice Dataverse table.
 // Column names verified against actual Dataverse metadata on 2026-03-19.
 
-import { getFormattedValue } from '../services/powerPagesApi'
+import { getLookupId, getLookupName } from '../services/powerPagesApi'
 import choiceValues from '../../dataverse-choice-values.json'
 
 // -- Raw OData Entity ---------------------------------------------------------
@@ -19,11 +19,11 @@ export interface InvoiceEntity {
   spnvc_invoicestatus?: number       // Invoice Status (Picklist)
   // Lookup raw GUID values (use in $select and $filter)
   _spnvc_contactid_value?: string    // Submitter contact GUID
-  _spnvc_supplierid_value?: string   // Supplier GUID
+  _spnvc_supplieraccountid_value?: string   // Supplier GUID
   _spnvc_purchaseorderid_value?: string // Purchase Order GUID
   // Expanded navigation properties (use in $expand)
   spnvc_ContactId?: { contactid: string; fullname?: string }
-  spnvc_SupplierId?: { spnvc_supplierid: string; spnvc_name?: string }
+  spnvc_SupplierAccountId?: { accountid: string; name?: string }
   // System columns
   createdon?: string
   modifiedon?: string
@@ -114,16 +114,16 @@ export const mapInvoiceEntity = (entity: InvoiceEntity): Invoice => ({
   amount: entity.spnvc_amount ?? 0,
   status: INVOICE_STATUS_VALUE_TO_LABEL[entity.spnvc_invoicestatus ?? 0] ?? 'Draft',
   statusValue: entity.spnvc_invoicestatus ?? INVOICE_STATUS.Draft,
-  contactId: entity._spnvc_contactid_value,
+  contactId: getLookupId(entity, 'spnvc_contactid'),
   contactName:
-    getFormattedValue(entity, '_spnvc_contactid_value')
+    getLookupName(entity, 'spnvc_contactid')
     ?? entity.spnvc_ContactId?.fullname
     ?? '',
-  supplierId: entity._spnvc_supplierid_value,
-  purchaseOrderId: entity._spnvc_purchaseorderid_value,
+  supplierId: getLookupId(entity, 'spnvc_supplieraccountid'),
+  purchaseOrderId: getLookupId(entity, 'spnvc_purchaseorderid'),
   supplierName:
-    getFormattedValue(entity, '_spnvc_supplierid_value')
-    ?? entity.spnvc_SupplierId?.spnvc_name
+    getLookupName(entity, 'spnvc_supplieraccountid')
+    ?? entity.spnvc_SupplierAccountId?.name
     ?? '',
   createdOn: entity.createdon ?? '',
   modifiedOn: entity.modifiedon ?? entity.createdon ?? '',

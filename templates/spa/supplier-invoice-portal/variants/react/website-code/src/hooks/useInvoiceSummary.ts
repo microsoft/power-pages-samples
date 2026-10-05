@@ -31,12 +31,8 @@ const INVOICE_SUMMARY_SELECT = [
   'spnvc_duedate',
   'spnvc_amount',
   'spnvc_invoicestatus',
-].join(',')
-// Nav property casing verified against Dataverse metadata
-// (ReferencedEntityNavigationPropertyName on the ManyToOne relationships).
-const INVOICE_SUMMARY_EXPAND = [
-  'spnvc_ContactId($select=fullname)',
-  'spnvc_SupplierId($select=spnvc_name)',
+  '_spnvc_supplieraccountid_value',
+  '_spnvc_contactid_value',
 ].join(',')
 const INVOICE_SUMMARY_INSTRUCTION = 'Summarization/prompt/invoice_summary'
 
@@ -95,7 +91,6 @@ export function useInvoiceSummary(invoiceId: string | undefined): UseInvoiceSumm
           entitySet: ENTITY_SET,
           id: invoiceId,
           select: INVOICE_SUMMARY_SELECT,
-          expand: INVOICE_SUMMARY_EXPAND,
           // On the initial call, send the instruction identifier. On a refinement,
           // the server wants the opaque Config token in `RecommendationConfig` and
           // nothing in `InstructionIdentifier`.

@@ -21,9 +21,7 @@ const MY_INVOICES_SELECT = [
   'spnvc_invoicestatus',
   'spnvc_submissiondate',
   'spnvc_duedate',
-].join(',')
-const MY_INVOICES_EXPAND = [
-  'spnvc_SupplierId($select=spnvc_name)',
+  '_spnvc_supplieraccountid_value',
 ].join(',')
 const MY_INVOICES_ORDERBY = 'spnvc_submissiondate desc'
 const MY_INVOICES_INSTRUCTION = 'Summarization/prompt/myinvoices_summary'
@@ -88,7 +86,6 @@ export function useMyInvoicesSummary(
         const response = await fetchListSummary({
           entitySet: ENTITY_SET,
           select: MY_INVOICES_SELECT,
-          expand: MY_INVOICES_EXPAND,
           filter,
           orderby: MY_INVOICES_ORDERBY,
           instructionIdentifier: recommendationConfig ? undefined : MY_INVOICES_INSTRUCTION,
