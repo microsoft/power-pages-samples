@@ -20,8 +20,6 @@
   <EntityRelationship Name="spnvc_account_contact" />
   <EntityRelationship Name="spnvc_account_invoice" />
   <EntityRelationship Name="spnvc_account_purchaseorder" />
-  <EntityRelationship Name="spnvc_account_invoice" />
-  <EntityRelationship Name="spnvc_account_purchaseorder" />
   <EntityRelationship Name="spnvc_contact_invoice_submitter" />
   <EntityRelationship Name="spnvc_contact_invoiceattachment_contact" />
   <EntityRelationship Name="spnvc_contact_invoicecomment_author" />

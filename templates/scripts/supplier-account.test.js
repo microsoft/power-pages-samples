@@ -3,6 +3,8 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const os = require("node:os");
+const { spawnSync } = require("node:child_process");
 const test = require("node:test");
 const { validateTemplates } = require("./validate-templates");
 
@@ -51,6 +53,41 @@ test("new supplier lookups bind Accounts without retargeting legacy columns", ()
     });
   }
   assert.deepEqual(validateTemplates().errors, []);
+});
+
+test("solution relationship reference manifest declares each schema name once", () => {
+  const references = [...read(path.join(solution, "Other/Relationships.xml"))
+    .matchAll(/<EntityRelationship\b[^>]*\bName="([^"]+)"[^>]*\/>/g)]
+    .map(match => match[1].toLowerCase());
+  const duplicates = references.filter((name, index) => references.indexOf(name) !== index);
+  assert.deepEqual(duplicates, [], "duplicate references produce duplicate definitions in the installable ZIP");
+});
+
+test("packed solution has unique relationship definitions", (t) => {
+  const available = spawnSync("pac", ["help"], { encoding: "utf8" });
+  if (available.error?.code === "ENOENT") {
+    t.skip("PAC CLI is not installed; source manifest uniqueness is tested separately");
+    return;
+  }
+  assert.equal(available.status, 0, available.stderr);
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "supplier-relationship-pack-"));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const zip = path.join(directory, "supplier-unmanaged.zip");
+  const packed = spawnSync("pac", [
+    "solution", "pack", "--zipfile", zip, "--folder", solution,
+    "--packagetype", "Unmanaged", "--errorlevel", "Warning"
+  ], { encoding: "utf8" });
+  assert.equal(packed.status, 0, `${packed.stdout}\n${packed.stderr}`);
+  assert.doesNotMatch(`${packed.stdout}\n${packed.stderr}`, /warning|not defined in customizations/i);
+  const extracted = spawnSync("unzip", ["-p", zip, "customizations.xml"], { encoding: "utf8" });
+  assert.equal(extracted.status, 0, extracted.stderr);
+  const names = [...extracted.stdout.matchAll(/<EntityRelationship\b[^>]*\bName="([^"]+)"/g)]
+    .map(match => match[1].toLowerCase());
+  assert.ok(names.includes("spnvc_account_contact"));
+  assert.ok(names.includes("spnvc_account_invoice"));
+  assert.ok(names.includes("spnvc_account_purchaseorder"));
+  assert.deepEqual(names.filter((name, index) => names.indexOf(name) !== index), [],
+    "a warning-free pack must not repeat relationship definitions");
 });
 
 test("native Account Contact membership is a shipped N:N relationship, not a recreated business table", () => {
