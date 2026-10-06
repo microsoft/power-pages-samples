@@ -264,6 +264,76 @@
         "transport": "differential"
       }
     },
+    "tableAssets": {
+      "spnvc_invoice": {
+        "forms": [
+          "b4d62e96-e21d-4051-9b88-4dd5eb963015",
+          "5aa99787-7291-473a-85cf-0df3c0057596",
+          "e3419bae-b485-415b-b595-8537f8eff87c"
+        ],
+        "views": [
+          "2a11b7a1-39e7-4d1e-a1dc-c30d4958c4eb",
+          "40fc6524-44bd-49f2-8ccb-944a9d12f516",
+          "46a94860-c18c-4e5d-a12d-e9ebf0b2a3b5",
+          "4ad954ec-10fb-42c6-b19a-03e33308b7b2",
+          "d38cafb7-4186-f111-ab0f-000d3a5b6e82",
+          "e514f7b2-565a-4de8-89ee-513ebb1c4a6b",
+          "f38b21e4-54b6-4bbd-acb4-d33d9a492ef8"
+        ],
+        "ribbonDiff": true
+      },
+      "spnvc_invoiceattachment": {
+        "forms": [
+          "21bcd544-9e44-4cbf-955f-c33447049c03",
+          "a517e9f6-03ea-42f5-82e9-a24a88371018",
+          "01020cc6-656c-47d1-8d26-3b60d3b1c646"
+        ],
+        "views": [
+          "2d14b48e-7520-4098-afd8-9ed854a7a3c5",
+          "363a92d3-c7f2-4f0d-ba83-0fd606c52359",
+          "37a96b45-c7d2-4d97-8fc9-a3da790958a4",
+          "44951711-4d88-488e-9402-66e776062786",
+          "4a08ac56-4720-4ebe-b997-42f1e9e9fd9f",
+          "7069aaef-3444-46a7-aa88-fa33747237db",
+          "74c365c8-4186-f111-ab0f-000d3a5b69cd"
+        ],
+        "ribbonDiff": true
+      },
+      "spnvc_invoicecomment": {
+        "forms": [
+          "a3e3df7a-5cb2-44d0-994c-c1c6915d79eb",
+          "6ed0643a-b875-4a71-ad9b-d3605a75dba4",
+          "560aaf37-93e2-443c-ab32-3ac150848828"
+        ],
+        "views": [
+          "07543611-6bf7-4dfc-b8c2-b697cd7c6573",
+          "1d5c2425-15d1-4902-a54b-274bf1d54fd7",
+          "341fda13-bda0-438e-89d5-b3f6726dc55e",
+          "8c42da1f-5334-469a-b385-f139de823b9e",
+          "b51f711e-45c3-4c6b-98fc-772813440c75",
+          "c629fb8a-af44-430b-bae8-977528db85e8",
+          "e07657c2-4186-f111-ab0f-000d3a5b69cd"
+        ],
+        "ribbonDiff": true
+      },
+      "spnvc_purchaseorder": {
+        "forms": [
+          "33288de1-4dff-4722-a810-456ba8c26ce2",
+          "ebb3b076-7f21-4f3c-801e-aded62456b96",
+          "82b448b3-8293-4ec2-8644-e07d2a08b64c"
+        ],
+        "views": [
+          "3bafba94-d602-44ed-aa5c-9d5924d6079a",
+          "5a7893b1-4186-f111-ab0f-000d3a5b6e82",
+          "621ee0c0-8e8e-4547-a179-6c3b25f73d53",
+          "7c36d016-71b2-45fe-abbb-af5b4a600c25",
+          "e132fe42-17f5-46ac-9878-4f526b2bd63b",
+          "f3674512-7c51-4e77-833a-3315df86e0d9",
+          "f9f0455f-5dda-424a-aa3a-eb8cf171dc57"
+        ],
+        "ribbonDiff": true
+      }
+    },
     "choices": {
       "spnvc_invoice": {
         "spnvc_invoicestatus": {

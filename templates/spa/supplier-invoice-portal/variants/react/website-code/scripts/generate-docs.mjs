@@ -30,7 +30,7 @@ const relationships = [
     lookupColumn: 'parentcustomerid', navigationProperty: 'parentcustomerid_account',
   },
 ]
-const model = { tables, relationships, manyToManyRelationships: contract.manyToManyRelationships, forms: contract.forms, choices: choices.tables }
+const model = { tables, relationships, manyToManyRelationships: contract.manyToManyRelationships, forms: contract.forms, tableAssets: contract.tableAssets, choices: choices.tables }
 const permissionRows = (modelOnly ? [] : permissions).map(permission => {
   const field = key => new RegExp(`^${key}: (.+)$`, 'm').exec(permission)?.[1] ?? ''
   if (!contract.tables[field('entitylogicalname')] && field('entitylogicalname') !== 'contact') {
@@ -141,12 +141,14 @@ The segmented Contact component adds only the Management form section.
 Unchanged Account keys, name, state and standard Contact columns remain platform dependencies.</p></section>
 <section><h2>Shipping solution surface</h2>
 <p>The React website implements invoice, purchase-order, comment and attachment screens.
-Their generic exported Information forms, saved views and empty ribbon diffs are not included in the supporting package.
-The only authored UI assets are the Active supplier accounts view and the additive Portal Contact (Enhanced) assignment form.
+The supporting package retains each used business table's existing Information card/main/quick forms, seven saved views and ribbon exports.
+The Active supplier accounts view and additive Portal Contact (Enhanced) assignment form are included alongside them.
+The package contains 13 forms and 29 views.
+Cleanup excludes unused tables and unrelated feature components, preserving the existing table-owned UI assets of used tables.
 Table/column definitions, primary keys/names, state/status, ownership/audit metadata, currency/base amounts and the file relationship remain.
-The existing contract and actual ZIP checks reject unexpected custom components.</p>
+The existing contract and actual ZIP checks require the exact retained UI sets and valid field references while rejecting unrelated custom components.</p>
 <p>Package minimization does not delete installed schema, UI assets, records or permissions.
-Validate this slimmer candidate with an authorized fresh-environment import before releasing; successful packing alone does not verify import.</p></section>
+Validate the unreleased candidate with an authorized fresh-environment import before releasing; successful packing alone does not verify import.</p></section>
 <section><h2>Relationships</h2><div class="scroll"><table><thead><tr><th>Relationship</th><th>Source -> target</th><th>Lookup / navigation property</th></tr></thead><tbody>${relationships.map(relation =>
   `<tr><td><code>${escape(relation.name)}</code></td><td>${escape(relation.referencingTable)} -> ${escape(relation.referencedTable)}</td><td><code>${escape(relation.lookupColumn)}<br>${escape(relation.navigationProperty)}</code></td></tr>`).join('')}</tbody></table></div>
 <p>Deleting an Account removes its invoice and PO links, rather than cascading deletion of financial records.

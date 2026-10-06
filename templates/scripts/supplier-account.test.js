@@ -133,21 +133,54 @@ test("packed solution includes unique relationships, the Supplier view and diffe
   assert.deepEqual(entities.map(entity => entity[1].toLowerCase()).sort(), Object.keys(contract.tables).sort(),
     "the release ZIP must contain only the four business tables and segmented Account/Contact components");
   for (const [, schemaName, xml] of entities) {
-    const table = contract.tables[schemaName.toLowerCase()];
-    const customColumns = [...xml.matchAll(/<attribute\b[^>]*>([\s\S]*?)<\/attribute>/g)]
+    const logicalName = schemaName.toLowerCase();
+    const table = contract.tables[logicalName];
+    const attributes = [...xml.matchAll(/<attribute\b[^>]*>([\s\S]*?)<\/attribute>/g)];
+    const customColumns = attributes
       .filter(attribute => /<IsCustomField>1<\/IsCustomField>/.test(attribute[1]))
       .map(attribute => /<LogicalName>([^<]+)<\/LogicalName>/.exec(attribute[1])?.[1]);
     assert.deepEqual(customColumns.sort(), [...table.customColumns].sort(),
       `${schemaName} must not ship custom fields outside the website contract`);
+    const ui = contract.tableAssets[logicalName];
+    if (ui) {
+      const columns = new Set(attributes.map(attribute =>
+        /<LogicalName>([^<]+)<\/LogicalName>/.exec(attribute[1])?.[1].toLowerCase()));
+      const forms = [...xml.matchAll(/<systemform>([\s\S]*?)<\/systemform>/g)].map(match => match[1]);
+      const views = [...xml.matchAll(/<savedquery>([\s\S]*?)<\/savedquery>/g)].map(match => match[1]);
+      assert.deepEqual(forms.map(form => /<formid>\{([^}]+)\}<\/formid>/i.exec(form)?.[1].toLowerCase()).sort(),
+        [...ui.forms].sort(), `${schemaName} retains its exact original form set`);
+      assert.deepEqual(views.map(view => /<savedqueryid>\{([^}]+)\}<\/savedqueryid>/i.exec(view)?.[1].toLowerCase()).sort(),
+        [...ui.views].sort(), `${schemaName} retains its exact original view set`);
+      assert.match(xml, /<RibbonDiffXml>/, `${schemaName} retains its exported ribbon metadata`);
+      for (const form of forms) {
+        for (const field of form.matchAll(/\bdatafieldname="([^"]+)"/g)) {
+          assert.ok(columns.has(field[1].toLowerCase()), `${schemaName} form references missing field ${field[1]}`);
+        }
+      }
+      for (const view of views) {
+        for (const field of view.matchAll(/<(?:attribute|condition|order|cell)\b[^>]*\b(?:name|attribute)="([^"]+)"/g)) {
+          assert.ok(columns.has(field[1].toLowerCase()), `${schemaName} view references missing field ${field[1]}`);
+        }
+        for (const row of view.matchAll(/<row\b[^>]*\bid="([^"]+)"/g)) {
+          assert.ok(columns.has(row[1].toLowerCase()), `${schemaName} view references missing row key ${row[1]}`);
+        }
+      }
+    }
   }
   const formIds = [...extracted.stdout.matchAll(/<formid>\{([^}]+)\}<\/formid>/gi)]
     .map(match => match[1].toLowerCase());
-  assert.deepEqual(formIds.sort(), Object.values(contract.forms).map(form => form.id).sort(),
-    "only the website-supporting Contact assignment form should ship, not generic business Information forms");
+  const expectedFormIds = [
+    ...Object.values(contract.forms).map(form => form.id),
+    ...Object.values(contract.tableAssets).flatMap(assets => assets.forms),
+  ];
+  assert.deepEqual(formIds.sort(), expectedFormIds.sort(),
+    "retain the original forms for every used business table and the additive Contact assignment form");
   const viewIds = [...extracted.stdout.matchAll(/<savedqueryid>\{([^}]+)\}<\/savedqueryid>/gi)]
     .map(match => match[1].toLowerCase());
-  assert.deepEqual(viewIds, [contract.forms.contact.defaultViewId],
-    "only the active Supplier assignment view should ship, not generic business saved views");
+  assert.deepEqual(viewIds.sort(), [
+    contract.forms.contact.defaultViewId,
+    ...Object.values(contract.tableAssets).flatMap(assets => assets.views),
+  ].sort(), "retain all original used-table views plus the active Supplier assignment view");
   assert.doesNotMatch(extracted.stdout.toLowerCase(),
     /\bspnvc_(supplier|supplierid|carrier|dealer|order|orderlineitem|product|shipment|ocr_file_to_text)\b/,
     "retired tables, lookup targets and fields must be absent from the actual release payload");
@@ -162,7 +195,7 @@ test("packed solution includes unique relationships, the Supplier view and diffe
   }
 });
 
-test("shipping source contains only the explicitly required Management form and view assets", () => {
+test("shipping source retains exact used-table UI assets without unrelated table components", () => {
   const contract = json(path.join(website, "dataverse-solution-contract.json"));
   function files(directory) {
     if (!fs.existsSync(directory)) return [];
@@ -174,13 +207,22 @@ test("shipping source contains only the explicitly required Management form and 
     .map(file => path.basename(file, ".xml").replace(/[{}]/g, "").toLowerCase());
   const viewIds = assets.filter(file => file.includes(`${path.sep}SavedQueries${path.sep}`))
     .map(file => path.basename(file, ".xml").replace(/[{}]/g, "").toLowerCase());
-  assert.deepEqual(formIds, [contract.forms.contact.id]);
-  assert.deepEqual(viewIds, [contract.forms.contact.defaultViewId]);
-  assert.deepEqual(assets.filter(file => path.basename(file) === "RibbonDiff.xml"), []);
-  for (const table of Object.keys(contract.tables).filter(table => table.startsWith("spnvc_"))) {
+  assert.deepEqual(formIds.sort(), [
+    contract.forms.contact.id, ...Object.values(contract.tableAssets).flatMap(assets => assets.forms),
+  ].sort());
+  assert.deepEqual(viewIds.sort(), [
+    contract.forms.contact.defaultViewId, ...Object.values(contract.tableAssets).flatMap(assets => assets.views),
+  ].sort());
+  const ribbons = assets.filter(file => path.basename(file) === "RibbonDiff.xml")
+    .map(file => path.basename(path.dirname(file)).toLowerCase());
+  assert.deepEqual(ribbons.sort(), Object.keys(contract.tableAssets).sort());
+  for (const table of Object.keys(contract.tableAssets)) {
     const directory = fs.readdirSync(path.join(solution, "Entities")).find(folder => folder.toLowerCase() === table);
-    assert.doesNotMatch(read(path.join(solution, "Entities", directory, "Entity.xml")),
-      /<FormXml|<SavedQueries|<RibbonDiffXml/, "business UI customization markers must not auto-include exported leftovers");
+    const entity = read(path.join(solution, "Entities", directory, "Entity.xml"));
+    for (const marker of ["FormXml", "SavedQueries", "RibbonDiffXml"]) {
+      assert.match(entity, new RegExp(`<${marker}\\s*/>`), "all used-table UI assets must be included in packing");
+    }
+    assert.equal(contract.tableAssets[table].ribbonDiff, true);
   }
 });
 
