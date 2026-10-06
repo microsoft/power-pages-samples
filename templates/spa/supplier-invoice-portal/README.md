@@ -2,7 +2,7 @@
 
 This folder contains the Supplier Invoice Portal template entry for the installable `templates/` catalog.
 
-The checked-in supporting solution source is an unpacked unmanaged export under `solutions/SupplierInvoiceSPAPortal/`.
+The checked-in supporting solution source is reviewable, minimized unmanaged source under `solutions/SupplierInvoiceSPAPortal/`.
 Its folder name matches the `SupplierInvoiceSPAPortal` unique name in `Other/Solution.xml`.
 It uses the `spnvc` publisher prefix.
 The validator detects the managed state from `solutions/SupplierInvoiceSPAPortal/Other/Solution.xml`.
@@ -48,6 +48,12 @@ Unchanged Account and Contact metadata remain standard Dataverse dependencies.
 The expected custom columns, relationships, and case-sensitive lookup navigation properties are declared in [`dataverse-solution-contract.json`](variants/react/website-code/dataverse-solution-contract.json).
 Template validation rejects solution components that drift from this contract.
 The [data model plan](variants/react/website-code/docs/data-model-plan.html) includes the shipped columns, choices, and relationship diagram.
+
+The shipping solution includes only one authored view, **Active supplier accounts**, and one authored form customization, the additive **Portal Contact (Enhanced)** assignment grid.
+Invoice, PO, comment and attachment screens are implemented by the React website; their generic exported Information forms, saved views and empty ribbon diffs are not shipped.
+Primary keys/names, state/status, ownership/audit metadata, currency/base amounts and file-column relationships remain because they support Dataverse storage and the website's API paths.
+The existing solution contract and actual ZIP tests reject extra custom tables, fields, relationships and UI assets.
+This trims the release artifact; it does not remove schema, forms, views, records or permissions from an existing environment.
 
 ## Assign contacts in Power Pages Management
 
@@ -187,5 +193,6 @@ Review explicit removals if a bundle is no longer generated.
 After reviewing obsolete generated bundles, use `npm run site-assets:sync -- --remove-stale` to remove only those exported bundle records.
 
 Before production use, validate the packed solution and Management navigation in a target test environment, then test direct reads, writes, AppendTo, both-direction `$ref` denial, and membership revocation with separate Contacts.
+The slimmer release candidate also needs an authorized fresh-environment import check; warning-free packing is not proof of a successful import.
 Repository tests and local mock UI checks do not prove live Dataverse import or portal authorization.
 The existing status-based UI edit locks are preserved; table permissions do not enforce invoice-status transitions.

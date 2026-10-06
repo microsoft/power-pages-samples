@@ -88,6 +88,20 @@ test("packed solution includes unique relationships, the Supplier view and diffe
   assert.ok(names.includes("spnvc_account_purchaseorder"));
   assert.deepEqual(names.filter((name, index) => names.indexOf(name) !== index), [],
     "a warning-free pack must not repeat relationship definitions");
+  const contract = json(path.join(website, "dataverse-solution-contract.json"));
+  const businessTables = Object.keys(contract.tables).filter(table => table.startsWith("spnvc_"));
+  const platformRelationships = businessTables.flatMap(table => [
+    `business_unit_${table}`, `lk_${table}_createdby`, `lk_${table}_modifiedby`,
+    `owner_${table}`, `team_${table}`, `user_${table}`,
+  ]);
+  platformRelationships.push(
+    "transactioncurrency_spnvc_invoice", "transactioncurrency_spnvc_purchaseorder",
+    "fileattachment_spnvc_invoiceattachment_spnvc_file",
+  );
+  assert.deepEqual([...names].sort(), [
+    ...Object.keys(contract.relationships), ...Object.keys(contract.manyToManyRelationships),
+    ...platformRelationships,
+  ].sort(), "ship only website relationships and standard ownership/audit/currency/file metadata");
   const account = /<Entity>\s*<Name\b[^>]*>Account<\/Name>([\s\S]*?)<\/Entity>/.exec(extracted.stdout)?.[1];
   assert.ok(account, "segmented Account component must be packed");
   const view = /<savedquery>([\s\S]*?<savedqueryid>\{e590060a-418f-5de4-93d3-98e2bf5e8b57\}<\/savedqueryid>[\s\S]*?)<\/savedquery>/.exec(account)?.[1];
@@ -115,6 +129,59 @@ test("packed solution includes unique relationships, the Supplier view and diffe
   assert.match(manifest.stdout, /Required type="60"[^>]*solution="PowerPages_RuntimeCore[^"]*"[^>]*id="\{c1c97961-2d42-4103-abf8-2fe2bdf38224\}"/);
   assert.doesNotMatch(contact, /<DisplayConditions>|datafieldname="parentcustomerid"|<formLibraries>|<events>/,
     "native differential transport must not copy unrelated controls, role IDs or handlers from the source environment");
+  const entities = [...extracted.stdout.matchAll(/<Entity>\s*<Name\b[^>]*>([^<]+)<\/Name>([\s\S]*?)<\/Entity>/g)];
+  assert.deepEqual(entities.map(entity => entity[1].toLowerCase()).sort(), Object.keys(contract.tables).sort(),
+    "the release ZIP must contain only the four business tables and segmented Account/Contact components");
+  for (const [, schemaName, xml] of entities) {
+    const table = contract.tables[schemaName.toLowerCase()];
+    const customColumns = [...xml.matchAll(/<attribute\b[^>]*>([\s\S]*?)<\/attribute>/g)]
+      .filter(attribute => /<IsCustomField>1<\/IsCustomField>/.test(attribute[1]))
+      .map(attribute => /<LogicalName>([^<]+)<\/LogicalName>/.exec(attribute[1])?.[1]);
+    assert.deepEqual(customColumns.sort(), [...table.customColumns].sort(),
+      `${schemaName} must not ship custom fields outside the website contract`);
+  }
+  const formIds = [...extracted.stdout.matchAll(/<formid>\{([^}]+)\}<\/formid>/gi)]
+    .map(match => match[1].toLowerCase());
+  assert.deepEqual(formIds.sort(), Object.values(contract.forms).map(form => form.id).sort(),
+    "only the website-supporting Contact assignment form should ship, not generic business Information forms");
+  const viewIds = [...extracted.stdout.matchAll(/<savedqueryid>\{([^}]+)\}<\/savedqueryid>/gi)]
+    .map(match => match[1].toLowerCase());
+  assert.deepEqual(viewIds, [contract.forms.contact.defaultViewId],
+    "only the active Supplier assignment view should ship, not generic business saved views");
+  assert.doesNotMatch(extracted.stdout.toLowerCase(),
+    /\bspnvc_(supplier|supplierid|carrier|dealer|order|orderlineitem|product|shipment|ocr_file_to_text)\b/,
+    "retired tables, lookup targets and fields must be absent from the actual release payload");
+  assert.doesNotMatch(extracted.stdout, /<(?:AppModule|Workflow|Role|FieldSecurityProfile|CustomAction|CommandDefinition)\b/,
+    "the supporting package must not introduce unused app, process, role, security or ribbon components");
+  const roots = [...manifest.stdout.matchAll(/<RootComponent type="([^"]+)" schemaName="([^"]+)" behavior="([^"]+)"/g)];
+  assert.deepEqual(roots.map(root => root[2]).sort(), Object.keys(contract.tables).sort());
+  for (const [, type, table, behavior] of roots) {
+    assert.equal(type, "1", "no unrelated process/app/security root components");
+    assert.equal(behavior, table.startsWith("spnvc_") ? "0" : "2",
+      "create required custom tables but include only selected standard-table components");
+  }
+});
+
+test("shipping source contains only the explicitly required Management form and view assets", () => {
+  const contract = json(path.join(website, "dataverse-solution-contract.json"));
+  function files(directory) {
+    if (!fs.existsSync(directory)) return [];
+    return fs.readdirSync(directory, { withFileTypes: true }).flatMap(entry =>
+      entry.isDirectory() ? files(path.join(directory, entry.name)) : [path.join(directory, entry.name)]);
+  }
+  const assets = files(path.join(solution, "Entities"));
+  const formIds = assets.filter(file => file.includes(`${path.sep}FormXml${path.sep}`))
+    .map(file => path.basename(file, ".xml").replace(/[{}]/g, "").toLowerCase());
+  const viewIds = assets.filter(file => file.includes(`${path.sep}SavedQueries${path.sep}`))
+    .map(file => path.basename(file, ".xml").replace(/[{}]/g, "").toLowerCase());
+  assert.deepEqual(formIds, [contract.forms.contact.id]);
+  assert.deepEqual(viewIds, [contract.forms.contact.defaultViewId]);
+  assert.deepEqual(assets.filter(file => path.basename(file) === "RibbonDiff.xml"), []);
+  for (const table of Object.keys(contract.tables).filter(table => table.startsWith("spnvc_"))) {
+    const directory = fs.readdirSync(path.join(solution, "Entities")).find(folder => folder.toLowerCase() === table);
+    assert.doesNotMatch(read(path.join(solution, "Entities", directory, "Entity.xml")),
+      /<FormXml|<SavedQueries|<RibbonDiffXml/, "business UI customization markers must not auto-include exported leftovers");
+  }
 });
 
 test("native Account Contact membership is a shipped N:N relationship, not a recreated business table", () => {

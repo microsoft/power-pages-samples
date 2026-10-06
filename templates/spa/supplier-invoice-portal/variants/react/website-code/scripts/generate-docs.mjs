@@ -139,6 +139,14 @@ ${tables.map(table => `<details open><summary>${escape(table.logicalName)} - ${t
 <p>The segmented Account solution component contains the customized Category column, native Account-Contact relationship, and Active supplier accounts Management view.
 The segmented Contact component adds only the Management form section.
 Unchanged Account keys, name, state and standard Contact columns remain platform dependencies.</p></section>
+<section><h2>Shipping solution surface</h2>
+<p>The React website implements invoice, purchase-order, comment and attachment screens.
+Their generic exported Information forms, saved views and empty ribbon diffs are not included in the supporting package.
+The only authored UI assets are the Active supplier accounts view and the additive Portal Contact (Enhanced) assignment form.
+Table/column definitions, primary keys/names, state/status, ownership/audit metadata, currency/base amounts and the file relationship remain.
+The existing contract and actual ZIP checks reject unexpected custom components.</p>
+<p>Package minimization does not delete installed schema, UI assets, records or permissions.
+Validate this slimmer candidate with an authorized fresh-environment import before releasing; successful packing alone does not verify import.</p></section>
 <section><h2>Relationships</h2><div class="scroll"><table><thead><tr><th>Relationship</th><th>Source -> target</th><th>Lookup / navigation property</th></tr></thead><tbody>${relationships.map(relation =>
   `<tr><td><code>${escape(relation.name)}</code></td><td>${escape(relation.referencingTable)} -> ${escape(relation.referencedTable)}</td><td><code>${escape(relation.lookupColumn)}<br>${escape(relation.navigationProperty)}</code></td></tr>`).join('')}</tbody></table></div>
 <p>Deleting an Account removes its invoice and PO links, rather than cascading deletion of financial records.

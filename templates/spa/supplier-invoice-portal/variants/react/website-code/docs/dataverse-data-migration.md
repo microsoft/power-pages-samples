@@ -13,6 +13,9 @@ Review the Category option value for collisions with target-environment customiz
 ## Fresh provisioning
 
 Pack the shared unmanaged solution using the commands in the [template README](../../../../README.md).
+The package does not carry generic business-table Information forms, saved views or ribbon customizations.
+The only authored UI assets are the active Supplier Account view and additive enhanced Contact assignment form.
+Dataverse table/column definitions and required ownership, audit, currency and file relationships remain intact.
 Import the solution before importing `seed-data/data.json`.
 The solution import does not import the JSON seed data.
 
@@ -67,6 +70,7 @@ The replacement Account lookup is a new column, `spnvc_supplieraccountid`, with 
 These are new relationships, not a claim that an existing lookup can be retargeted in place.
 
 An unmanaged solution update leaves retired tables, columns, data, site settings, and permissions in the environment.
+Omitting generic business UI assets from this release package also does not delete them from an installed environment.
 It does not map old suppliers to Accounts or backfill new lookup columns.
 Removing old components from this repository is not a destructive migration script.
 
