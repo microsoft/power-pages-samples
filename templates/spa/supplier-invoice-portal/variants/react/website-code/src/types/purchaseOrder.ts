@@ -1,7 +1,7 @@
 // src/types/purchaseOrder.ts
 // TypeScript types for the spnvc_purchaseorder Dataverse table.
 
-import { getFormattedValue } from '../services/powerPagesApi'
+import { getLookupId, getLookupName } from '../services/powerPagesApi'
 import choiceValues from '../../dataverse-choice-values.json'
 
 // -- Raw OData Entity ---------------------------------------------------------
@@ -14,9 +14,9 @@ export interface PurchaseOrderEntity {
   spnvc_deliverydate?: string        // Delivery Date (DateTime ISO)
   spnvc_postatus?: number            // PO Status (Picklist)
   // Lookup raw GUID values
-  _spnvc_supplierid_value?: string   // Supplier GUID
+  _spnvc_supplieraccountid_value?: string   // Supplier GUID
   // Expanded navigation properties
-  spnvc_SupplierId?: { spnvc_supplierid: string; spnvc_name?: string }
+  spnvc_SupplierAccountId?: { accountid: string; name?: string }
   // System columns
   createdon?: string
   modifiedon?: string
@@ -96,10 +96,10 @@ export const mapPurchaseOrderEntity = (entity: PurchaseOrderEntity): PurchaseOrd
     deliveryDate: entity.spnvc_deliverydate ?? '',
     status: PO_STATUS_VALUE_TO_LABEL[entity.spnvc_postatus ?? 0] ?? 'Draft',
     statusValue: entity.spnvc_postatus ?? PO_STATUS.Draft,
-    supplierId: entity._spnvc_supplierid_value,
+    supplierId: getLookupId(entity, 'spnvc_supplieraccountid'),
     supplierName:
-      getFormattedValue(entity, '_spnvc_supplierid_value')
-      ?? entity.spnvc_SupplierId?.spnvc_name
+      getLookupName(entity, 'spnvc_supplieraccountid')
+      ?? entity.spnvc_SupplierAccountId?.name
       ?? '',
     createdOn: entity.createdon ?? '',
     modifiedOn: entity.modifiedon ?? entity.createdon ?? '',

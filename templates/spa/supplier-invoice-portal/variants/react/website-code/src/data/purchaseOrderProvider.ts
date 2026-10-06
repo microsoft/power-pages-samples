@@ -5,6 +5,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import type { PurchaseOrder, POStatusLabel } from '../types/purchaseOrder'
+import { isReviewer } from '../utils/authorization'
+import { and, eq, or, type FetchFilter } from '../services/fetchXmlApi'
 
 const isDevelopment =
   typeof window !== 'undefined' &&
@@ -67,8 +69,10 @@ export function usePurchaseOrderList(params?: {
     setError(null)
 
     if (isDevelopment) {
-      const { purchaseOrders: mockPOs } = await import('./mockData')
-      let list = [...mockPOs]
+      const { purchaseOrders: mockPOs, supplierAccountId, reviewerAccountIds } = await import('./mockData')
+      let list = mockPOs.filter(po => isReviewer()
+        ? reviewerAccountIds.includes(po.supplierId)
+        : po.supplierId === supplierAccountId)
 
       if (status && status !== 'All') {
         list = list.filter(po => po.status === status)
@@ -112,6 +116,7 @@ export function usePurchaseOrderList(params?: {
         remainingAmount: po.totalAmount - po.invoicedAmount,
         deliveryDate: po.deliveryDate,
         status: po.status,
+        supplierId: po.supplierId,
         supplierName: po.supplierName,
         createdOn: po.createdOn,
       })))
@@ -131,11 +136,15 @@ export function usePurchaseOrderList(params?: {
         createdOn: 'createdon',
       }
 
-      let filter: string | undefined
+      let filter: FetchFilter | undefined
       if (status && status !== 'All') {
         const { PO_STATUS } = await import('../types/purchaseOrder')
         const statusVal = PO_STATUS[status as POStatusLabel]
-        if (statusVal) filter = `spnvc_postatus eq ${statusVal}`
+        if (statusVal) filter = eq('spnvc_postatus', statusVal)
+      }
+      if (!isReviewer()) {
+        const { getSupplierCompanyId } = await import('../services/supplierAffiliationService')
+        filter = and(filter, eq('spnvc_supplieraccountid', await getSupplierCompanyId()))
       }
 
       const result = await listPurchaseOrders({
@@ -148,6 +157,8 @@ export function usePurchaseOrderList(params?: {
       setPurchaseOrders(result.items.map(apiPOToItem))
       setTotalCount(result.totalCount)
     } catch (err) {
+      setPurchaseOrders([])
+      setTotalCount(0)
       setError(err instanceof Error ? err.message : 'Failed to fetch purchase orders')
     } finally {
       setIsLoading(false)
@@ -170,9 +181,11 @@ export function usePurchaseOrderDetail(id: string | undefined) {
     setError(null)
 
     if (isDevelopment) {
-      const { getPurchaseOrderById } = await import('./mockData')
+      const { getPurchaseOrderById, supplierAccountId, reviewerAccountIds } = await import('./mockData')
       const mock = getPurchaseOrderById(id)
-      if (mock) {
+      if (mock && (isReviewer()
+        ? reviewerAccountIds.includes(mock.supplierId)
+        : mock.supplierId === supplierAccountId)) {
         setPurchaseOrder({
           id: mock.id,
           poNumber: mock.poNumber,
@@ -182,6 +195,7 @@ export function usePurchaseOrderDetail(id: string | undefined) {
           remainingAmount: mock.totalAmount - mock.invoicedAmount,
           deliveryDate: mock.deliveryDate,
           status: mock.status,
+          supplierId: mock.supplierId,
           supplierName: mock.supplierName,
           createdOn: mock.createdOn,
         })
@@ -195,8 +209,16 @@ export function usePurchaseOrderDetail(id: string | undefined) {
     try {
       const { getPurchaseOrderById: getApi } = await import('../services/purchaseOrderService')
       const result = await getApi(id)
+      if (result && !isReviewer()) {
+        const { getSupplierCompanyId } = await import('../services/supplierAffiliationService')
+        if (result.supplierId !== await getSupplierCompanyId()) {
+          setPurchaseOrder(null)
+          return
+        }
+      }
       setPurchaseOrder(result ? apiPOToItem(result) : null)
     } catch (err) {
+      setPurchaseOrder(null)
       setError(err instanceof Error ? err.message : 'Failed to fetch purchase order')
     } finally {
       setIsLoading(false)
@@ -211,15 +233,18 @@ export function usePurchaseOrderDetail(id: string | undefined) {
 export function useSupplierPOs() {
   const [purchaseOrders, setPurchaseOrders] = useState<POItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     setIsLoading(true)
+    setError(null)
 
     if (isDevelopment) {
-      const { purchaseOrders: mockPOs } = await import('./mockData')
+      const { purchaseOrders: mockPOs, supplierAccountId } = await import('./mockData')
       // In dev, show Issued POs (available for invoicing)
       const issuedPOs = mockPOs.filter(po =>
-        po.status === 'Issued' || po.status === 'Partially Invoiced'
+        po.supplierId === supplierAccountId &&
+        (po.status === 'Issued' || po.status === 'Partially Invoiced')
       )
       setPurchaseOrders(issuedPOs.map(po => ({
         id: po.id,
@@ -230,6 +255,7 @@ export function useSupplierPOs() {
         remainingAmount: po.totalAmount - po.invoicedAmount,
         deliveryDate: po.deliveryDate,
         status: po.status,
+        supplierId: po.supplierId,
         supplierName: po.supplierName,
         createdOn: po.createdOn,
       })))
@@ -240,14 +266,19 @@ export function useSupplierPOs() {
     try {
       const { listPurchaseOrders } = await import('../services/purchaseOrderService')
       const { PO_STATUS } = await import('../types/purchaseOrder')
+      const { getSupplierCompanyId } = await import('../services/supplierAffiliationService')
+      const companyId = await getSupplierCompanyId()
       const result = await listPurchaseOrders({
         pageSize: 100,
-        filter: `spnvc_postatus eq ${PO_STATUS['Issued']} or spnvc_postatus eq ${PO_STATUS['Partially Invoiced']}`,
+        filter: and(eq('spnvc_supplieraccountid', companyId),
+          or(eq('spnvc_postatus', PO_STATUS.Issued), eq('spnvc_postatus', PO_STATUS['Partially Invoiced']))),
         orderBy: 'spnvc_name asc',
+        assignableOnly: true,
       })
       setPurchaseOrders(result.items.map(apiPOToItem))
-    } catch {
-      // Empty on error
+    } catch (err) {
+      setPurchaseOrders([])
+      setError(err instanceof Error ? err.message : 'Failed to fetch supplier purchase orders')
     } finally {
       setIsLoading(false)
     }
@@ -255,7 +286,7 @@ export function useSupplierPOs() {
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  return { purchaseOrders, isLoading }
+  return { purchaseOrders, isLoading, error }
 }
 
 // ── Supplier options for assignment ──
@@ -278,9 +309,9 @@ export function useAssignableSuppliers() {
       setError(null)
 
       if (isDevelopment) {
-        const { suppliers: mockSuppliers } = await import('./mockData')
+        const { listMockAssignableSuppliers } = await import('./mockData')
         if (cancelled) return
-        setSuppliers(mockSuppliers.map(s => ({ id: s.id, name: s.name })))
+        setSuppliers(listMockAssignableSuppliers().map(s => ({ id: s.id, name: s.name })))
         setIsLoading(false)
         return
       }

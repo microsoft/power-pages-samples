@@ -3,10 +3,81 @@
   "exportedAt": "2026-06-04T09:29:14.250Z",
   "sourceEnvironmentUrl": "https://example.crm.dynamics.com",
   "notes": [
-    "Contacts are intentionally scoped to records whose fullname contains Amy or Bob.",
-    "File-column binaries are stored under files/ and referenced from fileExports."
+    "Supplier Accounts use Account Category Supplier (132140000); import by accountid only, never match customer Accounts by name.",
+    "Accounts precede Contacts; parentcustomerid_account establishes the single Supplier company affiliation.",
+    "Reviewer N:N assignments use collection-valued spnvc_account_contact@odata.bind on Contact creation; replay does not reconcile existing Contacts.",
+    "File-column binaries are stored under files/ and referenced from fileExports.",
+    "Financial-example Contact lookups use only the two fictional seeded Contacts; no source-environment user is required.",
+    "Money records omit source-environment currency GUIDs. Review the target/importing-user USD currency before importing the USD examples."
   ],
   "tables": {
+    "suppliers": {
+      "logicalName": "account",
+      "entitySet": "accounts",
+      "idColumn": "accountid",
+      "records": [
+        {
+          "accountid": "96223d8d-d926-f111-8341-000d3a5bf33c",
+          "name": "Adventure Works Supply",
+          "accountcategorycode": 132140000,
+          "statecode": 0
+        },
+        {
+          "accountid": "d9250f46-d926-f111-8341-000d3a36e41e",
+          "name": "Contoso Electronics",
+          "accountcategorycode": 132140000,
+          "statecode": 0
+        },
+        {
+          "accountid": "952a3168-d926-f111-8341-000d3a58de60",
+          "name": "Fabrikam Industrial",
+          "accountcategorycode": 132140000,
+          "statecode": 0
+        },
+        {
+          "accountid": "f41a0d9b-d926-f111-8341-000d3a58de60",
+          "name": "Litware Inc",
+          "accountcategorycode": 132140000,
+          "statecode": 0
+        },
+        {
+          "accountid": "66bc0181-d926-f111-8341-000d3a58de60",
+          "name": "Northwind Traders",
+          "accountcategorycode": 132140000,
+          "statecode": 0
+        },
+        {
+          "accountid": "5608809e-d926-f111-8341-000d3a36e41e",
+          "name": "Proseware Inc",
+          "accountcategorycode": 132140000,
+          "statecode": 0
+        },
+        {
+          "accountid": "e61a0d9b-d926-f111-8341-000d3a58de60",
+          "name": "Tailspin Toys",
+          "accountcategorycode": 132140000,
+          "statecode": 0
+        },
+        {
+          "accountid": "769496a7-d926-f111-8341-000d3a37e531",
+          "name": "Trey Research",
+          "accountcategorycode": 132140000,
+          "statecode": 0
+        },
+        {
+          "accountid": "8897a8a0-d926-f111-8341-000d3a37e531",
+          "name": "VanArsdel Ltd",
+          "accountcategorycode": 132140000,
+          "statecode": 0
+        },
+        {
+          "accountid": "e3e24992-d926-f111-8341-000d3a36e41e",
+          "name": "Wingtip Toys",
+          "accountcategorycode": 132140000,
+          "statecode": 0
+        }
+      ]
+    },
     "contacts": {
       "logicalName": "contact",
       "entitySet": "contacts",
@@ -15,81 +86,24 @@
         {
           "@odata.etag": "W/\"39017463\"",
           "emailaddress1": "amy.chen@example.com",
-          "fullname": "Amy Chen",
-          "contactid": "60a29644-9d11-f111-8406-000d3a5bf33c"
+          "firstname": "Amy",
+          "lastname": "Chen",
+          "contactid": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "parentcustomerid_account@odata.bind": "/accounts(d9250f46-d926-f111-8341-000d3a36e41e)",
+          "spnvc_account_contact@odata.bind": [
+            "/accounts(d9250f46-d926-f111-8341-000d3a36e41e)"
+          ]
         },
         {
           "@odata.etag": "W/\"44009762\"",
           "emailaddress1": "bob.williams@example.com",
-          "fullname": "Bob Williams",
-          "contactid": "af95fa50-9d11-f111-8406-000d3a36e41e"
-        }
-      ]
-    },
-    "suppliers": {
-      "logicalName": "spnvc_supplier",
-      "entitySet": "spnvc_suppliers",
-      "idColumn": "spnvc_supplierid",
-      "records": [
-        {
-          "@odata.etag": "W/\"38059700\"",
-          "spnvc_name": "Adventure Works Supply",
-          "spnvc_status": 100000000,
-          "spnvc_supplierid": "96223d8d-d926-f111-8341-000d3a5bf33c"
-        },
-        {
-          "@odata.etag": "W/\"38059694\"",
-          "spnvc_name": "Contoso Electronics",
-          "spnvc_status": 100000000,
-          "spnvc_supplierid": "d9250f46-d926-f111-8341-000d3a36e41e"
-        },
-        {
-          "@odata.etag": "W/\"38059696\"",
-          "spnvc_name": "Fabrikam Industrial",
-          "spnvc_status": 100000000,
-          "spnvc_supplierid": "952a3168-d926-f111-8341-000d3a58de60"
-        },
-        {
-          "@odata.etag": "W/\"38059706\"",
-          "spnvc_name": "Litware Inc",
-          "spnvc_status": 100000000,
-          "spnvc_supplierid": "f41a0d9b-d926-f111-8341-000d3a58de60"
-        },
-        {
-          "@odata.etag": "W/\"38059698\"",
-          "spnvc_name": "Northwind Traders",
-          "spnvc_status": 100000000,
-          "spnvc_supplierid": "66bc0181-d926-f111-8341-000d3a58de60"
-        },
-        {
-          "@odata.etag": "W/\"38059708\"",
-          "spnvc_name": "Proseware Inc",
-          "spnvc_status": 100000000,
-          "spnvc_supplierid": "5608809e-d926-f111-8341-000d3a36e41e"
-        },
-        {
-          "@odata.etag": "W/\"38059704\"",
-          "spnvc_name": "Tailspin Toys",
-          "spnvc_status": 100000000,
-          "spnvc_supplierid": "e61a0d9b-d926-f111-8341-000d3a58de60"
-        },
-        {
-          "@odata.etag": "W/\"38059712\"",
-          "spnvc_name": "Trey Research",
-          "spnvc_status": 100000000,
-          "spnvc_supplierid": "769496a7-d926-f111-8341-000d3a37e531"
-        },
-        {
-          "@odata.etag": "W/\"38059710\"",
-          "spnvc_name": "VanArsdel Ltd",
-          "spnvc_status": 100000000,
-          "spnvc_supplierid": "8897a8a0-d926-f111-8341-000d3a37e531"
-        },
-        {
-          "@odata.etag": "W/\"38059702\"",
-          "spnvc_name": "Wingtip Toys",
-          "spnvc_status": 100000000,
-          "spnvc_supplierid": "e3e24992-d926-f111-8341-000d3a36e41e"
+          "firstname": "Bob",
+          "lastname": "Williams",
+          "contactid": "af95fa50-9d11-f111-8406-000d3a36e41e",
+          "spnvc_account_contact@odata.bind": [
+            "/accounts(d9250f46-d926-f111-8341-000d3a36e41e)",
+            "/accounts(952a3168-d926-f111-8341-000d3a58de60)"
+          ]
         }
       ]
     },
@@ -100,133 +114,103 @@
       "records": [
         {
           "@odata.etag": "W/\"38059799\"",
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "d9250f46-d926-f111-8341-000d3a36e41e",
           "spnvc_purchaseorderid": "f52b7e24-da26-f111-8341-000d3a37e531",
           "spnvc_description": "Office electronics and peripherals",
           "spnvc_deliverydate": "2026-04-15T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-001",
           "spnvc_postatus": 2,
-          "spnvc_totalamount": 15000
+          "spnvc_totalamount": 15000,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(d9250f46-d926-f111-8341-000d3a36e41e)"
         },
         {
           "@odata.etag": "W/\"38059801\"",
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "952a3168-d926-f111-8341-000d3a58de60",
           "spnvc_purchaseorderid": "c7a71336-da26-f111-8341-000d3a36e41e",
           "spnvc_description": "Industrial manufacturing parts",
           "spnvc_deliverydate": "2026-04-30T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-002",
           "spnvc_postatus": 2,
-          "spnvc_totalamount": 32500
+          "spnvc_totalamount": 32500,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(952a3168-d926-f111-8341-000d3a58de60)"
         },
         {
           "@odata.etag": "W/\"38059803\"",
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "66bc0181-d926-f111-8341-000d3a58de60",
           "spnvc_purchaseorderid": "8e0f5d38-da26-f111-8341-000d3a37e531",
           "spnvc_description": "International shipping supplies",
           "spnvc_deliverydate": "2026-03-25T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-003",
           "spnvc_postatus": 3,
-          "spnvc_totalamount": 8750
+          "spnvc_totalamount": 8750,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(66bc0181-d926-f111-8341-000d3a58de60)"
         },
         {
           "@odata.etag": "W/\"38059805\"",
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "96223d8d-d926-f111-8341-000d3a5bf33c",
           "spnvc_purchaseorderid": "0515b442-da26-f111-8341-000d3a58dd8c",
           "spnvc_description": "Outdoor equipment and gear",
           "spnvc_deliverydate": "2026-05-10T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-004",
           "spnvc_postatus": 2,
-          "spnvc_totalamount": 22000
+          "spnvc_totalamount": 22000,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(96223d8d-d926-f111-8341-000d3a5bf33c)"
         },
         {
           "@odata.etag": "W/\"38059807\"",
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "e3e24992-d926-f111-8341-000d3a36e41e",
           "spnvc_purchaseorderid": "f860b34c-da26-f111-8341-000d3a37e531",
           "spnvc_description": "Toy inventory restocking",
           "spnvc_deliverydate": "2026-04-20T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-005",
           "spnvc_postatus": 1,
-          "spnvc_totalamount": 12300
+          "spnvc_totalamount": 12300,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(e3e24992-d926-f111-8341-000d3a36e41e)"
         },
         {
           "@odata.etag": "W/\"38059809\"",
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "e61a0d9b-d926-f111-8341-000d3a58de60",
           "spnvc_purchaseorderid": "f594d559-da26-f111-8341-000d3a37e531",
           "spnvc_description": "Seasonal product line",
           "spnvc_deliverydate": "2026-06-01T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-006",
           "spnvc_postatus": 1,
-          "spnvc_totalamount": 18900
+          "spnvc_totalamount": 18900,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(e61a0d9b-d926-f111-8341-000d3a58de60)"
         },
         {
           "@odata.etag": "W/\"38059811\"",
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "f41a0d9b-d926-f111-8341-000d3a58de60",
           "spnvc_purchaseorderid": "23548357-da26-f111-8341-000d3a36e41e",
           "spnvc_description": "Software licenses and services",
           "spnvc_deliverydate": "2026-03-30T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-007",
           "spnvc_postatus": 4,
-          "spnvc_totalamount": 45000
+          "spnvc_totalamount": 45000,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(f41a0d9b-d926-f111-8341-000d3a58de60)"
         },
         {
           "@odata.etag": "W/\"38059813\"",
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "5608809e-d926-f111-8341-000d3a36e41e",
           "spnvc_purchaseorderid": "71ca6963-da26-f111-8341-000d3a37e531",
           "spnvc_description": "Data analytics platform",
           "spnvc_deliverydate": "2026-05-15T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-008",
           "spnvc_postatus": 2,
-          "spnvc_totalamount": 28400
+          "spnvc_totalamount": 28400,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(5608809e-d926-f111-8341-000d3a36e41e)"
         },
         {
           "@odata.etag": "W/\"38059815\"",
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "8897a8a0-d926-f111-8341-000d3a37e531",
           "spnvc_purchaseorderid": "34831367-da26-f111-8341-000d3a5bf33c",
           "spnvc_description": "Audio/visual equipment",
           "spnvc_deliverydate": "2026-04-10T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-009",
           "spnvc_postatus": 5,
-          "spnvc_totalamount": 9600
+          "spnvc_totalamount": 9600,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(8897a8a0-d926-f111-8341-000d3a37e531)"
         },
         {
           "@odata.etag": "W/\"38059817\"",
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "769496a7-d926-f111-8341-000d3a37e531",
           "spnvc_purchaseorderid": "d7ee956a-da26-f111-8341-000d3a58dd8c",
           "spnvc_description": "Research lab supplies",
           "spnvc_deliverydate": "2026-05-20T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "PO-2026-010",
           "spnvc_postatus": 2,
-          "spnvc_totalamount": 16750
+          "spnvc_totalamount": 16750,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(769496a7-d926-f111-8341-000d3a37e531)"
         }
       ]
     },
@@ -238,13 +222,9 @@
         {
           "@odata.etag": "W/\"38066214\"",
           "spnvc_amount": 1200,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "d9250f46-d926-f111-8341-000d3a36e41e",
           "spnvc_description": "Adding sample data. ",
           "spnvc_submissiondate": "2026-03-23T17:58:54Z",
           "spnvc_duedate": "2026-04-10T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-1774288734882",
           "spnvc_invoiceid": "47b38af1-e126-f111-8341-000d3a5bf33c",
           "spnvc_ponumber": "PO-2026-001",
@@ -252,18 +232,15 @@
           "_spnvc_purchaseorderid_value": "f52b7e24-da26-f111-8341-000d3a37e531",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
-          "spnvc_invoicestatus": 5
+          "spnvc_invoicestatus": 5,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(d9250f46-d926-f111-8341-000d3a36e41e)"
         },
         {
           "@odata.etag": "W/\"38974672\"",
           "spnvc_amount": 1200,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "769496a7-d926-f111-8341-000d3a37e531",
           "spnvc_description": "initial estimate ",
           "spnvc_submissiondate": "2026-03-25T05:55:07Z",
           "spnvc_duedate": "2026-04-09T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-1774418107292",
           "spnvc_invoiceid": "fdfc8929-0f28-f111-8341-000d3a37e531",
           "spnvc_ponumber": "PO-2026-010",
@@ -271,18 +248,15 @@
           "_spnvc_purchaseorderid_value": "d7ee956a-da26-f111-8341-000d3a58dd8c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
-          "spnvc_invoicestatus": 5
+          "spnvc_invoicestatus": 5,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(769496a7-d926-f111-8341-000d3a37e531)"
         },
         {
           "@odata.etag": "W/\"39017467\"",
           "spnvc_amount": 1100,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "d9250f46-d926-f111-8341-000d3a36e41e",
           "spnvc_description": "new invoice",
           "spnvc_submissiondate": "2026-04-02T16:29:14Z",
           "spnvc_duedate": "2026-04-22T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-1775147354436",
           "spnvc_invoiceid": "46e2e013-b12e-f111-88b4-000d3a37e531",
           "spnvc_ponumber": "PO-2026-001",
@@ -290,235 +264,200 @@
           "_spnvc_purchaseorderid_value": "f52b7e24-da26-f111-8341-000d3a37e531",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
           "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
-          "spnvc_invoicestatus": 6
+          "spnvc_invoicestatus": 6,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(d9250f46-d926-f111-8341-000d3a36e41e)"
         },
         {
           "@odata.etag": "W/\"40766389\"",
           "spnvc_amount": 8500,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "d9250f46-d926-f111-8341-000d3a36e41e",
           "spnvc_description": "Laptop computers batch 1 - 15 units Dell Latitude 5540",
           "spnvc_submissiondate": "2026-03-10T00:00:00Z",
           "spnvc_duedate": "2026-04-10T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-2026-001",
           "spnvc_invoiceid": "615b047b-da26-f111-8341-000d3a58dd8c",
           "spnvc_ponumber": "PO-2026-001",
           "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
           "_spnvc_purchaseorderid_value": "f52b7e24-da26-f111-8341-000d3a37e531",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 5
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "spnvc_invoicestatus": 5,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(d9250f46-d926-f111-8341-000d3a36e41e)"
         },
         {
           "@odata.etag": "W/\"40769402\"",
           "spnvc_amount": 12000,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "8897a8a0-d926-f111-8341-000d3a37e531",
           "spnvc_description": "new PO order",
           "spnvc_submissiondate": "2026-04-24T00:00:00Z",
           "spnvc_duedate": "2026-04-13T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-2026-0011",
           "spnvc_invoiceid": "1036f65e-9c3f-f111-88b4-000d3a58de60",
           "spnvc_ponumber": "PO-2026-009",
           "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
           "_spnvc_purchaseorderid_value": "34831367-da26-f111-8341-000d3a5bf33c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 2
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "spnvc_invoicestatus": 2,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(8897a8a0-d926-f111-8341-000d3a37e531)"
         },
         {
           "@odata.etag": "W/\"40769405\"",
           "spnvc_amount": 13000,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "8897a8a0-d926-f111-8341-000d3a37e531",
           "spnvc_description": "new comment",
           "spnvc_submissiondate": "2026-04-24T00:00:00Z",
           "spnvc_duedate": "2026-04-29T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-2026-0012",
           "spnvc_invoiceid": "5d8faa86-9c3f-f111-88b4-000d3a58de60",
           "spnvc_ponumber": "PO-2026-009",
           "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
           "_spnvc_purchaseorderid_value": "34831367-da26-f111-8341-000d3a5bf33c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 2
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "spnvc_invoicestatus": 2,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(8897a8a0-d926-f111-8341-000d3a37e531)"
         },
         {
           "@odata.etag": "W/\"40766384\"",
           "spnvc_amount": 6500,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "d9250f46-d926-f111-8341-000d3a36e41e",
           "spnvc_description": "Monitors and docking stations - 15 units 27in 4K displays with USB-C docks",
           "spnvc_submissiondate": "2026-03-12T00:00:00Z",
           "spnvc_duedate": "2026-04-12T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-2026-002",
           "spnvc_invoiceid": "e42a377f-da26-f111-8341-000d3a37e531",
           "spnvc_ponumber": "PO-2026-001",
           "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
           "_spnvc_purchaseorderid_value": "f52b7e24-da26-f111-8341-000d3a37e531",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 2
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "spnvc_invoicestatus": 2,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(d9250f46-d926-f111-8341-000d3a36e41e)"
         },
         {
           "@odata.etag": "W/\"40766393\"",
           "spnvc_amount": 15200,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "952a3168-d926-f111-8341-000d3a58de60",
           "spnvc_description": "Steel beams and fasteners for warehouse expansion project",
           "spnvc_submissiondate": "2026-03-15T00:00:00Z",
           "spnvc_duedate": "2026-04-15T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-2026-003",
           "spnvc_invoiceid": "943d8283-da26-f111-8341-000d3a58de60",
           "spnvc_ponumber": "PO-2026-002",
           "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
           "_spnvc_purchaseorderid_value": "c7a71336-da26-f111-8341-000d3a36e41e",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 2
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "spnvc_invoicestatus": 2,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(952a3168-d926-f111-8341-000d3a58de60)"
         },
         {
           "@odata.etag": "W/\"40766387\"",
           "spnvc_amount": 8750,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "66bc0181-d926-f111-8341-000d3a58de60",
           "spnvc_description": "Shipping containers and packing materials for Q2 fulfillment",
           "spnvc_submissiondate": "2026-03-05T00:00:00Z",
           "spnvc_duedate": "2026-04-05T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-2026-004",
           "spnvc_invoiceid": "f1295b85-da26-f111-8341-000d3a37e531",
           "spnvc_ponumber": "PO-2026-003",
           "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
           "_spnvc_purchaseorderid_value": "8e0f5d38-da26-f111-8341-000d3a37e531",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 7
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "spnvc_invoicestatus": 7,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(66bc0181-d926-f111-8341-000d3a58de60)"
         },
         {
           "@odata.etag": "W/\"40766391\"",
           "spnvc_amount": 11000,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "96223d8d-d926-f111-8341-000d3a5bf33c",
           "spnvc_description": "Camping equipment - tents, sleeping bags, and outdoor cooking gear",
           "spnvc_submissiondate": "2026-03-18T00:00:00Z",
           "spnvc_duedate": "2026-04-18T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-2026-005",
           "spnvc_invoiceid": "c196038c-da26-f111-8341-000d3a58dd8c",
           "spnvc_ponumber": "PO-2026-004",
           "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
           "_spnvc_purchaseorderid_value": "0515b442-da26-f111-8341-000d3a58dd8c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 1
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "spnvc_invoicestatus": 1,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(96223d8d-d926-f111-8341-000d3a5bf33c)"
         },
         {
           "@odata.etag": "W/\"40766395\"",
           "spnvc_amount": 45000,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "f41a0d9b-d926-f111-8341-000d3a58de60",
           "spnvc_description": "Enterprise software license renewal - annual subscription",
           "spnvc_submissiondate": "2026-02-28T00:00:00Z",
           "spnvc_duedate": "2026-03-28T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-2026-006",
           "spnvc_invoiceid": "e05e0d97-da26-f111-8341-000d3a58de60",
           "spnvc_ponumber": "PO-2026-007",
           "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
           "_spnvc_purchaseorderid_value": "23548357-da26-f111-8341-000d3a36e41e",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 7
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "spnvc_invoicestatus": 7,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(f41a0d9b-d926-f111-8341-000d3a58de60)"
         },
         {
           "@odata.etag": "W/\"40766397\"",
           "spnvc_amount": 14200,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "5608809e-d926-f111-8341-000d3a36e41e",
           "spnvc_description": "Analytics platform setup and configuration - Phase 1",
           "spnvc_submissiondate": "2026-03-20T00:00:00Z",
           "spnvc_duedate": "2026-04-20T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-2026-007",
           "spnvc_invoiceid": "ecff419b-da26-f111-8341-000d3a5bf33c",
           "spnvc_ponumber": "PO-2026-008",
           "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
           "_spnvc_purchaseorderid_value": "71ca6963-da26-f111-8341-000d3a37e531",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 2
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "spnvc_invoicestatus": 2,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(5608809e-d926-f111-8341-000d3a36e41e)"
         },
         {
           "@odata.etag": "W/\"40766399\"",
           "spnvc_amount": 9600,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "8897a8a0-d926-f111-8341-000d3a37e531",
           "spnvc_description": "Conference room AV system - projector, speakers, and control panel",
           "spnvc_submissiondate": "2026-02-15T00:00:00Z",
           "spnvc_duedate": "2026-03-15T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-2026-008",
           "spnvc_invoiceid": "f1ff419b-da26-f111-8341-000d3a5bf33c",
           "spnvc_ponumber": "PO-2026-009",
           "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
           "_spnvc_purchaseorderid_value": "34831367-da26-f111-8341-000d3a5bf33c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 6
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "spnvc_invoicestatus": 6,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(8897a8a0-d926-f111-8341-000d3a37e531)"
         },
         {
           "@odata.etag": "W/\"40766401\"",
           "spnvc_amount": 8375,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "769496a7-d926-f111-8341-000d3a37e531",
           "spnvc_description": "Lab chemicals and glassware for Q2 research projects",
           "spnvc_submissiondate": "2026-03-22T00:00:00Z",
           "spnvc_duedate": "2026-04-22T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-2026-009",
           "spnvc_invoiceid": "d9145ca1-da26-f111-8341-000d3a5bf33c",
           "spnvc_ponumber": "PO-2026-010",
           "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
           "_spnvc_purchaseorderid_value": "d7ee956a-da26-f111-8341-000d3a58dd8c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 6
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "spnvc_invoicestatus": 6,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(769496a7-d926-f111-8341-000d3a37e531)"
         },
         {
           "@odata.etag": "W/\"40766402\"",
           "spnvc_amount": 11000,
-          "_spnvc_supplierid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_SupplierId",
-          "_spnvc_supplierid_value": "96223d8d-d926-f111-8341-000d3a5bf33c",
           "spnvc_description": "Hiking gear and accessories - backpacks, boots, and safety equipment",
           "spnvc_submissiondate": "2026-03-19T00:00:00Z",
           "spnvc_duedate": "2026-04-19T00:00:00Z",
-          "_transactioncurrencyid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "transactioncurrencyid",
-          "_transactioncurrencyid_value": "58337f5b-5f62-ef11-bfe2-002248046590",
           "spnvc_name": "INV-2026-010",
           "spnvc_invoiceid": "db145ca1-da26-f111-8341-000d3a5bf33c",
           "spnvc_ponumber": "PO-2026-004",
           "_spnvc_purchaseorderid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_PurchaseOrderId",
           "_spnvc_purchaseorderid_value": "0515b442-da26-f111-8341-000d3a58dd8c",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "59d2f304-6470-ef11-a671-002248091d8b",
-          "spnvc_invoicestatus": 2
+          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c",
+          "spnvc_invoicestatus": 2,
+          "spnvc_SupplierAccountId@odata.bind": "/accounts(96223d8d-d926-f111-8341-000d3a5bf33c)"
         }
       ]
     },
@@ -530,7 +469,7 @@
         {
           "@odata.etag": "W/\"38059839\"",
           "_spnvc_authorcontactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_AuthorContactId",
-          "_spnvc_authorcontactid_value": "0c93e537-a823-f111-8341-000d3a36e41e",
+          "_spnvc_authorcontactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e",
           "spnvc_invoicecommentid": "d4ea70b4-da26-f111-8341-000d3a36e41e",
           "spnvc_name": "Review Note",
           "spnvc_linkedaction": "Approved",
@@ -539,7 +478,7 @@
           "createdon": "2026-03-23T17:07:00Z",
           "spnvc_commenttext": "Invoice verified against PO-2026-001. All line items match purchase order specifications. Approved for payment processing.",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "0c93e537-a823-f111-8341-000d3a36e41e"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059842\"",
@@ -558,7 +497,7 @@
         {
           "@odata.etag": "W/\"38059846\"",
           "_spnvc_authorcontactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_AuthorContactId",
-          "_spnvc_authorcontactid_value": "1c93e537-a823-f111-8341-000d3a36e41e",
+          "_spnvc_authorcontactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e",
           "spnvc_invoicecommentid": "1315c3ba-da26-f111-8341-000d3a5bf33c",
           "spnvc_name": "Review Note",
           "spnvc_linkedaction": "Submitted",
@@ -567,12 +506,12 @@
           "createdon": "2026-03-23T17:07:11Z",
           "spnvc_commenttext": "Quantity discrepancy on line item 3 - invoice shows 50 units but PO specifies 45. Please verify and resubmit.",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "1c93e537-a823-f111-8341-000d3a36e41e"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059848\"",
           "_spnvc_authorcontactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_AuthorContactId",
-          "_spnvc_authorcontactid_value": "4eb6d7f9-d926-f111-8341-000d3a58dd8c",
+          "_spnvc_authorcontactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e",
           "spnvc_invoicecommentid": "29e30bb9-da26-f111-8341-000d3a58dd8c",
           "spnvc_name": "Payment Confirmation",
           "spnvc_linkedaction": "Paid",
@@ -581,12 +520,12 @@
           "createdon": "2026-03-23T17:07:16Z",
           "spnvc_commenttext": "Payment processed via ACH transfer on March 20, 2026. Transaction reference: ACH-2026-0342.",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "4eb6d7f9-d926-f111-8341-000d3a58dd8c"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059850\"",
           "_spnvc_authorcontactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_AuthorContactId",
-          "_spnvc_authorcontactid_value": "06f3e7d8-d926-f111-8341-000d3a58dd8c",
+          "_spnvc_authorcontactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e",
           "spnvc_invoicecommentid": "480462c1-da26-f111-8341-000d3a36e41e",
           "spnvc_name": "Draft Note",
           "spnvc_linkedaction": null,
@@ -595,12 +534,12 @@
           "createdon": "2026-03-23T17:07:22Z",
           "spnvc_commenttext": "Pending final pricing confirmation from Adventure Works. Expected updated quote by end of week.",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "06f3e7d8-d926-f111-8341-000d3a58dd8c"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059852\"",
           "_spnvc_authorcontactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_AuthorContactId",
-          "_spnvc_authorcontactid_value": "53b635fd-d926-f111-8341-000d3a36e41e",
+          "_spnvc_authorcontactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e",
           "spnvc_invoicecommentid": "f8cb4cc7-da26-f111-8341-000d3a37e531",
           "spnvc_name": "Approval Note",
           "spnvc_linkedaction": "Approved",
@@ -609,7 +548,7 @@
           "createdon": "2026-03-23T17:07:42Z",
           "spnvc_commenttext": "Approved per annual licensing agreement terms. Amount matches contract schedule for FY2026.",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "53b635fd-d926-f111-8341-000d3a36e41e"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059854\"",
@@ -628,7 +567,7 @@
         {
           "@odata.etag": "W/\"38059856\"",
           "_spnvc_authorcontactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_AuthorContactId",
-          "_spnvc_authorcontactid_value": "18ae3208-da26-f111-8341-000d3a58dd8c",
+          "_spnvc_authorcontactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e",
           "spnvc_invoicecommentid": "9e9a7dd1-da26-f111-8341-000d3a36e41e",
           "spnvc_name": "Rejection Note",
           "spnvc_linkedaction": "Rejected",
@@ -637,12 +576,12 @@
           "createdon": "2026-03-23T17:07:55Z",
           "spnvc_commenttext": "Missing tax documentation. Please resubmit with W-9 form and updated certificate of insurance before processing.",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "18ae3208-da26-f111-8341-000d3a58dd8c"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059858\"",
           "_spnvc_authorcontactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_AuthorContactId",
-          "_spnvc_authorcontactid_value": "1c93e537-a823-f111-8341-000d3a36e41e",
+          "_spnvc_authorcontactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e",
           "spnvc_invoicecommentid": "295ab4d4-da26-f111-8341-000d3a58dd8c",
           "spnvc_name": "Rejection Note",
           "spnvc_linkedaction": "Rejected",
@@ -651,12 +590,12 @@
           "createdon": "2026-03-23T17:08:00Z",
           "spnvc_commenttext": "Unit pricing needs to be updated per contract amendment CA-2026-012. Current pricing reflects outdated rate schedule.",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "1c93e537-a823-f111-8341-000d3a36e41e"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059860\"",
           "_spnvc_authorcontactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_AuthorContactId",
-          "_spnvc_authorcontactid_value": "0c93e537-a823-f111-8341-000d3a36e41e",
+          "_spnvc_authorcontactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e",
           "spnvc_invoicecommentid": "624062d6-da26-f111-8341-000d3a5bf33c",
           "spnvc_name": "Review Note",
           "spnvc_linkedaction": "Submitted",
@@ -665,7 +604,7 @@
           "createdon": "2026-03-23T17:08:06Z",
           "spnvc_commenttext": "Second invoice for Adventure Works PO-2026-004. Checking against remaining PO balance of $11,000. Amounts match.",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "0c93e537-a823-f111-8341-000d3a36e41e"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38066192\"",
@@ -679,7 +618,7 @@
           "createdon": "2026-03-23T18:11:00Z",
           "spnvc_commenttext": "Missing bill copy. please share the invoice copy.",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38066201\"",
@@ -707,7 +646,7 @@
           "createdon": "2026-03-23T18:12:57Z",
           "spnvc_commenttext": "looks good.",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38298532\"",
@@ -721,7 +660,7 @@
           "createdon": "2026-03-25T06:01:51Z",
           "spnvc_commenttext": "Invoice looks good but we need final invoice.",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38298542\"",
@@ -735,7 +674,7 @@
           "createdon": "2026-03-25T06:13:31Z",
           "spnvc_commenttext": "Provide the invoice, check the comment.",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38298547\"",
@@ -791,7 +730,7 @@
           "createdon": "2026-04-02T16:30:14Z",
           "spnvc_commenttext": "need invoice attached to the request.",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "60a29644-9d11-f111-8406-000d3a5bf33c"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         }
       ]
     },
@@ -840,7 +779,7 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:08:30Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "f2c43ab9-d926-f111-8341-000d3a5bf33c"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059900\"",
@@ -854,7 +793,7 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:08:42Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "51e91fd4-d926-f111-8341-000d3a5bf33c"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059904\"",
@@ -868,7 +807,7 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:08:47Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "06f3e7d8-d926-f111-8341-000d3a58dd8c"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059909\"",
@@ -882,7 +821,7 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:09:07Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "5df22d44-9d11-f111-8406-000d3a36e41e"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059913\"",
@@ -910,7 +849,7 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:09:20Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "5df22d44-9d11-f111-8406-000d3a36e41e"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059921\"",
@@ -924,7 +863,7 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:09:24Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "f2c43ab9-d926-f111-8341-000d3a5bf33c"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38059925\"",
@@ -938,7 +877,7 @@
           "spnvc_filetype": "application/pdf",
           "createdon": "2026-03-23T17:09:29Z",
           "_spnvc_contactid_value@Microsoft.Dynamics.CRM.associatednavigationproperty": "spnvc_ContactId",
-          "_spnvc_contactid_value": "06f3e7d8-d926-f111-8341-000d3a58dd8c"
+          "_spnvc_contactid_value": "af95fa50-9d11-f111-8406-000d3a36e41e"
         },
         {
           "@odata.etag": "W/\"38066205\"",

@@ -7,6 +7,8 @@ delete: false
 entitylogicalname: spnvc_invoice
 entityname: Invoice - Reviewer Access
 id: 76266883-f351-4a13-b654-d6b464f2c699
+parententitypermission: e82591a8-9fd5-4665-a975-855df52d839f
+parentrelationship: spnvc_account_invoice
 read: true
-scope: 756150000
+scope: 756150003
 write: true

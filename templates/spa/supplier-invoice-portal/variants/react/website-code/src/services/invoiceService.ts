@@ -6,9 +6,6 @@ import {
   powerPagesFetchResponse,
   parseResponseBody,
   extractRecordId,
-  buildODataUrl,
-  escapeODataString,
-  type ODataCollectionResponse,
   type PaginatedResult,
 } from './powerPagesApi'
 import {
@@ -22,6 +19,7 @@ import {
   mapInvoiceEntity,
 } from '../types/invoice'
 import { callServerLogic } from './serverLogicApi'
+import { buildFetchXmlUrl, fetchXmlCollection, fetchXmlRecord, and, or, eq, contains, type FetchFilter } from './fetchXmlApi'
 
 // -- Constants ----------------------------------------------------------------
 
@@ -37,7 +35,7 @@ const INVOICE_SELECT = [
   'spnvc_amount',
   'spnvc_invoicestatus',
   '_spnvc_contactid_value',
-  '_spnvc_supplierid_value',
+  '_spnvc_supplieraccountid_value',
   '_spnvc_purchaseorderid_value',
   'createdon',
   'modifiedon',
@@ -45,18 +43,15 @@ const INVOICE_SELECT = [
 
 // Navigation property names are case-sensitive and come from Dataverse metadata:
 //   spnvc_ContactId -> contact (ReferencingEntityNavigationPropertyName)
-//   spnvc_SupplierId -> spnvc_supplier (ReferencingEntityNavigationPropertyName)
-const INVOICE_EXPAND = [
-  'spnvc_ContactId($select=contactid,fullname)',
-  'spnvc_SupplierId($select=spnvc_supplierid,spnvc_name)',
-].join(',')
+// Supplier names arrive as lookup formatted values, so supplier-facing reads do
+// not need permission to expand or browse Account records.
 
 // -- List Parameters ----------------------------------------------------------
 
 export interface InvoiceListParams {
   pageSize?: number
   nextLink?: string
-  filter?: string
+  filter?: FetchFilter
   orderBy?: string
   search?: string
 }
@@ -71,23 +66,21 @@ export const listInvoices = async (
   // Build $filter combining any custom filter with optional search
   let filter = params?.filter
   if (params?.search) {
-    const escaped = escapeODataString(params.search)
-    const searchFilter = `contains(spnvc_name,'${escaped}') or contains(spnvc_ponumber,'${escaped}') or contains(spnvc_description,'${escaped}')`
-    filter = filter ? `(${filter}) and (${searchFilter})` : searchFilter
+    const searchFilter = or(contains('spnvc_name', params.search), contains('spnvc_ponumber', params.search), contains('spnvc_description', params.search))
+    filter = and(filter, searchFilter)
   }
 
   // If we have a nextLink from a previous response, use it directly.
   // Dataverse does NOT support $skip -- pagination uses @odata.nextLink cursors.
-  const url = params?.nextLink ?? buildODataUrl(ENTITY_SET, {
-    '$select': INVOICE_SELECT,
-    '$expand': INVOICE_EXPAND,
-    '$orderby': params?.orderBy ?? 'createdon desc',
-    '$count': 'true',
-    '$top': String(pageSize),
-    '$filter': filter,
+  const url = params?.nextLink ?? buildFetchXmlUrl(ENTITY_SET, {
+    select: INVOICE_SELECT,
+    orderBy: params?.orderBy ?? 'createdon desc',
+    count: true,
+    pageSize,
+    filter,
   })
 
-  const response = await powerPagesFetch<ODataCollectionResponse<InvoiceEntity>>(url)
+  const response = await fetchXmlCollection<InvoiceEntity>(url)
 
   return {
     items: (response?.value ?? []).map(mapInvoiceEntity),
@@ -105,20 +98,15 @@ export const listInvoicesByStatus = async (
   const statusValue = INVOICE_STATUS[status]
   return listInvoices({
     ...params,
-    filter: `spnvc_invoicestatus eq ${statusValue}`,
+    filter: eq('spnvc_invoicestatus', statusValue),
   })
 }
 
 // -- Get by ID ----------------------------------------------------------------
 
 export const getInvoiceById = async (id: string): Promise<Invoice | null> => {
-  const url = buildODataUrl(`${ENTITY_SET}(${id})`, {
-    '$select': INVOICE_SELECT,
-    '$expand': INVOICE_EXPAND,
-  })
-
   try {
-    const entity = await powerPagesFetch<InvoiceEntity>(url)
+    const entity = await fetchXmlRecord<InvoiceEntity>(ENTITY_SET, id, INVOICE_SELECT)
     return entity ? mapInvoiceEntity(entity) : null
   } catch (err) {
     console.error(`[invoiceService] getInvoiceById(${id}) failed:`, err)
@@ -149,7 +137,7 @@ export const createInvoice = async (payload: CreateInvoiceInput): Promise<Invoic
     body['spnvc_ContactId@odata.bind'] = `/contacts(${payload.contactId})`
   }
   if (payload.supplierId) {
-    body['spnvc_SupplierId@odata.bind'] = `/spnvc_suppliers(${payload.supplierId})`
+    body['spnvc_SupplierAccountId@odata.bind'] = `/accounts(${payload.supplierId})`
   }
   if (payload.purchaseOrderId) {
     body['spnvc_PurchaseOrderId@odata.bind'] = `/spnvc_purchaseorders(${payload.purchaseOrderId})`
@@ -201,9 +189,9 @@ export const updateInvoice = async (
   }
   if (payload.supplierId !== undefined) {
     if (payload.supplierId) {
-      body['spnvc_SupplierId@odata.bind'] = `/spnvc_suppliers(${payload.supplierId})`
+      body['spnvc_SupplierAccountId@odata.bind'] = `/accounts(${payload.supplierId})`
     } else {
-      body['spnvc_SupplierId@odata.bind'] = null
+      body['spnvc_SupplierAccountId@odata.bind'] = null
     }
   }
   if (payload.purchaseOrderId !== undefined) {
@@ -235,33 +223,23 @@ export const deleteInvoice = async (id: string): Promise<void> => {
 
 // -- Count helper -------------------------------------------------------------
 
-export const getInvoiceCount = async (filter?: string): Promise<number> => {
-  const url = buildODataUrl(ENTITY_SET, {
-    '$select': 'spnvc_invoiceid',
-    '$filter': filter,
-    '$count': 'true',
-    '$top': '0',
+export const getInvoiceCount = async (filter?: FetchFilter): Promise<number> => {
+  const url = buildFetchXmlUrl(ENTITY_SET, {
+    select: 'spnvc_invoiceid',
+    filter,
+    count: true,
+    pageSize: 1,
   })
 
-  const response = await powerPagesFetch<ODataCollectionResponse<InvoiceEntity>>(url)
+  const response = await fetchXmlCollection<InvoiceEntity>(url)
   return response?.['@odata.count'] ?? 0
 }
 
 // -- Aggregation: count by status ---------------------------------------------
 
-// The Power Pages *client* Web API rejects $apply=groupby(...)/aggregate(...)
-// with "WebAPI * is not enabled": any request without an explicit $select is
-// treated as selecting all columns, which the (deprecated) wildcard field
-// permission model can no longer satisfy - see
-// https://learn.microsoft.com/power-pages/configure/configure-table-permissions
-// for the Web API field allowlist this depends on. There is no $select
-// workaround because Dataverse validates $select against the base entity's
-// schema, and aggregate/groupby result aliases (e.g. "count") do not exist
-// on that schema. Until the platform ships a fix, the dashboard-aggregates
-// server logic (.powerpages-site/server-logic/dashboard-aggregates) runs the
-// same $apply query server-side via Server.Connector.Dataverse instead: it
-// still enforces table permissions (Supplier: own invoices only, Reviewer:
-// all invoices) but isn't subject to the client Web API's wildcard gate.
+// Aggregate aliases cannot be selected as real columns by the client Web API.
+// The protected dashboard connector instead uses FetchXML and enforces the
+// caller's Company Name/N:N table permissions.
 export const getInvoiceCountByStatus = async (): Promise<
   Array<{ status: InvoiceStatusLabel; statusValue: number; count: number }>
 > => {
@@ -283,8 +261,7 @@ export const getInvoiceCountByStatus = async (): Promise<
 /**
  * Returns the sum and average of spnvc_amount across every invoice the current
  * portal user can see, via the dashboard-aggregates server logic. See the
- * comment above getInvoiceCountByStatus for why this can't run as a client
- * Web API $apply query.
+ * comment above getInvoiceCountByStatus for why the connector is used.
  */
 export const getInvoiceAmountStats = async (): Promise<{ total: number; avg: number }> => {
   const response = await callServerLogic<{ stats: { total: number; avg: number } }>(

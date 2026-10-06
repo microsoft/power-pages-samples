@@ -2,12 +2,13 @@ adx_entitypermission_webrole:
 - 997e7996-e241-4117-9c09-28e90a1fcdbc
 append: true
 appendto: true
-contactrelationship: spnvc_contact_invoiceattachment_contact
 create: true
 delete: true
 entitylogicalname: spnvc_invoiceattachment
 entityname: Invoice Attachment - Supplier Access
 id: 535a5911-0546-4e72-8963-9b56467e2353
+parententitypermission: cb0c220a-7e81-4056-9dde-666922e9f1a4
+parentrelationship: spnvc_invoice_invoiceattachment
 read: true
-scope: 756150001
+scope: 756150003
 write: true

@@ -4,7 +4,6 @@
   <EntityRelationship Name="business_unit_spnvc_invoiceattachment" />
   <EntityRelationship Name="business_unit_spnvc_invoicecomment" />
   <EntityRelationship Name="business_unit_spnvc_purchaseorder" />
-  <EntityRelationship Name="business_unit_spnvc_supplier" />
   <EntityRelationship Name="FileAttachment_spnvc_InvoiceAttachment_spnvc_File" />
   <EntityRelationship Name="lk_spnvc_invoice_createdby" />
   <EntityRelationship Name="lk_spnvc_invoice_modifiedby" />
@@ -14,13 +13,13 @@
   <EntityRelationship Name="lk_spnvc_invoicecomment_modifiedby" />
   <EntityRelationship Name="lk_spnvc_purchaseorder_createdby" />
   <EntityRelationship Name="lk_spnvc_purchaseorder_modifiedby" />
-  <EntityRelationship Name="lk_spnvc_supplier_createdby" />
-  <EntityRelationship Name="lk_spnvc_supplier_modifiedby" />
   <EntityRelationship Name="owner_spnvc_invoice" />
   <EntityRelationship Name="owner_spnvc_invoiceattachment" />
   <EntityRelationship Name="owner_spnvc_invoicecomment" />
   <EntityRelationship Name="owner_spnvc_purchaseorder" />
-  <EntityRelationship Name="owner_spnvc_supplier" />
+  <EntityRelationship Name="spnvc_account_contact" />
+  <EntityRelationship Name="spnvc_account_invoice" />
+  <EntityRelationship Name="spnvc_account_purchaseorder" />
   <EntityRelationship Name="spnvc_contact_invoice_submitter" />
   <EntityRelationship Name="spnvc_contact_invoiceattachment_contact" />
   <EntityRelationship Name="spnvc_contact_invoicecomment_author" />
@@ -29,18 +28,14 @@
   <EntityRelationship Name="spnvc_invoice_invoicecomment" />
   <EntityRelationship Name="spnvc_invoicecomment_invoiceattachment" />
   <EntityRelationship Name="spnvc_purchaseorder_invoice" />
-  <EntityRelationship Name="spnvc_supplier_invoice" />
-  <EntityRelationship Name="spnvc_supplier_purchaseorder" />
   <EntityRelationship Name="team_spnvc_invoice" />
   <EntityRelationship Name="team_spnvc_invoiceattachment" />
   <EntityRelationship Name="team_spnvc_invoicecomment" />
   <EntityRelationship Name="team_spnvc_purchaseorder" />
-  <EntityRelationship Name="team_spnvc_supplier" />
   <EntityRelationship Name="TransactionCurrency_spnvc_Invoice" />
   <EntityRelationship Name="TransactionCurrency_spnvc_PurchaseOrder" />
   <EntityRelationship Name="user_spnvc_invoice" />
   <EntityRelationship Name="user_spnvc_invoiceattachment" />
   <EntityRelationship Name="user_spnvc_invoicecomment" />
   <EntityRelationship Name="user_spnvc_purchaseorder" />
-  <EntityRelationship Name="user_spnvc_supplier" />
 </EntityRelationships>

@@ -7,6 +7,8 @@ delete: true
 entitylogicalname: spnvc_invoiceattachment
 entityname: Invoice Attachment - Reviewer Access
 id: 43822015-bdfb-4451-a1c4-bd5a7797a5b6
+parententitypermission: 76266883-f351-4a13-b654-d6b464f2c699
+parentrelationship: spnvc_invoice_invoiceattachment
 read: true
-scope: 756150000
+scope: 756150003
 write: false

@@ -2,7 +2,7 @@
 // TypeScript types for the spnvc_invoiceattachment Dataverse table.
 // Column names verified against actual Dataverse metadata on 2026-03-19.
 
-import { getFormattedValue } from '../services/powerPagesApi'
+import { getLookupId, getLookupName } from '../services/powerPagesApi'
 
 // -- Raw OData Entity ---------------------------------------------------------
 // Matches Dataverse column logical names exactly.
@@ -62,14 +62,14 @@ export const mapInvoiceAttachmentEntity = (
   fileName: entity.spnvc_name ?? '',
   fileSize: entity.spnvc_filesize ?? '',
   fileType: entity.spnvc_filetype ?? '',
-  invoiceId: entity._spnvc_invoiceid_value,
+  invoiceId: getLookupId(entity, 'spnvc_invoiceid'),
   invoiceName:
-    getFormattedValue(entity, '_spnvc_invoiceid_value')
+    getLookupName(entity, 'spnvc_invoiceid')
     ?? entity.spnvc_InvoiceId?.spnvc_name
     ?? '',
-  commentId: entity._spnvc_invoicecommentid_value,
+  commentId: getLookupId(entity, 'spnvc_invoicecommentid'),
   commentName:
-    getFormattedValue(entity, '_spnvc_invoicecommentid_value')
+    getLookupName(entity, 'spnvc_invoicecommentid')
     ?? entity.spnvc_InvoiceCommentId?.spnvc_name
     ?? '',
   createdOn: entity.createdon ?? '',

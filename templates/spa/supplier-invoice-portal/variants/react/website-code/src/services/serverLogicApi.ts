@@ -2,8 +2,7 @@
 // Thin client for Power Pages Server Logic endpoints (/_api/serverlogics/<name>).
 // Server Logic runs server-side and is protected by web roles and table
 // permissions rather than the client Web API's field-permission model, so it's
-// used here for the $apply aggregate/groupby queries the client Web API can't
-// run (see dashboard-aggregates.js for why).
+// used here for protected FetchXML aggregate queries (see dashboard-aggregates.js).
 
 import { powerPagesFetch } from './powerPagesApi'
 
@@ -43,5 +42,11 @@ export async function callServerLogic<T = unknown>(
     throw new Error(`Missing response data from server logic '${endpointName}'`)
   }
 
-  return JSON.parse(envelope.data) as T
+  const result: unknown = JSON.parse(envelope.data)
+  if (result && typeof result === 'object' && 'status' in result && result.status === 'error') {
+    const message = 'message' in result && typeof result.message === 'string'
+      ? result.message : `Server logic '${endpointName}' failed`
+    throw new Error(message)
+  }
+  return result as T
 }

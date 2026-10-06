@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "test": "node --test --test-concurrency=1 tests/invoiceService.test.mjs",
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+    "docs:generate": "node scripts/generate-docs.mjs",
+    "assignments:validate": "node scripts/validate-assignments.mjs --supplier-contact=60a29644-9d11-f111-8406-000d3a5bf33c --reviewer-contact=af95fa50-9d11-f111-8406-000d3a36e41e",
+    "site-assets:sync": "node scripts/sync-site-assets.mjs",
     "build": "tsc -b && vite build && node scripts/postbuild.js",
     "preview": "vite preview"
   },

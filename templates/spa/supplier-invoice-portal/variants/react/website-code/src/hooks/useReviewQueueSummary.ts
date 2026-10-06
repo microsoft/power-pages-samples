@@ -21,9 +21,7 @@ const REVIEW_QUEUE_SELECT = [
   'spnvc_invoicestatus',
   'spnvc_submissiondate',
   'spnvc_duedate',
-].join(',')
-const REVIEW_QUEUE_EXPAND = [
-  'spnvc_SupplierId($select=spnvc_name)',
+  '_spnvc_supplieraccountid_value',
 ].join(',')
 // No $top / Prefer: odata.maxpagesize - those are pagination concerns for the UI
 // table; the summary is bounded by Summarization/Data/ContentSizeLimit.
@@ -75,7 +73,6 @@ export function useReviewQueueSummary(): UseReviewQueueSummaryResult {
       const response = await fetchListSummary({
         entitySet: ENTITY_SET,
         select: REVIEW_QUEUE_SELECT,
-        expand: REVIEW_QUEUE_EXPAND,
         filter: REVIEW_QUEUE_FILTER,
         orderby: REVIEW_QUEUE_ORDERBY,
         instructionIdentifier: recommendationConfig ? undefined : REVIEW_QUEUE_INSTRUCTION,

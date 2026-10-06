@@ -259,7 +259,7 @@ export default function CreatePurchaseOrder() {
             }}
           >
             <option value="">
-              {suppliersLoading ? 'Loading suppliers...' : 'Select a supplier'}
+              {suppliersLoading ? 'Loading suppliers...' : suppliers.length ? 'Select a supplier' : 'No assigned active suppliers'}
             </option>
             {suppliers.map((supplier) => (
               <option key={supplier.id} value={supplier.id}>
@@ -274,6 +274,11 @@ export default function CreatePurchaseOrder() {
               style={{ color: 'var(--color-error)', fontSize: '0.8rem', marginTop: 4 }}
             >
               {suppliersError ? 'Could not load suppliers. Please refresh and try again.' : errors.supplierId}
+            </p>
+          )}
+          {!suppliersLoading && !suppliersError && suppliers.length === 0 && (
+            <p role="status" style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', marginTop: 4 }}>
+              Ask an administrator to assign active Supplier Accounts to your Contact.
             </p>
           )}
         </div>

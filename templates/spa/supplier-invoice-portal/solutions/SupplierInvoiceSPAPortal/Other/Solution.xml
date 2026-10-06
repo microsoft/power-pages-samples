@@ -6,7 +6,7 @@
       <LocalizedName description="Supplier Invoice SPA Portal" languagecode="1033" />
     </LocalizedNames>
     <Descriptions />
-    <Version>1.0.0.1</Version>
+    <Version>1.1.0.2</Version>
     <Managed>0</Managed>
     <Publisher>
       <UniqueName>spnvcportal</UniqueName>
@@ -82,8 +82,14 @@
       <RootComponent type="1" schemaName="spnvc_invoiceattachment" behavior="0" />
       <RootComponent type="1" schemaName="spnvc_invoicecomment" behavior="0" />
       <RootComponent type="1" schemaName="spnvc_purchaseorder" behavior="0" />
-      <RootComponent type="1" schemaName="spnvc_supplier" behavior="0" />
+      <RootComponent type="1" schemaName="account" behavior="2" />
+      <RootComponent type="1" schemaName="contact" behavior="2" />
     </RootComponents>
-    <MissingDependencies />
+    <MissingDependencies>
+      <MissingDependency>
+        <Required type="60" displayName="Portal Contact (Enhanced)" parentDisplayName="Contact" solution="PowerPages_RuntimeCore (1.0.2509.1)" id="{c1c97961-2d42-4103-abf8-2fe2bdf38224}" />
+        <Dependent type="60" displayName="Portal Contact (Enhanced)" parentDisplayName="Contact" id="{c1c97961-2d42-4103-abf8-2fe2bdf38224}" />
+      </MissingDependency>
+    </MissingDependencies>
   </SolutionManifest>
 </ImportExportXml>

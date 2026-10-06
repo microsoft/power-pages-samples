@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <systemform>
+    <formid>{c1c97961-2d42-4103-abf8-2fe2bdf38224}</formid>
+    <IntroducedVersion>1.0.0.0</IntroducedVersion>
+    <FormPresentation>0</FormPresentation>
+    <FormActivationState>1</FormActivationState>
+    <form shownavigationbar="true" showImage="false" maxWidth="1900" headerdensity="HighWithControls">
+      <tabs>
+        <tab name="general" verticallayout="true" id="{e3327218-e08e-4133-beb6-5177bc816581}" IsUserDefined="0" labelid="{b2ef0773-20d1-4dbd-8f0b-b2e66ad15120}" ordinalvalue="0">
+          <columns>
+            <column width="100%" id="0">
+              <sections>
+                <section name="spnvc_assigned_supplier_accounts_section" id="{080261b4-10d8-5e55-ab86-9bff20af4504}" IsUserDefined="1" locklevel="0" showlabel="true" showbar="true" layout="varwidth" celllabelalignment="Left" celllabelposition="Left" columns="1" labelwidth="115" ordinalvalue="5" solutionaction="Added">
+                  <labels>
+                    <label description="Assigned Supplier Accounts" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{56439164-dc93-58f2-9b29-84b985782d3c}" locklevel="0" rowspan="6" colspan="1" auto="false" showlabel="false" ordinalvalue="10000">
+                        <labels>
+                          <label description="Reviewer assignments (Company Name remains the single supplier affiliation)" languagecode="1033" />
+                        </labels>
+                        <control indicationOfSubgrid="true" id="spnvc_assigned_supplier_accounts" classid="{E7A81278-8635-4D9E-8D4D-59480B391C5B}">
+                          <parameters>
+                            <RecordsPerPage>5</RecordsPerPage>
+                            <AutoExpand>Fixed</AutoExpand>
+                            <EnableQuickFind>true</EnableQuickFind>
+                            <EnableViewPicker>false</EnableViewPicker>
+                            <EnableJumpBar>false</EnableJumpBar>
+                            <EnableChartPicker>false</EnableChartPicker>
+                            <TargetEntityType>account</TargetEntityType>
+                            <RelationshipName>spnvc_account_contact</RelationshipName>
+                            <ViewId>{E590060A-418F-5DE4-93D3-98E2BF5E8B57}</ViewId>
+                            <ViewIds>{E590060A-418F-5DE4-93D3-98E2BF5E8B57}</ViewIds>
+                            <IsUserView>false</IsUserView>
+                          </parameters>
+                        </control>
+                      </cell>
+                    </row>
+                    <row />
+                    <row />
+                    <row />
+                    <row />
+                    <row />
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+      </tabs>
+    </form>
+    <LocalizedNames>
+      <LocalizedName description="Portal Contact (Enhanced)" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="A form for this entity." languagecode="1033" />
+    </Descriptions>
+  </systemform>
+</forms>

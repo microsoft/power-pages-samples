@@ -1,6 +1,7 @@
 import type { InvoiceStatus, Invoice, User } from '../types'
 import type { POStatusLabel } from '../types/purchaseOrder'
 import { getDevRole } from '../services/authService'
+import { isAssignableSupplierAccount, mapSupplierEntity, type SupplierEntity } from '../types/supplier'
 export type { InvoiceStatus, Attachment, StatusHistoryEntry, Invoice, User, Comment } from '../types'
 
 export interface MockPurchaseOrder {
@@ -11,6 +12,7 @@ export interface MockPurchaseOrder {
   invoicedAmount: number
   deliveryDate: string
   status: POStatusLabel
+  supplierId: string
   supplierName: string
   createdOn: string
 }
@@ -301,18 +303,25 @@ export const invoices: Invoice[] = [
   },
 ]
 
-export interface MockSupplier {
-  id: string
-  name: string
-}
-
-export const suppliers: MockSupplier[] = [
-  { id: 'SUP-001', name: 'Contoso Supplies Ltd' },
-  { id: 'SUP-002', name: 'Fabrikam Industrial' },
-  { id: 'SUP-003', name: 'Northwind Logistics' },
+export const supplierAccountId = 'd9250f46-d926-f111-8341-000d3a36e41e'
+export const reviewerAccountIds = [
+  supplierAccountId,
+  '952a3168-d926-f111-8341-000d3a58de60',
 ]
 
-export const purchaseOrders: MockPurchaseOrder[] = [
+export const accounts: SupplierEntity[] = [
+  { accountid: supplierAccountId, name: 'Contoso Supplies Ltd', accountcategorycode: 132140000, statecode: 0 },
+  { accountid: '952a3168-d926-f111-8341-000d3a58de60', name: 'Fabrikam Industrial', accountcategorycode: 132140000, statecode: 0 },
+  { accountid: '66bc0181-d926-f111-8341-000d3a58de60', name: 'Northwind Logistics', accountcategorycode: 132140000, statecode: 0 },
+  { accountid: '11111111-1111-4111-8111-111111111111', name: 'Ordinary Customer', accountcategorycode: 2, statecode: 0 },
+  { accountid: '22222222-2222-4222-8222-222222222222', name: 'Inactive Supplier', accountcategorycode: 132140000, statecode: 1 },
+]
+
+export const listMockAssignableSuppliers = () => accounts
+  .filter(account => reviewerAccountIds.includes(account.accountid) && isAssignableSupplierAccount(account))
+  .map(mapSupplierEntity)
+
+export const purchaseOrders: MockPurchaseOrder[] = ([
   {
     id: 'PO-001',
     poNumber: 'PO-2026-001',
@@ -467,7 +476,20 @@ export const purchaseOrders: MockPurchaseOrder[] = [
     supplierName: 'Contoso Supplies Ltd',
     createdOn: '2026-03-01',
   },
-]
+] satisfies Omit<MockPurchaseOrder, 'supplierId'>[]).map(po => ({ ...po, supplierId: supplierAccountId }))
+
+purchaseOrders.push({
+  id: 'PO-OTHER-SUPPLIER',
+  poNumber: 'PO-FABRIKAM-001',
+  description: 'Purchase order for another supplier company',
+  totalAmount: 1000,
+  invoicedAmount: 0,
+  deliveryDate: '2026-05-01',
+  status: 'Issued',
+  supplierId: '952a3168-d926-f111-8341-000d3a58de60',
+  supplierName: 'Fabrikam Industrial',
+  createdOn: '2026-03-10',
+})
 
 export function getPurchaseOrderById(id: string): MockPurchaseOrder | undefined {
   return purchaseOrders.find((po) => po.id === id)

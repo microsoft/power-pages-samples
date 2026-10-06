@@ -13,8 +13,8 @@ export default function SubmitInvoice() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const preSelectedPO = searchParams.get('po') || ''
-  const { submit: submitInvoice, isSubmitting } = useCreateInvoiceAction()
-  const { purchaseOrders: availablePOs, isLoading: posLoading } = useSupplierPOs()
+  const { submit: submitInvoice, isSubmitting, error: submitError } = useCreateInvoiceAction()
+  const { purchaseOrders: availablePOs, isLoading: posLoading, error: posError } = useSupplierPOs()
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [form, setForm] = useState({
     poNumber: '',
@@ -52,7 +52,7 @@ export default function SubmitInvoice() {
 
   function validate() {
     const errs: Record<string, string> = {}
-    if (!form.selectedPOId) errs.poNumber = 'Please select a purchase order'
+    if (!selectedPO?.supplierId) errs.poNumber = 'Please select an available supplier purchase order'
     if (!form.amount || Number(form.amount) <= 0) errs.amount = 'Enter a valid amount'
     if (!form.dueDate) errs.dueDate = 'Due date is required'
     return errs
@@ -157,6 +157,17 @@ export default function SubmitInvoice() {
           Fill in the details to create and submit your invoice.
         </p>
       </div>
+
+      {(posError || submitError) && (
+        <p role="alert" style={{ color: 'var(--color-error)', marginBottom: 16 }}>
+          {posError || submitError}
+        </p>
+      )}
+      {!posLoading && !posError && availablePOs.length === 0 && (
+        <p role="status" style={{ color: 'var(--color-text-muted)', marginBottom: 16 }}>
+          No available purchase orders for your Company Name Account. Ask an administrator to check your active Supplier affiliation and assignments.
+        </p>
+      )}
 
       <form
         onSubmit={handleSubmit}

@@ -1,594 +1,366 @@
 {
-  "SITE_NAME": "Supplier Invoice Portal",
-  "GENERATED_AT": "2026-06-02T12:49:56.824Z",
-  "STRATEGY": "manual",
-  "EXPORT_TYPE": "unmanaged",
-  "APPROVAL_MODE": "N/A — dev-only, no deployment",
-  "HAS_ENV_VARS": false,
-  "SOLUTION_DONE": false,
-  "PIPELINE_DONE": false,
-  "PLAN_STATUS": "In Execution",
-  "LAST_INVOCATION_AT": "2026-06-02T12:51:55.370Z",
-  "APPROVED_BY": "Neeraj Nandwana",
-  "APPROVAL_DATE": "2026-06-02T12:51:10.902Z",
-  "stages": [
-    {
-      "label": "Dev",
-      "envUrl": "https://org8e8f5664.crm.dynamics.com/",
-      "envName": "PPCC 2025",
-      "type": "source"
-    }
-  ],
-  "steps": [
-    {
-      "name": "Setup solution",
-      "status": "pending",
-      "skip": false
-    }
-  ],
-  "pipelineMeta": null,
-  "risks": [
-    {
-      "type": "info",
-      "message": "A Dataverse solution will be created (or an existing one reused) for this site. The publisher prefix is irreversible once chosen — confirm carefully during setup-solution."
-    },
-    {
-      "type": "info",
-      "message": "18 auth-related site settings (Authentication/* and AzureAD/*) detected with values. setup-solution will ask which to back with environment variables so each stage can use different values. Skip any you do not need to vary per stage."
-    },
-    {
-      "type": "info",
-      "message": "7 credential-style site settings (ConsumerKey / ClientId / ClientSecret / etc.) detected. setup-solution will run a single bulk prompt to handle all of them — auto-classify by name, all-as-Secret, all-as-String, skip-all, or per-credential."
-    },
-    {
-      "type": "info",
-      "message": "This plan is dev-only — no pipeline or deployment. When you are ready to promote to other environments, re-run /power-pages:plan-alm and choose Power Platform Pipelines or Manual export/import."
-    }
-  ],
-  "solutionContents": {
+  "siteName": "Supplier Invoice Portal",
+  "strategy": "Fresh install or reviewed data migration",
+  "model": {
     "tables": [
-      "spnvc_invoice",
-      "spnvc_purchaseorder",
-      "spnvc_invoicecomment",
-      "spnvc_invoiceattachment",
-      "spnvc_supplier",
-      "spnvc_visaapplication",
-      "contact"
+      {
+        "logicalName": "spnvc_invoice",
+        "kind": "Custom table",
+        "columns": [
+          {
+            "logicalName": "spnvc_amount",
+            "type": "money"
+          },
+          {
+            "logicalName": "spnvc_amount_base",
+            "type": "money"
+          },
+          {
+            "logicalName": "spnvc_contactid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_description",
+            "type": "ntext"
+          },
+          {
+            "logicalName": "spnvc_duedate",
+            "type": "datetime"
+          },
+          {
+            "logicalName": "spnvc_invoicestatus",
+            "type": "picklist"
+          },
+          {
+            "logicalName": "spnvc_name",
+            "type": "nvarchar"
+          },
+          {
+            "logicalName": "spnvc_ponumber",
+            "type": "nvarchar"
+          },
+          {
+            "logicalName": "spnvc_purchaseorderid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_submissiondate",
+            "type": "datetime"
+          },
+          {
+            "logicalName": "spnvc_supplieraccountid",
+            "type": "lookup"
+          }
+        ]
+      },
+      {
+        "logicalName": "spnvc_invoiceattachment",
+        "kind": "Custom table",
+        "columns": [
+          {
+            "logicalName": "spnvc_contactid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_file",
+            "type": "file"
+          },
+          {
+            "logicalName": "spnvc_filesize",
+            "type": "nvarchar"
+          },
+          {
+            "logicalName": "spnvc_filetype",
+            "type": "nvarchar"
+          },
+          {
+            "logicalName": "spnvc_invoicecommentid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_invoiceid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_name",
+            "type": "nvarchar"
+          }
+        ]
+      },
+      {
+        "logicalName": "spnvc_invoicecomment",
+        "kind": "Custom table",
+        "columns": [
+          {
+            "logicalName": "spnvc_authorcontactid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_commenttext",
+            "type": "ntext"
+          },
+          {
+            "logicalName": "spnvc_contactid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_invoiceid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_linkedaction",
+            "type": "nvarchar"
+          },
+          {
+            "logicalName": "spnvc_name",
+            "type": "nvarchar"
+          }
+        ]
+      },
+      {
+        "logicalName": "spnvc_purchaseorder",
+        "kind": "Custom table",
+        "columns": [
+          {
+            "logicalName": "spnvc_deliverydate",
+            "type": "datetime"
+          },
+          {
+            "logicalName": "spnvc_description",
+            "type": "ntext"
+          },
+          {
+            "logicalName": "spnvc_name",
+            "type": "nvarchar"
+          },
+          {
+            "logicalName": "spnvc_postatus",
+            "type": "picklist"
+          },
+          {
+            "logicalName": "spnvc_supplieraccountid",
+            "type": "lookup"
+          },
+          {
+            "logicalName": "spnvc_totalamount",
+            "type": "money"
+          },
+          {
+            "logicalName": "spnvc_totalamount_base",
+            "type": "money"
+          }
+        ]
+      },
+      {
+        "logicalName": "account",
+        "kind": "Segmented standard table",
+        "columns": [
+          {
+            "logicalName": "accountcategorycode",
+            "type": "picklist"
+          }
+        ]
+      },
+      {
+        "logicalName": "contact",
+        "kind": "Segmented standard table",
+        "columns": []
+      }
     ],
-    "botComponents": [],
-    "siteSettings": {
-      "keepAsIs": [
-        {
-          "name": "CodeSite/Enabled"
-        },
-        {
-          "name": "CustomerSupport/DisplayAllUserActivitiesOnTimeline"
-        },
-        {
-          "name": "Footer/OutputCache/Enabled"
-        },
-        {
-          "name": "Header/OutputCache/Enabled"
-        },
-        {
-          "name": "Header/ShowAllProfileNavigationLinks"
-        },
-        {
-          "name": "HTTP/X-Frame-Options"
-        },
-        {
-          "name": "KnowledgeManagement/DisplayNotes"
-        },
-        {
-          "name": "KnowledgeManagement/NotesFilter"
-        },
-        {
-          "name": "MultiLanguage/DisplayLanguageCodeInURL"
-        },
-        {
-          "name": "MultiLanguage/MaximumDepthToClone"
-        },
-        {
-          "name": "OnlineDomains"
-        },
-        {
-          "name": "Profile/Enabled"
-        },
-        {
-          "name": "Profile/ForceSignUp"
-        },
-        {
-          "name": "Profile/ShowMarketingOptionsPanel"
-        },
-        {
-          "name": "Search/Enabled"
-        },
-        {
-          "name": "Search/FacetedView"
-        },
-        {
-          "name": "search/filters"
-        },
-        {
-          "name": "Search/IndexNotesAttachments"
-        },
-        {
-          "name": "Search/IndexQueryName"
-        },
-        {
-          "name": "search/query"
-        },
-        {
-          "name": "Search/RecordTypeFacetsEntities"
-        },
-        {
-          "name": "Site/AI/Skills/ActivateSite"
-        },
-        {
-          "name": "Site/AI/Skills/AddAiWebapi"
-        },
-        {
-          "name": "Site/AI/Skills/AddCloudFlow"
-        },
-        {
-          "name": "Site/AI/Skills/AddSampleData"
-        },
-        {
-          "name": "Site/AI/Skills/AuditPermissions"
-        },
-        {
-          "name": "Site/AI/Skills/CreateSite"
-        },
-        {
-          "name": "Site/AI/Skills/CreateWebroles"
-        },
-        {
-          "name": "Site/AI/Skills/DeploySite"
-        },
-        {
-          "name": "Site/AI/Skills/IntegrateWebApi"
-        },
-        {
-          "name": "Site/AI/Skills/SetupAuth"
-        },
-        {
-          "name": "Site/AI/Skills/SetupDatamodel"
-        },
-        {
-          "name": "Site/AI/Tools/AuthoringTool"
-        },
-        {
-          "name": "Site/BootstrapV5Enabled"
-        },
-        {
-          "name": "Summarization/Data/Enable"
-        },
-        {
-          "name": "Summarization/prompt/invoice_summary"
-        },
-        {
-          "name": "Summarization/prompt/myinvoices_summary"
-        },
-        {
-          "name": "Summarization/prompt/purchaseorder_summary"
-        },
-        {
-          "name": "Summarization/prompt/reviewqueue_summary"
-        },
-        {
-          "name": "ThemeFeature"
-        },
-        {
-          "name": "Webapi/contact/enabled"
-        },
-        {
-          "name": "Webapi/contact/fields"
-        },
-        {
-          "name": "Webapi/spnvc_invoice/enabled"
-        },
-        {
-          "name": "Webapi/spnvc_invoice/fields"
-        },
-        {
-          "name": "Webapi/spnvc_invoiceattachment/enabled"
-        },
-        {
-          "name": "Webapi/spnvc_invoiceattachment/fields"
-        },
-        {
-          "name": "Webapi/spnvc_invoicecomment/enabled"
-        },
-        {
-          "name": "Webapi/spnvc_invoicecomment/fields"
-        },
-        {
-          "name": "Webapi/spnvc_purchaseorder/enabled"
-        },
-        {
-          "name": "Webapi/spnvc_purchaseorder/fields"
-        },
-        {
-          "name": "Webapi/spnvc_supplier/enabled"
-        },
-        {
-          "name": "Webapi/spnvc_supplier/fields"
-        },
-        {
-          "name": "Webapi/spnvc_visaapplication/enabled"
-        },
-        {
-          "name": "Webapi/spnvc_visaapplication/fields"
-        },
-        {
-          "name": "Webapi/error/innererror"
-        }
-      ],
-      "authNoValue": [
-        {
-          "name": "Authentication/OpenAuth/Facebook/AppId"
-        },
-        {
-          "name": "Authentication/Registration/LoginButtonAuthenticationType"
-        },
-        {
-          "name": "Authentication/Registration/TermsPublicationDate"
-        }
-      ],
-      "promoteToEnvVar": [
-        {
-          "name": "Authentication/LoginThrottling/IpAddressTimeoutTimeSpan",
-          "value": "00:10:00"
-        },
-        {
-          "name": "Authentication/LoginThrottling/MaxAttemptsTimeLimitTimeSpan",
-          "value": "00:03:00"
-        },
-        {
-          "name": "Authentication/LoginThrottling/MaxInvaildAttemptsFromIPAddress",
-          "value": "1000"
-        },
-        {
-          "name": "Authentication/LoginTrackingEnabled",
-          "value": "False"
-        },
-        {
-          "name": "Authentication/OpenIdConnect/AzureAD/Caption",
-          "value": "Microsoft Entra ID"
-        },
-        {
-          "name": "Authentication/OpenIdConnect/AzureAD/RebrandDisclaimerEnabled",
-          "value": "false"
-        },
-        {
-          "name": "Authentication/Registration/AzureADLoginEnabled",
-          "value": "true"
-        },
-        {
-          "name": "Authentication/Registration/DenyMinors",
-          "value": "false"
-        },
-        {
-          "name": "Authentication/Registration/DenyMinorsWithoutParentalConsent",
-          "value": "false"
-        },
-        {
-          "name": "Authentication/Registration/EmailConfirmationEnabled",
-          "value": "true"
-        },
-        {
-          "name": "Authentication/Registration/Enabled",
-          "value": "true"
-        },
-        {
-          "name": "Authentication/Registration/ExternalLoginEnabled",
-          "value": "true"
-        },
-        {
-          "name": "Authentication/Registration/InvitationEnabled",
-          "value": "true"
-        },
-        {
-          "name": "Authentication/Registration/LocalLoginDeprecated",
-          "value": "False"
-        },
-        {
-          "name": "Authentication/Registration/LocalLoginEnabled",
-          "value": "true"
-        },
-        {
-          "name": "Authentication/Registration/OpenRegistrationEnabled",
-          "value": "true"
-        },
-        {
-          "name": "Authentication/Registration/ProfileRedirectEnabled",
-          "value": "\"false\""
-        },
-        {
-          "name": "Authentication/Registration/TermsAgreementEnabled",
-          "value": "false"
-        }
-      ],
-      "credentialNeedsDecision": [
-        {
-          "name": "Authentication/OpenAuth/Facebook/AppSecret",
-          "value": ""
-        },
-        {
-          "name": "Authentication/OpenAuth/LinkedIn/ConsumerKey",
-          "value": ""
-        },
-        {
-          "name": "Authentication/OpenAuth/LinkedIn/ConsumerSecret",
-          "value": ""
-        },
-        {
-          "name": "Authentication/OpenAuth/Microsoft/ClientId",
-          "value": ""
-        },
-        {
-          "name": "Authentication/OpenAuth/Microsoft/ClientSecret",
-          "value": ""
-        },
-        {
-          "name": "Authentication/OpenAuth/Twitter/ConsumerKey",
-          "value": ""
-        },
-        {
-          "name": "Authentication/OpenAuth/Twitter/ConsumerSecret",
-          "value": ""
-        }
-      ]
-    }
-  },
-  "sizeAnalysis": {
-    "totalSizeMB": {
-      "value": 4.4,
-      "tier": "green"
-    },
-    "componentCount": {
-      "value": 365,
-      "tier": "green"
-    },
-    "schemaAttrCount": {
-      "value": 1169,
-      "tier": "green"
-    },
-    "tableCount": {
-      "value": 19,
-      "tier": "yellow"
-    },
-    "webFilesAggregateMB": {
-      "value": 0,
-      "tier": "green"
-    },
-    "envVarCount": {
-      "value": 0,
-      "tier": "green"
-    }
-  },
-  "assetAdvisory": {
-    "enabled": true,
-    "candidates": [],
-    "recommendation": null
-  },
-  "splitStrategy": "single",
-  "appliedStrategies": [
-    "single"
-  ],
-  "compositeSubPartitioned": false,
-  "proposedSolutions": [
-    {
-      "uniqueName": "SupplierInvoicePortal",
-      "displayName": "Supplier Invoice Portal",
-      "order": 1,
-      "componentTypes": [
-        "All"
-      ],
-      "description": "All components packaged in a single managed solution. Estimated size is within recommended thresholds.",
-      "sizeMB": 4.4,
-      "componentCount": 365,
-      "components": []
-    }
-  ],
-  "recommendations": [],
-  "envVars": [],
-  "plannedEnvVarCount": 25,
-  "breakdown": {
-    "tables": 3.2,
-    "webFiles": 0,
-    "siteSettings": 0,
-    "cloudFlows": 0,
-    "webRolesAndPermissions": 0,
-    "envVars": 0,
-    "otherMetadata": 1.1
-  },
-  "estimationMethod": "metadata-based",
-  "estimationAccuracyPct": 15,
-  "truncationSuspected": false,
-  "truncationWarnings": [],
-  "webFilesDiskMeasuredMB": 0.5,
-  "webFilesDiskMeasuredPath": "dist",
-  "webFileSampleSize": 6,
-  "rawDiscovery": {
-    "estimate": {
-      "siteName": "Supplier Invoice Portal",
-      "publisherPrefix": "spnvc",
-      "solutionId": null,
-      "totalSizeMB": 4.4,
-      "componentCountSiteTotal": 365,
-      "componentCountSiteActionable": 236,
-      "componentCountInSolution": null,
-      "orphansOnSite": null,
-      "botCountScoped": 2,
-      "botComponentCountScoped": 30,
-      "bundleChunkCount": 129,
-      "bundleChunkNote": "129 hashed bundle chunks (Vite/Rollup) on the site — 0 are in the solution, 129 are orphans from prior pac pages upload-code-site runs. Cleanable via dedicated cleanup pass.",
-      "inSolution": null,
-      "tableCount": 19,
-      "schemaAttrCount": 1169,
-      "webFilesAggregateMB": 0,
-      "webFilesIndividual": [],
-      "webFileCount": 6,
-      "webFileSampleSize": 6,
-      "webFilesDiskMeasuredMB": 0.5,
-      "webFilesDiskMeasuredPath": "dist",
-      "webFilesDiskFileCount": 45,
-      "cloudFlowCount": 0,
-      "botCount": 2,
-      "envVarCount": 0,
-      "envVarCountScope": "publisher-prefix",
-      "envVarCountTenantWide": 0,
-      "mediaRatio": 0.31,
-      "siteType": "code-site",
-      "tables": [
-        {
-          "logicalName": "spnvc_invoice",
-          "attributeCount": 51
-        },
-        {
-          "logicalName": "spnvc_purchaseorder",
-          "attributeCount": 44
-        },
-        {
-          "logicalName": "spnvc_invoicecomment",
-          "attributeCount": 43
-        },
-        {
-          "logicalName": "spnvc_invoiceattachment",
-          "attributeCount": 45
-        },
-        {
-          "logicalName": "contact",
-          "attributeCount": 369
-        },
-        {
-          "logicalName": "spnvc_supplier",
-          "attributeCount": 44
-        },
-        {
-          "logicalName": "spnvc_carrier",
-          "attributeCount": 37
-        },
-        {
-          "logicalName": "spnvc_case",
-          "attributeCount": 62
-        },
-        {
-          "logicalName": "spnvc_casefeedback",
-          "attributeCount": 42
-        },
-        {
-          "logicalName": "spnvc_dealer",
-          "attributeCount": 54
-        },
-        {
-          "logicalName": "spnvc_document",
-          "attributeCount": 36
-        },
-        {
-          "logicalName": "spnvc_drawing",
-          "attributeCount": 40
-        },
-        {
-          "logicalName": "spnvc_drawingshare",
-          "attributeCount": 40
-        },
-        {
-          "logicalName": "spnvc_order",
-          "attributeCount": 47
-        },
-        {
-          "logicalName": "spnvc_orderlineitem",
-          "attributeCount": 45
-        },
-        {
-          "logicalName": "spnvc_product",
-          "attributeCount": 48
-        },
-        {
-          "logicalName": "spnvc_property",
-          "attributeCount": 45
-        },
-        {
-          "logicalName": "spnvc_shipment",
-          "attributeCount": 45
-        },
-        {
-          "logicalName": "spnvc_timelineentry",
-          "attributeCount": 32
-        }
-      ],
-      "breakdown": {
-        "tables": 3.2,
-        "webFiles": 0,
-        "siteSettings": 0,
-        "cloudFlows": 0,
-        "webRolesAndPermissions": 0,
-        "envVars": 0,
-        "otherMetadata": 1.1
+    "relationships": [
+      {
+        "name": "spnvc_contact_invoice_submitter",
+        "referencingTable": "spnvc_invoice",
+        "referencedTable": "contact",
+        "lookupColumn": "spnvc_contactid",
+        "navigationProperty": "spnvc_ContactId"
       },
-      "estimationMethod": "metadata-based",
-      "estimationAccuracyPct": 15,
-      "truncationSuspected": false,
-      "truncationWarnings": [],
-      "ppcGroundTruthCount": 312
+      {
+        "name": "spnvc_contact_invoiceattachment_contact",
+        "referencingTable": "spnvc_invoiceattachment",
+        "referencedTable": "contact",
+        "lookupColumn": "spnvc_contactid",
+        "navigationProperty": "spnvc_ContactId"
+      },
+      {
+        "name": "spnvc_contact_invoicecomment_author",
+        "referencingTable": "spnvc_invoicecomment",
+        "referencedTable": "contact",
+        "lookupColumn": "spnvc_authorcontactid",
+        "navigationProperty": "spnvc_AuthorContactId"
+      },
+      {
+        "name": "spnvc_contact_invoicecomment_contact",
+        "referencingTable": "spnvc_invoicecomment",
+        "referencedTable": "contact",
+        "lookupColumn": "spnvc_contactid",
+        "navigationProperty": "spnvc_ContactId"
+      },
+      {
+        "name": "spnvc_invoice_invoiceattachment",
+        "referencingTable": "spnvc_invoiceattachment",
+        "referencedTable": "spnvc_invoice",
+        "lookupColumn": "spnvc_invoiceid",
+        "navigationProperty": "spnvc_InvoiceId"
+      },
+      {
+        "name": "spnvc_invoice_invoicecomment",
+        "referencingTable": "spnvc_invoicecomment",
+        "referencedTable": "spnvc_invoice",
+        "lookupColumn": "spnvc_invoiceid",
+        "navigationProperty": "spnvc_InvoiceId"
+      },
+      {
+        "name": "spnvc_invoicecomment_invoiceattachment",
+        "referencingTable": "spnvc_invoiceattachment",
+        "referencedTable": "spnvc_invoicecomment",
+        "lookupColumn": "spnvc_invoicecommentid",
+        "navigationProperty": "spnvc_InvoiceCommentId"
+      },
+      {
+        "name": "spnvc_purchaseorder_invoice",
+        "referencingTable": "spnvc_invoice",
+        "referencedTable": "spnvc_purchaseorder",
+        "lookupColumn": "spnvc_purchaseorderid",
+        "navigationProperty": "spnvc_PurchaseOrderId"
+      },
+      {
+        "name": "spnvc_account_invoice",
+        "referencingTable": "spnvc_invoice",
+        "referencedTable": "account",
+        "lookupColumn": "spnvc_supplieraccountid",
+        "navigationProperty": "spnvc_SupplierAccountId"
+      },
+      {
+        "name": "spnvc_account_purchaseorder",
+        "referencingTable": "spnvc_purchaseorder",
+        "referencedTable": "account",
+        "lookupColumn": "spnvc_supplieraccountid",
+        "navigationProperty": "spnvc_SupplierAccountId"
+      },
+      {
+        "name": "contact_customer_accounts (standard dependency)",
+        "referencingTable": "contact",
+        "referencedTable": "account",
+        "lookupColumn": "parentcustomerid",
+        "navigationProperty": "parentcustomerid_account"
+      }
+    ],
+    "manyToManyRelationships": {
+      "spnvc_account_contact": {
+        "firstTable": "account",
+        "secondTable": "contact",
+        "intersectTable": "spnvc_account_contact",
+        "firstNavigationProperty": "spnvc_account_contact",
+        "secondNavigationProperty": "spnvc_account_contact"
+      }
     },
-    "splitPlan": {
-      "sizeAnalysis": {
-        "totalSizeMB": {
-          "value": 4.4,
-          "tier": "green"
-        },
-        "componentCount": {
-          "value": 365,
-          "tier": "green"
-        },
-        "schemaAttrCount": {
-          "value": 1169,
-          "tier": "green"
-        },
-        "tableCount": {
-          "value": 19,
-          "tier": "yellow"
-        },
-        "webFilesAggregateMB": {
-          "value": 0,
-          "tier": "green"
-        },
-        "envVarCount": {
-          "value": 0,
-          "tier": "green"
+    "forms": {
+      "contact": {
+        "id": "c1c97961-2d42-4103-abf8-2fe2bdf38224",
+        "name": "Portal Contact (Enhanced)",
+        "relationship": "spnvc_account_contact",
+        "defaultViewId": "e590060a-418f-5de4-93d3-98e2bf5e8b57",
+        "transport": "differential"
+      }
+    },
+    "tableAssets": {
+      "spnvc_invoice": {
+        "forms": [
+          "b4d62e96-e21d-4051-9b88-4dd5eb963015",
+          "5aa99787-7291-473a-85cf-0df3c0057596",
+          "e3419bae-b485-415b-b595-8537f8eff87c"
+        ],
+        "views": [
+          "2a11b7a1-39e7-4d1e-a1dc-c30d4958c4eb",
+          "40fc6524-44bd-49f2-8ccb-944a9d12f516",
+          "46a94860-c18c-4e5d-a12d-e9ebf0b2a3b5",
+          "4ad954ec-10fb-42c6-b19a-03e33308b7b2",
+          "d38cafb7-4186-f111-ab0f-000d3a5b6e82",
+          "e514f7b2-565a-4de8-89ee-513ebb1c4a6b",
+          "f38b21e4-54b6-4bbd-acb4-d33d9a492ef8"
+        ],
+        "ribbonDiff": true
+      },
+      "spnvc_invoiceattachment": {
+        "forms": [
+          "21bcd544-9e44-4cbf-955f-c33447049c03",
+          "a517e9f6-03ea-42f5-82e9-a24a88371018",
+          "01020cc6-656c-47d1-8d26-3b60d3b1c646"
+        ],
+        "views": [
+          "2d14b48e-7520-4098-afd8-9ed854a7a3c5",
+          "363a92d3-c7f2-4f0d-ba83-0fd606c52359",
+          "37a96b45-c7d2-4d97-8fc9-a3da790958a4",
+          "44951711-4d88-488e-9402-66e776062786",
+          "4a08ac56-4720-4ebe-b997-42f1e9e9fd9f",
+          "7069aaef-3444-46a7-aa88-fa33747237db",
+          "74c365c8-4186-f111-ab0f-000d3a5b69cd"
+        ],
+        "ribbonDiff": true
+      },
+      "spnvc_invoicecomment": {
+        "forms": [
+          "a3e3df7a-5cb2-44d0-994c-c1c6915d79eb",
+          "6ed0643a-b875-4a71-ad9b-d3605a75dba4",
+          "560aaf37-93e2-443c-ab32-3ac150848828"
+        ],
+        "views": [
+          "07543611-6bf7-4dfc-b8c2-b697cd7c6573",
+          "1d5c2425-15d1-4902-a54b-274bf1d54fd7",
+          "341fda13-bda0-438e-89d5-b3f6726dc55e",
+          "8c42da1f-5334-469a-b385-f139de823b9e",
+          "b51f711e-45c3-4c6b-98fc-772813440c75",
+          "c629fb8a-af44-430b-bae8-977528db85e8",
+          "e07657c2-4186-f111-ab0f-000d3a5b69cd"
+        ],
+        "ribbonDiff": true
+      },
+      "spnvc_purchaseorder": {
+        "forms": [
+          "33288de1-4dff-4722-a810-456ba8c26ce2",
+          "ebb3b076-7f21-4f3c-801e-aded62456b96",
+          "82b448b3-8293-4ec2-8644-e07d2a08b64c"
+        ],
+        "views": [
+          "3bafba94-d602-44ed-aa5c-9d5924d6079a",
+          "5a7893b1-4186-f111-ab0f-000d3a5b6e82",
+          "621ee0c0-8e8e-4547-a179-6c3b25f73d53",
+          "7c36d016-71b2-45fe-abbb-af5b4a600c25",
+          "e132fe42-17f5-46ac-9878-4f526b2bd63b",
+          "f3674512-7c51-4e77-833a-3315df86e0d9",
+          "f9f0455f-5dda-424a-aa3a-eb8cf171dc57"
+        ],
+        "ribbonDiff": true
+      }
+    },
+    "choices": {
+      "spnvc_invoice": {
+        "spnvc_invoicestatus": {
+          "Draft": 1,
+          "Submitted": 2,
+          "Approved": 5,
+          "Rejected": 6,
+          "Paid": 7
         }
       },
-      "assetAdvisory": {
-        "enabled": true,
-        "candidates": [],
-        "recommendation": null
-      },
-      "splitStrategy": "single",
-      "appliedStrategies": [
-        "single"
-      ],
-      "compositeSubPartitioned": false,
-      "proposedSolutions": [
-        {
-          "uniqueName": "SupplierInvoicePortal",
-          "displayName": "Supplier Invoice Portal",
-          "order": 1,
-          "componentTypes": [
-            "All"
-          ],
-          "description": "All components packaged in a single managed solution. Estimated size is within recommended thresholds.",
-          "sizeMB": 4.4,
-          "componentCount": 365,
-          "components": []
+      "spnvc_purchaseorder": {
+        "spnvc_postatus": {
+          "Draft": 1,
+          "Issued": 2,
+          "Partially Invoiced": 3,
+          "Fully Invoiced": 4,
+          "Closed": 5,
+          "Cancelled": 6
         }
-      ],
-      "recommendations": [],
-      "truncationSuspected": false,
-      "truncationWarnings": []
-    },
-    "hostResolution": null
+      },
+      "account": {
+        "accountcategorycode": {
+          "Preferred Customer": 1,
+          "Standard": 2,
+          "Supplier": 132140000
+        }
+      }
+    }
   }
 }
