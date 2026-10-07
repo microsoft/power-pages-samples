@@ -108,7 +108,7 @@ export default function Contact() {
         </div>
 
         {/* Hours & Social */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 24 }}>
           <div className="card animate-in animate-in-5" style={{ padding: 32 }}>
             <h2 style={{ fontSize: '1.125rem', marginBottom: 16 }}>{t('contact.hoursTitle')}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
