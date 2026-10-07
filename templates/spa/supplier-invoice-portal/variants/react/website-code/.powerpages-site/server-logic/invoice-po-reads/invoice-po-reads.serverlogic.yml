@@ -1,0 +1,7 @@
+adx_serverlogic_adx_webrole:
+  - 997e7996-e241-4117-9c09-28e90a1fcdbc
+  - c8031dd9-b8d4-435a-87df-3b90748d2fc4
+description: Fixed invoice and purchase-order reads through the caller-scoped Dataverse connector for the documented OData relationship-query limitation.
+display_name: Invoice and purchase-order reads
+id: 5bcce9c8-8919-4bf8-99ab-4d6d7d9e800f
+name: invoice-po-reads

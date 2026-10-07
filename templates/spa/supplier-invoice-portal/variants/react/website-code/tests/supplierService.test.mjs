@@ -8,7 +8,7 @@ let suppliers
 let orders
 let invoices
 let types
-let fetchXml
+let api
 let affiliation
 let mockData
 
@@ -24,7 +24,7 @@ before(async () => {
   orders = await server.ssrLoadModule('/src/services/purchaseOrderService.ts')
   invoices = await server.ssrLoadModule('/src/services/invoiceService.ts')
   types = await server.ssrLoadModule('/src/types/supplier.ts')
-  fetchXml = await server.ssrLoadModule('/src/services/fetchXmlApi.ts')
+  api = await server.ssrLoadModule('/src/services/powerPagesApi.ts')
   affiliation = await server.ssrLoadModule('/src/services/supplierAffiliationService.ts')
   mockData = await server.ssrLoadModule('/src/data/mockData.ts')
 })
@@ -41,14 +41,11 @@ test('assignment queries only active Supplier Accounts and maps standard keys', 
     if (url === '/_layout/tokenhtml') return new Response('<input value="test-token" />')
     const request = new URL(url, 'https://portal.example')
     assert.equal(request.pathname, '/_api/accounts')
-    const xml = request.searchParams.get('fetchXml')
-    for (const column of ['accountid', 'name', 'accountcategorycode', 'statecode']) {
-      assert.ok(xml.includes(`<attribute name="${column}"/>`))
-    }
-    assert.ok(xml.includes('<condition attribute="accountcategorycode" operator="eq" value="132140000"/>'))
-    assert.ok(xml.includes('<condition attribute="statecode" operator="eq" value="0"/>'))
-    assert.ok(xml.includes('<order attribute="name" descending="false"/>'))
-    assert.ok(!xml.includes('contactid'), 'table permissions determine the current contact')
+    assert.equal(request.searchParams.get('$select'), 'accountid,name,accountcategorycode,statecode')
+    assert.equal(request.searchParams.get('$filter'), '(accountcategorycode eq 132140000 and statecode eq 0)')
+    assert.equal(request.searchParams.get('$orderby'), 'name asc')
+    assert.equal(request.searchParams.get('fetchXml'), null)
+    assert.ok(!request.search.includes('contactid'), 'table permissions determine the current contact')
     return Response.json({ value: [account] })
   })
   assert.deepEqual(await suppliers.listAssignableSuppliers(), [{ id: accountId, name: account.name, status: 'Active' }])
@@ -66,10 +63,8 @@ test('get supplier by ID verifies Supplier category without hiding API errors', 
   let response = account
   mock.method(globalThis, 'fetch', async (url) => {
     if (url === '/_layout/tokenhtml') return new Response('<input value="test-token" />')
-    assert.ok(url.startsWith('/_api/accounts?'))
-    const xml = new URL(url, 'https://portal.example').searchParams.get('fetchXml')
-    assert.ok(xml.includes(`<condition attribute="accountid" operator="eq" value="${accountId}"/>`))
-    return Response.json({ value: [response] })
+    assert.equal(new URL(url, 'https://portal.example').pathname, `/_api/accounts(${accountId})`)
+    return Response.json(response)
   })
   assert.equal((await suppliers.getSupplierById(accountId)).id, accountId)
   response = { ...account, accountcategorycode: 2 }
@@ -82,18 +77,27 @@ test('get supplier by ID verifies Supplier category without hiding API errors', 
 })
 
 test('invoice and PO list/get map Account lookup annotations without requiring Account reads', async () => {
+  let balanceReads = 0
   mock.method(globalThis, 'fetch', async (url) => {
     if (url === '/_layout/tokenhtml') return new Response('<input value="test-token" />')
     const request = new URL(url, 'https://portal.example')
-    const xml = request.searchParams.get('fetchXml')
-    assert.ok(xml.includes('<attribute name="spnvc_supplieraccountid"/>'))
+    const serverRead = request.pathname === '/_api/serverlogics/invoice-po-reads'
+    if (serverRead && request.searchParams.get('select') === 'spnvc_invoiceid,spnvc_amount,spnvc_invoicestatus,_spnvc_purchaseorderid_value') {
+      balanceReads++
+      assert.equal(request.searchParams.get('table'), 'spnvc_invoices')
+      return Response.json({ success: true, error: null, data: JSON.stringify({ result: { value: [], '@odata.count': 0 } }) })
+    }
+    assert.ok(request.searchParams.get(serverRead ? 'select' : '$select').split(',').includes('_spnvc_supplieraccountid_value'))
+    assert.equal(request.searchParams.get('fetchXml'), null)
     assert.equal(request.searchParams.get('$expand'), null)
     const entity = {
       spnvc_invoiceid: recordId, spnvc_purchaseorderid: recordId,
       _spnvc_supplieraccountid_value: accountId,
       '_spnvc_supplieraccountid_value@OData.Community.Display.V1.FormattedValue': account.name,
     }
-    return Response.json({ value: [entity] })
+    return Response.json(serverRead
+      ? { success: true, error: null, data: JSON.stringify({ result: { value: [entity], '@odata.count': 1 } }) }
+      : entity)
   })
   for (const record of [
     (await invoices.listInvoices()).items[0],
@@ -104,75 +108,87 @@ test('invoice and PO list/get map Account lookup annotations without requiring A
     assert.equal(record.supplierId, accountId)
     assert.equal(record.supplierName, account.name)
   }
+  assert.equal(balanceReads, 2)
 })
 
-test('invoice and PO create/update bind Accounts using the new navigation property', async () => {
+test('scoped creates send selectors while direct updates retain the actual Account navigation binding', async () => {
   const writes = []
   mock.method(globalThis, 'fetch', async (url, options = {}) => {
     if (url === '/_layout/tokenhtml') return new Response('<input value="test-token" />')
-    if (url.startsWith('/_api/accounts?')) return Response.json({ value: [account] })
+    if (url.startsWith('/_api/accounts(')) return Response.json(account)
+    const request = new URL(url, 'https://portal.example')
+    if (request.pathname === '/_api/serverlogics/invoice-po-reads' && request.searchParams.get('table') === 'spnvc_invoices') {
+      assert.equal(options.method, 'GET')
+      assert.equal(request.searchParams.get('select'), 'spnvc_invoiceid,spnvc_amount,spnvc_invoicestatus,_spnvc_purchaseorderid_value')
+      return Response.json({ success: true, error: null, data: JSON.stringify({ result: { value: [], '@odata.count': 0 } }) })
+    }
     if (['POST', 'PATCH'].includes(options.method)) {
-      writes.push(JSON.parse(options.body))
+      writes.push({ method: options.method, url, body: JSON.parse(options.body) })
       if (options.method === 'PATCH') return new Response(null, { status: 204 })
     }
     const entity = {
       spnvc_invoiceid: recordId, spnvc_purchaseorderid: recordId,
       _spnvc_supplieraccountid_value: accountId, spnvc_SupplierAccountId: account,
+      _spnvc_contactid_value: recordId, _spnvc_purchaseorderid_value: recordId,
+      spnvc_name: 'FIXTURE', spnvc_amount: 1, spnvc_totalamount: 1, spnvc_invoicestatus: 1, spnvc_postatus: 1,
     }
-    return Response.json(options.method === 'POST' ? entity : { value: [entity] })
+    return options.method === 'POST'
+      ? Response.json({ success: true, error: null, data: JSON.stringify({ record: entity }) }) : Response.json(entity)
   })
-  await invoices.createInvoice({ invoiceNumber: 'INV-TEST', amount: 1, supplierId: accountId })
+  await invoices.createInvoice({ invoiceNumber: 'INV-TEST', amount: 1, supplierId: accountId, purchaseOrderId: recordId })
   await invoices.updateInvoice(recordId, { supplierId: accountId })
   await orders.createPurchaseOrder({ poNumber: 'PO-TEST', totalAmount: 1, supplierId: accountId })
   await orders.updatePurchaseOrder(recordId, { supplierId: accountId })
-  for (const body of writes) {
+  for (const { body } of writes.filter(write => write.method === 'PATCH')) {
     assert.equal(body['spnvc_SupplierAccountId@odata.bind'], `/accounts(${accountId})`)
     assert.equal(body['spnvc_SupplierId@odata.bind'], undefined)
   }
+  const creates = writes.filter(write => write.method === 'POST')
+  assert.deepEqual(creates.map(write => write.url), ['/_api/serverlogics/submit-invoice', '/_api/serverlogics/create-purchase-order'])
+  assert.equal(creates[0].body.supplierId, undefined)
+  assert.equal(creates[1].body.supplierId, accountId)
   await orders.updatePurchaseOrder(recordId, { supplierId: null })
-  assert.equal(writes.at(-1)['spnvc_SupplierAccountId@odata.bind'], null)
+  assert.equal(writes.at(-1).body['spnvc_SupplierAccountId@odata.bind'], null)
 })
 
-test('FetchXML preserves typed filters, escaping, count and complete paging cookies', async () => {
-  const url = fetchXml.buildFetchXmlUrl('spnvc_invoices', {
+test('OData preserves typed filters, escaping, count and complete continuation pages', async () => {
+  const url = api.buildCollectionUrl('spnvc_invoices', {
     select: 'spnvc_invoiceid,_spnvc_supplieraccountid_value',
-    filter: fetchXml.and(fetchXml.eq('spnvc_invoicestatus', 2),
-      fetchXml.contains('spnvc_name', `O'Brien & <100%>`)),
-    count: true, pageSize: 1, orderBy: 'createdon desc',
+    filter: api.and(api.eq('spnvc_invoicestatus', 2),
+      api.contains('spnvc_name', `O'Brien & <100%>`)),
+    count: true, orderBy: 'createdon desc',
   })
-  const xml = new URL(url, 'https://portal.example').searchParams.get('fetchXml')
-  assert.ok(xml.includes('returntotalrecordcount="true"'))
-  assert.ok(xml.includes('O&apos;Brien &amp; &lt;100[%]&gt;'))
-  const rawCookie = '<cookie page="1"><spnvc_invoiceid last="a" first="a"/></cookie>'
-  const envelope = `<cookie pagenumber="2" pagingcookie="${encodeURIComponent(encodeURIComponent(rawCookie))}" istracking="False" />`
+  const request = new URL(url, 'https://portal.example')
+  assert.equal(request.searchParams.get('$count'), 'true')
+  assert.equal(request.searchParams.get('$filter'), `(spnvc_invoicestatus eq 2 and contains(spnvc_name,'O''Brien & <100%>'))`)
+  assert.equal(request.searchParams.get('$top'), null, 'page size must not cap the complete collection')
+  const nextLink = '/_api/spnvc_invoices?$select=spnvc_invoiceid&$skiptoken=opaque%26cursor'
   let requests = 0
-  mock.method(globalThis, 'fetch', async url => {
+  mock.method(globalThis, 'fetch', async (url, options) => {
     if (url === '/_layout/tokenhtml') return new Response('<input value="test-token" />')
+    assert.ok(options.headers.get('Prefer').includes('odata.maxpagesize=1'))
     requests++
     if (requests === 1) {
       return Response.json({
         value: [{ id: 'first' }],
-        '@Microsoft.Dynamics.CRM.totalrecordcount': 2,
-        '@Microsoft.Dynamics.CRM.fetchxmlpagingcookie': envelope,
-        '@Microsoft.Dynamics.CRM.morerecords': true,
+        '@odata.count': 2,
+        '@odata.nextLink': nextLink,
       })
     }
-    const next = new URL(url, 'https://portal.example').searchParams.get('fetchXml')
-    assert.ok(next.includes('page="2"'))
-    assert.ok(next.includes('paging-cookie="&lt;cookie page=&quot;1&quot;'))
+    assert.equal(url, nextLink)
     return Response.json({ value: [{ id: 'second' }] })
   })
-  assert.deepEqual(await fetchXml.fetchAllXmlPages(url), [{ id: 'first' }, { id: 'second' }])
-  assert.throws(() => fetchXml.buildFetchXmlUrl('accounts', { select: 'name"/><bad', pageSize: 1 }))
-  assert.throws(() => fetchXml.buildFetchXmlUrl('accounts', { select: 'name', pageSize: 0 }))
+  assert.deepEqual(await api.fetchAllPages(url, 1), [{ id: 'first' }, { id: 'second' }])
+  assert.throws(() => api.buildCollectionUrl('accounts', { select: 'name"/><bad' }))
+  await assert.rejects(api.fetchODataCollection(url, 0), /page size/)
 })
 
-test('FetchXML fails explicitly instead of truncating a malformed page response', async () => {
-  const url = fetchXml.buildFetchXmlUrl('accounts', { select: 'accountid' })
+test('OData fails explicitly instead of truncating a malformed page response', async () => {
+  const url = api.buildCollectionUrl('accounts', { select: 'accountid' })
   mock.method(globalThis, 'fetch', async url => url === '/_layout/tokenhtml'
     ? new Response('<input value="test-token" />')
-    : Response.json({ value: [], '@Microsoft.Dynamics.CRM.morerecords': true }))
-  await assert.rejects(fetchXml.fetchXmlCollection(url), /without a paging cookie/)
+    : Response.json({ value: null }))
+  await assert.rejects(api.fetchODataCollection(url), /Missing OData collection/)
 })
 
 test('reviewer picker follows assigned A/B, excludes unassigned C and reflects removal without company fallback', () => {
@@ -202,11 +218,10 @@ test('supplier affiliation uses the Self Contact Company Name, rejecting missing
       assert.ok(url.startsWith(`/_api/contacts(${globalThis.window.Microsoft.Dynamic365.Portal.User.contactId})?`))
       return Response.json(data)
     }
-    assert.ok(url.startsWith('/_api/accounts?'))
-    const xml = new URL(url, 'https://portal.example').searchParams.get('fetchXml')
-    assert.ok(xml.includes(`<condition attribute="accountid" operator="eq" value="${accountId}"/>`))
+    assert.equal(new URL(url, 'https://portal.example').pathname, `/_api/accounts(${accountId})`)
     if (denied) return new Response('Forbidden', { status: 403 })
-    return Response.json({ value: companies })
+    if (!companies.length) return new Response(null, { status: 404 })
+    return Response.json(companies[0])
   })
   try {
     assert.equal(await affiliation.getSupplierCompanyId(), accountId)
@@ -236,14 +251,14 @@ test('supplier affiliation uses the Self Contact Company Name, rejecting missing
   }
 })
 
-test('company-wide invoice mapping supports FetchXML logical lookup fields without Account reads', async () => {
+test('company-wide invoice mapping reads OData lookup annotations without Account reads', async () => {
   mock.method(globalThis, 'fetch', async url => url === '/_layout/tokenhtml'
     ? new Response('<input value="test-token" />')
-    : Response.json({ value: [{
-      spnvc_invoiceid: recordId, spnvc_supplieraccountid: accountId,
-      'spnvc_supplieraccountid@OData.Community.Display.V1.FormattedValue': account.name,
-      spnvc_contactid: '11111111-1111-4111-8111-111111111111',
-    }] }))
+    : Response.json({
+      spnvc_invoiceid: recordId, _spnvc_supplieraccountid_value: accountId,
+      '_spnvc_supplieraccountid_value@OData.Community.Display.V1.FormattedValue': account.name,
+      _spnvc_contactid_value: '11111111-1111-4111-8111-111111111111',
+    }))
   const result = await invoices.getInvoiceById(recordId)
   assert.equal(result.supplierId, accountId)
   assert.equal(result.supplierName, account.name)
@@ -256,7 +271,7 @@ test('PO create and reassignment reject inactive, ordinary or inaccessible Accou
   mock.method(globalThis, 'fetch', async (url, options = {}) => {
     if (url === '/_layout/tokenhtml') return new Response('<input value="test-token" />')
     if (options.method === 'POST' || options.method === 'PATCH') writes++
-    return Response.json({ value: entities })
+    return entities.length ? Response.json(entities[0]) : new Response(null, { status: 404 })
   })
   for (const candidate of [[], [{ ...account, statecode: 1 }], [{ ...account, accountcategorycode: 2 }]]) {
     entities = candidate

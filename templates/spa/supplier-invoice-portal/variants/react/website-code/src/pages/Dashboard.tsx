@@ -19,8 +19,8 @@ export default function Dashboard() {
   usePageTitle('Dashboard')
   const { displayName } = useAuth()
   const { isReviewer } = useAuthorization()
-  const { metrics: m, isLoading: metricsLoading } = useDashboardMetrics(isReviewer)
-  const { invoices: recentInvoices, isLoading: invoicesLoading } = useRecentInvoices(5, isReviewer)
+  const { metrics: m, isLoading: metricsLoading, error: metricsError } = useDashboardMetrics(isReviewer)
+  const { invoices: recentInvoices, isLoading: invoicesLoading, error: invoicesError } = useRecentInvoices(5, isReviewer)
 
   const metrics = useMemo(() => {
     if (isReviewer) {
@@ -155,7 +155,7 @@ export default function Dashboard() {
       </div>
 
       {/* Onboarding card for first-time users */}
-      {!metricsLoading && m.total === 0 && (
+      {!metricsLoading && !metricsError && m.total === 0 && (
         <div className="onboarding-card animate-in animate-in-1" style={{ marginBottom: 28 }}>
           <FileText size={40} color="var(--color-primary)" aria-hidden="true" style={{ marginBottom: 12 }} />
           <h3 style={{ fontFamily: 'var(--font-heading)', marginBottom: 8 }}>Get started with your first invoice</h3>
@@ -183,6 +183,8 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
+      ) : metricsError ? (
+        <div role="alert" className="error-banner" style={{ marginBottom: 32 }}>{metricsError}</div>
       ) : (
       <div
         style={{
@@ -311,6 +313,8 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+        ) : invoicesError ? (
+          <div role="alert" className="error-banner" style={{ margin: 24 }}>{invoicesError}</div>
         ) : recentInvoices.length === 0 ? (
           <div style={{ padding: '48px 24px', textAlign: 'center' }}>
             <FileText size={40} color="var(--color-text-muted)" aria-hidden="true" style={{ marginBottom: 12 }} />

@@ -138,6 +138,28 @@ const dataSummaryErrorMessage = (
 ): string =>
   (code && DATA_SUMMARY_ERRORS[code]) ?? `Data summarization failed: ${status} ${statusText}`
 
+async function dataSummaryResponseError(response: Response): Promise<DataSummaryApiError> {
+  let error: {
+    code?: string; message?: string; innererror?: { code?: string; message?: string }
+  } | undefined
+  try {
+    const payload = await response.json()
+    error = payload?.error
+  } catch {
+    // The portal can return an HTML error instead of its JSON envelope.
+  }
+  const code = typeof error?.code === 'string' ? error.code : undefined
+  const relationshipFailure = response.status === 400 && code?.toLowerCase() === '9004010d' &&
+    typeof error?.innererror?.code === 'string' && error.innererror.code.toLowerCase() === '0x80040216' &&
+    error.innererror.message === 'entityRelationshipRole for given navigation property not found'
+  const message = relationshipFailure
+    ? "AI summaries are unavailable for the site's current relationship permission queries. No summary was generated."
+    : typeof error?.message === 'string' && !DATA_SUMMARY_ERRORS[code ?? '']
+      ? error.message
+      : dataSummaryErrorMessage(code, response.status, response.statusText)
+  return new DataSummaryApiError(message, response.status, code)
+}
+
 // -- Summary normalization ----------------------------------------------------
 
 /**
@@ -223,20 +245,7 @@ export async function fetchDataSummary(
   })
 
   if (!response.ok) {
-    let code: string | undefined
-    let serverMessage: string | undefined
-    try {
-      const errBody = await response.json()
-      code = errBody?.error?.code
-      serverMessage = errBody?.error?.message
-    } catch {
-      /* non-JSON body, fall back to status text */
-    }
-    const message =
-      serverMessage && !DATA_SUMMARY_ERRORS[code ?? '']
-        ? serverMessage
-        : dataSummaryErrorMessage(code, response.status, response.statusText)
-    throw new DataSummaryApiError(message, response.status, code)
+    throw await dataSummaryResponseError(response)
   }
 
   const payload = (await response.json()) as DataSummaryResponse
@@ -387,20 +396,7 @@ export async function fetchListSummary(
   })
 
   if (!response.ok) {
-    let code: string | undefined
-    let serverMessage: string | undefined
-    try {
-      const errBody = await response.json()
-      code = errBody?.error?.code
-      serverMessage = errBody?.error?.message
-    } catch {
-      /* non-JSON body */
-    }
-    const message =
-      serverMessage && !DATA_SUMMARY_ERRORS[code ?? '']
-        ? serverMessage
-        : dataSummaryErrorMessage(code, response.status, response.statusText)
-    throw new DataSummaryApiError(message, response.status, code)
+    throw await dataSummaryResponseError(response)
   }
 
   const payload = (await response.json()) as DataSummaryResponse

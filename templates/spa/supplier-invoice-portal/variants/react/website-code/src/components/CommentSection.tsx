@@ -1,8 +1,7 @@
 import { useState, useRef } from 'react'
 import { MessageSquare, Send, ArrowRightCircle, Paperclip, X, FileText, ImageIcon, Loader2 } from 'lucide-react'
 import type { Attachment, Comment, StatusHistoryEntry } from '../types'
-import { getCurrentUser } from '../services/authService'
-import { getCurrentMockUser } from '../data/mockData'
+import { getUserDisplayName, getUserInitials } from '../services/authService'
 
 interface ActivityItem {
   id: string
@@ -105,15 +104,8 @@ export default function CommentSection({ comments, statusHistory, onAddComment, 
   const [fileError, setFileError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Get current user dynamically (works in dev and production)
-  const isDev = typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  const ppUser = getCurrentUser()
-  const mockUser = isDev ? getCurrentMockUser() : null
-  const userName = ppUser ? `${ppUser.firstName} ${ppUser.lastName}` : mockUser?.name ?? 'You'
-  const userInitials = ppUser
-    ? `${ppUser.firstName?.[0] ?? ''}${ppUser.lastName?.[0] ?? ''}`.toUpperCase()
-    : mockUser?.initials ?? 'U'
+  const userName = getUserDisplayName() || 'You'
+  const userInitials = getUserInitials() || 'U'
 
   // Merge status history notes and comments into one chronological feed
   const activityItems: ActivityItem[] = []

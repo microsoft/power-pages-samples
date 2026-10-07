@@ -1,0 +1,6 @@
+adx_serverlogic_adx_webrole:
+  - 997e7996-e241-4117-9c09-28e90a1fcdbc
+description: Source-only caller-scoped invoice create candidate with server-derived Contact and Company, eligible PO validation and verified persistence. Runtime creation is unverified.
+display_name: Caller-scoped invoice create
+id: a35ad1c9-dc31-42b4-96f5-492023721f66
+name: submit-invoice

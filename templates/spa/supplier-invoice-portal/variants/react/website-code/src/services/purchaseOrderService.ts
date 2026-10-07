@@ -3,9 +3,8 @@
 
 import {
   powerPagesFetch,
-  powerPagesFetchResponse,
-  parseResponseBody,
-  extractRecordId,
+  collectPaginatedItems, collectionCount,
+  and, or, eq, contains, isGuid, type ODataFilter,
   type PaginatedResult,
 } from './powerPagesApi'
 import {
@@ -17,10 +16,13 @@ import {
   PO_STATUS,
   PO_STATUS_VALUE_TO_LABEL,
   mapPurchaseOrderEntity,
+  PO_INVOICED_STATUSES,
 } from '../types/purchaseOrder'
-import { callServerLogic } from './serverLogicApi'
+import { callServerLogic, createBusinessRecord } from './serverLogicApi'
 import { requireAssignableSupplier } from './supplierService'
-import { buildFetchXmlUrl, fetchXmlCollection, fetchXmlRecord, and, or, eq, contains, type FetchFilter } from './fetchXmlApi'
+import { SUPPLIER_CATEGORY, ACCOUNT_STATE } from '../types/supplier'
+import { fetchBusinessCollection, fetchBusinessRecord } from './businessReadService'
+import { INVOICE_STATUS } from '../types/invoice'
 
 // -- Constants ----------------------------------------------------------------
 
@@ -38,6 +40,55 @@ const PO_SELECT = [
   'modifiedon',
 ].join(',')
 
+interface LinkedInvoiceAmount {
+  spnvc_invoiceid: string
+  spnvc_amount: number
+  spnvc_invoicestatus: number
+  _spnvc_purchaseorderid_value: string
+}
+
+async function mapPurchaseOrdersWithBalances(entities: PurchaseOrderEntity[]): Promise<PurchaseOrder[]> {
+  const ids = [...new Set(entities.map(entity => {
+    if (!isGuid(entity.spnvc_purchaseorderid)) throw new Error('Missing purchase order ID for invoiced totals.')
+    return entity.spnvc_purchaseorderid.toLowerCase()
+  }))]
+  const totals = new Map<string, number>()
+  const statuses = PO_INVOICED_STATUSES.map(status => INVOICE_STATUS[status])
+  // The existing fixed reader permits 64 filter nodes. Fifty PO IDs plus
+  // the fixed status group fit that budget; bulk reads avoid one call per PO.
+  for (let offset = 0; offset < ids.length; offset += 50) {
+    const batch = ids.slice(offset, offset + 50)
+    const filter = and(
+      or(...batch.map(id => eq('_spnvc_purchaseorderid_value', id))),
+      or(...statuses.map(status => eq('spnvc_invoicestatus', status))),
+    )
+    const rows = await collectPaginatedItems(async nextLink => {
+      const response = await fetchBusinessCollection<LinkedInvoiceAmount>('spnvc_invoices', {
+        select: 'spnvc_invoiceid,spnvc_amount,spnvc_invoicestatus,_spnvc_purchaseorderid_value',
+        filter,
+        orderBy: 'spnvc_invoiceid asc',
+      }, 500, nextLink)
+      return { items: response.value, totalCount: collectionCount(response), nextLink: response['@odata.nextLink'] }
+    })
+    const seen = new Set<string>()
+    for (const row of rows) {
+      if (!isGuid(row.spnvc_invoiceid) || !isGuid(row._spnvc_purchaseorderid_value) ||
+          !batch.includes(row._spnvc_purchaseorderid_value.toLowerCase()) ||
+          !statuses.includes(row.spnvc_invoicestatus) ||
+          typeof row.spnvc_amount !== 'number' || !Number.isFinite(row.spnvc_amount) || row.spnvc_amount < 0 ||
+          seen.has(row.spnvc_invoiceid.toLowerCase())) {
+        throw new Error('Invalid or duplicate linked invoice in purchase order totals.')
+      }
+      seen.add(row.spnvc_invoiceid.toLowerCase())
+      const id = row._spnvc_purchaseorderid_value.toLowerCase()
+      const total = (totals.get(id) ?? 0) + row.spnvc_amount
+      if (!Number.isFinite(total)) throw new Error('Purchase order invoiced total exceeds the supported amount range.')
+      totals.set(id, total)
+    }
+  }
+  return entities.map(entity => mapPurchaseOrderEntity(entity, totals.get(entity.spnvc_purchaseorderid.toLowerCase()) ?? 0))
+}
+
 // Read the supplier lookup's formatted name without expanding Account records.
 // https://learn.microsoft.com/power-apps/maker/data-platform/types-of-fields#different-types-of-lookups
 
@@ -46,7 +97,7 @@ const PO_SELECT = [
 export interface POListParams {
   pageSize?: number
   nextLink?: string
-  filter?: FetchFilter
+  filter?: ODataFilter
   orderBy?: string
   search?: string
   assignableOnly?: boolean
@@ -63,84 +114,58 @@ export const listPurchaseOrders = async (
   if (params?.search) {
     filter = and(filter, or(contains('spnvc_name', params.search), contains('spnvc_description', params.search)))
   }
+  if (params?.assignableOnly) {
+    // The relationship export declares spnvc_SupplierAccountId with this casing.
+    // Filter the related Account on the server; do not fetch and discard other POs.
+    filter = and(filter,
+      eq('spnvc_SupplierAccountId/accountcategorycode', SUPPLIER_CATEGORY),
+      eq('spnvc_SupplierAccountId/statecode', ACCOUNT_STATE.Active))
+  }
 
-  const url = params?.nextLink ?? buildFetchXmlUrl(ENTITY_SET, {
+  const response = await fetchBusinessCollection<PurchaseOrderEntity>(ENTITY_SET, {
     select: PO_SELECT,
     orderBy: params?.orderBy ?? 'createdon desc',
     count: true,
-    pageSize,
     filter,
-    supplierAccountOnly: params?.assignableOnly,
-  })
-
-  const response = await fetchXmlCollection<PurchaseOrderEntity>(url)
+  }, pageSize, params?.nextLink)
 
   return {
-    items: (response?.value ?? []).map(mapPurchaseOrderEntity),
-    totalCount: response?.['@odata.count'] ?? response?.value?.length ?? 0,
-    nextLink: response?.['@odata.nextLink'],
+    items: await mapPurchaseOrdersWithBalances(response.value),
+    totalCount: collectionCount(response),
+    nextLink: response['@odata.nextLink'],
   }
 }
 
 // -- Get by ID ----------------------------------------------------------------
 
 export const getPurchaseOrderById = async (id: string): Promise<PurchaseOrder | null> => {
-  try {
-    const entity = await fetchXmlRecord<PurchaseOrderEntity>(ENTITY_SET, id, PO_SELECT)
-    return entity ? mapPurchaseOrderEntity(entity) : null
-  } catch (err) {
-    console.error(`[purchaseOrderService] getPurchaseOrderById(${id}) failed:`, err)
-    return null
-  }
+  const entity = await fetchBusinessRecord<PurchaseOrderEntity>(ENTITY_SET, id, PO_SELECT)
+  return entity ? (await mapPurchaseOrdersWithBalances([entity]))[0] : null
 }
 
 // -- Get POs by Supplier ------------------------------------------------------
 
 export const getPOsBySupplier = async (supplierId: string): Promise<PurchaseOrder[]> => {
-  const url = buildFetchXmlUrl(ENTITY_SET, {
-    select: PO_SELECT,
-    filter: eq('spnvc_supplieraccountid', supplierId),
+  return collectPaginatedItems(nextLink => listPurchaseOrders({
+    nextLink,
+    filter: eq('_spnvc_supplieraccountid_value', supplierId),
     orderBy: 'createdon desc',
-  })
-
-  const response = await fetchXmlCollection<PurchaseOrderEntity>(url)
-  return (response?.value ?? []).map(mapPurchaseOrderEntity)
+  }))
 }
 
 // -- Create -------------------------------------------------------------------
 
 export const createPurchaseOrder = async (payload: CreatePurchaseOrderInput): Promise<PurchaseOrder> => {
   if (payload.supplierId) await requireAssignableSupplier(payload.supplierId)
-  const body: Record<string, unknown> = {
-    spnvc_name: payload.poNumber,
-    spnvc_description: payload.description ?? '',
-    spnvc_totalamount: payload.totalAmount,
-    spnvc_postatus: PO_STATUS[payload.status ?? 'Draft'],
-  }
-
-  if (payload.deliveryDate) {
-    body.spnvc_deliverydate = payload.deliveryDate
-  }
-  if (payload.supplierId) {
-    body['spnvc_SupplierAccountId@odata.bind'] = `/accounts(${payload.supplierId})`
-  }
-
-  const response = await powerPagesFetchResponse(`/_api/${ENTITY_SET}`, {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify(body),
+  const entity = await createBusinessRecord<PurchaseOrderEntity>('create-purchase-order', {
+    poNumber: payload.poNumber,
+    description: payload.description ?? '',
+    totalAmount: payload.totalAmount,
+    deliveryDate: payload.deliveryDate,
+    supplierId: payload.supplierId,
+    status: payload.status ?? 'Draft',
   })
-
-  const entity = await parseResponseBody<PurchaseOrderEntity>(response)
-  if (entity) return mapPurchaseOrderEntity(entity)
-
-  const createdId = extractRecordId(response)
-  if (createdId) {
-    const created = await getPurchaseOrderById(createdId)
-    if (created) return created
-  }
-
-  throw new Error('Failed to retrieve created record')
+  return mapPurchaseOrderEntity(entity)
 }
 
 // -- Update -------------------------------------------------------------------

@@ -89,7 +89,7 @@ export default function App() {
             <Route path="/purchase-orders" element={<RequireAuth fallback={<SignInPrompt />}><PurchaseOrderList /></RequireAuth>} />
             <Route path="/purchase-orders/new" element={<RequireAuth fallback={<SignInPrompt />}><CreatePurchaseOrder /></RequireAuth>} />
             <Route path="/purchase-orders/:id" element={<RequireAuth fallback={<SignInPrompt />}><PurchaseOrderDetail /></RequireAuth>} />
-            <Route path="/profile" element={<RequireAuth fallback={<SignInPrompt />}><Profile /></RequireAuth>} />
+            <Route path="/myprofile" element={<RequireAuth fallback={<SignInPrompt />}><Profile /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

@@ -3,6 +3,7 @@
 
 import { getLookupId, getLookupName } from '../services/powerPagesApi'
 import choiceValues from '../../dataverse-choice-values.json'
+import type { InvoiceStatusLabel } from './invoice'
 
 // -- Raw OData Entity ---------------------------------------------------------
 
@@ -53,6 +54,7 @@ export interface PurchaseOrder {
   totalAmount: number
   invoicedAmount: number
   remainingAmount: number
+  overInvoicedAmount: number
   deliveryDate: string
   status: POStatusLabel
   statusValue: number
@@ -84,15 +86,31 @@ export interface UpdatePurchaseOrderInput {
 
 // -- Entity-to-Domain Mapper --------------------------------------------------
 
-export const mapPurchaseOrderEntity = (entity: PurchaseOrderEntity): PurchaseOrder => {
+export const PO_INVOICED_STATUSES: readonly InvoiceStatusLabel[] = ['Submitted', 'Approved', 'Paid']
+
+export function calculatePOBalance(totalAmount: number, invoicedAmount: number) {
+  if (!Number.isFinite(totalAmount) || totalAmount < 0 || !Number.isFinite(invoicedAmount) || invoicedAmount < 0) {
+    throw new Error('Purchase order balances require finite nonnegative amounts.')
+  }
+  // Dataverse Money supports up to four decimal places. Normalize binary
+  // addition noise without changing currency or rounding each invoice first.
+  // https://learn.microsoft.com/power-apps/maker/data-platform/types-of-fields#currency
+  const invoiced = Number(invoicedAmount.toFixed(4))
+  return {
+    invoicedAmount: invoiced,
+    remainingAmount: Number(Math.max(0, totalAmount - invoiced).toFixed(4)),
+    overInvoicedAmount: Number(Math.max(0, invoiced - totalAmount).toFixed(4)),
+  }
+}
+
+export const mapPurchaseOrderEntity = (entity: PurchaseOrderEntity, invoicedAmount = 0): PurchaseOrder => {
   const totalAmount = entity.spnvc_totalamount ?? 0
   return {
     id: entity.spnvc_purchaseorderid,
     poNumber: entity.spnvc_name ?? '',
     description: entity.spnvc_description ?? '',
     totalAmount,
-    invoicedAmount: 0, // Will be computed from linked invoices
-    remainingAmount: totalAmount,
+    ...calculatePOBalance(totalAmount, invoicedAmount),
     deliveryDate: entity.spnvc_deliverydate ?? '',
     status: PO_STATUS_VALUE_TO_LABEL[entity.spnvc_postatus ?? 0] ?? 'Draft',
     statusValue: entity.spnvc_postatus ?? PO_STATUS.Draft,

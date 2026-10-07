@@ -24,6 +24,10 @@ const reviewerNavItems: NavItem[] = [
   // { to: '/reviewer-help', label: 'Policy Search', icon: Sparkles, end: false },
 ]
 
+const profileNavItems: NavItem[] = [
+  { to: '/myprofile', label: 'My Profile', icon: User, end: true },
+]
+
 export default function Sidebar({
   onClose,
   autoFocusClose = false,
@@ -36,8 +40,10 @@ export default function Sidebar({
   const userMenuTriggerRef = useRef<HTMLButtonElement>(null)
   const navigate = useNavigate()
   const { isAuthenticated, isLoading, displayName, initials, login, logout } = useAuth()
-  const { isReviewer, canSwitchRoleMode, activeRoleMode } = useAuthorization()
-  const navItems = useMemo(() => isReviewer ? reviewerNavItems : supplierNavItems, [isReviewer])
+  const { isReviewer, isSupplier, canSwitchRoleMode, activeRoleMode } = useAuthorization()
+  const hasBusinessRole = isReviewer || isSupplier
+  const navItems = useMemo(() => isReviewer ? reviewerNavItems : isSupplier ? supplierNavItems : profileNavItems,
+    [isReviewer, isSupplier])
 
   // Fetch badge counts
   const [badges, setBadges] = useState<Record<string, number>>({})
@@ -52,7 +58,7 @@ export default function Sidebar({
   useInvoicesChanged(handleInvoicesChanged)
 
   useEffect(() => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated || !hasBusinessRole) return
     let cancelled = false
     getInvoiceCountByStatus().then((counts) => {
       if (cancelled) return
@@ -65,7 +71,7 @@ export default function Sidebar({
       setBadges({ awaitingReview, rejected })
     }).catch(() => { /* silent — badges are non-critical */ })
     return () => { cancelled = true }
-  }, [isAuthenticated, badgeRefreshToken])
+  }, [isAuthenticated, hasBusinessRole, badgeRefreshToken])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -326,7 +332,7 @@ export default function Sidebar({
                       marginTop: 1,
                     }}
                   >
-                    {isReviewer ? 'Reviewer' : 'Supplier'}
+                    {isReviewer ? 'Reviewer' : isSupplier ? 'Supplier' : 'Authenticated User'}
                   </div>
                 </div>
                 <ChevronUp
@@ -375,7 +381,7 @@ export default function Sidebar({
                   <button
                     type="button"
                     role="menuitem"
-                    onClick={() => { setUserMenuOpen(false); navigate('/profile') }}
+                    onClick={() => { setUserMenuOpen(false); navigate('/myprofile') }}
                     className="menu-item"
                     style={{ color: 'var(--color-text)' }}
                   >

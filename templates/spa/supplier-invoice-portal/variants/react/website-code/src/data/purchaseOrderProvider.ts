@@ -4,9 +4,11 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import type { PurchaseOrder, POStatusLabel } from '../types/purchaseOrder'
+import { PO_STATUS, PO_INVOICED_STATUSES, calculatePOBalance, type PurchaseOrder, type POStatusLabel } from '../types/purchaseOrder'
+import type { MockPurchaseOrder } from './mockData'
+import type { Invoice } from '../types'
 import { isReviewer } from '../utils/authorization'
-import { and, eq, or, type FetchFilter } from '../services/fetchXmlApi'
+import { and, eq, or, collectPaginatedItems, type ODataFilter } from '../services/powerPagesApi'
 
 const isDevelopment =
   typeof window !== 'undefined' &&
@@ -21,6 +23,7 @@ export interface POItem {
   totalAmount: number
   invoicedAmount: number
   remainingAmount: number
+  overInvoicedAmount: number
   deliveryDate: string
   status: string
   supplierId?: string
@@ -38,11 +41,25 @@ function apiPOToItem(po: PurchaseOrder): POItem {
     totalAmount: po.totalAmount,
     invoicedAmount: po.invoicedAmount,
     remainingAmount: po.remainingAmount,
+    overInvoicedAmount: po.overInvoicedAmount,
     deliveryDate: po.deliveryDate,
     status: po.status,
     supplierId: po.supplierId,
     supplierName: po.supplierName,
     createdOn: po.createdOn,
+  }
+}
+
+function mockPOToItem(po: MockPurchaseOrder, invoices: readonly Invoice[]): POItem {
+  // Demo invoices have unique PO numbers rather than Dataverse lookup IDs.
+  // Production balance reads always use the actual purchase-order lookup.
+  const invoiced = invoices.filter(invoice => invoice.poNumber === po.poNumber &&
+    PO_INVOICED_STATUSES.includes(invoice.status)).reduce((sum, invoice) => sum + invoice.amount, 0)
+  return {
+    id: po.id, poNumber: po.poNumber, description: po.description, totalAmount: po.totalAmount,
+    ...calculatePOBalance(po.totalAmount, invoiced),
+    deliveryDate: po.deliveryDate, status: po.status, supplierId: po.supplierId,
+    supplierName: po.supplierName, createdOn: po.createdOn,
   }
 }
 
@@ -69,10 +86,10 @@ export function usePurchaseOrderList(params?: {
     setError(null)
 
     if (isDevelopment) {
-      const { purchaseOrders: mockPOs, supplierAccountId, reviewerAccountIds } = await import('./mockData')
+      const { purchaseOrders: mockPOs, invoices: mockInvoices, supplierAccountId, reviewerAccountIds } = await import('./mockData')
       let list = mockPOs.filter(po => isReviewer()
         ? reviewerAccountIds.includes(po.supplierId)
-        : po.supplierId === supplierAccountId)
+        : po.supplierId === supplierAccountId && po.status !== 'Draft')
 
       if (status && status !== 'All') {
         list = list.filter(po => po.status === status)
@@ -107,19 +124,7 @@ export function usePurchaseOrderList(params?: {
         return sortDir === 'asc' ? cmp : -cmp
       })
 
-      setPurchaseOrders(list.map(po => ({
-        id: po.id,
-        poNumber: po.poNumber,
-        description: po.description,
-        totalAmount: po.totalAmount,
-        invoicedAmount: po.invoicedAmount,
-        remainingAmount: po.totalAmount - po.invoicedAmount,
-        deliveryDate: po.deliveryDate,
-        status: po.status,
-        supplierId: po.supplierId,
-        supplierName: po.supplierName,
-        createdOn: po.createdOn,
-      })))
+      setPurchaseOrders(list.map(po => mockPOToItem(po, mockInvoices)))
       setTotalCount(list.length)
       setIsLoading(false)
       return
@@ -136,26 +141,27 @@ export function usePurchaseOrderList(params?: {
         createdOn: 'createdon',
       }
 
-      let filter: FetchFilter | undefined
+      let filter: ODataFilter | undefined
       if (status && status !== 'All') {
-        const { PO_STATUS } = await import('../types/purchaseOrder')
         const statusVal = PO_STATUS[status as POStatusLabel]
         if (statusVal) filter = eq('spnvc_postatus', statusVal)
       }
       if (!isReviewer()) {
         const { getSupplierCompanyId } = await import('../services/supplierAffiliationService')
-        filter = and(filter, eq('spnvc_supplieraccountid', await getSupplierCompanyId()))
+        filter = and(filter, eq('_spnvc_supplieraccountid_value', await getSupplierCompanyId()),
+          { attribute: 'spnvc_postatus', operator: 'ne', value: PO_STATUS.Draft })
       }
 
-      const result = await listPurchaseOrders({
+      const result = await collectPaginatedItems(nextLink => listPurchaseOrders({
         pageSize: 50,
+        nextLink,
         filter,
         search: search || undefined,
         orderBy: `${sortFieldMap[sortKey] || 'createdon'} ${sortDir}`,
-      })
+      }))
 
-      setPurchaseOrders(result.items.map(apiPOToItem))
-      setTotalCount(result.totalCount)
+      setPurchaseOrders(result.map(apiPOToItem))
+      setTotalCount(result.length)
     } catch (err) {
       setPurchaseOrders([])
       setTotalCount(0)
@@ -181,24 +187,12 @@ export function usePurchaseOrderDetail(id: string | undefined) {
     setError(null)
 
     if (isDevelopment) {
-      const { getPurchaseOrderById, supplierAccountId, reviewerAccountIds } = await import('./mockData')
+      const { getPurchaseOrderById, invoices: mockInvoices, supplierAccountId, reviewerAccountIds } = await import('./mockData')
       const mock = getPurchaseOrderById(id)
       if (mock && (isReviewer()
         ? reviewerAccountIds.includes(mock.supplierId)
         : mock.supplierId === supplierAccountId)) {
-        setPurchaseOrder({
-          id: mock.id,
-          poNumber: mock.poNumber,
-          description: mock.description,
-          totalAmount: mock.totalAmount,
-          invoicedAmount: mock.invoicedAmount,
-          remainingAmount: mock.totalAmount - mock.invoicedAmount,
-          deliveryDate: mock.deliveryDate,
-          status: mock.status,
-          supplierId: mock.supplierId,
-          supplierName: mock.supplierName,
-          createdOn: mock.createdOn,
-        })
+        setPurchaseOrder(mockPOToItem(mock, mockInvoices))
       } else {
         setPurchaseOrder(null)
       }
@@ -240,25 +234,13 @@ export function useSupplierPOs() {
     setError(null)
 
     if (isDevelopment) {
-      const { purchaseOrders: mockPOs, supplierAccountId } = await import('./mockData')
+      const { purchaseOrders: mockPOs, invoices: mockInvoices, supplierAccountId } = await import('./mockData')
       // In dev, show Issued POs (available for invoicing)
       const issuedPOs = mockPOs.filter(po =>
         po.supplierId === supplierAccountId &&
         (po.status === 'Issued' || po.status === 'Partially Invoiced')
       )
-      setPurchaseOrders(issuedPOs.map(po => ({
-        id: po.id,
-        poNumber: po.poNumber,
-        description: po.description,
-        totalAmount: po.totalAmount,
-        invoicedAmount: po.invoicedAmount,
-        remainingAmount: po.totalAmount - po.invoicedAmount,
-        deliveryDate: po.deliveryDate,
-        status: po.status,
-        supplierId: po.supplierId,
-        supplierName: po.supplierName,
-        createdOn: po.createdOn,
-      })))
+      setPurchaseOrders(issuedPOs.map(po => mockPOToItem(po, mockInvoices)))
       setIsLoading(false)
       return
     }
@@ -268,14 +250,15 @@ export function useSupplierPOs() {
       const { PO_STATUS } = await import('../types/purchaseOrder')
       const { getSupplierCompanyId } = await import('../services/supplierAffiliationService')
       const companyId = await getSupplierCompanyId()
-      const result = await listPurchaseOrders({
+      const result = await collectPaginatedItems(nextLink => listPurchaseOrders({
         pageSize: 100,
-        filter: and(eq('spnvc_supplieraccountid', companyId),
+        nextLink,
+        filter: and(eq('_spnvc_supplieraccountid_value', companyId),
           or(eq('spnvc_postatus', PO_STATUS.Issued), eq('spnvc_postatus', PO_STATUS['Partially Invoiced']))),
         orderBy: 'spnvc_name asc',
         assignableOnly: true,
-      })
-      setPurchaseOrders(result.items.map(apiPOToItem))
+      }))
+      setPurchaseOrders(result.map(apiPOToItem))
     } catch (err) {
       setPurchaseOrders([])
       setError(err instanceof Error ? err.message : 'Failed to fetch supplier purchase orders')

@@ -11,6 +11,7 @@ import {
   fetchFileColumnUrl,
   uploadFileColumn,
   deleteFileColumn,
+  fetchODataRecord, collectionCount, and, eq, type ODataFilter,
   type PaginatedResult,
 } from './powerPagesApi'
 import {
@@ -19,7 +20,7 @@ import {
   type CreateInvoiceAttachmentInput,
   mapInvoiceAttachmentEntity,
 } from '../types/invoiceAttachment'
-import { buildFetchXmlUrl, fetchXmlCollection, fetchXmlRecord, and, eq, type FetchFilter } from './fetchXmlApi'
+import { fetchBusinessCollection } from './businessReadService'
 
 // -- Constants ----------------------------------------------------------------
 
@@ -45,7 +46,7 @@ const ATTACHMENT_SELECT = [
 export interface InvoiceAttachmentListParams {
   pageSize?: number
   nextLink?: string
-  filter?: FetchFilter
+  filter?: ODataFilter
   orderBy?: string
   invoiceId?: string
   commentId?: string
@@ -61,28 +62,23 @@ export const listInvoiceAttachments = async (
   // Build $filter combining any custom filter with optional invoiceId / commentId
   let filter = params?.filter
   if (params?.invoiceId) {
-    filter = and(filter, eq('spnvc_invoiceid', params.invoiceId))
+    filter = and(filter, eq('_spnvc_invoiceid_value', params.invoiceId))
   }
   if (params?.commentId) {
-    filter = and(filter, eq('spnvc_invoicecommentid', params.commentId))
+    filter = and(filter, eq('_spnvc_invoicecommentid_value', params.commentId))
   }
 
-  // If we have a nextLink from a previous response, use it directly.
-  // Dataverse does NOT support $skip -- pagination uses @odata.nextLink cursors.
-  const url = params?.nextLink ?? buildFetchXmlUrl(ENTITY_SET, {
+  const response = await fetchBusinessCollection<InvoiceAttachmentEntity>(ENTITY_SET, {
     select: ATTACHMENT_SELECT,
     orderBy: params?.orderBy ?? 'createdon desc',
     count: true,
-    pageSize,
     filter,
-  })
-
-  const response = await fetchXmlCollection<InvoiceAttachmentEntity>(url)
+  }, pageSize, params?.nextLink)
 
   return {
-    items: (response?.value ?? []).map(mapInvoiceAttachmentEntity),
-    totalCount: response?.['@odata.count'] ?? response?.value?.length ?? 0,
-    nextLink: response?.['@odata.nextLink'],
+    items: response.value.map(mapInvoiceAttachmentEntity),
+    totalCount: collectionCount(response),
+    nextLink: response['@odata.nextLink'],
   }
 }
 
@@ -109,13 +105,8 @@ export const listAttachmentsByComment = async (
 export const getInvoiceAttachmentById = async (
   id: string,
 ): Promise<InvoiceAttachment | null> => {
-  try {
-    const entity = await fetchXmlRecord<InvoiceAttachmentEntity>(ENTITY_SET, id, ATTACHMENT_SELECT)
-    return entity ? mapInvoiceAttachmentEntity(entity) : null
-  } catch (err) {
-    console.error(`[invoiceAttachmentService] getInvoiceAttachmentById(${id}) failed:`, err)
-    return null
-  }
+  const entity = await fetchODataRecord<InvoiceAttachmentEntity>(ENTITY_SET, id, ATTACHMENT_SELECT)
+  return entity ? mapInvoiceAttachmentEntity(entity) : null
 }
 
 // -- Create -------------------------------------------------------------------
@@ -213,17 +204,15 @@ export const deleteAttachmentFile = async (id: string): Promise<void> => {
 // -- Count helper -------------------------------------------------------------
 
 export const getInvoiceAttachmentCount = async (
-  filter?: FetchFilter,
+  filter?: ODataFilter,
 ): Promise<number> => {
-  const url = buildFetchXmlUrl(ENTITY_SET, {
+  const response = await fetchBusinessCollection<InvoiceAttachmentEntity>(ENTITY_SET, {
     select: 'spnvc_invoiceattachmentid',
     filter,
     count: true,
-    pageSize: 1,
-  })
-
-  const response = await fetchXmlCollection<InvoiceAttachmentEntity>(url)
-  return response?.['@odata.count'] ?? 0
+    top: 1,
+  }, 1)
+  return collectionCount(response)
 }
 
 // -- Count by Invoice ---------------------------------------------------------
@@ -231,5 +220,5 @@ export const getInvoiceAttachmentCount = async (
 export const getAttachmentCountByInvoice = async (
   invoiceId: string,
 ): Promise<number> => {
-  return getInvoiceAttachmentCount(eq('spnvc_invoiceid', invoiceId))
+  return getInvoiceAttachmentCount(eq('_spnvc_invoiceid_value', invoiceId))
 }

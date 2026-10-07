@@ -1,0 +1,1 @@
+import{p as a}from"./index-ESTzP7ST.js";const t=a.tables.account.accountcategorycode.Supplier,e=Object.freeze({Active:0,Inactive:1}),s=c=>c.accountcategorycode===t&&c.statecode===e.Active,i=c=>({id:c.accountid,name:c.name??"",status:c.statecode===e.Active?"Active":c.statecode===e.Inactive?"Inactive":void 0});export{e as A,t as S,s as i,i as m};

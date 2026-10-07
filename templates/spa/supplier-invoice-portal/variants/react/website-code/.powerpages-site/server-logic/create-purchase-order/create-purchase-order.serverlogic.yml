@@ -1,0 +1,6 @@
+adx_serverlogic_adx_webrole:
+  - c8031dd9-b8d4-435a-87df-3b90748d2fc4
+description: Source-only caller-scoped PO create candidate with assigned active Supplier Account validation and verified persistence. Runtime creation is unverified.
+display_name: Caller-scoped purchase-order create
+id: 2d9e75b3-e7c7-49b2-a1bb-e8c41cae0f9b
+name: create-purchase-order

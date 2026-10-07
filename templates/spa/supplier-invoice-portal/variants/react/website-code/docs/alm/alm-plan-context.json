@@ -391,12 +391,26 @@
       ]
     },
     {
+      "name": "Contact - Authenticated Profile",
+      "table": "contact",
+      "scope": "756150004",
+      "relationship": "",
+      "privileges": [
+        "read",
+        "write"
+      ],
+      "roles": [
+        "2ab5e3ba-0309-f111-8406-6045bd04a357"
+      ]
+    },
+    {
       "name": "Contact - Self",
       "table": "contact",
       "scope": "756150004",
       "relationship": "",
       "privileges": [
         "read",
+        "write",
         "appendto"
       ],
       "roles": [

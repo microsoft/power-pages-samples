@@ -337,6 +337,8 @@ test("Supplier PO and Account access is relationship-scoped, never global", () =
   assert.match(po, /scope: 756150002/);
   assert.match(po, /accountrelationship: spnvc_account_purchaseorder/);
   assert.doesNotMatch(po, /create: true|write: true|delete: true/);
+  assert.match(po, /^append: true$/m);
+  assert.match(po, /^appendto: false$/m);
   const supplierAccounts = permissions.filter(p => /entitylogicalname: account\n/.test(p) && p.includes(supplierRole));
   for (const account of supplierAccounts) {
     assert.match(account, /read: true/);
@@ -348,10 +350,20 @@ test("Supplier PO and Account access is relationship-scoped, never global", () =
   assert.match(reviewerAccounts, /contactrelationship: spnvc_account_contact/);
   for (const permission of permissions) {
     assert.doesNotMatch(permission, /scope: 756150000|scope: 756150005/);
-    assert.ok(!permission.includes("2ab5e3ba-0309-f111-8406-6045bd04a357"),
-      "default authenticated role must not defeat membership revocation");
+    if (!/entitylogicalname: contact\n/.test(permission)) {
+      assert.ok(!permission.includes("2ab5e3ba-0309-f111-8406-6045bd04a357"),
+        "default authenticated role must not defeat business membership revocation");
+    }
+    if (permission.includes("2ab5e3ba-0309-f111-8406-6045bd04a357")) {
+      assert.match(permission, /entitylogicalname: contact\n/);
+      assert.match(permission, /scope: 756150004/);
+      assert.match(permission, /read: true/);
+      assert.match(permission, /write: true/);
+      assert.doesNotMatch(permission, /append: true|appendto: true|create: true|delete: true/);
+    }
     if (!/entitylogicalname: account\n/.test(permission)) continue;
-    assert.match(permission, /append: false/);
+    assert.match(permission, /^append: true$/m);
+    assert.match(permission, /^appendto: false$/m);
     assert.doesNotMatch(permission, /create: true|write: true|delete: true/);
   }
   const reviewerId = /^id: (.+)$/m.exec(reviewerAccounts)[1];
@@ -361,15 +373,16 @@ test("Supplier PO and Account access is relationship-scoped, never global", () =
     assert.ok(child.includes(`parententitypermission: ${reviewerId}`));
     assert.ok(child.includes(`parentrelationship: spnvc_account_${table.slice("spnvc_".length)}`));
   }
-  const contact = permissions.find(p => /entitylogicalname: contact\n/.test(p));
+  const contact = permissions.find(p => /entitylogicalname: contact\n/.test(p) && p.includes(supplierRole));
   assert.match(contact, /scope: 756150004/);
-  assert.match(contact, /append: false/);
+  assert.match(contact, /^append: true$/m);
+  assert.match(contact, /^appendto: false$/m);
   const fields = read(path.join(website, ".powerpages-site/site-settings/Webapi-account-fields.sitesetting.yml"));
   assert.match(fields, /value: accountid,name,accountcategorycode,statecode/);
   assert.equal(fs.existsSync(path.join(website, ".powerpages-site/site-settings/Webapi-spnvc_supplier-enabled.sitesetting.yml")), false);
 });
 
-test("exported permission graph ties reviewer mutations to N:N membership and Supplier access to one company", () => {
+test("exported permission graph preserves company scope and conditional POST bindings for each role", () => {
   const directory = path.join(website, ".powerpages-site/table-permissions");
   const permissions = fs.readdirSync(directory).map(file => {
     const yaml = read(path.join(directory, file));
@@ -378,16 +391,20 @@ test("exported permission graph ties reviewer mutations to N:N membership and Su
       id: field("id"), table: field("entitylogicalname"), scope: field("scope"),
       parent: field("parententitypermission"), relationship: field("parentrelationship"),
       roles: [...yaml.matchAll(/^- ([0-9a-f-]+)$/gm)].map(match => match[1]),
-      read: field("read") === "true", write: field("write") === "true",
+      read: field("read") === "true", write: field("write") === "true", create: field("create") === "true",
       append: field("append") === "true", appendto: field("appendto") === "true"
     };
   });
   const contract = json(path.join(website, "dataverse-solution-contract.json"));
   const records = {
     account: ["A", "B", "C"].map(id => ({ id })),
-    contact: [{ id: "reviewer" }, { id: "supplier1" }, { id: "supplier2" }],
+    contact: [{ id: "reviewer" }, { id: "supplier1" }, { id: "supplier2" }, { id: "authenticated" }],
     spnvc_invoice: ["A", "B", "C"].map(account => ({ id: `INV-${account}`, spnvc_supplieraccountid: account })),
     spnvc_purchaseorder: ["A", "B", "C"].map(account => ({ id: `PO-${account}`, spnvc_supplieraccountid: account })),
+    spnvc_invoicecomment: ["A", "B", "C"].map(account => ({ id: `COMMENT-${account}`, spnvc_invoiceid: `INV-${account}` })),
+    spnvc_invoiceattachment: ["A", "B", "C"].map(account => ({
+      id: `ATTACHMENT-${account}`, spnvc_invoiceid: `INV-${account}`, spnvc_invoicecommentid: `COMMENT-${account}`,
+    })),
   };
   // This checks the exported graph against the documented scope semantics.
   // It isn't a live Power Pages authorization engine or a $ref integration test.
@@ -423,10 +440,14 @@ test("exported permission graph ties reviewer mutations to N:N membership and Su
     assert.equal(allowed("spnvc_invoice", records.spnvc_invoice[1], supplier, "write"), false);
     assert.equal(allowed("account", records.account[0], supplier, "read"), true);
     assert.equal(allowed("account", records.account[1], supplier, "read"), false);
-    assert.equal(allowed("account", records.account[0], supplier, "appendto"), true);
+    assert.equal(allowed("account", records.account[0], supplier, "appendto"), false);
     assert.equal(allowed("account", records.account[1], supplier, "appendto"), false);
-    assert.equal(allowed("account", records.account[0], supplier, "append"), false);
-    assert.equal(allowed("contact", records.contact.find(contact => contact.id === id), supplier, "append"), false);
+    assert.equal(allowed("account", records.account[0], supplier, "append"), true);
+    assert.equal(allowed("account", records.account[1], supplier, "append"), false);
+    assert.equal(allowed("contact", records.contact.find(contact => contact.id === id), supplier, "append"), true);
+    assert.equal(allowed("contact", records.contact.find(contact => contact.id !== id), supplier, "append"), false);
+    assert.equal(allowed("spnvc_purchaseorder", records.spnvc_purchaseorder[0], supplier, "append"), true);
+    assert.equal(allowed("spnvc_purchaseorder", records.spnvc_purchaseorder[0], supplier, "appendto"), false);
   }
   const dual = { id: "reviewer", roles: [supplierRole, reviewerRole], members: ["A", "B"], company: "A" };
   assert.equal(allowed("spnvc_invoice", records.spnvc_invoice[1], dual, "write"), true,
@@ -434,6 +455,66 @@ test("exported permission graph ties reviewer mutations to N:N membership and Su
   dual.members = ["A"];
   assert.equal(allowed("spnvc_invoice", records.spnvc_invoice[1], dual, "write"), false);
   assert.equal(allowed("spnvc_invoice", records.spnvc_invoice[0], dual, "write"), true);
+
+  // Only the captured POST validator direction is modeled here:
+  // primary business AppendTo plus referenced-row Append. These source checks
+  // do not establish native create persistence or PATCH/PUT/$ref/DELETE denial.
+  const postBinding = (primaryTable, primaryRow, targetTable, targetRow, actor) =>
+    allowed(primaryTable, primaryRow, actor, "appendto") && allowed(targetTable, targetRow, actor, "append");
+  const actors = [
+    { id: "supplier1", roles: [supplierRole], members: ["A"], company: "A" },
+    { id: "reviewer", roles: [reviewerRole], members: ["B"], company: "A" },
+    { id: "supplier2", roles: [supplierRole, reviewerRole], members: ["A", "B"], company: "A" },
+    { id: "authenticated", roles: ["2ab5e3ba-0309-f111-8406-6045bd04a357"], members: [], company: "A" },
+  ];
+  for (const actor of actors) {
+    const supplier = actor.roles.includes(supplierRole);
+    const reviewer = actor.roles.includes(reviewerRole);
+    const own = records.contact.find(contact => contact.id === actor.id);
+    const invoice = records.spnvc_invoice[0];
+    assert.equal(allowed("spnvc_invoice", invoice, actor, "create"), supplier);
+    if (supplier) {
+      for (const [table, row] of [
+        ["contact", own], ["account", records.account[0]], ["spnvc_purchaseorder", records.spnvc_purchaseorder[0]],
+      ]) assert.equal(postBinding("spnvc_invoice", invoice, table, row, actor), true);
+      assert.equal(postBinding("spnvc_invoice", invoice, "contact",
+        records.contact.find(contact => contact.id !== actor.id), actor), false);
+    }
+    const selectedPo = records.spnvc_purchaseorder[1];
+    assert.equal(allowed("spnvc_purchaseorder", selectedPo, actor, "create"), reviewer);
+    assert.equal(postBinding("spnvc_purchaseorder", selectedPo, "account", records.account[1], actor), reviewer);
+    const childIndex = supplier ? 0 : 1;
+    const parentInvoice = records.spnvc_invoice[childIndex];
+    const comment = records.spnvc_invoicecomment[childIndex];
+    const attachment = records.spnvc_invoiceattachment[childIndex];
+    assert.equal(allowed("spnvc_invoicecomment", comment, actor, "create"), supplier || reviewer);
+    for (const [table, row] of [["spnvc_invoice", parentInvoice], ["contact", own]]) {
+      assert.equal(postBinding("spnvc_invoicecomment", comment, table, row, actor), supplier || reviewer);
+    }
+    assert.equal(allowed("spnvc_invoiceattachment", attachment, actor, "create"), supplier);
+    for (const [table, row] of [["spnvc_invoice", parentInvoice], ["spnvc_invoicecomment", comment], ["contact", own]]) {
+      assert.equal(postBinding("spnvc_invoiceattachment", attachment, table, row, actor), supplier);
+    }
+    for (const table of ["account", "spnvc_purchaseorder"]) {
+      assert.equal(allowed(table, records[table][2], actor, "append"), false, "unassigned Company C stays outside the source model");
+    }
+    for (const table of ["account", "contact"]) {
+      for (const row of records[table]) assert.equal(allowed(table, row, actor, "appendto"), false,
+        "all additive root grants must omit AppendTo, without claiming native negative-route proof");
+    }
+    if (!supplier && !reviewer) {
+      for (const table of ["account", "spnvc_invoice", "spnvc_purchaseorder", "spnvc_invoicecomment", "spnvc_invoiceattachment"]) {
+        for (const row of records[table]) {
+          for (const privilege of ["read", "write", "create", "append", "appendto"]) {
+            assert.equal(allowed(table, row, actor, privilege), false);
+          }
+        }
+      }
+    }
+  }
+  assert.equal(allowed("spnvc_purchaseorder", records.spnvc_purchaseorder[0], actors[0], "appendto"), false);
+  assert.equal(allowed("spnvc_purchaseorder", records.spnvc_purchaseorder[0], actors[2], "appendto"), true,
+    "Reviewer privileges remain additive for a dual-role Contact");
 });
 
 test("shipped solution and runtime contain no custom Supplier table references", () => {

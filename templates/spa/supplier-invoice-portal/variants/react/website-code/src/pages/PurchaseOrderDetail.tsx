@@ -63,9 +63,8 @@ export default function PurchaseOrderDetail() {
   const [activeAction, setActiveAction] = useState<string | null>(null)
   const [isSummaryOpen, setIsSummaryOpen] = useState(true)
 
-  // Fetch linked invoices by PO number
   const { invoices: linkedInvoices, isLoading: invoicesLoading } = useInvoiceList({
-    search: po?.poNumber,
+    purchaseOrderId: id,
     pageSize: 50,
   })
 
@@ -256,7 +255,7 @@ export default function PurchaseOrderDetail() {
           )}
 
           {/* Supplier action: create invoice against this PO */}
-          {!isReviewer && (po.status === 'Issued' || po.status === 'Partially Invoiced') && (
+          {!isReviewer && po.remainingAmount > 0 && (po.status === 'Issued' || po.status === 'Partially Invoiced') && (
             <Link to={`/invoices/new?po=${po.id}`} className="btn-primary-sm">
               <Plus size={15} aria-hidden="true" /> Create Invoice
             </Link>
@@ -278,6 +277,9 @@ export default function PurchaseOrderDetail() {
           { label: 'Total Amount', value: formatCurrency(po.totalAmount), color: 'var(--color-primary)' },
           { label: 'Invoiced', value: formatCurrency(po.invoicedAmount), color: 'var(--color-warning)' },
           { label: 'Remaining', value: formatCurrency(po.remainingAmount), color: 'var(--color-success)' },
+          ...(po.overInvoicedAmount > 0 ? [
+            { label: 'Over-invoiced', value: formatCurrency(po.overInvoicedAmount), color: 'var(--color-error)' },
+          ] : []),
         ].map((item) => (
           <div
             key={item.label}
@@ -302,6 +304,9 @@ export default function PurchaseOrderDetail() {
 
       {/* Balance progress bar */}
       <div style={{ marginTop: 16 }}>
+        <p style={{ marginBottom: 8, fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+          Invoiced includes Submitted, Approved and Paid invoices.
+        </p>
         <div className="progress-bar">
           <div
             className="progress-bar-fill"

@@ -40,16 +40,17 @@
     "invoiceProvider-*.js",
     "mockData-*.js",
     "plus-*.js",
-    "purchaseOrder-*.js",
     "purchaseOrderProvider-*.js",
     "purchaseOrderService-*.js",
     "search-*.js",
     "send-*.js",
     "shield-*.js",
+    "supplier-*.js",
     "supplierAffiliationService-*.js",
     "supplierService-*.js",
     "triangle-alert-*.js",
     "upload-*.js",
+    "useCreatePreflight-*.js",
     "usePageTitle-*.js"
   ]
 }
