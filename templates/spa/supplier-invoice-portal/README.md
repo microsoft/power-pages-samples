@@ -114,11 +114,8 @@ Account Read exposes minimal identity/category/state fields for associated Accou
 The Supplier service validates the exact Company Name Account by ID and fails on a missing, inaccessible, inactive or non-Supplier company; it never substitutes another reviewer assignment.
 Direct portal association/disassociation requests in either direction must not be used to administer memberships.
 
-Run `npm run assignments:validate` from `website-code/` to check the shipped sample roles and affiliations.
-For an administrator-exported snapshot, run `scripts/validate-assignments.mjs` with `--input=<file>` and explicit `--supplier-contact=<guid>` / `--reviewer-contact=<guid>` arguments from that site's role assignments.
-The snapshot uses the seed/export table shape and collection-valued Account bind arrays.
-This local check does not mutate or audit a live environment.
-It reports the specific Account and whether Category or state excludes it, including Company Name diagnostics.
+Before production use, verify web roles, Company Name, Account Category and N:N memberships in a target test environment.
+The application fails closed when the signed-in Contact, Company or required membership is missing or inaccessible.
 
 Power Pages documents a [known OData GET issue with N:N/Parent permission chains](https://learn.microsoft.com/power-pages/configure/web-api-overview#known-issues).
 Supplier and Contact reads use the [Power Pages Web API](https://learn.microsoft.com/power-pages/configure/read-operations) with explicit OData `$select`, typed `$filter` and `$orderby` options.
@@ -365,23 +362,10 @@ pac pages upload-code-site --rootPath .
 The `website-code/` folder includes the React source, package files, Power Pages configuration, and `.powerpages-site` metadata.
 Make changes there, rebuild, and run the upload command again.
 
-After changing the solution contract or permissions, regenerate the model and permission documentation from `website-code/`:
-
-```bash
-npm run docs:generate
-```
-
-The generator reads repository metadata only.
-Its permission report does not claim to verify a deployed site's authorization.
-After a local build, refresh the checked-in compiled web files without connecting to a live site:
-
-```bash
-npm run site-assets:sync
-```
-
-This preserves the existing web-file IDs and updates hashed bundle filenames from `dist/`.
-Review explicit removals if a bundle is no longer generated.
-After reviewing obsolete generated bundles, use `npm run site-assets:sync -- --remove-stale` to remove only those exported bundle records.
+After changing source code, run `npm run build`.
+The postbuild step updates deployment patterns and the generated role-bound server scripts.
+The documents under `website-code/docs/` are static reference snapshots; keep them aligned when the model or permissions change.
+Refresh exported Power Pages metadata only through the intended PAC workflow, review every generated change, and do not commit PAC-generated `.portalconfig/manifest.yml` changes.
 
 Before production use, validate the packed solution and Management navigation in a target test environment, then test direct reads, writes, AppendTo, both-direction `$ref` denial, and membership revocation with separate Contacts.
 The unreleased candidate also needs an authorized fresh-environment import check; warning-free packing is not proof of a successful import.
