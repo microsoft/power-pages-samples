@@ -138,7 +138,7 @@ export default function PurchaseOrderList() {
               cursor: 'pointer',
             }}
           >
-            {allStatuses.map((s) => (
+            {allStatuses.filter(s => isReviewer || s !== 'Draft').map((s) => (
               <option key={s} value={s}>
                 {s === 'All' ? 'All Statuses' : s}
               </option>
@@ -247,8 +247,8 @@ export default function PurchaseOrderList() {
                     <p style={{ color: 'var(--color-text)', fontSize: '0.95rem', fontWeight: 500, marginBottom: 8 }}>
                       Something went wrong
                     </p>
-                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: 16 }}>
-                      We couldn&apos;t load the data. Check your connection and try again.
+                    <p role="alert" style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: 16, overflowWrap: 'anywhere' }}>
+                      {error}
                     </p>
                     <button onClick={() => refetch()} className="btn-primary-sm">
                       Try Again
@@ -290,7 +290,14 @@ export default function PurchaseOrderList() {
                     <td style={{ padding: '14px 16px', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{po.supplierName}</td>
                     <td style={{ padding: '14px 16px', fontSize: '0.9rem', fontFamily: 'var(--font-heading)', fontWeight: 500 }}>{formatCurrency(po.totalAmount)}</td>
                     <td style={{ padding: '14px 16px', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{formatCurrency(po.invoicedAmount)}</td>
-                    <td style={{ padding: '14px 16px', fontSize: '0.9rem', fontFamily: 'var(--font-heading)', fontWeight: 500 }}>{formatCurrency(po.remainingAmount)}</td>
+                    <td style={{ padding: '14px 16px', fontSize: '0.9rem', fontFamily: 'var(--font-heading)', fontWeight: 500 }}>
+                      {formatCurrency(po.remainingAmount)}
+                      {po.overInvoicedAmount > 0 && (
+                        <div style={{ marginTop: 4, fontSize: '0.75rem', color: 'var(--color-error)', overflowWrap: 'anywhere' }}>
+                          Over-invoiced by {formatCurrency(po.overInvoicedAmount)}
+                        </div>
+                      )}
+                    </td>
                     <td style={{ padding: '14px 16px' }}><StatusBadge status={po.status} /></td>
                     <td style={{ padding: '14px 24px', fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>{formatDate(po.deliveryDate)}</td>
                   </tr>
@@ -300,7 +307,7 @@ export default function PurchaseOrderList() {
           </table>
         </div>
 
-        <div
+        {!error && !isLoading && <div
           style={{
             padding: '12px 24px',
             fontSize: '0.8rem',
@@ -309,7 +316,7 @@ export default function PurchaseOrderList() {
           }}
         >
           {filtered.length} purchase order{filtered.length !== 1 ? 's' : ''}
-        </div>
+        </div>}
       </div>
     </div>
   )

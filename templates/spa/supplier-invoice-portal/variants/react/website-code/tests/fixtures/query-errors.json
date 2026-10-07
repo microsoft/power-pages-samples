@@ -1,0 +1,83 @@
+{
+  "invoice": {
+    "path": "/_api/spnvc_invoices",
+    "status": 500,
+    "error": {
+      "code": "9004010A",
+      "message": "An unexpected error occurred while processing the request"
+    }
+  },
+  "relationshipQuery": {
+    "status": 400,
+    "error": {
+      "code": "9004010D",
+      "message": "Common Data Service error occurred.",
+      "cdscode": "0x80040216",
+      "innererror": {
+        "code": "0x80040216",
+        "message": "entityRelationshipRole for given navigation property not found"
+      }
+    }
+  },
+  "purchaseOrder": {
+    "path": "/_api/spnvc_purchaseorders",
+    "status": 403,
+    "error": {
+      "code": "90040101",
+      "message": "Attribute spnvc_supplieraccountid in table spnvc_purchaseorder is not enabled for Web Api."
+    }
+  },
+  "invoiceCreateAssociation": {
+    "path": "/_api/spnvc_invoices",
+    "status": 403,
+    "error": {
+      "code": "90040106",
+      "message": "You don\u2019t have permission to associate or disassociate table contact to spnvc_invoice",
+      "innererror": {
+        "code": "90040106",
+        "message": "You don\u2019t have permission to associate or disassociate table contact to spnvc_invoice"
+      }
+    }
+  },
+  "purchaseOrderCreateAssociation": {
+    "path": "/_api/spnvc_purchaseorders",
+    "status": 403,
+    "error": {
+      "code": "90040106",
+      "message": "You don\u2019t have permission to associate or disassociate table account to spnvc_purchaseorder"
+    }
+  },
+  "purchaseOrderSdkAssociationException": {
+    "prefix": "Error executing POST request to 'spnvc_purchaseorders': ",
+    "error": {
+      "code": "90040106",
+      "message": "You don\u2019t have permission to associate or disassociate table account to spnvc_purchaseorder",
+      "innererror": {
+        "code": "90040106",
+        "message": "You don\u2019t have permission to associate or disassociate table account to spnvc_purchaseorder",
+        "type": "EntityPermissionAppendToIsMissingDuringAssociationChange"
+      }
+    },
+    "validatorEvidence": {
+      "purchaseOrderCreate": "granted",
+      "purchaseOrderAppendTo": "granted",
+      "accountAppend": "denied"
+    }
+  },
+  "invoiceDetailChildren": [
+    {
+      "path": "/_api/spnvc_invoicecomments",
+      "status": 400,
+      "select": "spnvc_invoicecommentid,spnvc_name,spnvc_commenttext,spnvc_linkedaction,_spnvc_invoiceid_value,_spnvc_authorcontactid_value,createdon,modifiedon",
+      "filter": "_spnvc_invoiceid_value eq <invoiceId>",
+      "orderBy": "createdon asc"
+    },
+    {
+      "path": "/_api/spnvc_invoiceattachments",
+      "status": 400,
+      "select": "spnvc_invoiceattachmentid,spnvc_name,spnvc_filesize,spnvc_filetype,spnvc_file_name,_spnvc_invoiceid_value,_spnvc_invoicecommentid_value,createdon,modifiedon",
+      "filter": "(_spnvc_invoiceid_value eq <invoiceId>)",
+      "orderBy": "createdon desc"
+    }
+  ]
+}

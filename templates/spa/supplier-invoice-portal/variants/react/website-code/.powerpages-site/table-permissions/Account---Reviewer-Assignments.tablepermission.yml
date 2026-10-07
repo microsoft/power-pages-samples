@@ -1,7 +1,7 @@
 adx_entitypermission_webrole:
 - c8031dd9-b8d4-435a-87df-3b90748d2fc4
-append: false
-appendto: true
+append: true
+appendto: false
 contactrelationship: spnvc_account_contact
 create: false
 delete: false

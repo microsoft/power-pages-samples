@@ -5,6 +5,7 @@ import { useCreatePOAction, useAssignableSuppliers } from '../data/purchaseOrder
 import ActionDialog from '../components/ActionDialog'
 import usePageTitle from '../hooks/usePageTitle'
 import { useAuthorization } from '../hooks/useAuthorization'
+import { useCreatePreflight } from '../hooks/useCreatePreflight'
 
 export default function CreatePurchaseOrder() {
   usePageTitle('Create Purchase Order')
@@ -20,6 +21,7 @@ export default function CreatePurchaseOrder() {
     deliveryDate: '',
     description: '',
   })
+  const preflight = useCreatePreflight('create-purchase-order', form.supplierId)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [shakeKey, setShakeKey] = useState(0)
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
@@ -51,6 +53,7 @@ export default function CreatePurchaseOrder() {
     const errs: Record<string, string> = {}
     if (!form.poNumber.trim()) errs.poNumber = 'PO Number is required'
     if (!form.supplierId) errs.supplierId = 'Select a supplier'
+    if (form.supplierId && !preflight.ready) errs.supplierId = preflight.error ?? 'Wait for the Supplier eligibility check'
     if (!form.totalAmount || Number(form.totalAmount) <= 0) errs.totalAmount = 'Enter a valid amount'
     return errs
   }
@@ -392,15 +395,15 @@ export default function CreatePurchaseOrder() {
           />
         </div>
 
-        {error && (
-          <div style={{ color: 'var(--color-error)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <AlertTriangle size={16} aria-hidden="true" /> {error}
+        {(preflight.error || error) && (
+          <div role="alert" style={{ color: 'var(--color-error)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <AlertTriangle size={16} aria-hidden="true" /> {preflight.error || error}
           </div>
         )}
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 12, paddingTop: 8 }}>
-          <button type="submit" disabled={isSubmitting} className="btn-primary">
+          <button type="submit" disabled={isSubmitting || preflight.isLoading || Boolean(preflight.error)} className="btn-primary">
             {isSubmitting ? (
               <><span className="btn-spinner" aria-hidden="true" /> Creating...</>
             ) : (

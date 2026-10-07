@@ -4,6 +4,11 @@ const isDevelopment =
   typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
+export const isLocalDevelopment = isDevelopment;
+export const PROFILE_IDENTITY_CHANGED = 'supplier-invoice-profile-identity-changed';
+type ProfileIdentity = Pick<PowerPagesUser, 'firstName' | 'lastName' | 'email' | 'fullName'>;
+let profileIdentity: { contactId: string; fields: ProfileIdentity } | undefined;
+
 // Mock users for local development — auth only works on deployed Power Pages sites
 const MOCK_SUPPLIER: PowerPagesUser = {
   userName: 'chris.green@contoso.com',
@@ -51,10 +56,22 @@ export function setActiveRoleModePreference(role: ActiveRoleMode): void {
  * Returns the currently logged-in user, or undefined if not authenticated.
  */
 export function getCurrentUser(): PowerPagesUser | undefined {
-  if (isDevelopment) {
-    return getDevRole() === 'reviewer' ? MOCK_REVIEWER : MOCK_SUPPLIER;
+  const user = isDevelopment
+    ? (getDevRole() === 'reviewer' ? MOCK_REVIEWER : MOCK_SUPPLIER)
+    : window.Microsoft?.Dynamic365?.Portal?.User;
+  return user && profileIdentity?.contactId === user.contactId
+    ? { ...user, ...profileIdentity.fields }
+    : user;
+}
+
+export function updateProfileIdentity(contactId: string, fields: ProfileIdentity): void {
+  if (getCurrentUser()?.contactId !== contactId) {
+    throw new Error('The signed-in Contact changed. Reload before editing your profile.');
   }
-  return window.Microsoft?.Dynamic365?.Portal?.User;
+  // Keep the login identifier, Contact ID and additive role grants unchanged.
+  // Notify every mounted useAuth consumer, including the persistent sidebar.
+  profileIdentity = { contactId, fields: { ...fields } };
+  window.dispatchEvent(new Event(PROFILE_IDENTITY_CHANGED));
 }
 
 /**
@@ -209,7 +226,7 @@ export function getUserDisplayName(): string {
   const user = getCurrentUser();
   if (!user) return '';
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ');
-  return fullName || user.userName;
+  return user.fullName || fullName || user.userName;
 }
 
 /**

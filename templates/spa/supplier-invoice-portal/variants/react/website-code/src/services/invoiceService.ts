@@ -3,9 +3,8 @@
 
 import {
   powerPagesFetch,
-  powerPagesFetchResponse,
-  parseResponseBody,
-  extractRecordId,
+  collectionCount,
+  and, or, eq, contains, type ODataFilter,
   type PaginatedResult,
 } from './powerPagesApi'
 import {
@@ -18,8 +17,8 @@ import {
   INVOICE_STATUS_VALUE_TO_LABEL,
   mapInvoiceEntity,
 } from '../types/invoice'
-import { callServerLogic } from './serverLogicApi'
-import { buildFetchXmlUrl, fetchXmlCollection, fetchXmlRecord, and, or, eq, contains, type FetchFilter } from './fetchXmlApi'
+import { callServerLogic, createBusinessRecord } from './serverLogicApi'
+import { fetchBusinessCollection, fetchBusinessRecord } from './businessReadService'
 
 // -- Constants ----------------------------------------------------------------
 
@@ -51,7 +50,7 @@ const INVOICE_SELECT = [
 export interface InvoiceListParams {
   pageSize?: number
   nextLink?: string
-  filter?: FetchFilter
+  filter?: ODataFilter
   orderBy?: string
   search?: string
 }
@@ -72,20 +71,17 @@ export const listInvoices = async (
 
   // If we have a nextLink from a previous response, use it directly.
   // Dataverse does NOT support $skip -- pagination uses @odata.nextLink cursors.
-  const url = params?.nextLink ?? buildFetchXmlUrl(ENTITY_SET, {
+  const response = await fetchBusinessCollection<InvoiceEntity>(ENTITY_SET, {
     select: INVOICE_SELECT,
     orderBy: params?.orderBy ?? 'createdon desc',
     count: true,
-    pageSize,
     filter,
-  })
-
-  const response = await fetchXmlCollection<InvoiceEntity>(url)
+  }, pageSize, params?.nextLink)
 
   return {
-    items: (response?.value ?? []).map(mapInvoiceEntity),
-    totalCount: response?.['@odata.count'] ?? response?.value?.length ?? 0,
-    nextLink: response?.['@odata.nextLink'],
+    items: response.value.map(mapInvoiceEntity),
+    totalCount: collectionCount(response),
+    nextLink: response['@odata.nextLink'],
   }
 }
 
@@ -105,62 +101,24 @@ export const listInvoicesByStatus = async (
 // -- Get by ID ----------------------------------------------------------------
 
 export const getInvoiceById = async (id: string): Promise<Invoice | null> => {
-  try {
-    const entity = await fetchXmlRecord<InvoiceEntity>(ENTITY_SET, id, INVOICE_SELECT)
-    return entity ? mapInvoiceEntity(entity) : null
-  } catch (err) {
-    console.error(`[invoiceService] getInvoiceById(${id}) failed:`, err)
-    return null
-  }
+  const entity = await fetchBusinessRecord<InvoiceEntity>(ENTITY_SET, id, INVOICE_SELECT)
+  return entity ? mapInvoiceEntity(entity) : null
 }
 
 // -- Create -------------------------------------------------------------------
 
 export const createInvoice = async (payload: CreateInvoiceInput): Promise<Invoice> => {
-  const body: Record<string, unknown> = {
-    spnvc_name: payload.invoiceNumber,
-    spnvc_ponumber: payload.poNumber ?? '',
-    spnvc_description: payload.description ?? '',
-    spnvc_amount: payload.amount,
-    spnvc_invoicestatus: INVOICE_STATUS[payload.status ?? 'Draft'],
-  }
-
-  if (payload.submissionDate) {
-    body.spnvc_submissiondate = payload.submissionDate
-  }
-  if (payload.dueDate) {
-    body.spnvc_duedate = payload.dueDate
-  }
-
-  // Bind lookups using @odata.bind with Navigation Property names (case-sensitive)
-  if (payload.contactId) {
-    body['spnvc_ContactId@odata.bind'] = `/contacts(${payload.contactId})`
-  }
-  if (payload.supplierId) {
-    body['spnvc_SupplierAccountId@odata.bind'] = `/accounts(${payload.supplierId})`
-  }
-  if (payload.purchaseOrderId) {
-    body['spnvc_PurchaseOrderId@odata.bind'] = `/spnvc_purchaseorders(${payload.purchaseOrderId})`
-  }
-
-  const response = await powerPagesFetchResponse(`/_api/${ENTITY_SET}`, {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify(body),
+  // Contact, Company, PO number and submission time are derived by the scoped
+  // endpoint. Legacy caller identity hints are never forwarded as authority.
+  const entity = await createBusinessRecord<InvoiceEntity>('submit-invoice', {
+    invoiceNumber: payload.invoiceNumber,
+    description: payload.description ?? '',
+    amount: payload.amount,
+    dueDate: payload.dueDate,
+    purchaseOrderId: payload.purchaseOrderId,
+    status: payload.status ?? 'Draft',
   })
-
-  // Try to parse the entity from the response body
-  const entity = await parseResponseBody<InvoiceEntity>(response)
-  if (entity) return mapInvoiceEntity(entity)
-
-  // No body -- extract the ID from the Location header and fetch the record
-  const createdId = extractRecordId(response)
-  if (createdId) {
-    const created = await getInvoiceById(createdId)
-    if (created) return created
-  }
-
-  throw new Error('Failed to retrieve created record -- no response body or Location header')
+  return mapInvoiceEntity(entity)
 }
 
 // -- Update -------------------------------------------------------------------
@@ -223,16 +181,14 @@ export const deleteInvoice = async (id: string): Promise<void> => {
 
 // -- Count helper -------------------------------------------------------------
 
-export const getInvoiceCount = async (filter?: FetchFilter): Promise<number> => {
-  const url = buildFetchXmlUrl(ENTITY_SET, {
+export const getInvoiceCount = async (filter?: ODataFilter): Promise<number> => {
+  const response = await fetchBusinessCollection<InvoiceEntity>(ENTITY_SET, {
     select: 'spnvc_invoiceid',
     filter,
     count: true,
-    pageSize: 1,
-  })
-
-  const response = await fetchXmlCollection<InvoiceEntity>(url)
-  return response?.['@odata.count'] ?? 0
+    top: 1,
+  }, 1)
+  return collectionCount(response)
 }
 
 // -- Aggregation: count by status ---------------------------------------------

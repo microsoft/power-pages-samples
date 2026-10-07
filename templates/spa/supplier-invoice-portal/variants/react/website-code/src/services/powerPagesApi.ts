@@ -27,33 +27,19 @@ const fetchAntiForgeryToken = async (): Promise<string> => {
     return cachedAntiForgeryToken
   }
 
-  try {
-    const response = await fetch('/_layout/tokenhtml', {})
-    if (response.status !== 200) {
-      throw new Error(`Failed to fetch token: ${response.status}`)
-    }
-
-    const tokenResponse = await response.text()
-    const valueString = 'value="'
-    const terminalString = '" />'
-    const valueIndex = tokenResponse.indexOf(valueString)
-
-    if (valueIndex === -1) {
-      throw new Error('Token not found in response')
-    }
-
-    const token = tokenResponse.substring(
-      valueIndex + valueString.length,
-      tokenResponse.indexOf(terminalString, valueIndex),
-    )
-
-    cachedAntiForgeryToken = token || ''
-    cachedAntiForgeryTimestamp = now
-    return cachedAntiForgeryToken
-  } catch (error) {
-    console.warn('Failed to fetch anti-forgery token:', error)
-    return ''
+  const response = await fetch('/_layout/tokenhtml', {})
+  if (response.status !== 200) {
+    throw new Error(`Failed to fetch token: ${response.status}. Please sign in again.`)
   }
+  const tokenResponse = await response.text()
+  // tokenhtml returns an input such as <input value="token" />.
+  // Accept either quote style and normal HTML closing whitespace, but reject
+  // missing/empty values instead of sending an unauthenticated-shaped request.
+  const token = /<input\b[^>]*\bvalue=(["'])([^"']+)\1/i.exec(tokenResponse)?.[2]
+  if (!token) throw new Error('Anti-forgery token not found. Please sign in again.')
+  cachedAntiForgeryToken = token
+  cachedAntiForgeryTimestamp = now
+  return token
 }
 
 // -- Header Builder -----------------------------------------------------------
@@ -108,14 +94,20 @@ export const parseResponseBody = async <T>(response: Response): Promise<T | null
 
 /**
  * Extract the created record ID from a POST response.
- * Power Pages Web API may return the entity in the body (when Prefer: return=representation
- * is honored) or just a success status with the record URL in the Location header.
+ * Power Pages can return 204 with entityid: <GUID>, while OData clients can
+ * return Location/OData-EntityId: .../entityset(<GUID>). Neither needs a body.
+ * https://learn.microsoft.com/power-pages/configure/write-update-delete-operations#create
  */
 export const extractRecordId = (response: Response): string | null => {
-  const location = response.headers.get('Location') ?? response.headers.get('OData-EntityId')
-  if (!location) return null
-  const match = location.match(/\(([0-9a-fA-F-]{36})\)/)
-  return match ? match[1] : null
+  const guid = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+  const entityId = response.headers.get('entityid')
+  if (entityId && new RegExp(`^${guid}$`, 'i').test(entityId)) return entityId
+  for (const header of ['Location', 'OData-EntityId']) {
+    const location = response.headers.get(header)
+    const id = location && new RegExp(`\\((${guid})\\)(?:\\?.*)?$`, 'i').exec(location)?.[1]
+    if (id) return id
+  }
+  return null
 }
 
 // -- Retry Helpers ------------------------------------------------------------
@@ -135,41 +127,92 @@ const sleep = (ms: number, signal?: AbortSignal): Promise<void> =>
 const isTransientError = (status: number): boolean =>
   status === 429 || (status >= 500 && status < 600)
 
+// A failed write response may arrive after persistence. Only safe reads can be
+// replayed automatically; an explicit anti-forgery rejection is handled below.
+const canRetryTransientResponse = (method: string | undefined): boolean =>
+  ['GET', 'HEAD'].includes((method ?? 'GET').toUpperCase())
+
+export class PowerPagesApiError extends Error {
+  constructor(
+    message: string, readonly status: number, readonly code?: string,
+    readonly details?: { cdsCode?: string; innerCode?: string; innerMessage?: string },
+  ) {
+    super(message)
+    this.name = 'PowerPagesApiError'
+  }
+}
+
+const responseError = async (response: Response): Promise<PowerPagesApiError> => {
+  const text = await response.text()
+  let payload: unknown
+  try {
+    payload = text ? JSON.parse(text) : undefined
+  } catch {
+    // IIS can return HTML rather than the Web API's JSON error envelope.
+  }
+  const object = isJsonObject(payload) ? payload : undefined
+  const rawError = object?.error ?? object?.Error
+  const error = isJsonObject(rawError) ? rawError : undefined
+  const inner = isJsonObject(error?.innererror) ? error.innererror : undefined
+  // Server Logic failures can use a string Error/error instead of the Web API's
+  // { error: { message, code } } envelope. Keep that reason rather than losing it.
+  // https://learn.microsoft.com/power-pages/configure/author-server-logic#example-response
+  const message = typeof rawError === 'string' ? rawError
+    : stringProperty(error, 'message') ?? stringProperty(error, 'Message') ??
+      stringProperty(object, 'message') ?? stringProperty(object, 'Message') ??
+      `Request failed with status ${response.status}`
+  return new PowerPagesApiError(message, response.status, stringProperty(error, 'code'), {
+    cdsCode: stringProperty(error, 'cdscode'),
+    innerCode: stringProperty(inner, 'code'),
+    innerMessage: stringProperty(inner, 'message'),
+  })
+}
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+function stringProperty(object: Record<string, unknown> | undefined, key: string): string | undefined {
+  const value = object?.[key]
+  return typeof value === 'string' ? value : undefined
+}
+
 // -- Core Fetch Wrapper -------------------------------------------------------
 
 export async function powerPagesFetch<T>(
   url: string,
-  options?: RequestInit & { signal?: AbortSignal },
+  options?: RequestInit & { signal?: AbortSignal; retryAntiForgery?: boolean },
 ): Promise<T | null> {
+  const { retryAntiForgery = true, ...requestOptions } = options ?? {}
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    const headers = await buildPowerPagesHeaders(options?.headers)
+    const headers = await buildPowerPagesHeaders(requestOptions.headers)
 
-    const response = await fetch(url, { ...options, headers })
+    const response = await fetch(url, { ...requestOptions, headers })
 
     // On 401, the user's session has expired -- do not retry, prompt re-authentication
     if (response.status === 401) {
       throw new Error('Session expired. Please sign in again.')
     }
 
-    // On 403, the anti-forgery token may have expired -- refresh and retry
-    if (response.status === 403 && attempt < MAX_RETRIES) {
-      cachedAntiForgeryToken = null
-      continue
+    if (response.status === 403) {
+      const error = await responseError(response)
+      // Other 403 codes are table/column denials, not token-expiration signals.
+      // https://learn.microsoft.com/power-pages/configure/web-api-http-requests-handle-errors#error-codes
+      if (retryAntiForgery && error.code?.toLowerCase() === WebApiErrorCode.AntiForgeryTokenInvalid && attempt < MAX_RETRIES) {
+        cachedAntiForgeryToken = null
+        continue
+      }
+      throw error
     }
 
-    if (isTransientError(response.status) && attempt < MAX_RETRIES) {
+    if (canRetryTransientResponse(options?.method) && isTransientError(response.status) && attempt < MAX_RETRIES) {
       const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1)
       await sleep(delay, options?.signal)
       continue
     }
 
     if (!response.ok) {
-      let message = `Request failed with status ${response.status}`
-      try {
-        const payload = await response.json()
-        if (payload?.error?.message) message = payload.error.message
-      } catch { /* ignore parse errors */ }
-      throw new Error(message)
+      throw await responseError(response)
     }
 
     return parseResponseBody<T>(response)
@@ -195,24 +238,23 @@ export async function powerPagesFetchResponse(
       throw new Error('Session expired. Please sign in again.')
     }
 
-    if (response.status === 403 && attempt < MAX_RETRIES) {
-      cachedAntiForgeryToken = null
-      continue
+    if (response.status === 403) {
+      const error = await responseError(response)
+      if (error.code?.toLowerCase() === WebApiErrorCode.AntiForgeryTokenInvalid && attempt < MAX_RETRIES) {
+        cachedAntiForgeryToken = null
+        continue
+      }
+      throw error
     }
 
-    if (isTransientError(response.status) && attempt < MAX_RETRIES) {
+    if (canRetryTransientResponse(options?.method) && isTransientError(response.status) && attempt < MAX_RETRIES) {
       const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1)
       await sleep(delay, options?.signal)
       continue
     }
 
     if (!response.ok) {
-      let message = `Request failed with status ${response.status}`
-      try {
-        const payload = await response.json()
-        if (payload?.error?.message) message = payload.error.message
-      } catch { /* ignore */ }
-      throw new Error(message)
+      throw await responseError(response)
     }
 
     return response
@@ -240,6 +282,7 @@ export const WebApiErrorCode = {
  * Returns the hex code string (e.g., '90040120') or undefined.
  */
 export const parseErrorCode = (error: unknown): string | undefined => {
+  if (error instanceof PowerPagesApiError && error.code) return error.code.toLowerCase()
   if (error && typeof error === 'object' && 'message' in error) {
     const msg = (error as Error).message
     const match = msg.match(/[0-9a-f]{8}/i)
@@ -285,6 +328,84 @@ export const buildODataUrl = (
 export const escapeODataString = (value: string): string =>
   value.replace(/'/g, "''")
 
+export type ODataFilter =
+  | { attribute: string; operator: 'eq' | 'ne'; value: string | number | boolean | null | Date }
+  | { attribute: string; operator: 'contains'; value: string }
+  | { type: 'and' | 'or'; filters: ODataFilter[] }
+
+export const eq = (attribute: string, value: string | number | boolean | null | Date): ODataFilter =>
+  ({ attribute, operator: 'eq', value })
+export const and = (...filters: (ODataFilter | undefined)[]): ODataFilter =>
+  ({ type: 'and', filters: filters.filter((filter): filter is ODataFilter => filter !== undefined) })
+export const or = (...filters: ODataFilter[]): ODataFilter => ({ type: 'or', filters })
+export const contains = (attribute: string, value: string): ODataFilter =>
+  ({ attribute, operator: 'contains', value })
+
+const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+export const isGuid = (value: unknown): value is string => typeof value === 'string' && GUID.test(value)
+const propertyName = (value: string): string => {
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*(?:\/[a-zA-Z_][a-zA-Z0-9_]*)*$/.test(value)) {
+    throw new Error(`Invalid OData property: ${value}`)
+  }
+  return value
+}
+
+export function serializeODataFilter(filter?: ODataFilter): string | undefined {
+  if (!filter) return undefined
+  if ('type' in filter) {
+    const parts = filter.filters.map(serializeODataFilter).filter((part): part is string => !!part)
+    return parts.length ? `(${parts.join(` ${filter.type} `)})` : undefined
+  }
+  const attribute = propertyName(filter.attribute)
+  if (filter.operator === 'contains') {
+    return `contains(${attribute},'${escapeODataString(filter.value)}')`
+  }
+  const value = filter.value
+  let literal: string
+  if (value === null) literal = 'null'
+  else if (value instanceof Date) literal = value.toISOString()
+  else if (typeof value === 'number') {
+    if (!Number.isFinite(value)) throw new Error('OData numeric filter must be finite')
+    literal = String(value)
+  } else if (typeof value === 'boolean') literal = String(value)
+  else if (/^_[a-z0-9_]+_value$/.test(attribute)) {
+    if (!GUID.test(value)) throw new Error('Lookup filter ID must be a GUID')
+    literal = value
+  } else literal = `'${escapeODataString(value)}'`
+  return `${attribute} ${filter.operator} ${literal}`
+}
+
+export interface ODataQuery {
+  select: string
+  filter?: ODataFilter
+  orderBy?: string
+  count?: boolean
+  top?: number
+}
+
+export function buildCollectionUrl(entitySet: string, query: ODataQuery): string {
+  const select = [...new Set(query.select.split(',').map(propertyName))].join(',')
+  const order = query.orderBy?.split(',').map(part => {
+    const match = /^([a-zA-Z_][a-zA-Z0-9_/]*)(?: (asc|desc))?$/.exec(part.trim())
+    if (!match) throw new Error(`Invalid OData sort: ${part}`)
+    return `${propertyName(match[1])}${match[2] ? ` ${match[2]}` : ''}`
+  }).join(',')
+  if (query.top !== undefined) validatePageSize(query.top)
+  return buildODataUrl(propertyName(entitySet), {
+    '$select': select,
+    '$filter': serializeODataFilter(query.filter),
+    '$orderby': order,
+    '$count': query.count ? 'true' : undefined,
+    '$top': query.top?.toString(),
+  })
+}
+
+function validatePageSize(pageSize: number): void {
+  if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 5000) {
+    throw new Error('OData page size must be between 1 and 5000')
+  }
+}
+
 // -- OData Types --------------------------------------------------------------
 
 export interface ODataCollectionResponse<T> {
@@ -315,39 +436,113 @@ export const getFormattedValue = (
   return typeof value === 'string' ? value : undefined
 }
 
-// FetchXML can return SDK logical lookup names instead of OData's _name_value
-// properties. Support both without confusing a primary key for a relationship.
 export const getLookupId = (record: Record<string, unknown>, name: string): string | undefined => {
-  const value = record[`_${name}_value`] ?? record[name]
+  const value = record[`_${name}_value`]
   return typeof value === 'string' ? value : undefined
 }
 
 export const getLookupName = (record: Record<string, unknown>, name: string): string | undefined =>
-  getFormattedValue(record, `_${name}_value`) ?? getFormattedValue(record, name)
+  getFormattedValue(record, `_${name}_value`)
 
 // -- Pagination Helper --------------------------------------------------------
 
 const MAX_PAGINATION_ITERATIONS = 100
 
-export const fetchAllPages = async <T>(initialUrl: string): Promise<T[]> => {
+// Dataverse cursors may be relative or absolute. Never send the portal's CSRF
+// token to a different origin or follow a cursor into another table/operation.
+// https://learn.microsoft.com/power-apps/developer/data-platform/webapi/query/page-results
+export function validateCollectionUrl(url: string, entitySet?: string): string {
+  const origin = typeof window !== 'undefined' ? window.location?.origin : undefined
+  const base = origin ?? 'https://portal.example'
+  const parsed = new URL(url, base)
+  if (parsed.origin !== base || parsed.username || parsed.password || parsed.hash ||
+      (!origin && !url.startsWith('/_api/')) ||
+      !/^\/_api\/[a-zA-Z][a-zA-Z0-9_]*$/.test(parsed.pathname) ||
+      (entitySet && parsed.pathname !== `/_api/${entitySet}`) ||
+      parsed.searchParams.has('fetchXml')) {
+    throw new Error('Invalid or cross-origin OData collection URL')
+  }
+  return `${parsed.pathname}${parsed.search}`
+}
+
+export async function fetchODataCollection<T>(
+  url: string, pageSize = 50, entitySet?: string,
+): Promise<ODataCollectionResponse<T>> {
+  validatePageSize(pageSize)
+  const safeUrl = validateCollectionUrl(url, entitySet)
+  const response = await powerPagesFetch<ODataCollectionResponse<T>>(safeUrl, {
+    headers: {
+      // $top caps the whole result set; maxpagesize preserves continuation pages.
+      Prefer: `odata.include-annotations="OData.Community.Display.V1.FormattedValue",odata.maxpagesize=${pageSize}`,
+    },
+  })
+  if (!response || !Array.isArray(response.value)) throw new Error('Missing OData collection response')
+  if (response['@odata.nextLink']) {
+    response['@odata.nextLink'] = validateCollectionUrl(
+      response['@odata.nextLink'], safeUrl.split('?')[0].slice('/_api/'.length),
+    )
+  }
+  return response
+}
+
+export async function fetchODataRecord<T>(
+  entitySet: string, id: string, select: string,
+): Promise<T | null> {
+  if (!GUID.test(id)) throw new Error('Record ID must be a GUID')
+  const url = buildODataUrl(`${propertyName(entitySet)}(${id})`, {
+    '$select': select.split(',').map(propertyName).join(','),
+  })
+  try {
+    const record = await powerPagesFetch<T>(url)
+    if (!record || typeof record !== 'object' || Array.isArray(record) || 'value' in record) {
+      throw new Error('Missing OData record response')
+    }
+    return record
+  } catch (error) {
+    if (error instanceof PowerPagesApiError && error.status === 404) return null
+    throw error
+  }
+}
+
+export function collectionCount(response: ODataCollectionResponse<unknown>): number {
+  const count = response['@odata.count']
+  if (typeof count !== 'number' || !Number.isInteger(count) || count < 0) {
+    throw new Error('Missing or invalid OData count')
+  }
+  return count
+}
+
+export const fetchAllPages = async <T>(initialUrl: string, pageSize = 50): Promise<T[]> => {
   let nextUrl: string | undefined = initialUrl
   const results: T[] = []
   let iterations = 0
 
   while (nextUrl) {
     if (++iterations > MAX_PAGINATION_ITERATIONS) {
-      console.error('Exceeded maximum pagination iterations')
-      break
+      throw new Error('OData pagination exceeded 100 pages')
     }
 
-    const page: ODataCollectionResponse<T> | null = await powerPagesFetch<ODataCollectionResponse<T>>(nextUrl)
-    if (!page) break
+    const page: ODataCollectionResponse<T> = await fetchODataCollection<T>(nextUrl, pageSize)
 
-    results.push(...(page.value ?? []))
+    results.push(...page.value)
     nextUrl = page['@odata.nextLink']
   }
 
   return results
+}
+
+export async function collectPaginatedItems<T>(
+  load: (nextLink?: string) => Promise<PaginatedResult<T>>,
+): Promise<T[]> {
+  const items: T[] = []
+  let nextLink: string | undefined
+  for (let page = 0; page < MAX_PAGINATION_ITERATIONS; page++) {
+    const result = await load(nextLink)
+    items.push(...result.items)
+    nextLink = result.nextLink
+    if (!nextLink) return items
+  }
+  throw new Error('OData pagination exceeded 100 pages')
 }
 
 // -- Lookup Binding Helper ----------------------------------------------------
@@ -389,7 +584,7 @@ export const bindLookup = (
 
 /**
  * Internal retry wrapper for file/image column operations.
- * Provides the same retry, 403-refresh, and 401 handling as powerPagesFetchResponse,
+ * Provides the same safe-read retry, token-refresh, and 401 handling as powerPagesFetchResponse,
  * but accepts pre-built Headers (needed for the custom Content-Type / Accept / Prefer
  * that file operations require).
  */
@@ -408,12 +603,15 @@ const fileColumnFetchResponse = async (
       throw new Error('Session expired. Please sign in again.')
     }
 
-    if (response.status === 403 && attempt < MAX_RETRIES) {
-      cachedAntiForgeryToken = null
-      continue
+    if (response.status === 403) {
+      const error = await responseError(response.clone())
+      if (error.code?.toLowerCase() === WebApiErrorCode.AntiForgeryTokenInvalid && attempt < MAX_RETRIES) {
+        cachedAntiForgeryToken = null
+        continue
+      }
     }
 
-    if (isTransientError(response.status) && attempt < MAX_RETRIES) {
+    if (canRetryTransientResponse(init.method) && isTransientError(response.status) && attempt < MAX_RETRIES) {
       await sleep(INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1))
       continue
     }

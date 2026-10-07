@@ -1,26 +1,78 @@
 import { useState, useEffect, useRef } from 'react'
 import { useProfileStats } from '../data/invoiceProvider'
-import { User, Building2, Mail, Phone, MapPin, Shield } from 'lucide-react'
+import { User, Building2, Shield } from 'lucide-react'
 import Toast from '../components/Toast'
 import usePageTitle from '../hooks/usePageTitle'
 import { useAuth } from '../hooks/useAuth'
+import { isLocalDevelopment } from '../services/authService'
+import { getProfile, updateProfile, type ProfileFields } from '../services/profileService'
+import { hasAnyRole } from '../utils/authorization'
+
+const emptyForm: ProfileFields = { firstName: '', lastName: '', email: '', phone: '', jobTitle: '' }
+
+function profileFields(profile: ProfileFields): ProfileFields {
+  return {
+    firstName: profile.firstName, lastName: profile.lastName,
+    email: profile.email, phone: profile.phone, jobTitle: profile.jobTitle,
+  }
+}
+
+function ProfileInvoiceStats() {
+  const { stats } = useProfileStats()
+  return (
+    <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+      {[
+        { label: 'Total Invoices', value: stats.total },
+        { label: 'Rejected', value: stats.rejected },
+        { label: 'Paid', value: stats.paid },
+        { label: 'Pending', value: stats.pending },
+      ].map(stat => (
+        <div key={stat.label} style={{ textAlign: 'center' }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', fontWeight: 600 }}>
+            {stat.value}
+          </div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>{stat.label}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default function Profile() {
   usePageTitle('My Profile')
   const { user, displayName, initials } = useAuth()
 
-  const initialForm = useRef({
-    name: displayName || '',
-    email: user?.email || '',
-    phone: '+1 (555) 012-3456',
-    jobTitle: 'Accounts Payable Manager',
-  })
+  const [toast, setToast] = useState<{ message: string; variant: 'success' | 'error' } | null>(null)
+  const [form, setForm] = useState(emptyForm)
+  const [savedForm, setSavedForm] = useState(emptyForm)
+  const [companyName, setCompanyName] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [loadVersion, setLoadVersion] = useState(0)
+  const saveController = useRef<AbortController | null>(null)
+  const isDirty = !isLoading && !loadError && JSON.stringify(form) !== JSON.stringify(savedForm)
 
-  const [showToast, setShowToast] = useState(false)
-  const [form, setForm] = useState(initialForm.current)
-  const savedFormRef = useRef(initialForm.current)
+  useEffect(() => {
+    const controller = new AbortController()
+    setIsLoading(true)
+    setLoadError(null)
+    getProfile(controller.signal).then(profile => {
+      if (controller.signal.aborted) return
+      const fields = profileFields(profile)
+      setForm(fields)
+      setSavedForm(fields)
+      setCompanyName(profile.companyName)
+    }).catch(error => {
+      if (!controller.signal.aborted) setLoadError(error instanceof Error ? error.message : String(error))
+    }).finally(() => {
+      if (!controller.signal.aborted) setIsLoading(false)
+    })
+    return () => controller.abort()
+  }, [loadVersion, user?.contactId])
 
-  const isDirty = JSON.stringify(form) !== JSON.stringify(savedFormRef.current)
+  useEffect(() => () => { saveController.current?.abort() }, [])
 
   // Warn before closing tab with unsaved changes
   useEffect(() => {
@@ -33,16 +85,37 @@ export default function Profile() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [isDirty])
 
-  const { stats: profileStats } = useProfileStats()
-  const totalInvoices = profileStats.total
-  const totalPaid = profileStats.paid
-  const totalPending = profileStats.pending
-  const totalRejected = profileStats.rejected
+  const hasBusinessRole = hasAnyRole(['Supplier', 'Reviewer'])
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    savedFormRef.current = form
-    setShowToast(true)
+    if (saveController.current || isLoading || loadError || !isDirty) return
+    // The ref closes the same-turn double-submit gap before React disables UI.
+    const controller = new AbortController()
+    saveController.current = controller
+    setIsSaving(true)
+    setSaveError(null)
+    setToast(null)
+    try {
+      const profile = await updateProfile(form, controller.signal)
+      if (controller.signal.aborted) return
+      const fields = profileFields(profile)
+      setForm(fields)
+      setSavedForm(fields)
+      setCompanyName(profile.companyName)
+      setToast({
+        message: isLocalDevelopment ? 'Demo profile saved in this browser only' : 'Profile updated successfully',
+        variant: 'success',
+      })
+    } catch (error) {
+      if (controller.signal.aborted) return
+      const message = error instanceof Error ? error.message : String(error)
+      setSaveError(message)
+      setToast({ message, variant: 'error' })
+    } finally {
+      saveController.current = null
+      if (!controller.signal.aborted) setIsSaving(false)
+    }
   }
 
   const inputStyle: React.CSSProperties = {
@@ -83,9 +156,9 @@ export default function Profile() {
   }
 
   return (
-    <div style={{ maxWidth: 800 }}>
-      {showToast && (
-        <Toast message="Profile updated successfully" onClose={() => setShowToast(false)} />
+    <div style={{ maxWidth: 800, overflowWrap: 'anywhere' }}>
+      {toast && (
+        <Toast key={toast.message} message={toast.message} variant={toast.variant} onClose={() => setToast(null)} />
       )}
 
       <div className="animate-in" style={{ marginBottom: 28 }}>
@@ -100,7 +173,7 @@ export default function Profile() {
           My Profile
         </h1>
         <p style={{ fontSize: '0.925rem', color: 'var(--color-text-muted)' }}>
-          Manage your account settings and preferences.
+          Update your Contact details. Sign-in credentials and company details are managed separately.
         </p>
       </div>
 
@@ -125,43 +198,35 @@ export default function Profile() {
           >
             {initials}
           </div>
-          <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', fontWeight: 600 }}>
               {displayName}
             </div>
             <div style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', marginTop: 2 }}>
-              {form.jobTitle}
+              {savedForm.jobTitle}
             </div>
             <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginTop: 4 }}>
               {user?.email}
             </div>
           </div>
-          <div
-            style={{
-              display: 'flex',
-              gap: 24,
-              flexWrap: 'wrap',
-            }}
-          >
-            {[
-              { label: 'Total Invoices', value: totalInvoices },
-              { label: 'Rejected', value: totalRejected },
-              { label: 'Paid', value: totalPaid },
-              { label: 'Pending', value: totalPending },
-            ].map((stat) => (
-              <div key={stat.label} style={{ textAlign: 'center' }}>
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', fontWeight: 600 }}>
-                  {stat.value}
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>{stat.label}</div>
-              </div>
-            ))}
-          </div>
+          {hasBusinessRole && <ProfileInvoiceStats />}
         </div>
       </div>
 
       {/* Personal Information */}
-      <form onSubmit={handleSave}>
+      {isLoading && <p role="status" style={{ marginBottom: 16 }}>Loading Contact profile...</p>}
+      {loadError && (
+        <div role="alert" style={{ marginBottom: 16, color: 'var(--color-error)' }}>
+          <p>{loadError}</p>
+          <button type="button" className="btn-secondary" onClick={() => setLoadVersion(value => value + 1)}>
+            Retry profile load
+          </button>
+        </div>
+      )}
+      {saveError && <p role="alert" style={{ marginBottom: 16, color: 'var(--color-error)' }}>{saveError}</p>}
+      {isLocalDevelopment && <p style={{ marginBottom: 16 }}>Demo mode: changes stay in this browser and do not update Dataverse.</p>}
+      <form onSubmit={handleSave} aria-busy={isLoading || isSaving}>
+        <fieldset disabled={isLoading || isSaving || !!loadError} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
         <div className="animate-in animate-in-2" style={cardStyle}>
           <h2 style={sectionTitle}>
             <User size={18} color="var(--color-primary)" aria-hidden="true" />
@@ -170,17 +235,32 @@ export default function Profile() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
               gap: 18,
             }}
           >
             <div>
-              <label htmlFor="profile-name" style={labelStyle}>Full Name</label>
+              <label htmlFor="profile-first-name" style={labelStyle}>First Name</label>
               <input
-                id="profile-name"
+                id="profile-first-name"
                 type="text"
-                value={form.name}
-                onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value }))}
+                maxLength={50}
+                autoComplete="given-name"
+                value={form.firstName}
+                onChange={(e) => setForm(prev => ({ ...prev, firstName: e.target.value }))}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label htmlFor="profile-last-name" style={labelStyle}>Last Name</label>
+              <input
+                id="profile-last-name"
+                type="text"
+                required
+                maxLength={50}
+                autoComplete="family-name"
+                value={form.lastName}
+                onChange={(e) => setForm(prev => ({ ...prev, lastName: e.target.value }))}
                 style={inputStyle}
               />
             </div>
@@ -189,6 +269,8 @@ export default function Profile() {
               <input
                 id="profile-email"
                 type="email"
+                maxLength={100}
+                autoComplete="email"
                 value={form.email}
                 onChange={(e) => setForm(prev => ({ ...prev, email: e.target.value }))}
                 style={inputStyle}
@@ -199,6 +281,8 @@ export default function Profile() {
               <input
                 id="profile-phone"
                 type="tel"
+                maxLength={50}
+                autoComplete="tel"
                 value={form.phone}
                 onChange={(e) => setForm(prev => ({ ...prev, phone: e.target.value }))}
                 style={inputStyle}
@@ -209,6 +293,8 @@ export default function Profile() {
               <input
                 id="profile-title"
                 type="text"
+                maxLength={100}
+                autoComplete="organization-title"
                 value={form.jobTitle}
                 onChange={(e) => setForm(prev => ({ ...prev, jobTitle: e.target.value }))}
                 style={inputStyle}
@@ -224,42 +310,9 @@ export default function Profile() {
             Company Information
           </h2>
           <p style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginBottom: 16 }}>Managed by your organization</p>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: 20,
-            }}
-          >
-            {[
-              { icon: Building2, label: 'Company', value: 'Contoso Supplies Ltd' },
-              { icon: MapPin, label: 'Address', value: '123 Commerce Drive, Seattle, WA 98101' },
-              { icon: Mail, label: 'Billing Email', value: 'billing@contoso.com' },
-              { icon: Phone, label: 'Phone', value: '+1 (555) 900-1234' },
-            ].map((item) => (
-              <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 'var(--radius)',
-                    background: 'var(--color-bg)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  <item.icon size={16} color="var(--color-text-muted)" aria-hidden="true" />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginBottom: 2 }}>
-                    {item.label}
-                  </div>
-                  <div style={{ fontSize: '0.925rem', fontWeight: 500 }}>{item.value}</div>
-                </div>
-              </div>
-            ))}
+          <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginBottom: 2 }}>Company</div>
+          <div style={{ fontSize: '0.925rem', fontWeight: 500 }}>
+            {isLoading ? 'Loading...' : loadError ? 'Unavailable' : companyName || 'No company assigned'}
           </div>
         </div>
 
@@ -269,36 +322,18 @@ export default function Profile() {
             <Shield size={18} color="var(--color-primary)" aria-hidden="true" />
             Security
           </h2>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '12px 16px',
-              background: 'var(--color-bg)',
-              borderRadius: 'var(--radius)',
-              flexWrap: 'wrap',
-              gap: 12,
-            }}
-          >
-            <div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 500 }}>Password</div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: 2 }}>
-                Last changed 30 days ago
-              </div>
-            </div>
-            <button type="button" className="btn-change-pw">
-              Change Password
-            </button>
-          </div>
+          <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
+            Use your sign-in provider to manage your password. This form changes business Contact details only.
+          </p>
         </div>
 
         {/* Save */}
         <div className="animate-in animate-in-5" style={{ display: 'flex', gap: 12 }}>
-          <button type="submit" className="btn-primary">
-            Save Changes
+          <button type="submit" className="btn-primary" disabled={!isDirty || isLoading || isSaving || !!loadError}>
+            {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
+        </fieldset>
       </form>
     </div>
   )

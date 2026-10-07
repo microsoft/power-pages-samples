@@ -1,6 +1,5 @@
 import { getCurrentUser } from './authService'
-import { powerPagesFetch, buildODataUrl } from './powerPagesApi'
-import { fetchXmlRecord } from './fetchXmlApi'
+import { powerPagesFetch, buildODataUrl, fetchODataRecord } from './powerPagesApi'
 import { SUPPLIER_CATEGORY, ACCOUNT_STATE, type SupplierEntity } from '../types/supplier'
 
 interface ContactAffiliation {
@@ -26,7 +25,7 @@ export async function getSupplierCompanyId(): Promise<string> {
   const companyId = contact._parentcustomerid_value
   let company: SupplierEntity | null
   try {
-    company = await fetchXmlRecord<SupplierEntity>(
+    company = await fetchODataRecord<SupplierEntity>(
       'accounts', companyId, 'accountid,name,accountcategorycode,statecode',
     )
   } catch (error) {

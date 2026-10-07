@@ -3,13 +3,14 @@
  * Components import from here instead of mockData.ts or hooks directly.
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { InvoiceStatus, StatusHistoryEntry, Attachment, Comment } from '../types'
 import type { Invoice as ApiInvoice, InvoiceStatusLabel } from '../types/invoice'
 import type { InvoiceComment as ApiComment } from '../types/invoiceComment'
 import type { InvoiceAttachment as ApiAttachment } from '../types/invoiceAttachment'
 import { getCurrentUser } from '../services/authService'
 import { notifyInvoicesChanged } from './invoiceEvents'
+import { and, eq, collectPaginatedItems, type ODataFilter } from '../services/powerPagesApi'
 
 const isDevelopment =
   typeof window !== 'undefined' &&
@@ -127,6 +128,7 @@ interface UseInvoiceListResult {
 export function useInvoiceList(params?: {
   status?: string
   search?: string
+  purchaseOrderId?: string
   sortKey?: string
   sortDir?: 'asc' | 'desc'
   page?: number
@@ -139,6 +141,7 @@ export function useInvoiceList(params?: {
 
   const status = params?.status
   const search = params?.search
+  const purchaseOrderId = params?.purchaseOrderId
   const sortKey = params?.sortKey || 'submissionDate'
   const sortDir = params?.sortDir || 'desc'
   const page = params?.page || 1
@@ -152,6 +155,11 @@ export function useInvoiceList(params?: {
       // Use mock data
       const { invoices: mockInvoices } = await import('./mockData')
       let list = [...mockInvoices]
+      if (purchaseOrderId) {
+        const { getPurchaseOrderById } = await import('./mockData')
+        const po = getPurchaseOrderById(purchaseOrderId)
+        list = po ? list.filter(invoice => invoice.poNumber === po.poNumber) : []
+      }
 
       if (status && status !== 'All') {
         list = list.filter(i => i.status === status)
@@ -223,26 +231,34 @@ export function useInvoiceList(params?: {
         dueDate: 'spnvc_duedate',
       }
 
-      let filter: import('../services/fetchXmlApi').FetchFilter | undefined
+      let filter: ODataFilter | undefined
       if (status && status !== 'All') {
         const { INVOICE_STATUS } = await import('../types/invoice')
         const statusVal = INVOICE_STATUS[status as InvoiceStatusLabel]
         if (statusVal) filter = { attribute: 'spnvc_invoicestatus', operator: 'eq', value: statusVal }
       }
+      if (purchaseOrderId) filter = and(filter, eq('_spnvc_purchaseorderid_value', purchaseOrderId))
       const { isReviewer } = await import('../utils/authorization')
       if (!isReviewer()) {
-        const [{ getSupplierCompanyId }, { and, eq }] = await Promise.all([
-          import('../services/supplierAffiliationService'), import('../services/fetchXmlApi'),
-        ])
-        filter = and(filter, eq('spnvc_supplieraccountid', await getSupplierCompanyId()))
+        const { getSupplierCompanyId } = await import('../services/supplierAffiliationService')
+        filter = and(filter, eq('_spnvc_supplieraccountid_value', await getSupplierCompanyId()))
       }
 
-      const result = await listInvoices({
+      if (!Number.isInteger(page) || page < 1 || page > 100) throw new Error('Invoice page must be between 1 and 100')
+      const query = {
         pageSize,
         filter,
         search: search || undefined,
         orderBy: `${sortFieldMap[sortKey] || 'spnvc_submissiondate'} ${sortDir}`,
-      })
+      }
+      let result = await listInvoices(query)
+      for (let index = 1; index < page; index++) {
+        if (!result.nextLink) {
+          result = { items: [], totalCount: result.totalCount }
+          break
+        }
+        result = await listInvoices({ ...query, nextLink: result.nextLink })
+      }
 
       setInvoices(result.items.map(apiInvoiceToItem))
       setTotalCount(result.totalCount)
@@ -253,7 +269,7 @@ export function useInvoiceList(params?: {
     } finally {
       setIsLoading(false)
     }
-  }, [status, search, sortKey, sortDir, page, pageSize])
+  }, [status, search, purchaseOrderId, sortKey, sortDir, page, pageSize])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -266,14 +282,23 @@ export function useInvoiceDetail(id: string | undefined) {
   const [invoice, setInvoice] = useState<InvoiceItem | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [refreshError, setRefreshError] = useState<string | null>(null)
+  const activeRequest = useRef(0)
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (background = false) => {
+    const request = ++activeRequest.current
     if (!id) { setInvoice(null); setIsLoading(false); return }
-    setIsLoading(true)
-    setError(null)
+    // Comment readback must retain the detail/editor, including a new draft.
+    // Only initial navigation replaces the page with a loading skeleton.
+    if (!background) {
+      setIsLoading(true)
+      setError(null)
+    }
+    setRefreshError(null)
 
     if (isDevelopment) {
       const { getInvoiceById } = await import('./mockData')
+      if (request !== activeRequest.current) return
       const mock = getInvoiceById(id)
       if (mock) {
         setInvoice({
@@ -310,23 +335,26 @@ export function useInvoiceDetail(id: string | undefined) {
 
       const [invoiceResult, commentsResult, attachmentsResult] = await Promise.all([
         getApi(id),
-        listCommentsByInvoiceId(id),
-        listAttachmentsByInvoice(id),
+        collectPaginatedItems(nextLink => listCommentsByInvoiceId(id, { nextLink })),
+        collectPaginatedItems(nextLink => listAttachmentsByInvoice(id, { nextLink })),
       ])
+      if (request !== activeRequest.current) return
 
       if (invoiceResult) {
         const { isReviewer } = await import('../utils/authorization')
         if (!isReviewer()) {
           const { getSupplierCompanyId } = await import('../services/supplierAffiliationService')
-          if (invoiceResult.supplierId !== await getSupplierCompanyId()) {
+          const companyId = await getSupplierCompanyId()
+          if (request !== activeRequest.current) return
+          if (invoiceResult.supplierId !== companyId) {
             setInvoice(null)
             return
           }
         }
         const item = apiInvoiceToItem(invoiceResult)
         // Merge comments with their linked attachments
-        item.comments = commentsResult.items.map(c => {
-          const mapped = apiCommentToItem(c, attachmentsResult.items)
+        item.comments = commentsResult.map(c => {
+          const mapped = apiCommentToItem(c, attachmentsResult)
           return {
             id: mapped.id,
             author: mapped.author,
@@ -338,22 +366,32 @@ export function useInvoiceDetail(id: string | undefined) {
           }
         })
         // All attachments for the "Attached Documents" section
-        item.attachments = attachmentsResult.items.map(apiAttachmentToUi)
+        item.attachments = attachmentsResult.map(apiAttachmentToUi)
         setInvoice(item)
       } else {
         setInvoice(null)
       }
     } catch (err) {
-      setInvoice(null)
-      setError(err instanceof Error ? err.message : 'Failed to fetch invoice')
+      if (request !== activeRequest.current) return
+      const message = err instanceof Error ? err.message : 'Failed to fetch invoice'
+      if (background) {
+        setRefreshError(`The invoice could not be refreshed: ${message}`)
+      } else {
+        setInvoice(null)
+        setError(message)
+      }
     } finally {
-      setIsLoading(false)
+      if (request === activeRequest.current && !background) setIsLoading(false)
     }
   }, [id])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => {
+    fetchData()
+    return () => { activeRequest.current++ }
+  }, [fetchData])
 
-  return { invoice, isLoading, error, refetch: fetchData }
+  const refetch = useCallback(() => fetchData(invoice !== null), [fetchData, invoice])
+  return { invoice, isLoading, error, refreshError, refetch }
 }
 
 // ── Dashboard metrics ──
@@ -368,9 +406,11 @@ export function useDashboardMetrics(isReviewer = false) {
     totalProcessed: 0,
   })
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     setIsLoading(true)
+    setError(null)
 
     if (isDevelopment) {
       const { invoices } = await import('./mockData')
@@ -431,8 +471,8 @@ export function useDashboardMetrics(isReviewer = false) {
           totalProcessed: 0,
         })
       }
-    } catch {
-      // Silently fall back to zeros
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard metrics')
     } finally {
       setIsLoading(false)
     }
@@ -440,7 +480,7 @@ export function useDashboardMetrics(isReviewer = false) {
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  return { metrics, isLoading, refetch: fetchData }
+  return { metrics, isLoading, error, refetch: fetchData }
 }
 
 // ── Recent invoices (Dashboard) ──
@@ -448,9 +488,11 @@ export function useDashboardMetrics(isReviewer = false) {
 export function useRecentInvoices(count = 5, isReviewer = false) {
   const [invoices, setInvoices] = useState<InvoiceItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     setIsLoading(true)
+    setError(null)
 
     if (isDevelopment) {
       const { invoices: mockInvoices } = await import('./mockData')
@@ -490,14 +532,17 @@ export function useRecentInvoices(count = 5, isReviewer = false) {
         })
         setInvoices(result.items.map(apiInvoiceToItem))
       } else {
+        const { getSupplierCompanyId } = await import('../services/supplierAffiliationService')
         const result = await listInvoices({
           pageSize: count,
+          filter: eq('_spnvc_supplieraccountid_value', await getSupplierCompanyId()),
           orderBy: 'spnvc_submissiondate desc',
         })
         setInvoices(result.items.map(apiInvoiceToItem))
       }
-    } catch {
-      // Empty on error
+    } catch (err) {
+      setInvoices([])
+      setError(err instanceof Error ? err.message : 'Failed to load recent invoices')
     } finally {
       setIsLoading(false)
     }
@@ -505,7 +550,7 @@ export function useRecentInvoices(count = 5, isReviewer = false) {
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  return { invoices, isLoading }
+  return { invoices, isLoading, error }
 }
 
 // ── Create invoice ──
@@ -707,7 +752,7 @@ export function useCreateCommentAction() {
 
       // 1. Create the comment record
       // Child access now follows the Invoice, so Contact provenance can stay
-      // with the caller and requires only Self Contact AppendTo.
+      // with the caller; referenced Contact Append is still scoped to Self.
       const ownerContactId = user?.contactId
       const comment = await createInvoiceComment({
         commentText: text,

@@ -1,7 +1,7 @@
 // src/services/supplierService.ts
 // Read service for Supplier-category Accounts via Power Pages Web API.
 
-import { buildFetchXmlUrl, fetchAllXmlPages, fetchXmlRecord, and, eq } from './fetchXmlApi'
+import { buildCollectionUrl, fetchAllPages, fetchODataRecord, and, eq } from './powerPagesApi'
 import {
   type SupplierEntity,
   type Supplier,
@@ -31,21 +31,20 @@ const SUPPLIER_SELECT = [
  * must never be offered for supplier assignment.
  */
 export const listAssignableSuppliers = async (): Promise<Supplier[]> => {
-  const url = buildFetchXmlUrl(ENTITY_SET, {
+  const url = buildCollectionUrl(ENTITY_SET, {
     select: SUPPLIER_SELECT,
     filter: and(eq('accountcategorycode', SUPPLIER_CATEGORY), eq('statecode', ACCOUNT_STATE.Active)),
     orderBy: 'name asc',
-    pageSize: 5000,
   })
 
-  const entities = await fetchAllXmlPages<SupplierEntity>(url)
+  const entities = await fetchAllPages<SupplierEntity>(url, 5000)
   return entities.filter(isAssignableSupplierAccount).map(mapSupplierEntity)
 }
 
 // -- Get by ID ----------------------------------------------------------------
 
 export const getSupplierById = async (id: string): Promise<Supplier | null> => {
-  const entity = await fetchXmlRecord<SupplierEntity>(ENTITY_SET, id, SUPPLIER_SELECT)
+  const entity = await fetchODataRecord<SupplierEntity>(ENTITY_SET, id, SUPPLIER_SELECT)
   return entity?.accountcategorycode === SUPPLIER_CATEGORY ? mapSupplierEntity(entity) : null
 }
 

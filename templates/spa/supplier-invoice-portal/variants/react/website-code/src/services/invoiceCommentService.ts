@@ -5,6 +5,7 @@ import {
   powerPagesFetchResponse,
   parseResponseBody,
   extractRecordId,
+  fetchODataRecord, collectionCount, eq, type ODataFilter,
   type PaginatedResult,
 } from './powerPagesApi'
 import {
@@ -13,7 +14,7 @@ import {
   type CreateInvoiceCommentInput,
   mapInvoiceCommentEntity,
 } from '../types/invoiceComment'
-import { buildFetchXmlUrl, fetchXmlCollection, fetchXmlRecord, eq, type FetchFilter } from './fetchXmlApi'
+import { fetchBusinessCollection } from './businessReadService'
 
 // -- Constants ----------------------------------------------------------------
 
@@ -38,7 +39,7 @@ const COMMENT_SELECT = [
 export interface InvoiceCommentListParams {
   pageSize?: number
   nextLink?: string
-  filter?: FetchFilter
+  filter?: ODataFilter
   orderBy?: string
 }
 
@@ -49,22 +50,17 @@ export const listInvoiceComments = async (
 ): Promise<PaginatedResult<InvoiceComment>> => {
   const pageSize = params?.pageSize ?? 25
 
-  // If we have a nextLink from a previous response, use it directly.
-  // Dataverse does NOT support $skip -- pagination uses @odata.nextLink cursors.
-  const url = params?.nextLink ?? buildFetchXmlUrl(ENTITY_SET, {
+  const response = await fetchBusinessCollection<InvoiceCommentEntity>(ENTITY_SET, {
     select: COMMENT_SELECT,
     orderBy: params?.orderBy ?? 'createdon asc',
     count: true,
-    pageSize,
     filter: params?.filter,
-  })
-
-  const response = await fetchXmlCollection<InvoiceCommentEntity>(url)
+  }, pageSize, params?.nextLink)
 
   return {
-    items: (response?.value ?? []).map(mapInvoiceCommentEntity),
-    totalCount: response?.['@odata.count'] ?? response?.value?.length ?? 0,
-    nextLink: response?.['@odata.nextLink'],
+    items: response.value.map(mapInvoiceCommentEntity),
+    totalCount: collectionCount(response),
+    nextLink: response['@odata.nextLink'],
   }
 }
 
@@ -76,20 +72,15 @@ export const listCommentsByInvoiceId = async (
 ): Promise<PaginatedResult<InvoiceComment>> => {
   return listInvoiceComments({
     ...params,
-    filter: eq('spnvc_invoiceid', invoiceId),
+    filter: eq('_spnvc_invoiceid_value', invoiceId),
   })
 }
 
 // -- Get by ID ----------------------------------------------------------------
 
 export const getInvoiceCommentById = async (id: string): Promise<InvoiceComment | null> => {
-  try {
-    const entity = await fetchXmlRecord<InvoiceCommentEntity>(ENTITY_SET, id, COMMENT_SELECT)
-    return entity ? mapInvoiceCommentEntity(entity) : null
-  } catch (err) {
-    console.error(`[invoiceCommentService] getInvoiceCommentById(${id}) failed:`, err)
-    return null
-  }
+  const entity = await fetchODataRecord<InvoiceCommentEntity>(ENTITY_SET, id, COMMENT_SELECT)
+  return entity ? mapInvoiceCommentEntity(entity) : null
 }
 
 // -- Create -------------------------------------------------------------------
@@ -142,20 +133,18 @@ export const createInvoiceComment = async (
 
 // -- Count helper -------------------------------------------------------------
 
-export const getInvoiceCommentCount = async (filter?: FetchFilter): Promise<number> => {
-  const url = buildFetchXmlUrl(ENTITY_SET, {
+export const getInvoiceCommentCount = async (filter?: ODataFilter): Promise<number> => {
+  const response = await fetchBusinessCollection<InvoiceCommentEntity>(ENTITY_SET, {
     select: 'spnvc_invoicecommentid',
     filter,
     count: true,
-    pageSize: 1,
-  })
-
-  const response = await fetchXmlCollection<InvoiceCommentEntity>(url)
-  return response?.['@odata.count'] ?? 0
+    top: 1,
+  }, 1)
+  return collectionCount(response)
 }
 
 // -- Count comments for an invoice --------------------------------------------
 
 export const getCommentCountForInvoice = async (invoiceId: string): Promise<number> => {
-  return getInvoiceCommentCount(eq('spnvc_invoiceid', invoiceId))
+  return getInvoiceCommentCount(eq('_spnvc_invoiceid_value', invoiceId))
 }

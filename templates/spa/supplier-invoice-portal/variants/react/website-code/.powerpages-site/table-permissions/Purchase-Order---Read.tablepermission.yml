@@ -1,8 +1,8 @@
 adx_entitypermission_webrole:
 - 997e7996-e241-4117-9c09-28e90a1fcdbc
 accountrelationship: spnvc_account_purchaseorder
-append: false
-appendto: true
+append: true
+appendto: false
 create: false
 delete: false
 entitylogicalname: spnvc_purchaseorder

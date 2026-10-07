@@ -9,6 +9,7 @@ import {
   getActiveRoleMode,
   isAdmin,
   isReviewer,
+  isSupplier,
 } from '../utils/authorization';
 
 export function useAuthorization() {
@@ -26,5 +27,6 @@ export function useAuthorization() {
     canSwitchRoleMode: canSwitchRoleMode(),
     activeRoleMode: getActiveRoleMode(),
     isReviewer: isReviewer(),
+    isSupplier: isSupplier(),
   };
 }

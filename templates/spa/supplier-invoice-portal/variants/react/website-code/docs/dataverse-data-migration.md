@@ -110,7 +110,7 @@ Removing old components from this repository is not a destructive migration scri
 9. Delete retired schema or data only in a separately authorized cleanup after reviewing dependencies and retention requirements.
    Do not delete it as part of this template's installation.
 
-No live import, deployment, or destructive migration is authorized or performed by the repository's build, tests, documentation generator, or solution packing.
+The repository build, tests and solution packing do not perform a live import, deployment or destructive migration.
 
 ## Management customization and configuration limits
 
@@ -130,7 +130,7 @@ An empty grid after Add Existing therefore does not prove the association failed
 Inspect the exact Account's Category, state and N:N membership before retrying.
 Only correct Category after confirming the business is intended to be a Supplier; preserve unrelated fields and associations.
 Refresh the grid after that correction rather than recreating an existing link.
-The local assignment validator distinguishes Category and state errors for both memberships and Company Name.
+The portal distinguishes inaccessible, inactive and non-Supplier Company Name records.
 If the target uses another Contact form, or a customization hides the General tab or its controls, review the form layers and app form selection before provisioning.
 Publish the affected Account and Contact customizations after unmanaged import.
 Table-level publication also publishes other pending customizations on those tables; obtain the environment owner's consent before doing so.

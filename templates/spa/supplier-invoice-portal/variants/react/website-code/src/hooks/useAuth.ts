@@ -7,6 +7,7 @@ import {
   getUserInitials,
   login as authLogin,
   logout as authLogout,
+  PROFILE_IDENTITY_CHANGED,
 } from '../services/authService';
 
 interface UseAuthReturn {
@@ -31,6 +32,8 @@ export function useAuth(): UseAuthReturn {
 
   useEffect(() => {
     refresh();
+    window.addEventListener(PROFILE_IDENTITY_CHANGED, refresh);
+    return () => window.removeEventListener(PROFILE_IDENTITY_CHANGED, refresh);
   }, [refresh]);
 
   return {

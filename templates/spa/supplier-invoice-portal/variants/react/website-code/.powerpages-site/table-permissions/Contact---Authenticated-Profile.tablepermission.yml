@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- 2ab5e3ba-0309-f111-8406-6045bd04a357
+append: false
+appendto: false
+create: false
+delete: false
+entitylogicalname: contact
+entityname: Contact - Authenticated Profile
+id: c5e8551a-659b-45fb-baf4-1968b39c4410
+read: true
+scope: 756150004
+write: true

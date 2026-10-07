@@ -6,6 +6,7 @@ export interface PowerPagesUser {
   userName: string;
   firstName: string;
   lastName: string;
+  fullName?: string;
   email: string;
   contactId: string;
   userRoles: string[];

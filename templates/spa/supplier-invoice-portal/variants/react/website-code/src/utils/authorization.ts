@@ -65,11 +65,12 @@ export function canSwitchRoleMode(): boolean {
   return hasRole('Supplier') && hasRole('Reviewer');
 }
 
-export function getActiveRoleMode(): ActiveRoleMode {
+export function getActiveRoleMode(): ActiveRoleMode | undefined {
   if (canSwitchRoleMode()) {
     return getActiveRoleModePreference() ?? 'reviewer';
   }
-  return hasRole('Reviewer') ? 'reviewer' : 'supplier';
+  if (hasRole('Reviewer')) return 'reviewer';
+  return hasRole('Supplier') ? 'supplier' : undefined;
 }
 
 /**
@@ -80,7 +81,7 @@ export function isReviewer(): boolean {
 }
 
 /**
- * Checks if the current user is a supplier (not a reviewer).
+ * Checks whether the current user has Supplier access in the active UI mode.
  */
 export function isSupplier(): boolean {
   return getActiveRoleMode() === 'supplier';

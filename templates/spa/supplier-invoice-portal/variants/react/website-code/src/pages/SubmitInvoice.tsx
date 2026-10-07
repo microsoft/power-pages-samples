@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Send, X, AlertTriangle } from 'lucide-react'
 import FileUpload from '../components/FileUpload'
 import type { UploadedFile } from '../components/FileUpload'
@@ -7,9 +7,28 @@ import ActionDialog from '../components/ActionDialog'
 import usePageTitle from '../hooks/usePageTitle'
 import { useCreateInvoiceAction, formatCurrency } from '../data/invoiceProvider'
 import { useSupplierPOs } from '../data/purchaseOrderProvider'
+import { useAuthorization } from '../hooks/useAuthorization'
+import { useCreatePreflight } from '../hooks/useCreatePreflight'
 
 export default function SubmitInvoice() {
   usePageTitle('Submit Invoice')
+  const { hasRole } = useAuthorization()
+  if (!hasRole('Supplier')) {
+    return (
+      <div style={{ textAlign: 'center', padding: 60 }}>
+        <AlertTriangle size={48} color="var(--color-error)" aria-hidden="true" style={{ marginBottom: 12 }} />
+        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', marginBottom: 8 }}>Access Denied</h1>
+        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: 20 }}>
+          Only suppliers can submit invoices.
+        </p>
+        <Link to="/dashboard" className="btn-primary">Back to Dashboard</Link>
+      </div>
+    )
+  }
+  return <SubmitInvoiceForm />
+}
+
+function SubmitInvoiceForm() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const preSelectedPO = searchParams.get('po') || ''
@@ -23,6 +42,7 @@ export default function SubmitInvoice() {
     dueDate: '',
     description: '',
   })
+  const preflight = useCreatePreflight('submit-invoice', form.selectedPOId)
 
   // Pre-select PO from query param once POs are loaded
   useEffect(() => {
@@ -53,6 +73,7 @@ export default function SubmitInvoice() {
   function validate() {
     const errs: Record<string, string> = {}
     if (!selectedPO?.supplierId) errs.poNumber = 'Please select an available supplier purchase order'
+    if (selectedPO?.supplierId && !preflight.ready) errs.poNumber = preflight.error ?? 'Wait for the purchase-order eligibility check'
     if (!form.amount || Number(form.amount) <= 0) errs.amount = 'Enter a valid amount'
     if (!form.dueDate) errs.dueDate = 'Due date is required'
     return errs
@@ -158,9 +179,9 @@ export default function SubmitInvoice() {
         </p>
       </div>
 
-      {(posError || submitError) && (
+      {(posError || preflight.error || submitError) && (
         <p role="alert" style={{ color: 'var(--color-error)', marginBottom: 16 }}>
-          {posError || submitError}
+          {posError || preflight.error || submitError}
         </p>
       )}
       {!posLoading && !posError && availablePOs.length === 0 && (
@@ -387,7 +408,7 @@ export default function SubmitInvoice() {
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: 12, paddingTop: 8 }}>
-          <button type="submit" disabled={isSubmitting} className="btn-primary">
+          <button type="submit" disabled={isSubmitting || preflight.isLoading || Boolean(preflight.error)} className="btn-primary">
             {isSubmitting ? (
               <><span className="btn-spinner" aria-hidden="true" /> Submitting...</>
             ) : (

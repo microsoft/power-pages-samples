@@ -6,7 +6,8 @@ import {
   ThumbsUp, ThumbsDown, Sparkles, RefreshCw, Bell,
 } from 'lucide-react'
 import { formatCurrency, formatDate, useInvoiceDetail, useUpdateInvoiceAction, useCreateCommentAction, downloadAttachment, deleteAttachment } from '../data/invoiceProvider'
-import { statusOrder, getCurrentMockUser } from '../data/mockData'
+import { statusOrder } from '../data/mockData'
+import { getUserDisplayName, getUserInitials } from '../services/authService'
 import type { CommentFile } from '../components/CommentSection'
 import { isInvoiceLocked } from '../types/invoice'
 import { useAuthorization } from '../hooks/useAuthorization'
@@ -228,7 +229,7 @@ export default function InvoiceDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { isReviewer } = useAuthorization()
-  const { invoice, isLoading, error, refetch } = useInvoiceDetail(id)
+  const { invoice, isLoading, error, refreshError, refetch } = useInvoiceDetail(id)
   const {
     summary: aiSummary,
     recommendations: aiRecommendations,
@@ -271,12 +272,11 @@ export default function InvoiceDetail() {
     if (!id) return
 
     // Optimistic local update for immediate feedback
-    const user = getCurrentMockUser()
     const attachments = files?.map(f => f.attachment)
     const newComment: Comment = {
       id: `c-${Date.now()}`,
-      author: user.name,
-      authorInitials: user.initials,
+      author: getUserDisplayName() || 'You',
+      authorInitials: getUserInitials() || 'U',
       date: new Date().toISOString(),
       text,
       linkedAction,
@@ -404,7 +404,7 @@ export default function InvoiceDetail() {
             {showErrorDetails ? 'Hide details' : 'Show details'}
           </button>
           {showErrorDetails && (
-            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', marginTop: 8, fontFamily: 'monospace' }}>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', marginTop: 8, fontFamily: 'var(--font-body)' }}>
               {error}
             </p>
           )}
@@ -446,6 +446,14 @@ export default function InvoiceDetail() {
 
   return (
     <div style={{ maxWidth: 800 }}>
+      {refreshError && (
+        <div role="alert" className="error-banner" style={{ marginBottom: 16 }}>
+          {refreshError} The displayed invoice may be out of date.
+          <button type="button" onClick={() => refetch()} className="btn-secondary-sm" style={{ marginLeft: 12 }}>
+            Refresh invoice
+          </button>
+        </div>
+      )}
       {toast && (
         <Toast message={toast.message} variant={toast.variant} onClose={() => setToast(null)} />
       )}
@@ -577,7 +585,7 @@ export default function InvoiceDetail() {
         <div
           role="list"
           aria-label="Invoice status progress"
-          style={{ display: 'flex', alignItems: 'flex-start', minWidth: 480 }}
+          style={{ display: 'flex', alignItems: 'flex-start', minWidth: 0 }}
         >
           {timelineSteps.map((step, i) => {
             const state = getTimelineState(invoice.status, step.statuses)
