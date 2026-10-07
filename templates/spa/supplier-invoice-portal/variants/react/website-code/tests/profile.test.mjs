@@ -103,6 +103,9 @@ async function portalFixture(options = {}) {
         if (options.readFailure || (options.readbackFailure && writes.length)) {
           return route.fulfill({ status: 400, json: { error: { message: 'Contact read unavailable' } } })
         }
+        if (options.profileReadDelayMs) {
+          await new Promise(resolve => setTimeout(resolve, options.profileReadDelayMs))
+        }
         return route.fulfill({ json: contact })
       }
       if (options.includeCompany && url.pathname === `/_api/accounts(${companyId})`) {
@@ -122,15 +125,20 @@ async function portalFixture(options = {}) {
   return { context, page, writes, requests, releasePatch }
 }
 
+async function waitForProfileLoaded(page) {
+  await page.locator('form[aria-busy="false"]').waitFor()
+}
+
 test('myprofile direct navigation and full reload avoid the captured native profile redirect', async () => {
   const { context, page, requests, writes } = await portalFixture({
     profilePath: '/myprofile', simulateReservedProfile: true, roles: ['Authenticated Users'],
+    profileReadDelayMs: 2_000,
   })
   try {
-    await page.getByLabel('Email Address').waitFor()
+    await waitForProfileLoaded(page)
     assert.equal(await page.getByLabel('Email Address').inputValue(), 'original@example.com')
     await page.reload()
-    await page.getByLabel('Email Address').waitFor()
+    await waitForProfileLoaded(page)
     assert.equal(new URL(page.url()).pathname, '/myprofile')
     assert.equal(await page.getByLabel('Email Address').inputValue(), 'original@example.com')
     assert.equal(requests.filter(request => request.path.startsWith('/_api/contacts(') && request.method === 'GET').length, 2)
@@ -409,11 +417,11 @@ test('mock profile explicitly saves only in this browser, survives reload and ke
     await page.getByRole('button', { name: 'Save Changes' }).click()
     await page.getByText('Demo profile saved in this browser only', { exact: true }).waitFor()
     await page.reload()
-    await page.getByLabel('Email Address').waitFor()
+    await waitForProfileLoaded(page)
     assert.equal(await page.getByLabel('Email Address').inputValue(), 'demo@example.com')
     await page.evaluate(() => localStorage.setItem('mock-role', 'reviewer'))
     await page.reload()
-    await page.getByLabel('Email Address').waitFor()
+    await waitForProfileLoaded(page)
     assert.notEqual(await page.getByLabel('Email Address').inputValue(), 'demo@example.com')
     assert.equal(writes.length, 0)
     assert.equal(requests.filter(request => request.path.startsWith('/_api/contacts')).length, 0)
@@ -450,7 +458,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
       const { context, page, writes } = await portalFixture({ viewport, patchStatus })
       try {
         const email = page.getByLabel('Email Address')
-        await email.waitFor()
+        await waitForProfileLoaded(page)
         assert.equal(await email.inputValue(), 'original@example.com')
         await page.getByLabel('First Name').fill('Updated')
         await email.fill('updated@example.com')
@@ -479,7 +487,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
             `profile-${viewport.width}-${state}-header.png`), animations: 'disabled' })
         }
         await page.reload()
-        await email.waitFor()
+        await waitForProfileLoaded(page)
         assert.equal(await email.inputValue(), patchStatus ? 'original@example.com' : 'updated@example.com')
       } finally {
         await context.close()
