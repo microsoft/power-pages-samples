@@ -72,3 +72,7 @@ pac pages upload-code-site --rootPath .
 
 The `website-code/` folder includes the React source, package files, Power Pages configuration, and `.powerpages-site` metadata.
 Make changes there, rebuild, and run the upload command again.
+
+The portal uses Segoe UI for headings and body text, with system font fallbacks on platforms where Segoe UI is not installed.
+Code and identifiers use system monospace fonts.
+The font stacks are defined in `variants/react/website-code/src/styles/theme.css`; no external font downloads are required.

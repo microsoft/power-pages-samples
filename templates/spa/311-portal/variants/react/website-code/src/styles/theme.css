@@ -2,9 +2,9 @@
 
 :root {
   /* Typography */
-  --font-heading: 'Space Grotesk', sans-serif;
-  --font-body: 'IBM Plex Sans', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-heading: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  --font-body: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
   /* Colors — Civic palette */
   --color-primary: #1B4965;
