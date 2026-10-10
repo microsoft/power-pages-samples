@@ -17,9 +17,36 @@ Confirm the release target:
 - Target ref, usually the current branch or `main`.
 - Whether this is a draft release or a published release.
 
-If the user did not provide a tag, propose one from the catalog version or date.
+If the user provided a tag, use it and check for conflicts in Step 4.
+Otherwise, read the latest published release from GitHub:
 
-Completion criterion: you know the tag, target ref, release mode, and template IDs included.
+```bash
+gh api 'repos/{owner}/{repo}/releases/latest' --jq .tag_name
+```
+
+Use that release tag as the version baseline.
+GitHub's latest-release endpoint excludes drafts and prereleases.
+Keep the tag prefix and parse its semantic version, such as `templates-v1.1.0`.
+Read the diff and commit history between that tag and the intended target ref, focusing on the changes being released.
+Choose the increment from those changes:
+
+- Major for breaking changes to installation, configuration, or supported template behavior.
+- Minor for new templates or backward-compatible functionality.
+- Patch for backward-compatible fixes, documentation, or maintenance without new functionality.
+
+Use the highest applicable increment.
+Reset the minor and patch numbers to zero for a major increment, and the patch number to zero for a minor increment.
+For example, from `templates-v1.1.0`, propose `templates-v1.1.1` for fixes, `templates-v1.2.0` for a new template, or `templates-v2.0.0` for a breaking change.
+Explain the increment using the changes found and confirm the proposed tag.
+If compatibility is unclear, ask the user before choosing the increment.
+
+Catalog and individual template versions describe template metadata; they do not determine the release tag.
+If no published release exists, ask the user for the initial tag.
+If the lookup fails for another reason, report the error and resolve it before proposing a version.
+If the latest tag has no recognizable semantic version, ask the user for the next tag.
+Do not substitute a catalog version, date, draft, prerelease, or local tag when the published-release baseline is unavailable.
+
+Completion criterion: you know the confirmed tag, target ref, release mode, and template IDs included; an inferred tag is based on the latest published release and the changes since it.
 
 ## Step 2: Validate the template catalog
 
@@ -43,6 +70,7 @@ Completion criterion: validation passed, or the release is blocked with the fail
 ## Step 3: Build the release summary
 
 Write release notes from the template catalog and git diff, not from memory alone.
+Use the latest published release tag as the comparison base when one exists.
 
 Include:
 
