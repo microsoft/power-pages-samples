@@ -30,6 +30,102 @@ test("accepts a valid unmanaged template family fixture", () => {
   assert.deepEqual(result.warnings, []);
 });
 
+test("accepts solution publication metadata with true, false, or no declarations", () => {
+  for (const solutions of [
+    [{ uniqueName: "TestSolution", publishChanges: true }],
+    [{ uniqueName: "TestSolution", publishChanges: false }],
+    undefined
+  ]) {
+    const root = createTemplateRoot({
+      familyExtras: solutions === undefined ? {} : { solutions }
+    });
+
+    const result = validateTemplates({ root });
+    assert.deepEqual(result.errors, []);
+    assert.deepEqual(result.warnings, []);
+  }
+});
+
+test("rejects duplicate and unknown solution publication declarations", () => {
+  const duplicateRoot = createTemplateRoot({
+    familyExtras: {
+      solutions: [
+        { uniqueName: "TestSolution", publishChanges: true },
+        { uniqueName: "TestSolution", publishChanges: false }
+      ]
+    }
+  });
+  const duplicateResult = validateTemplates({ root: duplicateRoot });
+  assert(duplicateResult.errors.some((error) =>
+    error.includes('declares duplicate solution publication metadata for "TestSolution"')
+  ));
+
+  const unknownRoot = createTemplateRoot({
+    familyExtras: {
+      solutions: [{ uniqueName: "testsolution", publishChanges: true }]
+    }
+  });
+  const unknownResult = validateTemplates({ root: unknownRoot });
+  assert(unknownResult.errors.some((error) =>
+    error.includes('declares solution publication metadata for "testsolution", but no exact case-sensitive folder exists')
+  ));
+});
+
+test("rejects solution publication metadata when the solution folder name drifts", () => {
+  const root = createTemplateRoot({
+    solutionUniqueName: "TestSolution",
+    solutionFolderName: "RenamedSolution",
+    familyExtras: {
+      solutions: [{ uniqueName: "TestSolution", publishChanges: true }]
+    }
+  });
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) =>
+    error.includes('declares solution publication metadata for "TestSolution", but no exact case-sensitive folder exists')
+  ));
+  assert(result.errors.some((error) =>
+    error.includes('solution folder "RenamedSolution" must exactly match XML unique name "TestSolution"')
+  ));
+});
+
+test("requires complete solution publication metadata objects", () => {
+  const root = createTemplateRoot({
+    familyExtras: {
+      solutions: [
+        { uniqueName: "TestSolution" },
+        { publishChanges: true },
+        { uniqueName: "TestSolution", publishChanges: "true", extra: true }
+      ]
+    }
+  });
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("$.templates[0].solutions[0].publishChanges is required")));
+  assert(result.errors.some((error) => error.includes("$.templates[0].solutions[1].uniqueName is required")));
+  assert(result.errors.some((error) => error.includes("$.templates[0].solutions[2].publishChanges must be boolean")));
+  assert(result.errors.some((error) => error.includes("$.templates[0].solutions[2].extra is not allowed")));
+});
+
+test("rejects invalid Dataverse solution unique names in publication metadata", () => {
+  const root = createTemplateRoot({
+    familyExtras: {
+      solutions: [
+        { uniqueName: "Invalid solution", publishChanges: true },
+        { uniqueName: "Invalid-Solution!", publishChanges: false }
+      ]
+    }
+  });
+
+  const result = validateTemplates({ root });
+  assert.equal(
+    result.errors.filter((error) =>
+      error.includes("does not match ^[A-Za-z_][A-Za-z0-9_]*$")
+    ).length,
+    2
+  );
+});
+
 test("requires the derived website-code directory for every template kind", () => {
   for (const fixture of [
     { kind: "spa", framework: "react" },
@@ -81,7 +177,8 @@ test("rejects variant-specific family metadata", () => {
     variantOverrides: {
       previewImages: ["spa/test-template/variants/react/previews/home-react.png"],
       seedDataPath: "spa/test-template/variants/react/seed-data/accounts.json",
-      requiredDataverseLanguages: [1033, 1036]
+      requiredDataverseLanguages: [1033, 1036],
+      solutions: [{ uniqueName: "TestSolution", publishChanges: true }]
     },
     variantSeedData: {
       entitySetName: "accounts",
@@ -106,6 +203,9 @@ test("rejects variant-specific family metadata", () => {
   ));
   assert(result.errors.some((error) =>
     error.includes("$.templates[0].variants.react.requiredDataverseLanguages is not allowed")
+  ));
+  assert(result.errors.some((error) =>
+    error.includes("$.templates[0].variants.react.solutions is not allowed")
   ));
 });
 

@@ -388,6 +388,44 @@ for (const mode of ['supplier', 'reviewer']) {
   })
 }
 
+test('review queue has no AI UI or summary requests while filter, search and sort remain active', async () => {
+  const f = await fixture({ mode: 'reviewer', summaryState: 'relationship-all' })
+  try {
+    await f.page.goto('http://portal.example/review')
+    await f.page.getByText('INV-FIXTURE-1', { exact: true }).waitFor()
+    await f.page.waitForLoadState('networkidle')
+    assert.equal(await f.page.getByRole('heading', { name: 'Queue AI Summary', exact: true }).count(), 0)
+    assert.equal(await f.page.locator('#review-queue-ai-summary-body').count(), 0)
+    assert.equal(await f.page.getByRole('button', { name: 'Try again', exact: true }).count(), 0)
+    assert.equal(f.requests.some(request => request.path.startsWith('/_api/summarization/')), false)
+
+    const submittedRequest = f.page.waitForRequest(request => {
+      const url = new URL(request.url())
+      return url.pathname === '/_api/serverlogics/invoice-po-reads' &&
+        url.searchParams.get('table') === 'spnvc_invoices' &&
+        filterHasCondition(JSON.parse(url.searchParams.get('filter') || 'null'), 'spnvc_invoicestatus', 'eq', 2)
+    })
+    await f.page.locator('#queue-status-filter').selectOption('Submitted')
+    await submittedRequest
+
+    await f.page.getByRole('searchbox', { name: 'Search invoices', exact: true }).fill('INV-FIXTURE')
+    await assertEventually(() => f.requests.some(request => request.path === '/_api/serverlogics/invoice-po-reads' &&
+      filterHasCondition(JSON.parse(new URLSearchParams(request.query).get('filter') || 'null'),
+        'spnvc_name', 'contains', 'INV-FIXTURE')))
+
+    await f.page.getByRole('columnheader', { name: /Amount/ }).click()
+    await assertEventually(() => f.requests.some(request => request.path === '/_api/serverlogics/invoice-po-reads' &&
+      new URLSearchParams(request.query).get('orderBy') === 'spnvc_amount asc'))
+
+    await f.page.getByText('INV-FIXTURE-1', { exact: true }).waitFor()
+    assert.equal(await f.page.getByText('INV-FIXTURE-1', { exact: true }).count(), 1)
+    assert.equal(await f.page.getByText('Company A', { exact: true }).count(), 5)
+    assert.equal(await f.page.getByText('10 invoices in queue', { exact: true }).count(), 1)
+    assert.equal(f.requests.some(request => request.path.startsWith('/_api/summarization/')), false)
+    await inspectLayout(f.page, 'review-queue-no-ai', 1440)
+  } finally { await f.context.close() }
+})
+
 test('live comment optimistic author is the signed-in Contact, never the mock user', async () => {
   const f = await fixture({ commentState: 'success' })
   try {
@@ -735,24 +773,22 @@ test('dual-role supplier mode uses Company A while reviewer assignment replies c
 })
 
 for (const summaryState of ['success', 'empty', 'error']) {
-  test(`record-level invoice, PO and queue summary callers retain OData selections and visible ${summaryState} states`, async () => {
+  test(`record-level invoice and PO summary callers retain OData selections and visible ${summaryState} states`, async () => {
     const { context, page, requests } = await fixture({ mode: 'supplier', summaryState })
     try {
-      for (const path of [`/invoices/${invoiceId}`, `/purchase-orders/${poId}`, '/review']) {
+      for (const path of [`/invoices/${invoiceId}`, `/purchase-orders/${poId}`]) {
         await page.goto(`http://portal.example${path}`)
         const message = summaryState === 'success'
           ? 'Fixture summary'
           : summaryState === 'error'
             ? 'Fixture summary denied'
-            : path === '/review'
-                ? 'No invoices in the review queue right now'
-                : 'There is nothing to summarize yet.'
+            : 'There is nothing to summarize yet.'
         await page.getByText(message, { exact: summaryState !== 'empty' }).first().waitFor()
       }
       const summaries = requests.filter(request => request.path.startsWith('/_api/summarization/'))
       // React StrictMode replays mount effects in the local development build.
       // Check the retained caller contracts without mistaking that replay for retries.
-      assert.equal(new Set(summaries.map(request => JSON.parse(request.body).InstructionIdentifier)).size, 3)
+      assert.equal(new Set(summaries.map(request => JSON.parse(request.body).InstructionIdentifier)).size, 2)
       assert.ok(summaries.every(request => request.method === 'POST' && JSON.parse(request.body).InstructionIdentifier))
       assert.ok(summaries.every(request => !request.query.includes('fetchXml')))
     } finally { await context.close() }
