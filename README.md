@@ -54,6 +54,7 @@ Server-side JavaScript that runs on the Power Pages runtime, callable from both 
 | --- | --- | --- |
 | [SharePoint Integration](samples/server-logic/sharepoint-integration/) | Microsoft Graph + SharePoint | Call Microsoft Graph and SharePoint Online from server logic using an Entra client-credentials app. Pairs with the [File Upload (SharePoint)](samples/spa/snippets/file-upload/sharepoint/) code-site sample. |
 | [Unbound Custom API Invocation](samples/server-logic/unbound-custom-api/) | Dataverse Custom APIs | Invoke an unbound Custom Action with `POST` and a parameterized unbound Custom Function with `GET` from server logic using a ready-to-import solution. |
+| [CSP Violation Reporting](samples/server-logic/csp-reporting/) | Reporting API + CSP | Receive browser-generated CSP violation reports in a defensive anonymous Server Logic endpoint while preserving antiforgery protection everywhere else. |
 
 ## Sample categories
 
