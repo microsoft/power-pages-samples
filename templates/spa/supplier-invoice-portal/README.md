@@ -69,11 +69,16 @@ The roles are additive, so switching the site's Supplier or Reviewer presentatio
 
 In Supplier presentation, **My POs** hides Draft purchase orders and removes Draft from the status filter, while Reviewer presentation retains Draft access.
 
-The invoice list intentionally has no AI summary card or hidden summarization request, while summaries on individual invoices, individual purchase orders, and the reviewer queue depend on the target environment's Power Pages AI settings.
+The invoice list and reviewer queue intentionally have no AI summary card or hidden summarization request.
+Summaries on individual invoices and purchase orders depend on the target environment's Power Pages AI settings.
 
 ## Install manually
 
 Use these steps when installing the template without an installer skill.
+
+The catalog marks `SupplierInvoiceSPAPortal` with `"publishChanges": true`.
+Import it with `pac solution import --publish-changes` so the Portal Contact (Enhanced) assignment grid and its filtered Account view are available.
+The PAC publication step can include other pending customizations in the target environment.
 
 ### Prerequisites
 

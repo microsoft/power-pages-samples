@@ -176,13 +176,15 @@ test('captured AI relationship failure stays an explicit compatibility error, ne
   mock.method(globalThis, 'fetch', async url => url === '/_layout/tokenhtml'
     ? new Response('<input value="test-token" />')
     : Response.json({ error: errors.relationshipQuery.error }, { status: 400 }))
-  for (const load of [
-    () => summaries.fetchDataSummary({ entitySet: 'spnvc_invoices', id: recordId, select: 'spnvc_name' }),
-    () => summaries.fetchListSummary({ entitySet: 'spnvc_invoices', select: 'spnvc_name' }),
-  ]) {
-    await assert.rejects(load(), error => error.code === '9004010D' &&
-      error.status === 400 && error.message.includes('No summary was generated.'))
-  }
+  await assert.rejects(
+    summaries.fetchDataSummary({ entitySet: 'spnvc_invoices', id: recordId, select: 'spnvc_name' }),
+    error => error.code === '9004010D' &&
+      error.status === 400 && error.message.includes('No summary was generated.'),
+  )
+})
+
+test('AI summary service has no collection summarization client', () => {
+  assert.equal(summaries.fetchListSummary, undefined)
 })
 
 test('failed Server Logic envelopes preserve their reason instead of a bare HTTP status', async () => {
