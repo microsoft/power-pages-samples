@@ -1,14 +1,16 @@
 # Power Pages templates
 
-Templates are installable Power Pages starting points.
+Templates are Power Pages starting points that are either installed from repository artifacts or
+provisioned by a documented platform API.
 They are different from `samples/`: templates are meant to be imported into an environment, while samples are learning examples that explain a pattern or capability.
 
 The central catalog is [`manifest.json`](manifest.json).
-Each entry is a template family with one or more variants.
-The family defines shared metadata, preview images, required Dataverse languages, and optional seed data.
+Each entry is a template family. Repository-artifact entries define downloadable variants,
+required Dataverse languages, and optional seed data. Platform-provisioned entries define the
+exact provisioning contract and presentation metadata needed by catalog consumers.
 The schema for the catalog is [`schemas/templates-manifest.schema.json`](schemas/templates-manifest.schema.json).
 
-Template artifacts use a fixed layout, so the manifest does not repeat derivable paths:
+Repository-artifact templates use a fixed layout, so the manifest does not repeat derivable paths:
 
 ```text
 templates/<kind>/<template-id>/
@@ -28,11 +30,26 @@ When a family has multiple solutions, import them in case-insensitive lexical un
 Sibling solutions must be independently importable and must not depend on each other.
 Framework variants contain only their `website-code/` directory.
 
+Platform-provisioned traditional templates declare:
+
+- `provisioning.type: "create-website-api"`
+- the exact `provisioning.templateName` submitted to the Create Website API
+- presentation metadata in `capabilities`, `requirements`, `warning`, and `responsivePreviews`
+
+These entries do not define variants, required Dataverse languages, seed data, or flat
+`previewImages`. Their directories contain only documentation and samples-owned presentation
+assets such as the paired desktop/mobile images declared in `responsivePreviews`; they do not
+duplicate the website source or solutions provisioned by the platform.
+
 ## Template categories
 
 - [SPA templates](spa/) - installable code-site templates built with frontend frameworks.
+- [Traditional templates](traditional/) - platform-provisioned Power Pages templates and
+  traditional repository-artifact templates.
 
 ## Use a template
+
+For a repository-artifact template:
 
 1. Open the template folder.
 1. Choose the variant you want to install.
@@ -40,6 +57,11 @@ Framework variants contain only their `website-code/` directory.
 1. Import the seed data separately when the template includes `seed-data/data.json`.
 1. Deploy the website content from the variant's `website-code/` folder as described in the template README.
 1. Review any template-specific prerequisites, such as Dataverse features or Power Pages Admin Center settings.
+
+For a platform-provisioned traditional template, use a consumer that supports its declared
+`provisioning.type`. The consumer must submit the exact `templateName`, enforce its own
+documented creation prerequisites, and fetch the catalog and previews from the same immutable
+revision.
 
 The repository stores each unmanaged solution as reviewable source under the template family's `solutions/<solution-unique-name>/` directory.
 Pack and import every direct solution folder in case-insensitive lexical unique-name order.

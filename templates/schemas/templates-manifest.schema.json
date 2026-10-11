@@ -23,10 +23,7 @@
           "kind",
           "keywords",
           "audience",
-          "previewImages",
-          "requiredDataverseLanguages",
-          "author",
-          "variants"
+          "author"
         ],
         "additionalProperties": false,
         "properties": {
@@ -73,6 +70,7 @@
             }
           },
           "previewImages": {
+            "description": "Flat preview list for repository-artifact templates. Create Website API templates use responsivePreviews instead.",
             "type": "array",
             "uniqueItems": true,
             "items": {
@@ -81,10 +79,12 @@
             }
           },
           "seedDataPath": {
+            "description": "Repository-hosted seed data imported after template solutions. Not valid for Create Website API templates.",
             "type": "string",
             "pattern": "^.+\\.json$"
           },
           "requiredDataverseLanguages": {
+            "description": "Dataverse languages required by repository-hosted template artifacts. Not valid for Create Website API templates.",
             "type": "array",
             "minItems": 1,
             "uniqueItems": true,
@@ -97,7 +97,38 @@
             "type": "string",
             "minLength": 1
           },
+          "provisioning": {
+            "$ref": "#/$defs/provisioning"
+          },
+          "capabilities": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "requirements": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "warning": {
+            "type": "string",
+            "minLength": 1
+          },
+          "responsivePreviews": {
+            "description": "Labeled desktop/mobile preview pairs for Create Website API templates.",
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/responsivePreview"
+            }
+          },
           "variants": {
+            "description": "Downloadable framework variants for repository-artifact templates. Not valid for Create Website API templates.",
             "type": "object",
             "minProperties": 1,
             "additionalProperties": false,
@@ -124,6 +155,54 @@
     }
   },
   "$defs": {
+    "provisioning": {
+      "type": "object",
+      "required": [
+        "type",
+        "templateName"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "create-website-api"
+          ]
+        },
+        "templateName": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        }
+      }
+    },
+    "responsivePreview": {
+      "type": "object",
+      "required": [
+        "id",
+        "displayName",
+        "desktop",
+        "mobile"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "desktop": {
+          "type": "string",
+          "pattern": "^.+\\.png$"
+        },
+        "mobile": {
+          "type": "string",
+          "pattern": "^.+\\.png$"
+        }
+      }
+    },
     "templateVariant": {
       "type": "object",
       "additionalProperties": false

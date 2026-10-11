@@ -65,6 +65,182 @@
       "variants": {
         "react": {}
       }
+    },
+    {
+      "id": "starter-layout-1",
+      "displayName": "Starter Layout 1",
+      "description": "This versatile template provides a basic, multipage navigation framework and simple building blocks for you to customize any way you want. Just click on a section or image to customize it.",
+      "kind": "traditional",
+      "keywords": [
+        "starter",
+        "multipage",
+        "navigation"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "author": "Microsoft",
+      "provisioning": {
+        "type": "create-website-api",
+        "templateName": "StarterLayout1"
+      },
+      "capabilities": [
+        "Home page",
+        "Subpages",
+        "Contact us",
+        "Search results"
+      ],
+      "requirements": [],
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Home page",
+          "desktop": "traditional/starter-layout-1/previews/desktop-home.png",
+          "mobile": "traditional/starter-layout-1/previews/mobile-home.png"
+        },
+        {
+          "id": "subpage-1",
+          "displayName": "Sub page 1",
+          "desktop": "traditional/starter-layout-1/previews/desktop-services.png",
+          "mobile": "traditional/starter-layout-1/previews/mobile-services.png"
+        },
+        {
+          "id": "subpage-2",
+          "displayName": "Sub page 2",
+          "desktop": "traditional/starter-layout-1/previews/desktop-contact.png",
+          "mobile": "traditional/starter-layout-1/previews/mobile-contact.png"
+        }
+      ]
+    },
+    {
+      "id": "blank-page",
+      "displayName": "Blank page",
+      "description": "This 1-page blank template provides a simple starting point to create a completely custom site with no preset sections or components.",
+      "kind": "traditional",
+      "keywords": [
+        "blank",
+        "starter",
+        "custom"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "author": "Microsoft",
+      "provisioning": {
+        "type": "create-website-api",
+        "templateName": "BlankPage"
+      },
+      "capabilities": [
+        "Home page"
+      ],
+      "requirements": [],
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Home page",
+          "desktop": "traditional/blank-page/previews/desktop-home.png",
+          "mobile": "traditional/blank-page/previews/mobile-home.png"
+        }
+      ]
+    },
+    {
+      "id": "program-registration",
+      "displayName": "Program Registration",
+      "description": "Enable parents to browse after-school activities, review availability, and register online.",
+      "kind": "traditional",
+      "keywords": [
+        "programs",
+        "registration",
+        "activities"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "author": "Microsoft",
+      "provisioning": {
+        "type": "create-website-api",
+        "templateName": "ProgramRegistration"
+      },
+      "capabilities": [],
+      "requirements": [],
+      "responsivePreviews": []
+    },
+    {
+      "id": "event-portal",
+      "displayName": "Event Portal",
+      "description": "Give customers a central place to discover events, review complete event information, and register for the experiences that interest them.",
+      "kind": "traditional",
+      "keywords": [
+        "events",
+        "registration",
+        "agenda",
+        "speakers"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "author": "Microsoft",
+      "provisioning": {
+        "type": "create-website-api",
+        "templateName": "EventPortal"
+      },
+      "capabilities": [
+        "Customizable event template",
+        "List of events",
+        "Event details with location, agenda, speakers, and sponsors",
+        "Event registration page"
+      ],
+      "requirements": [
+        "Customer Insights - Journeys license"
+      ],
+      "warning": "Some components may not behave fully in design studio and can require pro-developer customization.",
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Home page",
+          "desktop": "traditional/event-portal/previews/desktop-home.png",
+          "mobile": "traditional/event-portal/previews/mobile-home.png"
+        },
+        {
+          "id": "registration",
+          "displayName": "Registration page",
+          "desktop": "traditional/event-portal/previews/desktop-registration.png",
+          "mobile": "traditional/event-portal/previews/mobile-registration.png"
+        },
+        {
+          "id": "about",
+          "displayName": "Event about page",
+          "desktop": "traditional/event-portal/previews/desktop-about.png",
+          "mobile": "traditional/event-portal/previews/mobile-about.png"
+        }
+      ]
+    },
+    {
+      "id": "schedule-and-manage-meetings",
+      "displayName": "Schedule and Manage Meetings",
+      "description": "Enable location selection and appointment scheduling with customizable calendars and reminders.",
+      "kind": "traditional",
+      "keywords": [
+        "meetings",
+        "appointments",
+        "scheduling"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "author": "Microsoft",
+      "provisioning": {
+        "type": "create-website-api",
+        "templateName": "BookMeetings"
+      },
+      "capabilities": [],
+      "requirements": [],
+      "responsivePreviews": []
     }
   ]
 }

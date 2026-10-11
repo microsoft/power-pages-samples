@@ -260,6 +260,75 @@ function validateEnums(template, label, result) {
       }
     }
   }
+
+  validateCreateWebsiteApiMetadata(template, label, result);
+  validateRepositoryArtifactMetadata(template, label, result);
+}
+
+function isCreateWebsiteApiTemplate(template) {
+  return template?.provisioning?.type === "create-website-api";
+}
+
+function validateCreateWebsiteApiMetadata(template, label, result) {
+  if (!template.provisioning) {
+    return;
+  }
+
+  if (!isCreateWebsiteApiTemplate(template)) {
+    return;
+  }
+
+  if (template.kind !== "traditional") {
+    result.errors.push(
+      `Template "${label}" create-website-api provisioning is supported only for traditional templates.`
+    );
+  }
+
+  for (const propertyName of [
+    "previewImages",
+    "requiredDataverseLanguages",
+    "seedDataPath",
+    "variants"
+  ]) {
+    if (Object.hasOwn(template, propertyName)) {
+      result.errors.push(
+        `Template "${label}" create-website-api provisioning must not define ${propertyName}.`
+      );
+    }
+  }
+
+  for (const propertyName of ["capabilities", "requirements", "responsivePreviews"]) {
+    if (!Array.isArray(template[propertyName])) {
+      result.errors.push(
+        `Template "${label}" create-website-api provisioning requires ${propertyName}.`
+      );
+    }
+  }
+
+  const seenPreviewIds = new Set();
+  for (const preview of template.responsivePreviews ?? []) {
+    if (!preview || typeof preview !== "object" || Array.isArray(preview) || typeof preview.id !== "string") {
+      continue;
+    }
+    if (seenPreviewIds.has(preview.id)) {
+      result.errors.push(`Template "${label}" responsivePreviews contains duplicate id "${preview.id}".`);
+    }
+    seenPreviewIds.add(preview.id);
+  }
+}
+
+function validateRepositoryArtifactMetadata(template, label, result) {
+  if (isCreateWebsiteApiTemplate(template)) {
+    return;
+  }
+
+  for (const propertyName of ["previewImages", "requiredDataverseLanguages", "variants"]) {
+    if (!Object.hasOwn(template, propertyName)) {
+      result.errors.push(
+        `Template "${label}" repository-artifact metadata requires ${propertyName}.`
+      );
+    }
+  }
 }
 
 function trackIdByKind(template, idsByKind) {
@@ -297,6 +366,31 @@ function validateTemplateFolders(root, idsByKind, result) {
 
 function validateReferencedPaths(template, label, root, result) {
   const familyBase = getFamilyBasePath(template);
+  if (isCreateWebsiteApiTemplate(template)) {
+    const responsivePreviewPaths = (template.responsivePreviews ?? []).flatMap(
+      (preview) => [preview?.desktop, preview?.mobile]
+    );
+    validatePreviewImages(
+      responsivePreviewPaths,
+      label,
+      root,
+      `${familyBase}/previews`,
+      "responsivePreviews",
+      result
+    );
+    // The platform provisions these website artifacts. Reject repository package
+    // directories so the catalog cannot accidentally become a second copy.
+    for (const directoryName of ["seed-data", "solutions", "variants"]) {
+      const directoryPath = path.resolve(root, familyBase, directoryName);
+      if (directoryExists(directoryPath)) {
+        result.errors.push(
+          `Template "${label}" create-website-api directory must not contain ${directoryName}/.`
+        );
+      }
+    }
+    return;
+  }
+
   validatePreviewImages(template.previewImages, label, root, `${familyBase}/previews`, "previewImages", result);
   const solutionMetadata = validateSolutionsDirectory(
     label,

@@ -63,6 +63,83 @@ test("accepts a traditional website export without SPA project files", () => {
   assert.deepEqual(result.warnings, []);
 });
 
+test("accepts a Create Website API template with metadata and previews but no repository artifacts", () => {
+  const root = createTemplateRoot({
+    kind: "traditional",
+    framework: "none",
+    createWebsiteCode: false,
+    createSolution: false,
+    omitArtifactFields: true,
+    familyExtras: {
+      provisioning: {
+        type: "create-website-api",
+        templateName: "StarterLayout1"
+      },
+      capabilities: ["Home page", "Subpages"],
+      requirements: [],
+      responsivePreviews: [
+        {
+          id: "home",
+          displayName: "Home page",
+          desktop: "traditional/test-template/previews/desktop-home.png",
+          mobile: "traditional/test-template/previews/mobile-home.png"
+        }
+      ]
+    }
+  });
+  const templateRoot = path.join(root, "traditional/test-template");
+  fs.rmSync(path.join(templateRoot, "solutions"), { recursive: true });
+  fs.rmSync(path.join(templateRoot, "seed-data"), { recursive: true });
+  fs.writeFileSync(path.join(templateRoot, "previews/desktop-home.png"), "png");
+  fs.writeFileSync(path.join(templateRoot, "previews/mobile-home.png"), "png");
+
+  const result = validateTemplates({ root });
+  assert.deepEqual(result.errors, []);
+  assert.deepEqual(result.warnings, []);
+});
+
+test("rejects invalid Create Website API metadata and repository artifacts", () => {
+  const root = createTemplateRoot({
+    kind: "traditional",
+    framework: "react",
+    previewImages: ["traditional/test-template/previews/legacy.png"],
+    familyExtras: {
+      provisioning: {
+        type: "create-website-api",
+        templateName: "StarterLayout1"
+      },
+      responsivePreviews: [
+        {
+          id: "home",
+          displayName: "Home page",
+          desktop: "traditional/test-template/previews/desktop-home.png",
+          mobile: "traditional/test-template/previews/mobile-home.png"
+        },
+        {
+          id: "home",
+          displayName: "Duplicate home page",
+          desktop: "traditional/test-template/previews/desktop-home.png",
+          mobile: "traditional/test-template/previews/mobile-home.png"
+        }
+      ]
+    }
+  });
+  const previewRoot = path.join(root, "traditional/test-template/previews");
+  fs.writeFileSync(path.join(previewRoot, "legacy.png"), "png");
+  fs.writeFileSync(path.join(previewRoot, "desktop-home.png"), "png");
+  fs.writeFileSync(path.join(previewRoot, "mobile-home.png"), "png");
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("must not define previewImages")));
+  assert(result.errors.some((error) => error.includes("must not define requiredDataverseLanguages")));
+  assert(result.errors.some((error) => error.includes("must not define variants")));
+  assert(result.errors.some((error) => error.includes("requires capabilities")));
+  assert(result.errors.some((error) => error.includes("requires requirements")));
+  assert(result.errors.some((error) => error.includes('duplicate id "home"')));
+  assert(result.errors.some((error) => error.includes("must not contain solutions/")));
+  assert(result.errors.some((error) => error.includes("must not contain variants/")));
+});
+
 test("requires SPA project files and website export metadata", () => {
   const root = createTemplateRoot();
   const websiteCodePath = path.join(root, "spa/test-template/variants/react/website-code");
@@ -189,7 +266,9 @@ test("rejects missing or invalid required Dataverse languages", () => {
   });
 
   const missingResult = validateTemplates({ root: missingRoot });
-  assert(missingResult.errors.some((error) => error.includes("$.templates[0].requiredDataverseLanguages is required")));
+  assert(missingResult.errors.some((error) =>
+    error.includes("repository-artifact metadata requires requiredDataverseLanguages")
+  ));
 
   const invalidRoot = createTemplateRoot({
     requiredDataverseLanguages: [1033, "1036"]
@@ -1174,6 +1253,12 @@ function createTemplateRoot(options = {}) {
     },
     ...(options.familyExtras ?? {})
   };
+
+  if (options.omitArtifactFields) {
+    delete template.previewImages;
+    delete template.requiredDataverseLanguages;
+    delete template.variants;
+  }
 
   if (Object.hasOwn(options, "requiredDataverseLanguages") && options.requiredDataverseLanguages === undefined) {
     delete template.requiredDataverseLanguages;
