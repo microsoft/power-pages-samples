@@ -6,6 +6,11 @@ They are different from `samples/`: templates are meant to be imported into an e
 The central catalog is [`manifest.json`](manifest.json).
 Each entry is a template family with one or more variants.
 The family defines shared metadata, preview images, required Dataverse languages, and optional seed data.
+The optional family-level `solutions` array defines publication behavior for unpacked solutions.
+Each item names an exact, case-sensitive `solutions/<uniqueName>/` folder and sets `publishChanges` to `true` or `false`.
+For `publishChanges: true`, consumers import that solution with `pac solution import --publish-changes`.
+For `false` or an omitted `solutions` field, consumers import without the flag.
+The PAC publication step can include other pending customizations in the target environment; it is not solution-scoped.
 The schema for the catalog is [`schemas/templates-manifest.schema.json`](schemas/templates-manifest.schema.json).
 
 Template artifacts use a fixed layout, so the manifest does not repeat derivable paths:

@@ -304,6 +304,7 @@ function validateReferencedPaths(template, label, root, result) {
     `${familyBase}/solutions`,
     familyBase,
     template.kind === "traditional",
+    template.solutions,
     result
   );
 
@@ -412,6 +413,7 @@ function validateSolutionsDirectory(
   solutionsDirectory,
   familyBase,
   allowPowerPagesComponents,
+  declaredSolutions,
   result
 ) {
   const metadata = createDataverseMetadata();
@@ -443,6 +445,13 @@ function validateSolutionsDirectory(
     result.errors.push(`Template "${label}" solutions directory must contain at least one solution folder.`);
   }
 
+  validateSolutionPublicationMetadata(
+    declaredSolutions,
+    new Set(solutionDirectories.map((entry) => entry.name)),
+    label,
+    result
+  );
+
   solutionDirectories.sort((left, right) => compareCaseInsensitive(left.name, right.name));
   const solutions = [];
   const uniqueNames = new Map();
@@ -473,6 +482,39 @@ function validateSolutionsDirectory(
   }
   validateIndependentSiblingSolutions(solutions, uniqueNames, label, result);
   return metadata;
+}
+
+function validateSolutionPublicationMetadata(declarations, solutionFolders, label, result) {
+  if (!Array.isArray(declarations)) {
+    return;
+  }
+
+  const declaredUniqueNames = new Set();
+  for (const declaration of declarations) {
+    if (!declaration || typeof declaration !== "object" || Array.isArray(declaration)) {
+      continue;
+    }
+
+    const uniqueName = declaration.uniqueName;
+    if (typeof uniqueName !== "string") {
+      continue;
+    }
+
+    if (declaredUniqueNames.has(uniqueName)) {
+      result.errors.push(
+        `Template "${label}" declares duplicate solution publication metadata for "${uniqueName}".`
+      );
+    } else {
+      declaredUniqueNames.add(uniqueName);
+    }
+
+    if (!solutionFolders.has(uniqueName)) {
+      result.errors.push(
+        `Template "${label}" declares solution publication metadata for "${uniqueName}", ` +
+        "but no exact case-sensitive folder exists under the template family's solutions directory."
+      );
+    }
+  }
 }
 
 function compareCaseInsensitive(left, right) {
