@@ -7,6 +7,7 @@
       "expected_output": "Validates the template catalog, builds factual release notes from templates/manifest.json and READMEs, creates an annotated tag, pushes it, and creates a draft GitHub release.",
       "files": [],
       "expectations": [
+        "Uses the user-supplied tag instead of inferring a different version",
         "Runs node templates/scripts/validate-templates.js before creating the tag",
         "Checks whether the requested tag already exists locally or remotely",
         "Uses an annotated tag",
@@ -35,6 +36,77 @@
         "Checks the remote tag before creating a new one",
         "Does not force-update an existing tag",
         "Explains the blocker clearly"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Propose a release tag without creating a tag or release. GitHub's latest published release is templates-v1.1.0, the catalog version is 9.0.0, and the changes since that release are backward-compatible bug fixes and documentation updates.",
+      "expected_output": "Proposes templates-v1.1.1 from the latest published release, explains the patch increment, and asks for confirmation without changing the catalog or publishing anything.",
+      "files": [],
+      "expectations": [
+        "Uses GitHub's latest published release as the version baseline",
+        "Compares the latest release tag with the intended target ref",
+        "Proposes templates-v1.1.1 for fixes and documentation",
+        "Does not derive the release version from the catalog version or date",
+        "Does not create or push a tag or release"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Propose a release tag without publishing anything. The latest published release is templates-v1.1.7, the catalog version is 1.0.0, and the changes being released add a new template and backward-compatible functionality alongside bug fixes.",
+      "expected_output": "Proposes templates-v1.2.0, using a minor increment for new functionality and resetting the patch number despite the lower catalog version.",
+      "files": [],
+      "expectations": [
+        "Uses templates-v1.1.7 as the baseline",
+        "Chooses a minor increment over a patch increment for new functionality",
+        "Proposes templates-v1.2.0 and asks for confirmation",
+        "Does not change the catalog or create a tag or release"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Propose the next templates release tag without creating it. The latest published release is templates-v1.3.4. Changes since that release add a new template, fix bugs, and remove an installation configuration option that existing users rely on.",
+      "expected_output": "Proposes templates-v2.0.0 and explains that the breaking installation change takes precedence over new functionality and fixes.",
+      "files": [],
+      "expectations": [
+        "Chooses a major increment for the breaking installation change",
+        "Resets minor and patch numbers to zero",
+        "Preserves the templates-v prefix",
+        "Asks for confirmation without creating a tag or release"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Choose a tag for the first templates release. GitHub confirms that this repository has no published releases, but templates/manifest.json has catalog version 1.0.0.",
+      "expected_output": "Asks the user for the initial tag instead of deriving one from the catalog version, date, or local tags.",
+      "files": [],
+      "expectations": [
+        "Asks the user for the initial release tag",
+        "Does not use the catalog version as a fallback",
+        "Does not create a tag or release before the user supplies the tag"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Propose the next release tag. The latest-release API lookup fails with an authentication error; a local templates-v1.4.0 tag and a templates-v1.5.0 draft release are visible.",
+      "expected_output": "Reports the authentication blocker and resolves the lookup before proposing a version rather than substituting a local tag or draft release.",
+      "files": [],
+      "expectations": [
+        "Reports the latest-release lookup error explicitly",
+        "Does not treat an authentication failure as proof that no published releases exist",
+        "Does not use a local tag or draft release as the baseline",
+        "Does not propose or create a release tag while the lookup is blocked"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Propose the next release tag without creating it. The latest published release tag is templates-october, which has no semantic version, and the catalog version is 2.0.0.",
+      "expected_output": "Asks the user for the next tag because the latest published tag cannot supply a semantic version baseline.",
+      "files": [],
+      "expectations": [
+        "Asks the user for the next release tag",
+        "Does not infer a version from the catalog or date",
+        "Does not create a tag or release"
       ]
     }
   ]

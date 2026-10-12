@@ -58,27 +58,6 @@ export interface FetchDataSummaryArgs {
   recommendationConfig?: string
 }
 
-export interface FetchListSummaryArgs {
-  /** OData entity-set name, e.g. 'spnvc_invoices'. */
-  entitySet: string
-  /** `$select` — comma-separated column list (required). */
-  select: string
-  /** `$expand` — optional nested selects on navigation properties. */
-  expand?: string
-  /**
-   * `$filter` — maker-scoped row filter. Do NOT pass `$top` or a `Prefer: odata.maxpagesize`
-   * header here — pagination belongs to the UI's list fetch; the summary's ceiling is
-   * governed by `Summarization/Data/ContentSizeLimit`.
-   */
-  filter?: string
-  /** `$orderby` — typically mirrors the UI's list ordering. */
-  orderby?: string
-  /** Maker-defined prompt identifier (initial call only). */
-  instructionIdentifier?: string
-  /** Opaque token echoed back from `Recommendations[i].Config` for refinement. */
-  recommendationConfig?: string
-}
-
 // -- Error class --------------------------------------------------------------
 
 /**
@@ -194,15 +173,6 @@ function buildQuery(args: FetchDataSummaryArgs): string {
   const parts: string[] = []
   if (args.select) parts.push(`$select=${args.select}`)
   if (args.expand) parts.push(`$expand=${args.expand}`)
-  return parts.length ? `?${parts.join('&')}` : ''
-}
-
-function buildListQuery(args: FetchListSummaryArgs): string {
-  const parts: string[] = []
-  if (args.select) parts.push(`$select=${args.select}`)
-  if (args.expand) parts.push(`$expand=${args.expand}`)
-  if (args.filter) parts.push(`$filter=${args.filter}`)
-  if (args.orderby) parts.push(`$orderby=${args.orderby}`)
   return parts.length ? `?${parts.join('&')}` : ''
 }
 
@@ -359,49 +329,5 @@ export async function fetchSearchSummary(
   return {
     Summary: (body as SearchSummaryResponse).Summary ?? '',
     Citations: (body as SearchSummaryResponse).Citations ?? [],
-  }
-}
-
-/**
- * Data summarization against a collection (list) endpoint:
- *   POST /_api/summarization/data/v1.0/<entitySet>?$select=...&$filter=...
- *
- * Row-level security scopes the collection automatically — callers do not need to
- * hand-scope by owner. `$top` is deliberately not supported: the server-side ceiling
- * is `Summarization/Data/ContentSizeLimit`, not the UI's paginated fetch.
- */
-export async function fetchListSummary(
-  args: FetchListSummaryArgs,
-): Promise<DataSummaryResponse> {
-  const { entitySet, instructionIdentifier, recommendationConfig } = args
-  const url = `/_api/summarization/data/v1.0/${entitySet}${buildListQuery(args)}`
-
-  const body: Record<string, string> = {}
-  if (instructionIdentifier) body.InstructionIdentifier = instructionIdentifier
-  if (recommendationConfig) body.RecommendationConfig = recommendationConfig
-
-  const token = await getCsrfToken()
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json; charset=utf-8',
-      'OData-MaxVersion': '4.0',
-      'OData-Version': '4.0',
-      __RequestVerificationToken: token,
-      'X-Requested-With': 'XMLHttpRequest',
-    },
-    body: JSON.stringify(body),
-  })
-
-  if (!response.ok) {
-    throw await dataSummaryResponseError(response)
-  }
-
-  const payload = (await response.json()) as DataSummaryResponse
-  return {
-    ...payload,
-    Summary: normalizeSummaryString(payload.Summary ?? ''),
   }
 }

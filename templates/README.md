@@ -5,9 +5,15 @@ provisioned by a documented platform API.
 They are different from `samples/`: templates are meant to be imported into an environment, while samples are learning examples that explain a pattern or capability.
 
 The central catalog is [`manifest.json`](manifest.json).
-Each entry is a template family. Repository-artifact entries define downloadable variants,
-required Dataverse languages, and optional seed data. Platform-provisioned entries define the
-exact provisioning contract and presentation metadata needed by catalog consumers.
+Each entry is a template family. Repository-artifact entries define one or more downloadable
+variants, shared metadata, preview images, required Dataverse languages, and optional seed data.
+The optional family-level `solutions` array defines publication behavior for unpacked solutions.
+Each item names an exact, case-sensitive `solutions/<uniqueName>/` folder and sets `publishChanges` to `true` or `false`.
+For `publishChanges: true`, consumers import that solution with `pac solution import --publish-changes`.
+For `false` or an omitted `solutions` field, consumers import without the flag.
+The PAC publication step can include other pending customizations in the target environment; it is not solution-scoped.
+Platform-provisioned entries instead define the exact provisioning contract and presentation
+metadata needed by catalog consumers.
 The schema for the catalog is [`schemas/templates-manifest.schema.json`](schemas/templates-manifest.schema.json).
 
 Repository-artifact templates use a fixed layout, so the manifest does not repeat derivable paths:

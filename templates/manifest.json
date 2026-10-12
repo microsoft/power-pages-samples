@@ -62,6 +62,12 @@
         1033
       ],
       "author": "Microsoft",
+      "solutions": [
+        {
+          "uniqueName": "SupplierInvoiceSPAPortal",
+          "publishChanges": true
+        }
+      ],
       "variants": {
         "react": {}
       }
