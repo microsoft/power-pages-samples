@@ -17,19 +17,19 @@ or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any addi
 
 Samples live under `samples/`, grouped by how they are delivered to Power Pages:
 
-- **`spa/`** - code sites (single-page apps) built with a frontend framework and uploaded with the Power Platform CLI, split into two kinds:
+- **`spa/`** - SPA sites built with a frontend framework and uploaded with the Power Platform CLI, split into two kinds:
   - **`spa/apps/<name>/<framework>/`** - full, multi-feature reference applications. Apps always keep a framework subfolder (e.g. `car-sales-website/react/`, `car-sales-website/angular/`) so multiple ports of the same app sit side by side.
   - **`spa/snippets/<topic>/`** - small, single-topic samples that each teach one capability. Snippets are React-only, so the framework subfolder is omitted and the React app sits directly under the topic folder.
   - **`spa/snippets/<topic>/<variant>/`** - a snippet family: several variants of one topic, each its own React app, with a parent `README.md` that indexes them. Variants are still React-only and still have no framework subfolder. See `spa/snippets/file-upload/` (with `notes/`, `file-column/`, `sharepoint/`, `azure-blob/` variants) as the reference.
-- **`traditional/<name>/`** - non-code sites built with Liquid and web templates on the enhanced data model.
-- **`server-logic/<name>/`** - server-side JavaScript that runs on the Power Pages runtime and can be called from both code sites and traditional sites.
+- **`traditional/<name>/`** - non-SPA sites built with Liquid and web templates on the enhanced data model.
+- **`server-logic/<name>/`** - server-side JavaScript that runs on the Power Pages runtime and can be called from both SPA and non-SPA sites.
 
 ### Where does my sample go?
 
 - Teaches **one** capability and ships as a single React app → **`spa/snippets/`**. It stays a snippet even if it is polished - teaching one thing is what makes it a snippet.
 - Shows several variants of one topic (e.g. "N ways to upload a file") → **`spa/snippets/<topic>/<variant>/`** with a parent index README.
 - A **full, multi-feature** application → **`spa/apps/`**. As an objective test, choose `apps/` when the sample has **multiple routes/pages _and_ touches more than one Dataverse table or feature area**, or when it ships **more than one framework port**.
-- A **non-code** (Liquid / web template) site → **`traditional/`**.
+- A **non-SPA** (Liquid / web template) site → **`traditional/`**.
 - A reusable **server-side** function → **`server-logic/`**.
 
 **Snippet → app graduation:** a snippet becomes an app when it grows a second framework port (e.g. an Angular or Vue version is added). At that point, move it from `spa/snippets/<topic>/` to `spa/apps/<name>/<framework>/` so every port shares one parent. Apps are named with a `-website` or `-template` suffix (e.g. `car-sales-website`, `vue-admin-template`), so rename the topic folder accordingly on graduation (a `payments` snippet becomes `apps/payments-website/react/`, not `apps/payments/react/`).
@@ -52,11 +52,11 @@ The folder name must match the manifest `id`, and the `id` must be stable kebab-
 Each family can have one variant per framework: `react`, `vue`, `angular`, or `astro`.
 Each template family owns one shared set of unpacked supporting solutions.
 Framework variants contain only their website code.
-Create `templates/traditional/` when the first traditional installable template ships.
+Non-SPA template families use this folder path: `templates/non-spa/<family>/`.
 
 To contribute a template:
 
-1. Build the SPA code site.
+1. Build the SPA site.
 2. Export the Power Pages site and any unmanaged supporting solutions.
 3. Capture real PNG preview images.
 4. Optionally author seed-data JSON files using this shape: `{ "entitySetName": "<plural entity set>", "records": [...] }`.

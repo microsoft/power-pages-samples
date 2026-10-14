@@ -1,6 +1,6 @@
 # Power Pages SPA templates
 
-SPA templates are installable Power Pages code-site templates built with familiar frontend frameworks.
+SPA templates are installable Power Pages templates built with familiar frontend frameworks.
 Use this index to choose the template that best matches the scenario you want to start from.
 
 ## Templates
@@ -17,7 +17,7 @@ Use this index to choose the template that best matches the scenario you want to
 1. Pick a framework variant.
 1. Pack and import each direct folder under the template family's `solutions/` directory in case-insensitive lexical unique-name order.
 1. Import `seed-data/data.json` separately if the template family includes seed data.
-1. Upload the code site from the variant's `website-code/` folder.
+1. Upload the SPA site from the variant's `website-code/` folder.
 1. Open the site in Power Pages and complete any template-specific setup.
 
 For prerequisites, seed-data notes, and manual install commands, see the README in each template folder.

@@ -1,6 +1,6 @@
 # Power Pages - SPA - Authentication Sample
 
-This React sample demonstrates authentication flows for a Power Pages code site, including local sign-in, registration, password reset, invitation redemption, external sign-in, terms acceptance, and role-protected profile content.
+This React sample demonstrates authentication flows for a Power Pages SPA site, including local sign-in, registration, password reset, invitation redemption, external sign-in, terms acceptance, and role-protected profile content.
 
 ## Screenshot
 
@@ -59,7 +59,7 @@ The build output is written to `dist`.
    pac auth create --environment <Environment URL>
    ```
 
-1. Build and upload the code site:
+1. Build and upload the SPA site:
 
    ```powershell
    npm run build

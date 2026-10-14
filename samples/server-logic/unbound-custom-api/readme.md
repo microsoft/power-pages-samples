@@ -21,7 +21,7 @@ import.
 | --- | --- |
 | Solution | `ServerLogicUnboundCustomApiSample_1_0_0_2.zip` |
 | Site | `Custom API Support in Server Logic` |
-| Site type | Enhanced-data-model site (not a code site) |
+| Site type | Enhanced-data-model non-SPA site |
 | Home page | Automatically invokes the server logic endpoint and renders both results |
 | Server logic endpoint | `sl-unbound-customapi-manual-test` |
 | Custom Action | `new_ServerLogicUnboundActionManualTest` |

@@ -1,6 +1,6 @@
-# Traditional Power Pages templates
+# Non-SPA Power Pages templates
 
-Traditional templates in this directory are provisioned by the Power Pages Create Website API.
+Non-SPA templates in this directory are provisioned by the Power Pages Create Website API.
 The platform owns the generated website source and solutions; this repository owns the catalog
 metadata, documentation, and preview assets used to discover and select them.
 

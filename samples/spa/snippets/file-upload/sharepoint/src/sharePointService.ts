@@ -2,10 +2,10 @@
 // sharePointService.ts — THE LESSON OF THIS SAMPLE
 //
 // Upload, list, download, and delete files in a **SharePoint document library**
-// from a Power Pages code site (SPA) — through **server logic**.
+// from a Power Pages SPA site through **server logic**.
 //
 // THE KEY POINT: Power Pages has no portal Web API (`/_api`) surface for
-// SharePoint document libraries, and code sites can't host the native
+// SharePoint document libraries, and SPA sites can't host the native
 // Liquid/form subgrid. So the SPA calls **server logic** — server-side
 // JavaScript that holds an Entra app (client-credentials) and calls Microsoft
 // Graph to do the SharePoint work. The browser never sees the secret and never

@@ -76,7 +76,7 @@
       "id": "starter-layout-1",
       "displayName": "Starter Layout 1",
       "description": "This versatile template provides a basic, multipage navigation framework and simple building blocks for you to customize any way you want. Just click on a section or image to customize it.",
-      "kind": "traditional",
+      "kind": "non-spa",
       "keywords": [
         "starter",
         "multipage",
@@ -102,20 +102,20 @@
         {
           "id": "home",
           "displayName": "Home page",
-          "desktop": "traditional/starter-layout-1/previews/desktop-home.png",
-          "mobile": "traditional/starter-layout-1/previews/mobile-home.png"
+          "desktop": "non-spa/starter-layout-1/previews/desktop-home.png",
+          "mobile": "non-spa/starter-layout-1/previews/mobile-home.png"
         },
         {
           "id": "subpage-1",
           "displayName": "Sub page 1",
-          "desktop": "traditional/starter-layout-1/previews/desktop-services.png",
-          "mobile": "traditional/starter-layout-1/previews/mobile-services.png"
+          "desktop": "non-spa/starter-layout-1/previews/desktop-services.png",
+          "mobile": "non-spa/starter-layout-1/previews/mobile-services.png"
         },
         {
           "id": "subpage-2",
           "displayName": "Sub page 2",
-          "desktop": "traditional/starter-layout-1/previews/desktop-contact.png",
-          "mobile": "traditional/starter-layout-1/previews/mobile-contact.png"
+          "desktop": "non-spa/starter-layout-1/previews/desktop-contact.png",
+          "mobile": "non-spa/starter-layout-1/previews/mobile-contact.png"
         }
       ]
     },
@@ -123,7 +123,7 @@
       "id": "blank-page",
       "displayName": "Blank page",
       "description": "This 1-page blank template provides a simple starting point to create a completely custom site with no preset sections or components.",
-      "kind": "traditional",
+      "kind": "non-spa",
       "keywords": [
         "blank",
         "starter",
@@ -146,8 +146,8 @@
         {
           "id": "home",
           "displayName": "Home page",
-          "desktop": "traditional/blank-page/previews/desktop-home.png",
-          "mobile": "traditional/blank-page/previews/mobile-home.png"
+          "desktop": "non-spa/blank-page/previews/desktop-home.png",
+          "mobile": "non-spa/blank-page/previews/mobile-home.png"
         }
       ]
     },
@@ -155,7 +155,7 @@
       "id": "program-registration",
       "displayName": "Program Registration",
       "description": "Enable parents to browse after-school activities, review availability, and register online.",
-      "kind": "traditional",
+      "kind": "non-spa",
       "keywords": [
         "programs",
         "registration",
@@ -178,7 +178,7 @@
       "id": "event-portal",
       "displayName": "Event Portal",
       "description": "Give customers a central place to discover events, review complete event information, and register for the experiences that interest them.",
-      "kind": "traditional",
+      "kind": "non-spa",
       "keywords": [
         "events",
         "registration",
@@ -208,20 +208,20 @@
         {
           "id": "home",
           "displayName": "Home page",
-          "desktop": "traditional/event-portal/previews/desktop-home.png",
-          "mobile": "traditional/event-portal/previews/mobile-home.png"
+          "desktop": "non-spa/event-portal/previews/desktop-home.png",
+          "mobile": "non-spa/event-portal/previews/mobile-home.png"
         },
         {
           "id": "registration",
           "displayName": "Registration page",
-          "desktop": "traditional/event-portal/previews/desktop-registration.png",
-          "mobile": "traditional/event-portal/previews/mobile-registration.png"
+          "desktop": "non-spa/event-portal/previews/desktop-registration.png",
+          "mobile": "non-spa/event-portal/previews/mobile-registration.png"
         },
         {
           "id": "about",
           "displayName": "Event about page",
-          "desktop": "traditional/event-portal/previews/desktop-about.png",
-          "mobile": "traditional/event-portal/previews/mobile-about.png"
+          "desktop": "non-spa/event-portal/previews/desktop-about.png",
+          "mobile": "non-spa/event-portal/previews/mobile-about.png"
         }
       ]
     },
@@ -229,7 +229,7 @@
       "id": "schedule-and-manage-meetings",
       "displayName": "Schedule and Manage Meetings",
       "description": "Enable location selection and appointment scheduling with customizable calendars and reminders.",
-      "kind": "traditional",
+      "kind": "non-spa",
       "keywords": [
         "meetings",
         "appointments",

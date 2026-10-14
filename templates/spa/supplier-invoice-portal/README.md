@@ -1,6 +1,6 @@
 # Supplier Invoice Portal template
 
-The Supplier Invoice Portal is an installable Power Pages SPA for supplier purchase orders, invoice submission, review, attachments, comments, and status tracking, with a shared unmanaged Dataverse solution, sample data, and a React code site under `variants/react/website-code/`.
+The Supplier Invoice Portal is an installable Power Pages SPA for supplier purchase orders, invoice submission, review, attachments, comments, and status tracking, with a shared unmanaged Dataverse solution, sample data, and a React SPA site under `variants/react/website-code/`.
 
 ## Previews
 
@@ -127,7 +127,7 @@ If you write your own importer:
 Do not use Dataverse spreadsheet import for this data because it does not preserve the required IDs and lookup bindings or upload the file-column binaries.
 Do not import the sample data into a production environment.
 
-### Build and upload the code site
+### Build and upload the SPA site
 
 Run these commands from the repository root:
 
@@ -148,7 +148,7 @@ Follow the [Supplier Account provisioning and migration checklist](variants/reac
 
 ## Customize the template
 
-Edit the React project in `variants/react/website-code/`, then run `npm run build` and upload the code site again.
+Edit the React project in `variants/react/website-code/`, then run `npm run build` and upload the SPA site again.
 Do not edit generated server-script files directly.
 The postbuild step generates them from `scripts/business-create-server.js`.
 Keep `dataverse-solution-contract.json` and the references under `website-code/docs/` aligned when you change the Dataverse model, permissions, or site behavior.

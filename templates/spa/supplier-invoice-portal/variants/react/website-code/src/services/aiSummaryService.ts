@@ -230,7 +230,7 @@ export async function fetchDataSummary(
 export interface SearchSummaryCitation {
   /** 1-based citation index as rendered in `[[N]](url)` markdown tokens. */
   index: number
-  /** Raw URL from the API. May point to `/page-not-found/?id=<guid>` for KB articles on code sites. */
+  /** Raw URL from the API. May point to `/page-not-found/?id=<guid>` for KB articles on SPA sites. */
   url: string
   /** Best-effort human-readable label (passed through verbatim from the API when present). */
   title?: string
@@ -245,7 +245,7 @@ export interface SearchSummaryResponse {
 
 /**
  * Extract the knowledge-article id from a built-in Power Pages
- * `/page-not-found/?id=<guid>` URL. Code sites do not ship the knowledge-article
+ * `/page-not-found/?id=<guid>` URL. SPA sites do not ship the knowledge-article
  * route by default, so the API's citation URLs land on the 404 page unless the
  * caller rewrites them to the SPA's own KB route.
  */

@@ -1,7 +1,7 @@
 # File Upload to SharePoint Sample (React + Vite)
 
 This sample shows how to **upload, list, download, and delete files in a
-SharePoint document library** from a Power Pages **code site (SPA)** — using
+SharePoint document library** from a Power Pages **SPA site** — using
 **server logic** + **Microsoft Graph**.
 
 Two halves:
@@ -15,9 +15,9 @@ Two halves:
 
 ## Why server logic (and not `/_api` or a cloud flow)?
 
-SharePoint can't be reached from a code site with the portal Web API (`/_api` is
-Dataverse-only), and code sites can't host the native Liquid/basic-form subgrid
-([code sites don't support Liquid, lists, or forms](https://learn.microsoft.com/power-pages/configure/create-code-sites#differences-from-existing-power-pages-sites)).
+SharePoint can't be reached from an SPA site with the portal Web API (`/_api` is
+Dataverse-only), and SPA sites can't host the native Liquid/basic-form subgrid
+([SPA sites don't support Liquid, lists, or forms](https://learn.microsoft.com/power-pages/configure/create-code-sites#differences-from-existing-power-pages-sites)).
 A Power Automate cloud flow can bridge it, but the flow trigger caps payloads at a
 small size. **Server logic** runs server-side, keeps the Graph secret off the
 client, and gives a clean SPA-callable API — a better fit than the cloud-flow

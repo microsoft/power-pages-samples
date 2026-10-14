@@ -43,7 +43,7 @@
             "type": "string",
             "enum": [
               "spa",
-              "traditional"
+              "non-spa"
             ]
           },
           "keywords": {

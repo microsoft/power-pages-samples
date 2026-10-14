@@ -36,7 +36,7 @@ When a family has multiple solutions, import them in case-insensitive lexical un
 Sibling solutions must be independently importable and must not depend on each other.
 Framework variants contain only their `website-code/` directory.
 
-Platform-provisioned traditional templates declare:
+Platform-provisioned non-SPA templates declare:
 
 - `provisioning.type: "create-website-api"`
 - the exact `provisioning.templateName` submitted to the Create Website API
@@ -49,9 +49,9 @@ duplicate the website source or solutions provisioned by the platform.
 
 ## Template categories
 
-- [SPA templates](spa/) - installable code-site templates built with frontend frameworks.
-- [Traditional templates](traditional/) - platform-provisioned Power Pages templates and
-  traditional repository-artifact templates.
+- [SPA templates](spa/) - installable SPA templates built with frontend frameworks.
+- [Non-SPA templates](non-spa/) - platform-provisioned Power Pages templates and
+  non-SPA repository-artifact templates.
 
 ## Use a template
 
@@ -64,7 +64,7 @@ For a repository-artifact template:
 1. Deploy the website content from the variant's `website-code/` folder as described in the template README.
 1. Review any template-specific prerequisites, such as Dataverse features or Power Pages Admin Center settings.
 
-For a platform-provisioned traditional template, use a consumer that supports its declared
+For a platform-provisioned non-SPA template, use a consumer that supports its declared
 `provisioning.type`. The consumer must submit the exact `templateName`, enforce its own
 documented creation prerequisites, and fetch the catalog and previews from the same immutable
 revision.
@@ -76,7 +76,7 @@ It does not import the JSON seed data.
 Dataverse export seed tables must use the exact logical name, entity set name, primary key, column logical names, and lookup navigation properties from the unpacked solution metadata.
 Write lookups as `<NavigationProperty>@odata.bind` with `/<entitySetName>(<guid>)`, and order parent tables before tables that reference them.
 For SPA templates, the shared solutions contain supporting Dataverse artifacts and do not contain the Power Pages website.
-Traditional solutions may include Power Pages website components.
+Non-SPA solutions may include Power Pages website components.
 
 Catalog paths are relative to `templates/manifest.json`.
 Consumers must resolve a release tag to a commit SHA and fetch the manifest and applicable template assets from that same immutable revision.

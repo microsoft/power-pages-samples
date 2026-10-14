@@ -129,7 +129,7 @@ test("rejects invalid Dataverse solution unique names in publication metadata", 
 test("requires the derived website-code directory for every template kind", () => {
   for (const fixture of [
     { kind: "spa", framework: "react" },
-    { kind: "traditional", framework: "none" }
+    { kind: "non-spa", framework: "none" }
   ]) {
     const root = createTemplateRoot({
       ...fixture,
@@ -143,13 +143,13 @@ test("requires the derived website-code directory for every template kind", () =
   }
 });
 
-test("accepts a traditional website export without SPA project files", () => {
+test("accepts a non-SPA website export without SPA project files", () => {
   const root = createTemplateRoot({
-    kind: "traditional",
+    kind: "non-spa",
     framework: "none",
     solutionHasWebsiteComponent: true
   });
-  const websiteCodePath = path.join(root, "traditional/test-template/variants/none/website-code");
+  const websiteCodePath = path.join(root, "non-spa/test-template/variants/none/website-code");
 
   assert.equal(fs.existsSync(path.join(websiteCodePath, "package.json")), false);
   assert.equal(fs.existsSync(path.join(websiteCodePath, "powerpages.config.json")), false);
@@ -161,7 +161,7 @@ test("accepts a traditional website export without SPA project files", () => {
 
 test("accepts a Create Website API template with metadata and previews but no repository artifacts", () => {
   const root = createTemplateRoot({
-    kind: "traditional",
+    kind: "non-spa",
     framework: "none",
     createWebsiteCode: false,
     createSolution: false,
@@ -177,13 +177,13 @@ test("accepts a Create Website API template with metadata and previews but no re
         {
           id: "home",
           displayName: "Home page",
-          desktop: "traditional/test-template/previews/desktop-home.png",
-          mobile: "traditional/test-template/previews/mobile-home.png"
+          desktop: "non-spa/test-template/previews/desktop-home.png",
+          mobile: "non-spa/test-template/previews/mobile-home.png"
         }
       ]
     }
   });
-  const templateRoot = path.join(root, "traditional/test-template");
+  const templateRoot = path.join(root, "non-spa/test-template");
   fs.rmSync(path.join(templateRoot, "solutions"), { recursive: true });
   fs.rmSync(path.join(templateRoot, "seed-data"), { recursive: true });
   fs.writeFileSync(path.join(templateRoot, "previews/desktop-home.png"), "png");
@@ -196,9 +196,9 @@ test("accepts a Create Website API template with metadata and previews but no re
 
 test("rejects invalid Create Website API metadata and repository artifacts", () => {
   const root = createTemplateRoot({
-    kind: "traditional",
+    kind: "non-spa",
     framework: "react",
-    previewImages: ["traditional/test-template/previews/legacy.png"],
+    previewImages: ["non-spa/test-template/previews/legacy.png"],
     familyExtras: {
       provisioning: {
         type: "create-website-api",
@@ -208,19 +208,19 @@ test("rejects invalid Create Website API metadata and repository artifacts", () 
         {
           id: "home",
           displayName: "Home page",
-          desktop: "traditional/test-template/previews/desktop-home.png",
-          mobile: "traditional/test-template/previews/mobile-home.png"
+          desktop: "non-spa/test-template/previews/desktop-home.png",
+          mobile: "non-spa/test-template/previews/mobile-home.png"
         },
         {
           id: "home",
           displayName: "Duplicate home page",
-          desktop: "traditional/test-template/previews/desktop-home.png",
-          mobile: "traditional/test-template/previews/mobile-home.png"
+          desktop: "non-spa/test-template/previews/desktop-home.png",
+          mobile: "non-spa/test-template/previews/mobile-home.png"
         }
       ]
     }
   });
-  const previewRoot = path.join(root, "traditional/test-template/previews");
+  const previewRoot = path.join(root, "non-spa/test-template/previews");
   fs.writeFileSync(path.join(previewRoot, "legacy.png"), "png");
   fs.writeFileSync(path.join(previewRoot, "desktop-home.png"), "png");
   fs.writeFileSync(path.join(previewRoot, "mobile-home.png"), "png");

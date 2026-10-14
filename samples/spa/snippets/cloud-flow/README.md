@@ -1,7 +1,7 @@
 # Cloud Flow Sample (React + Vite)
 
 This sample shows how to **invoke a Power Automate cloud flow from a Power Pages
-code site**. It is the smallest app that proves the concept: one form, one
+SPA site**. It is the smallest app that proves the concept: one form, one
 button, one flow call.
 
 The entire lesson is in [`src/cloudFlowClient.ts`](src/cloudFlowClient.ts) — the
@@ -149,7 +149,7 @@ fields.
 
 1. Set up the flow and `FLOW_ID` (see **Set up the flow** above — Option A needs no edit).
 1. Run `npm install` then `npm run build`.
-1. Run `pac pages upload-code-site --rootPath .` to upload the site.
+1. Run `pac pages upload-code-site --rootPath .` to upload the SPA site.
 1. Go to Power Pages home and click **Inactive sites**. Find **Cloud Flow Sample**
    and click **Reactivate**.
 1. Once active, click **Preview**, fill in the form, and click **Request callback**

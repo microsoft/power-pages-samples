@@ -5,7 +5,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const VALID_KINDS = new Set(["spa", "traditional"]);
+const VALID_KINDS = new Set(["spa", "non-spa"]);
 const VALID_FRAMEWORKS = new Set(["angular", "astro", "none", "react", "vue"]);
 const VALID_AUDIENCES = new Set(["admins", "developers", "makers", "partners"]);
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -278,9 +278,9 @@ function validateCreateWebsiteApiMetadata(template, label, result) {
     return;
   }
 
-  if (template.kind !== "traditional") {
+  if (template.kind !== "non-spa") {
     result.errors.push(
-      `Template "${label}" create-website-api provisioning is supported only for traditional templates.`
+      `Template "${label}" create-website-api provisioning is supported only for non-SPA templates.`
     );
   }
 
@@ -397,7 +397,7 @@ function validateReferencedPaths(template, label, root, result) {
     root,
     `${familyBase}/solutions`,
     familyBase,
-    template.kind === "traditional",
+    template.kind === "non-spa",
     template.solutions,
     result
   );
