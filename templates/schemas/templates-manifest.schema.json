@@ -156,11 +156,64 @@
               }
             }
           }
+        },
+        "if": {
+          "type": "object",
+          "properties": {
+            "provisioning": true
+          },
+          "required": [
+            "provisioning"
+          ]
+        },
+        "then": {
+          "$ref": "#/$defs/createWebsiteApiTemplate"
+        },
+        "else": {
+          "$ref": "#/$defs/repositoryArtifactTemplate"
         }
       }
     }
   },
   "$defs": {
+    "createWebsiteApiTemplate": {
+      "description": "Platform-provisioned template. The platform owns the generated website source and solutions, so repository-artifact metadata is not allowed. Property types are defined on the template item; this shape only constrains presence and kind.",
+      "type": "object",
+      "required": [
+        "provisioning",
+        "capabilities",
+        "requirements",
+        "responsivePreviews"
+      ],
+      "properties": {
+        "kind": {
+          "const": "non-spa"
+        },
+        "provisioning": true,
+        "capabilities": true,
+        "requirements": true,
+        "responsivePreviews": true,
+        "previewImages": false,
+        "requiredDataverseLanguages": false,
+        "seedDataPath": false,
+        "solutions": false,
+        "variants": false
+      }
+    },
+    "repositoryArtifactTemplate": {
+      "description": "Template whose website code, previews, and supporting solutions are stored in this repository. Property types are defined on the template item; this shape only constrains presence.",
+      "type": "object",
+      "required": [
+        "previewImages",
+        "requiredDataverseLanguages",
+        "variants"
+      ],
+      "properties": {
+        "previewImages": true,
+        "requiredDataverseLanguages": true,
+        "variants": true
+      }
+    },
     "provisioning": {
       "type": "object",
       "required": [

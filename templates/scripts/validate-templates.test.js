@@ -236,6 +236,113 @@ test("rejects invalid Create Website API metadata and repository artifacts", () 
   assert(result.errors.some((error) => error.includes("must not contain variants/")));
 });
 
+test("rejects solution publication metadata on Create Website API templates", () => {
+  const root = createTemplateRoot({
+    kind: "non-spa",
+    framework: "none",
+    createWebsiteCode: false,
+    createSolution: false,
+    omitArtifactFields: true,
+    familyExtras: {
+      provisioning: {
+        type: "create-website-api",
+        templateName: "StarterLayout1"
+      },
+      capabilities: ["Home page"],
+      requirements: [],
+      responsivePreviews: [
+        {
+          id: "home",
+          displayName: "Home page",
+          desktop: "non-spa/test-template/previews/desktop-home.png",
+          mobile: "non-spa/test-template/previews/mobile-home.png"
+        }
+      ],
+      solutions: [{ uniqueName: "PlatformOwnedSolution", publishChanges: true }]
+    }
+  });
+  const templateRoot = path.join(root, "non-spa/test-template");
+  // Without a solutions/ directory, only the metadata rule can catch this entry.
+  fs.rmSync(path.join(templateRoot, "solutions"), { recursive: true });
+  fs.rmSync(path.join(templateRoot, "seed-data"), { recursive: true });
+  fs.writeFileSync(path.join(templateRoot, "previews/desktop-home.png"), "png");
+  fs.writeFileSync(path.join(templateRoot, "previews/mobile-home.png"), "png");
+
+  const result = validateTemplates({ root });
+  assert.equal(result.errors.length, 1, result.errors.join("\n"));
+  assert.match(result.errors[0], /create-website-api provisioning must not define solutions\./);
+});
+
+test("published schema encodes mutually exclusive Create Website API and repository-artifact shapes", () => {
+  const templatesRoot = path.join(__dirname, "..");
+  const schema = JSON.parse(
+    fs.readFileSync(path.join(templatesRoot, "schemas", "templates-manifest.schema.json"), "utf8")
+  );
+  const manifest = JSON.parse(fs.readFileSync(path.join(templatesRoot, "manifest.json"), "utf8"));
+  const items = schema.properties.templates.items;
+  const resolveRef = (ref) => ref.slice(2).split("/").reduce((node, key) => node[key], schema);
+  const apiShape = resolveRef(items.then.$ref);
+  const artifactShape = resolveRef(items.else.$ref);
+
+  // validateAgainstSchema does not interpret if/then/else, so evaluate the published
+  // branches here to keep schema-only consumers aligned with the custom checks.
+  const shapeViolations = (entry) => {
+    const shape = Object.hasOwn(entry, "provisioning") ? apiShape : artifactShape;
+    const rules = Object.entries(shape.properties ?? {});
+    return [
+      ...(shape.required ?? []).filter((name) => !Object.hasOwn(entry, name)).map((name) => `missing ${name}`),
+      ...rules
+        .filter(([name, rule]) => rule === false && Object.hasOwn(entry, name))
+        .map(([name]) => `forbidden ${name}`),
+      ...rules
+        .filter(([name, rule]) => rule && Object.hasOwn(rule, "const") && entry[name] !== rule.const)
+        .map(([name]) => `invalid ${name}`)
+    ];
+  };
+
+  assert.deepEqual(items.if.required, ["provisioning"]);
+  for (const entry of manifest.templates) {
+    assert.deepEqual(shapeViolations(entry), [], entry.id);
+  }
+
+  const common = {
+    id: "x",
+    displayName: "X",
+    description: "X",
+    keywords: ["x"],
+    audience: ["makers"],
+    author: "Test"
+  };
+  assert.deepEqual(shapeViolations({ ...common, kind: "spa" }), [
+    "missing previewImages",
+    "missing requiredDataverseLanguages",
+    "missing variants"
+  ]);
+  assert.deepEqual(
+    shapeViolations({
+      ...common,
+      kind: "spa",
+      provisioning: { type: "create-website-api", templateName: "StarterLayout1" },
+      capabilities: [],
+      requirements: [],
+      responsivePreviews: [],
+      previewImages: [],
+      requiredDataverseLanguages: [1033],
+      seedDataPath: "spa/x/seed-data/data.json",
+      solutions: [],
+      variants: { react: {} }
+    }),
+    [
+      "forbidden previewImages",
+      "forbidden requiredDataverseLanguages",
+      "forbidden seedDataPath",
+      "forbidden solutions",
+      "forbidden variants",
+      "invalid kind"
+    ]
+  );
+});
+
 test("requires SPA project files and website export metadata", () => {
   const root = createTemplateRoot();
   const websiteCodePath = path.join(root, "spa/test-template/variants/react/website-code");

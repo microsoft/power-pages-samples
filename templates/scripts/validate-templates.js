@@ -284,10 +284,14 @@ function validateCreateWebsiteApiMetadata(template, label, result) {
     );
   }
 
+  // `solutions` is repository-artifact publication metadata. The platform owns these
+  // sites' solutions, and validateReferencedPaths returns before checking solution
+  // declarations, so reject it here instead of telling consumers to import them.
   for (const propertyName of [
     "previewImages",
     "requiredDataverseLanguages",
     "seedDataPath",
+    "solutions",
     "variants"
   ]) {
     if (Object.hasOwn(template, propertyName)) {

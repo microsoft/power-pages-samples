@@ -42,10 +42,11 @@ Platform-provisioned non-SPA templates declare:
 - the exact `provisioning.templateName` submitted to the Create Website API
 - presentation metadata in `capabilities`, `requirements`, `warning`, and `responsivePreviews`
 
-These entries do not define variants, required Dataverse languages, seed data, or flat
-`previewImages`. Their directories contain only documentation and samples-owned presentation
-assets such as the paired desktop/mobile images declared in `responsivePreviews`; they do not
-duplicate the website source or solutions provisioned by the platform.
+These entries do not define variants, required Dataverse languages, seed data, solution
+publication metadata (`solutions`), or flat `previewImages`. Their directories contain only
+documentation and samples-owned presentation assets such as the paired desktop/mobile images
+declared in `responsivePreviews`; they do not duplicate the website source or solutions
+provisioned by the platform.
 
 ## Template categories
 
