@@ -154,7 +154,7 @@
     {
       "id": "program-registration",
       "displayName": "Program Registration",
-      "description": "Enable parents to browse after-school activities, review availability, and register online.",
+      "description": "Provide step-by-step registration and an easy way for people to browse and sign up for individual or multi-day classes.",
       "kind": "non-spa",
       "keywords": [
         "programs",
@@ -170,9 +170,34 @@
         "type": "create-website-api",
         "templateName": "ProgramRegistration"
       },
-      "capabilities": [],
+      "capabilities": [
+        "Customizable tables, lists, and sample data",
+        "Custom date-time picker",
+        "Custom course filters",
+        "Automated email notifications for confirmations, alerts, and more",
+        "Customizable themes and fonts to match your branding"
+      ],
       "requirements": [],
-      "responsivePreviews": []
+      "responsivePreviews": [
+        {
+          "id": "registrations",
+          "displayName": "My registrations",
+          "desktop": "non-spa/program-registration/previews/desktop-registrations.png",
+          "mobile": "non-spa/program-registration/previews/mobile-registrations.png"
+        },
+        {
+          "id": "event-catalog",
+          "displayName": "After-school events",
+          "desktop": "non-spa/program-registration/previews/desktop-event-catalog.png",
+          "mobile": "non-spa/program-registration/previews/mobile-event-catalog.png"
+        },
+        {
+          "id": "registration-flow",
+          "displayName": "Registration flow",
+          "desktop": "non-spa/program-registration/previews/desktop-registration-flow.png",
+          "mobile": "non-spa/program-registration/previews/mobile-registration-flow.png"
+        }
+      ]
     },
     {
       "id": "event-portal",
@@ -228,7 +253,7 @@
     {
       "id": "schedule-and-manage-meetings",
       "displayName": "Schedule and Manage Meetings",
-      "description": "Enable location selection and appointment scheduling with customizable calendars and reminders.",
+      "description": "Enable people to quickly schedule appointments with specific staff members regarding specific topics.",
       "kind": "non-spa",
       "keywords": [
         "meetings",
@@ -244,9 +269,35 @@
         "type": "create-website-api",
         "templateName": "BookMeetings"
       },
-      "capabilities": [],
+      "capabilities": [
+        "Customizable location picker",
+        "Step-by-step forms with customizable sample date",
+        "Custom date-time picker",
+        "Custom calendars",
+        "Automated email notifications for reminders and alerts",
+        "Customizable themes and fonts to match your branding"
+      ],
       "requirements": [],
-      "responsivePreviews": []
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Home page",
+          "desktop": "non-spa/schedule-and-manage-meetings/previews/desktop-home.png",
+          "mobile": "non-spa/schedule-and-manage-meetings/previews/mobile-home.png"
+        },
+        {
+          "id": "service-selection",
+          "displayName": "Service selection",
+          "desktop": "non-spa/schedule-and-manage-meetings/previews/desktop-service-selection.png",
+          "mobile": "non-spa/schedule-and-manage-meetings/previews/mobile-service-selection.png"
+        },
+        {
+          "id": "appointment-confirmation",
+          "displayName": "Appointment confirmation",
+          "desktop": "non-spa/schedule-and-manage-meetings/previews/desktop-appointment-confirmation.png",
+          "mobile": "non-spa/schedule-and-manage-meetings/previews/mobile-appointment-confirmation.png"
+        }
+      ]
     }
   ]
 }
