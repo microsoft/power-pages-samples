@@ -14,7 +14,6 @@ requirements, warnings, capabilities, and responsive preview paths.
 | <img src="starter-layout-1/previews/desktop-home.png" alt="Starter Layout 1 home page" width="220" /> | [Starter Layout 1](starter-layout-1/) | Multipage starting point with reusable navigation and common pages. |
 | <img src="blank-page/previews/desktop-home.png" alt="Blank Page home page" width="220" /> | [Blank Page](blank-page/) | Minimal starting point for a custom site. |
 | — | [Program Registration](program-registration/) | Browse programs, review availability, and register. |
-| <img src="event-portal/previews/desktop-home.png" alt="Event Portal home page" width="220" /> | [Event Portal](event-portal/) | Discover events, review details, and register. |
 | — | [Schedule and Manage Meetings](schedule-and-manage-meetings/) | Select locations and schedule appointments. |
 
 ## Common workflow

@@ -200,57 +200,6 @@
       ]
     },
     {
-      "id": "event-portal",
-      "displayName": "Event Portal",
-      "description": "Give customers a central place to discover events, review complete event information, and register for the experiences that interest them.",
-      "kind": "non-spa",
-      "keywords": [
-        "events",
-        "registration",
-        "agenda",
-        "speakers"
-      ],
-      "audience": [
-        "makers",
-        "developers"
-      ],
-      "author": "Microsoft",
-      "provisioning": {
-        "type": "create-website-api",
-        "templateName": "EventPortal"
-      },
-      "capabilities": [
-        "Customizable event template",
-        "List of events",
-        "Event details with location, agenda, speakers, and sponsors",
-        "Event registration page"
-      ],
-      "requirements": [
-        "Customer Insights - Journeys license"
-      ],
-      "warning": "Some components may not behave fully in design studio and can require pro-developer customization.",
-      "responsivePreviews": [
-        {
-          "id": "home",
-          "displayName": "Home page",
-          "desktop": "non-spa/event-portal/previews/desktop-home.png",
-          "mobile": "non-spa/event-portal/previews/mobile-home.png"
-        },
-        {
-          "id": "registration",
-          "displayName": "Registration page",
-          "desktop": "non-spa/event-portal/previews/desktop-registration.png",
-          "mobile": "non-spa/event-portal/previews/mobile-registration.png"
-        },
-        {
-          "id": "about",
-          "displayName": "Event about page",
-          "desktop": "non-spa/event-portal/previews/desktop-about.png",
-          "mobile": "non-spa/event-portal/previews/mobile-about.png"
-        }
-      ]
-    },
-    {
       "id": "schedule-and-manage-meetings",
       "displayName": "Schedule and Manage Meetings",
       "description": "Enable people to quickly schedule appointments with specific staff members regarding specific topics.",
