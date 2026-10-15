@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: jgehrcke/github-repo-stats
-          ref: RELEASE
+          ref: d80572c9029636cd0e97e3a79e7a9c293bea3b02 # RELEASE
           path: .github/actions/github-repo-stats
 
       - name: patch github-repo-stats stargazer fetch
