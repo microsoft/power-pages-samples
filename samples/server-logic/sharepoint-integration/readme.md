@@ -2,7 +2,7 @@
 
 This guide walks you through setting up and testing the **Server Logic** sample that integrates Power Pages with **Microsoft Graph** and **SharePoint Online**. 
 
-> **Related sample:** for a full **code site (SPA)** that calls SharePoint through server logic (a file manager UI + companion server-logic file), see [File Upload (SharePoint)](../../spa/snippets/file-upload/sharepoint/).
+> **Related sample:** for a full **SPA site** that calls SharePoint through server logic (a file manager UI + companion server-logic file), see [File Upload (SharePoint)](../../spa/snippets/file-upload/sharepoint/).
 
 ## Step 1: Download the sample package 
 

@@ -535,7 +535,7 @@ export const parseSummaryWithCitations = (summary: string): SummaryPart[] => {
 /**
  * Recover the knowledge article id from a citation URL, or null when the URL is an ordinary page.
  *
- * On a code site the search service still points citations at the stock Power Pages knowledge
+ * On an SPA site the search service still points citations at the stock Power Pages knowledge
  * base route, which this site does not serve, so they arrive as
  * `https://<host>/page-not-found/?id=<knowledgearticleid>`. Rendering those verbatim sends every
  * citation to a 404. Callers rewrite a non-null result onto this app's own `/knowledge/:slug`

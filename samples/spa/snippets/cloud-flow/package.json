@@ -1,7 +1,7 @@
 {
   "name": "cloud-flow-sample",
   "version": "1.0.0",
-  "description": "Minimal Power Pages code site that invokes a Power Automate cloud flow from the browser",
+  "description": "Minimal Power Pages SPA site that invokes a Power Automate cloud flow from the browser",
   "type": "module",
   "scripts": {
     "dev": "vite",

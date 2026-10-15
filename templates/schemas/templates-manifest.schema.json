@@ -23,10 +23,7 @@
           "kind",
           "keywords",
           "audience",
-          "previewImages",
-          "requiredDataverseLanguages",
-          "author",
-          "variants"
+          "author"
         ],
         "additionalProperties": false,
         "properties": {
@@ -46,7 +43,7 @@
             "type": "string",
             "enum": [
               "spa",
-              "traditional"
+              "non-spa"
             ]
           },
           "keywords": {
@@ -73,6 +70,7 @@
             }
           },
           "previewImages": {
+            "description": "Flat preview list for repository-artifact templates. Create Website API templates use responsivePreviews instead.",
             "type": "array",
             "uniqueItems": true,
             "items": {
@@ -81,10 +79,12 @@
             }
           },
           "seedDataPath": {
+            "description": "Repository-hosted seed data imported after template solutions. Not valid for Create Website API templates.",
             "type": "string",
             "pattern": "^.+\\.json$"
           },
           "requiredDataverseLanguages": {
+            "description": "Dataverse languages required by repository-hosted template artifacts. Not valid for Create Website API templates.",
             "type": "array",
             "minItems": 1,
             "uniqueItems": true,
@@ -97,6 +97,36 @@
             "type": "string",
             "minLength": 1
           },
+          "provisioning": {
+            "$ref": "#/$defs/provisioning"
+          },
+          "capabilities": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "requirements": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "warning": {
+            "type": "string",
+            "minLength": 1
+          },
+          "responsivePreviews": {
+            "description": "Labeled desktop/mobile preview pairs for Create Website API templates.",
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/responsivePreview"
+            }
+          },
           "solutions": {
             "type": "array",
             "items": {
@@ -104,6 +134,7 @@
             }
           },
           "variants": {
+            "description": "Downloadable framework variants for repository-artifact templates. Not valid for Create Website API templates.",
             "type": "object",
             "minProperties": 1,
             "additionalProperties": false,
@@ -125,11 +156,112 @@
               }
             }
           }
+        },
+        "if": {
+          "type": "object",
+          "properties": {
+            "provisioning": true
+          },
+          "required": [
+            "provisioning"
+          ]
+        },
+        "then": {
+          "$ref": "#/$defs/createWebsiteApiTemplate"
+        },
+        "else": {
+          "$ref": "#/$defs/repositoryArtifactTemplate"
         }
       }
     }
   },
   "$defs": {
+    "createWebsiteApiTemplate": {
+      "description": "Platform-provisioned template. The platform owns the generated website source and solutions, so repository-artifact metadata is not allowed. Property types are defined on the template item; this shape only constrains presence and kind.",
+      "type": "object",
+      "required": [
+        "provisioning",
+        "capabilities",
+        "requirements",
+        "responsivePreviews"
+      ],
+      "properties": {
+        "kind": {
+          "const": "non-spa"
+        },
+        "provisioning": true,
+        "capabilities": true,
+        "requirements": true,
+        "responsivePreviews": true,
+        "previewImages": false,
+        "requiredDataverseLanguages": false,
+        "seedDataPath": false,
+        "solutions": false,
+        "variants": false
+      }
+    },
+    "repositoryArtifactTemplate": {
+      "description": "Template whose website code, previews, and supporting solutions are stored in this repository. Property types are defined on the template item; this shape only constrains presence.",
+      "type": "object",
+      "required": [
+        "previewImages",
+        "requiredDataverseLanguages",
+        "variants"
+      ],
+      "properties": {
+        "previewImages": true,
+        "requiredDataverseLanguages": true,
+        "variants": true
+      }
+    },
+    "provisioning": {
+      "type": "object",
+      "required": [
+        "type",
+        "templateName"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "create-website-api"
+          ]
+        },
+        "templateName": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        }
+      }
+    },
+    "responsivePreview": {
+      "type": "object",
+      "required": [
+        "id",
+        "displayName",
+        "desktop",
+        "mobile"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "desktop": {
+          "type": "string",
+          "pattern": "^.+\\.png$"
+        },
+        "mobile": {
+          "type": "string",
+          "pattern": "^.+\\.png$"
+        }
+      }
+    },
     "solutionPublication": {
       "type": "object",
       "required": [

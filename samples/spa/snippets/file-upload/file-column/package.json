@@ -1,7 +1,7 @@
 {
   "name": "file-upload-file-column-sample",
   "version": "1.0.0",
-  "description": "Minimal Power Pages code site that uploads and downloads files to a native Dataverse File column via the Web API",
+  "description": "Minimal Power Pages SPA site that uploads and downloads files to a native Dataverse File column via the Web API",
   "type": "module",
   "scripts": {
     "dev": "vite",

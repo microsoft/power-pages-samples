@@ -194,7 +194,7 @@ test('real Profile Save writes Contact and retains values after reload', async (
     assert.equal(await page.locator('main').getByText('updated@example.com', { exact: true }).count(), 1)
     assert.equal(await page.getByText('Fixture Supplier', { exact: true }).count(), 1)
     await page.reload()
-    await page.getByLabel('Email Address').waitFor()
+    await waitForProfileLoaded(page)
     const reloadedEmail = await page.getByLabel('Email Address').inputValue()
     console.log(`Profile caller: success toast, Contact PATCH count=${writesAtSuccess}, reload retained email=${reloadedEmail === 'updated@example.com'}`)
     assert.equal(writesAtSuccess, 1, 'success toast must follow an authenticated Contact PATCH, not a simulated save')

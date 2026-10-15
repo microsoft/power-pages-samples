@@ -6,7 +6,7 @@ layout (`samples/spa/react/…`, `samples/spa/angular/…`, `samples/spa/vue/…
 
 - `spa/apps/` — full, multi-feature reference applications (`<name>/<framework>/`)
 - `spa/snippets/` — single-topic samples (React-only, flat)
-- `traditional/` — non-code Liquid / web-template sites
+- `traditional/` — non-SPA Liquid / web-template sites
 - `server-logic/` — server-side runtime code
 
 GitHub does **not** redirect renamed paths, so links that pointed at the old

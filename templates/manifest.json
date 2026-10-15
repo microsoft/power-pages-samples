@@ -71,6 +71,182 @@
       "variants": {
         "react": {}
       }
+    },
+    {
+      "id": "starter-layout-1",
+      "displayName": "Starter Layout 1",
+      "description": "This versatile template provides a basic, multipage navigation framework and simple building blocks for you to customize any way you want. Just click on a section or image to customize it.",
+      "kind": "non-spa",
+      "keywords": [
+        "starter",
+        "multipage",
+        "navigation"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "author": "Microsoft",
+      "provisioning": {
+        "type": "create-website-api",
+        "templateName": "StarterLayout1"
+      },
+      "capabilities": [
+        "Home page",
+        "Subpages",
+        "Contact us",
+        "Search results"
+      ],
+      "requirements": [],
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Home page",
+          "desktop": "non-spa/starter-layout-1/previews/desktop-home.png",
+          "mobile": "non-spa/starter-layout-1/previews/mobile-home.png"
+        },
+        {
+          "id": "subpage-1",
+          "displayName": "Sub page 1",
+          "desktop": "non-spa/starter-layout-1/previews/desktop-services.png",
+          "mobile": "non-spa/starter-layout-1/previews/mobile-services.png"
+        },
+        {
+          "id": "subpage-2",
+          "displayName": "Sub page 2",
+          "desktop": "non-spa/starter-layout-1/previews/desktop-contact.png",
+          "mobile": "non-spa/starter-layout-1/previews/mobile-contact.png"
+        }
+      ]
+    },
+    {
+      "id": "blank-page",
+      "displayName": "Blank page",
+      "description": "This 1-page blank template provides a simple starting point to create a completely custom site with no preset sections or components.",
+      "kind": "non-spa",
+      "keywords": [
+        "blank",
+        "starter",
+        "custom"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "author": "Microsoft",
+      "provisioning": {
+        "type": "create-website-api",
+        "templateName": "BlankPage"
+      },
+      "capabilities": [
+        "Home page"
+      ],
+      "requirements": [],
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Home page",
+          "desktop": "non-spa/blank-page/previews/desktop-home.png",
+          "mobile": "non-spa/blank-page/previews/mobile-home.png"
+        }
+      ]
+    },
+    {
+      "id": "program-registration",
+      "displayName": "Program Registration",
+      "description": "Provide step-by-step registration and an easy way for people to browse and sign up for individual or multi-day classes.",
+      "kind": "non-spa",
+      "keywords": [
+        "programs",
+        "registration",
+        "activities"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "author": "Microsoft",
+      "provisioning": {
+        "type": "create-website-api",
+        "templateName": "ProgramRegistration"
+      },
+      "capabilities": [
+        "Customizable tables, lists, and sample data",
+        "Custom date-time picker",
+        "Custom course filters",
+        "Automated email notifications for confirmations, alerts, and more",
+        "Customizable themes and fonts to match your branding"
+      ],
+      "requirements": [],
+      "responsivePreviews": [
+        {
+          "id": "registrations",
+          "displayName": "My registrations",
+          "desktop": "non-spa/program-registration/previews/desktop-registrations.png",
+          "mobile": "non-spa/program-registration/previews/mobile-registrations.png"
+        },
+        {
+          "id": "event-catalog",
+          "displayName": "After-school events",
+          "desktop": "non-spa/program-registration/previews/desktop-event-catalog.png",
+          "mobile": "non-spa/program-registration/previews/mobile-event-catalog.png"
+        },
+        {
+          "id": "registration-flow",
+          "displayName": "Registration flow",
+          "desktop": "non-spa/program-registration/previews/desktop-registration-flow.png",
+          "mobile": "non-spa/program-registration/previews/mobile-registration-flow.png"
+        }
+      ]
+    },
+    {
+      "id": "schedule-and-manage-meetings",
+      "displayName": "Schedule and Manage Meetings",
+      "description": "Enable people to quickly schedule appointments with specific staff members regarding specific topics.",
+      "kind": "non-spa",
+      "keywords": [
+        "meetings",
+        "appointments",
+        "scheduling"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "author": "Microsoft",
+      "provisioning": {
+        "type": "create-website-api",
+        "templateName": "BookMeetings"
+      },
+      "capabilities": [
+        "Customizable location picker",
+        "Step-by-step forms with customizable sample date",
+        "Custom date-time picker",
+        "Custom calendars",
+        "Automated email notifications for reminders and alerts",
+        "Customizable themes and fonts to match your branding"
+      ],
+      "requirements": [],
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Home page",
+          "desktop": "non-spa/schedule-and-manage-meetings/previews/desktop-home.png",
+          "mobile": "non-spa/schedule-and-manage-meetings/previews/mobile-home.png"
+        },
+        {
+          "id": "service-selection",
+          "displayName": "Service selection",
+          "desktop": "non-spa/schedule-and-manage-meetings/previews/desktop-service-selection.png",
+          "mobile": "non-spa/schedule-and-manage-meetings/previews/mobile-service-selection.png"
+        },
+        {
+          "id": "appointment-confirmation",
+          "displayName": "Appointment confirmation",
+          "desktop": "non-spa/schedule-and-manage-meetings/previews/desktop-appointment-confirmation.png",
+          "mobile": "non-spa/schedule-and-manage-meetings/previews/mobile-appointment-confirmation.png"
+        }
+      ]
     }
   ]
 }

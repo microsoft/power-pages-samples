@@ -93,7 +93,7 @@ export default function App() {
       <h1>My documents</h1>
       <p className="subtitle">
         Files are stored in a <strong>SharePoint</strong> document library, reached
-        from this code site through <strong>server logic</strong> + Microsoft Graph.
+        from this SPA site through <strong>server logic</strong> + Microsoft Graph.
       </p>
 
       <label className={`upload ${busy ? 'disabled' : ''}`}>

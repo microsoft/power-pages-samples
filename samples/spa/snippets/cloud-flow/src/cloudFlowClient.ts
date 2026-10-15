@@ -2,7 +2,7 @@
 // cloudFlowClient.ts — THE LESSON OF THIS SAMPLE
 //
 // This is the entire recipe for calling a Power Automate cloud flow from a
-// Power Pages code site. Everything else in this app is just UI around it.
+// Power Pages SPA site. Everything else in this app is just UI around it.
 //
 // A registered cloud flow is invoked with a single HTTP request:
 //

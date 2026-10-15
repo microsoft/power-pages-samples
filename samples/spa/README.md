@@ -1,6 +1,6 @@
 # Power Pages SPA Samples
 
-SPA samples show how to build Power Pages code sites with familiar frontend frameworks, run them locally, and upload them with the Power Platform CLI.
+SPA samples show how to build Power Pages SPA sites with familiar frontend frameworks, run them locally, and upload them with the Power Platform CLI.
 
 Use this index to choose the sample that best matches the framework or scenario you want to explore. Samples are grouped into **[full applications](apps/)** and **[single-topic snippets](snippets/)**.
 
@@ -24,7 +24,7 @@ Use this index to choose the sample that best matches the framework or scenario 
 | <img src="snippets/cloud-flow/screenshot.png" alt="Cloud flow sample screenshot" width="220" /> | [Cloud Flow Sample](snippets/cloud-flow/) | React + Vite | Call a Power Automate cloud flow | Invoke a registered flow with `/_api/cloudflow/v1.0/trigger/<id>`, CSRF token, and render the response. |
 | <img src="snippets/file-upload/notes/screenshot.png" alt="File upload sample screenshot" width="220" /> | [File Upload (Notes) Sample](snippets/file-upload/notes/) | React + Vite | Upload and download files via the Web API | Store files as Dataverse notes (annotations), with base64 `documentbody`, CSRF, and size/type guards. |
 | <img src="snippets/file-upload/file-column/screenshot.png" alt="File upload file column sample screenshot" width="220" /> | [File Upload (File Column) Sample](snippets/file-upload/file-column/) | React + Vite | Upload files to a native File column | Store files in a Dataverse **File column** (`PATCH` raw bytes + `$value` download, no base64), with companion columns, CSRF, and size/type guards. |
-| <img src="snippets/file-upload/sharepoint/screenshot.png" alt="SharePoint file upload sample screenshot" width="220" /> | [File Upload (SharePoint) Sample](snippets/file-upload/sharepoint/) | React + Vite | Upload files to SharePoint via server logic | Reach a SharePoint document library from a code site through **server logic** (`/_api/serverlogics`) + Microsoft Graph, with CSRF and per-user folders. Text documents (server logic's HttpClient is text-only). |
+| <img src="snippets/file-upload/sharepoint/screenshot.png" alt="SharePoint file upload sample screenshot" width="220" /> | [File Upload (SharePoint) Sample](snippets/file-upload/sharepoint/) | React + Vite | Upload files to SharePoint via server logic | Reach a SharePoint document library from an SPA site through **server logic** (`/_api/serverlogics`) + Microsoft Graph, with CSRF and per-user folders. Text documents (server logic's HttpClient is text-only). |
 | <img src="snippets/file-upload/azure-blob/screenshot.png" alt="Azure Blob file upload sample screenshot" width="220" /> | [File Upload (Azure Blob) Sample](snippets/file-upload/azure-blob/) | React + Vite | Upload files to Azure Blob storage | Store files in your own **Azure Blob** container via the file-management Web API (`/_api/file/...`: initialize → chunked `UploadBlock` → download/delete), tracked by an annotation placeholder. |
 
 ## Common workflow
@@ -33,6 +33,6 @@ Use this index to choose the sample that best matches the framework or scenario 
 1. Install dependencies with `npm install` or `npm ci`.
 1. Run the local development server with the command listed in the sample README.
 1. Build the app with `npm run build`.
-1. Upload the code site with `pac pages upload-code-site --rootPath .`.
+1. Upload the SPA site with `pac pages upload-code-site --rootPath .`.
 
 For Power Pages setup details, prerequisites, and sample-specific configuration, see the README in each sample folder.

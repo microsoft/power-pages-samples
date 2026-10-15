@@ -8,7 +8,7 @@ import usePageTitle from '../hooks/usePageTitle'
 
 // Render a summary string with inline `[[N]](url)` citation tokens as clickable
 // anchors. Citation URLs that point at Power Pages' built-in `/page-not-found`
-// (the default behaviour for KB articles on a code site) are rewritten to the
+// (the default behaviour for KB articles on an SPA site) are rewritten to the
 // SPA's `/knowledge/<id>` route so the reviewer lands on real content.
 function renderSummaryWithCitations(summary: string): ReactNode[] {
   if (!summary) return []

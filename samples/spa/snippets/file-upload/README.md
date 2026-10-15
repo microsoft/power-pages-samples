@@ -1,7 +1,7 @@
 # File Upload Samples
 
 Power Pages offers several ways to let users upload and manage files. This folder
-groups the file-upload **code-site (SPA)** samples by storage approach.
+groups the file-upload **SPA site** samples by storage approach.
 
 ## Choosing an approach
 
@@ -15,7 +15,7 @@ groups the file-upload **code-site (SPA)** samples by storage approach.
 **Notes**, **File column**, **SharePoint**, and **Azure Blob** are all built here as
 runnable React + Vite samples. Notes and File column call the portal Web API directly,
 and Azure Blob uses the dedicated file-management Web API (`/_api/file/...`).
-**SharePoint** can't use the Web API (it has no SharePoint surface, and code sites
+**SharePoint** can't use the Web API (it has no SharePoint surface, and SPA sites
 can't host the native Liquid/form subgrid), so it uses **server logic** (server-side
 JS) + Microsoft Graph.
 
@@ -30,7 +30,7 @@ JS) + Microsoft Graph.
   two-step create then `$value` download). The modern approach for larger or
   binary-clean files.
 - **[File Upload (SharePoint)](sharepoint/)** — each file lives in a **SharePoint
-  document library**, reached from the code site through **server logic** (server-side
+  document library**, reached from the SPA site through **server logic** (server-side
   JavaScript) that holds an Entra app and calls **Microsoft Graph**. Use it for
   document management / collaboration, or when files must live in SharePoint. *(Server
   logic's HttpClient is text-only, so this sample handles text documents — see its

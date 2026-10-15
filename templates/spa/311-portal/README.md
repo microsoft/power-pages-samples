@@ -59,7 +59,7 @@ Preserve the IDs in each table because later records refer to earlier records by
 Lookup records use the exact `spa311_CategoryId`, `spa311_ServiceTypeId`, and `spa311_ServiceRequestId` navigation properties from the unpacked solution.
 Do not use Dataverse's spreadsheet import for this file because it will not preserve lookup IDs.
 
-8. Install dependencies, build the React project, and upload the code site:
+8. Install dependencies, build the React project, and upload the SPA site:
 
 ```bash
 cd templates/spa/311-portal/variants/react/website-code
