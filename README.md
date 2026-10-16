@@ -1,10 +1,40 @@
 # Power Pages Samples
 
-This repository contains samples and templates for Microsoft Power Pages. Use the table below to quickly find a sample by framework, scenario, or Power Pages capability.
+This repository contains samples and templates for Microsoft Power Pages.
+Use the tables below to find a template for a new site or a sample that explains a framework, scenario, or Power Pages capability.
 
 Each sample includes its own README with setup steps, deployment notes, and a screenshot so you can preview the experience before running it locally.
 
 > **Reorganized July 2026.** The `samples/` folder moved from a framework-first to a category-first layout. If you followed an older link, see [MIGRATION.md](MIGRATION.md) for old → new paths.
+
+## Templates at a glance
+
+Templates under [`templates/`](templates/) are starting points for new Power Pages sites.
+Samples under [`samples/`](samples/) are learning examples for specific patterns and capabilities.
+See the [template guide](templates/README.md) for installation and provisioning workflows, and the [template catalog](templates/manifest.json) for metadata and prerequisites.
+
+### Non-SPA templates (`templates/non-spa/`)
+
+These templates are provisioned by the Power Pages Create Website API.
+The repository contains catalog metadata, documentation, and desktop/mobile previews, not downloadable website source or solutions.
+See the [non-SPA template guide](templates/non-spa/) for the provisioning workflow.
+
+| Preview | Template | Scenario |
+| --- | --- | --- |
+| <img src="templates/non-spa/starter-layout-1/previews/desktop-home.png" alt="Starter Layout 1 home page" width="180" /> | [Starter Layout 1](templates/non-spa/starter-layout-1/) | Start a multipage site with navigation and common page building blocks. |
+| <img src="templates/non-spa/blank-page/previews/desktop-home.png" alt="Blank Page home page" width="180" /> | [Blank Page](templates/non-spa/blank-page/) | Build a custom site without preset sections or components. |
+| <img src="templates/non-spa/program-registration/previews/desktop-event-catalog.png" alt="Program Registration event catalog" width="180" /> | [Program Registration](templates/non-spa/program-registration/) | Browse programs and register for individual or multi-day classes. |
+| <img src="templates/non-spa/schedule-and-manage-meetings/previews/desktop-home.png" alt="Schedule and Manage Meetings home page" width="180" /> | [Schedule and Manage Meetings](templates/non-spa/schedule-and-manage-meetings/) | Schedule appointments with staff members for specific topics. |
+
+### SPA templates (`templates/spa/`)
+
+SPA templates include downloadable website code, shared supporting Dataverse solutions, and seed data.
+Follow each template's README to import the solutions and seed data, then deploy the website code.
+
+| Preview | Template | Framework | Scenario |
+| --- | --- | --- | --- |
+| <img src="templates/spa/311-portal/previews/home.png" alt="311 Portal home page" width="180" /> | [311 Portal](templates/spa/311-portal/) | React + Vite | Citizen service requests, request tracking, maps, and knowledge articles. |
+| <img src="templates/spa/supplier-invoice-portal/previews/home.png" alt="Supplier Invoice Portal home page" width="180" /> | [Supplier Invoice Portal](templates/spa/supplier-invoice-portal/) | React + Vite | Supplier onboarding, purchase orders, invoice submission, and review. |
 
 ## Samples at a glance
 
