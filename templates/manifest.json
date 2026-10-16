@@ -120,6 +120,194 @@
       ]
     },
     {
+      "id": "starter-layout-2",
+      "displayName": "Starter Layout 2",
+      "description": "This versatile template provides a basic, multipage navigation framework and simple building blocks for you to customize any way you want. Just click on a section or image to customize it.",
+      "kind": "non-spa",
+      "keywords": [
+        "starter",
+        "multipage",
+        "navigation"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "author": "Microsoft",
+      "provisioning": {
+        "type": "create-website-api",
+        "templateName": "StarterLayout2"
+      },
+      "capabilities": [
+        "Home page",
+        "Subpages",
+        "Contact us",
+        "Search results"
+      ],
+      "requirements": [],
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Home page",
+          "desktop": "non-spa/starter-layout-2/previews/desktop-home.png",
+          "mobile": "non-spa/starter-layout-2/previews/mobile-home.png"
+        },
+        {
+          "id": "subpage-1",
+          "displayName": "Sub page 1",
+          "desktop": "non-spa/starter-layout-2/previews/desktop-subpage-1.png",
+          "mobile": "non-spa/starter-layout-2/previews/mobile-subpage-1.png"
+        },
+        {
+          "id": "subpage-2",
+          "displayName": "Sub page 2",
+          "desktop": "non-spa/starter-layout-2/previews/desktop-subpage-2.png",
+          "mobile": "non-spa/starter-layout-2/previews/mobile-subpage-2.png"
+        }
+      ]
+    },
+    {
+      "id": "starter-layout-3",
+      "displayName": "Starter Layout 3",
+      "description": "This versatile template provides a basic, multipage navigation framework and simple building blocks for you to customize any way you want. Just click on a section or image to customize it.",
+      "kind": "non-spa",
+      "keywords": [
+        "starter",
+        "multipage",
+        "navigation"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "author": "Microsoft",
+      "provisioning": {
+        "type": "create-website-api",
+        "templateName": "StarterLayout3"
+      },
+      "capabilities": [
+        "Home page",
+        "Subpages",
+        "Contact us",
+        "Search results"
+      ],
+      "requirements": [],
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Home page",
+          "desktop": "non-spa/starter-layout-3/previews/desktop-home.png",
+          "mobile": "non-spa/starter-layout-3/previews/mobile-home.png"
+        },
+        {
+          "id": "subpage-1",
+          "displayName": "Sub page 1",
+          "desktop": "non-spa/starter-layout-3/previews/desktop-subpage-1.png",
+          "mobile": "non-spa/starter-layout-3/previews/mobile-subpage-1.png"
+        },
+        {
+          "id": "subpage-2",
+          "displayName": "Sub page 2",
+          "desktop": "non-spa/starter-layout-3/previews/desktop-subpage-2.png",
+          "mobile": "non-spa/starter-layout-3/previews/mobile-subpage-2.png"
+        }
+      ]
+    },
+    {
+      "id": "starter-layout-4",
+      "displayName": "Starter Layout 4",
+      "description": "This versatile template provides a basic, multipage navigation framework and simple building blocks for you to customize any way you want. Just click on a section or image to customize it.",
+      "kind": "non-spa",
+      "keywords": [
+        "starter",
+        "multipage",
+        "navigation"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "author": "Microsoft",
+      "provisioning": {
+        "type": "create-website-api",
+        "templateName": "StarterLayout4"
+      },
+      "capabilities": [
+        "Home page",
+        "Subpages",
+        "Contact us",
+        "Search results"
+      ],
+      "requirements": [],
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Home page",
+          "desktop": "non-spa/starter-layout-4/previews/desktop-home.png",
+          "mobile": "non-spa/starter-layout-4/previews/mobile-home.png"
+        },
+        {
+          "id": "subpage-1",
+          "displayName": "Sub page 1",
+          "desktop": "non-spa/starter-layout-4/previews/desktop-subpage-1.png",
+          "mobile": "non-spa/starter-layout-4/previews/mobile-subpage-1.png"
+        },
+        {
+          "id": "subpage-2",
+          "displayName": "Sub page 2",
+          "desktop": "non-spa/starter-layout-4/previews/desktop-subpage-2.png",
+          "mobile": "non-spa/starter-layout-4/previews/mobile-subpage-2.png"
+        }
+      ]
+    },
+    {
+      "id": "starter-layout-5",
+      "displayName": "Starter Layout 5",
+      "description": "This versatile template provides a basic, multipage navigation framework and simple building blocks for you to customize any way you want. Just click on a section or image to customize it.",
+      "kind": "non-spa",
+      "keywords": [
+        "starter",
+        "multipage",
+        "navigation"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "author": "Microsoft",
+      "provisioning": {
+        "type": "create-website-api",
+        "templateName": "StarterLayout5"
+      },
+      "capabilities": [
+        "Home page",
+        "Subpages",
+        "Contact us",
+        "Search results"
+      ],
+      "requirements": [],
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Home page",
+          "desktop": "non-spa/starter-layout-5/previews/desktop-home.png",
+          "mobile": "non-spa/starter-layout-5/previews/mobile-home.png"
+        },
+        {
+          "id": "subpage-1",
+          "displayName": "Sub page 1",
+          "desktop": "non-spa/starter-layout-5/previews/desktop-subpage-1.png",
+          "mobile": "non-spa/starter-layout-5/previews/mobile-subpage-1.png"
+        },
+        {
+          "id": "subpage-2",
+          "displayName": "Sub page 2",
+          "desktop": "non-spa/starter-layout-5/previews/desktop-subpage-2.png",
+          "mobile": "non-spa/starter-layout-5/previews/mobile-subpage-2.png"
+        }
+      ]
+    },
+    {
       "id": "blank-page",
       "displayName": "Blank page",
       "description": "This 1-page blank template provides a simple starting point to create a completely custom site with no preset sections or components.",

@@ -12,6 +12,10 @@ requirements, warnings, capabilities, and responsive preview paths.
 | Preview | Template | Scenario |
 | --- | --- | --- |
 | <img src="starter-layout-1/previews/desktop-home.png" alt="Starter Layout 1 home page" width="220" /> | [Starter Layout 1](starter-layout-1/) | Multipage starting point with reusable navigation and common pages. |
+| <img src="starter-layout-2/previews/desktop-home.png" alt="Starter Layout 2 home page" width="220" /> | [Starter Layout 2](starter-layout-2/) | Multipage starting point with reusable navigation and common pages. |
+| <img src="starter-layout-3/previews/desktop-home.png" alt="Starter Layout 3 home page" width="220" /> | [Starter Layout 3](starter-layout-3/) | Multipage starting point with reusable navigation and common pages. |
+| <img src="starter-layout-4/previews/desktop-home.png" alt="Starter Layout 4 home page" width="220" /> | [Starter Layout 4](starter-layout-4/) | Multipage starting point with reusable navigation and common pages. |
+| <img src="starter-layout-5/previews/desktop-home.png" alt="Starter Layout 5 home page" width="220" /> | [Starter Layout 5](starter-layout-5/) | Multipage starting point with reusable navigation and common pages. |
 | <img src="blank-page/previews/desktop-home.png" alt="Blank Page home page" width="220" /> | [Blank Page](blank-page/) | Minimal starting point for a custom site. |
 | — | [Program Registration](program-registration/) | Browse programs, review availability, and register. |
 | — | [Schedule and Manage Meetings](schedule-and-manage-meetings/) | Select locations and schedule appointments. |
