@@ -13,7 +13,8 @@ import { fileURLToPath } from "node:url";
 
 const siteDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(siteDir, "..");
-const siteFiles = ["index.html", "styles.css", "data.js", "app.js"];
+const siteFiles = ["index.html", "theme.css", "styles.css", "data.js", "app.js"];
+const siteDirs = ["assets"];
 
 function parseOutDir(argv) {
   const index = argv.indexOf("--out");
@@ -94,6 +95,7 @@ function build(outDir) {
   rmSync(outDir, { recursive: true, force: true });
   mkdirSync(outDir, { recursive: true });
   for (const file of siteFiles) cpSync(path.join(siteDir, file), path.join(outDir, file));
+  for (const dir of siteDirs) cpSync(path.join(siteDir, dir), path.join(outDir, dir), { recursive: true });
   for (const asset of assets) {
     const target = path.join(outDir, asset);
     mkdirSync(path.dirname(target), { recursive: true });

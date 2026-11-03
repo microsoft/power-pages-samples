@@ -7,14 +7,14 @@ window.CATALOG = (() => {
     mobile: `templates/non-spa/${id}/previews/mobile-${page}.png`
   });
 
-  const starter = (n, pages = ["home", "subpage-1", "subpage-2"]) => {
+  const starter = (n, look, pages = ["home", "subpage-1", "subpage-2"]) => {
     const id = `starter-layout-${n}`;
     const labels = ["Home page", "Sub page 1", "Sub page 2"];
     return {
       id,
       name: `Starter Layout ${n}`,
       path: `templates/non-spa/${id}/`,
-      desc: "A multipage site with navigation and simple building blocks you customize in the design studio.",
+      desc: `A multipage starter with ${look}. Customize every section in the design studio.`,
       publisher: "Microsoft",
       tags: ["Design studio"],
       features: ["Home page", "Subpages", "Contact us", "Search results"],
@@ -123,11 +123,11 @@ window.CATALOG = (() => {
                   nonSpa("schedule-and-manage-meetings", "appointment-confirmation", "Appointment confirmation")
                 ]
               },
-              starter(1, ["home", "services", "contact"]),
-              starter(2),
-              starter(3),
-              starter(4),
-              starter(5),
+              starter(1, "a navy hero and a photo beside the headline", ["home", "services", "contact"]),
+              starter(2, "a light header and an illustration beside the headline"),
+              starter(3, "a bold full-width color hero above a photo band"),
+              starter(4, "a dark, image-led introduction"),
+              starter(5, "a light layout and a photo beside the introduction"),
               {
                 id: "blank-page",
                 name: "Blank page",

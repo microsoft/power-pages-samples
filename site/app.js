@@ -1,14 +1,21 @@
 (() => {
   const { repo, groups } = window.CATALOG;
-  const asset = (path) => path;
   const sectionsEl = document.getElementById("sections");
   const navEl = document.getElementById("index-nav");
   const countEl = document.getElementById("result-count");
+  const copyViewEl = document.getElementById("copy-view");
   const searchEl = document.getElementById("search");
+  const searchForm = searchEl.form;
   const dialog = document.getElementById("detail");
+
+  const announcer = document.createElement("div");
+  announcer.className = "visually-hidden";
+  announcer.setAttribute("role", "status");
+  document.body.append(announcer);
 
   const esc = (value) =>
     String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const slug = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
   const items = new Map();
   for (const group of groups) {
@@ -17,6 +24,95 @@
     }
   }
   const total = items.size;
+
+  const templateGroup = groups.find((g) => g.id === "templates");
+  const templateEntries = templateGroup.categories.flatMap((category) => category.items.map((item) => items.get(item.id)));
+  const kindIds = templateGroup.categories.map((c) => c.id);
+  const publishers = [...new Set(templateEntries.map((e) => e.item.publisher).filter(Boolean))].sort();
+
+  const sampleCount = total - templateEntries.length;
+  document.getElementById("hero-proof").textContent =
+    `${templateEntries.length} templates and ${sampleCount} samples, published by Microsoft under the MIT license.`;
+
+  // ---------------------------------------------------------------------------
+  // Shareable URL state
+  //
+  // Catalog view:  ?q=upload&type=spa&publisher=Microsoft#templates
+  // Open entry:    ?item=311-portal&page=map&view=mobile
+  // Query strings work on GitHub Pages because every URL serves index.html.
+  // The first release used #item=<id>; readUrl still accepts it so old links work.
+  // ---------------------------------------------------------------------------
+
+  const view = { q: "", type: "all", publisher: "all" };
+  let detail = null; // { id, page, view }
+  let detailPushed = false;
+  let closingFromHistory = false;
+
+  function readUrl() {
+    const params = new URLSearchParams(location.search);
+    const legacy = location.hash.match(/^#item=(.+)$/);
+    view.q = (params.get("q") || "").trim();
+    view.type = kindIds.includes(params.get("type")) ? params.get("type") : "all";
+    view.publisher = publishers.includes(params.get("publisher")) ? params.get("publisher") : "all";
+    const id = params.get("item") || (legacy ? decodeURIComponent(legacy[1]) : null);
+    detail = id && items.has(id)
+      ? { id, page: params.get("page") || "", view: params.get("view") === "mobile" ? "mobile" : "desktop" }
+      : null;
+  }
+
+  function sectionHash() {
+    return location.hash && !location.hash.startsWith("#item=") ? location.hash : "";
+  }
+
+  function viewUrl() {
+    const params = new URLSearchParams();
+    if (view.q) params.set("q", view.q);
+    if (view.type !== "all") params.set("type", view.type);
+    if (view.publisher !== "all") params.set("publisher", view.publisher);
+    const query = params.toString();
+    return `${location.pathname}${query ? `?${query}` : ""}${sectionHash()}`;
+  }
+
+  function itemHref(id) {
+    return `?item=${encodeURIComponent(id)}`;
+  }
+
+  function detailUrl() {
+    const params = new URLSearchParams({ item: detail.id });
+    if (detail.page) params.set("page", detail.page);
+    if (detail.view === "mobile") params.set("view", "mobile");
+    return `${location.pathname}?${params}`;
+  }
+
+  const absolute = (url) => new URL(url, location.href).href;
+
+  const isFiltered = () => Boolean(view.q) || view.type !== "all" || view.publisher !== "all";
+
+  async function copyLink(url, button) {
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Clipboard API needs a secure context; fall back for http previews.
+      const field = Object.assign(document.createElement("textarea"), { value: url });
+      document.body.append(field);
+      field.select();
+      document.execCommand("copy");
+      field.remove();
+    }
+    const label = button.querySelector("[data-label]") || button;
+    const original = label.textContent;
+    button.dataset.copied = "true";
+    label.textContent = "Link copied";
+    announcer.textContent = "Link copied to clipboard";
+    setTimeout(() => {
+      button.dataset.copied = "false";
+      label.textContent = original;
+    }, 2000);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Rendering
+  // ---------------------------------------------------------------------------
 
   // Non-SPA template previews already ship inside device frames, so only raw
   // screenshots get the thin screen outline.
@@ -27,11 +123,11 @@
       ? `<div class="no-preview"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Planned. Not built yet.</div>`
       : `<div class="no-preview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4"/></svg>Runs on the server. No screen to preview.</div>`;
 
-  function cardHtml(entry) {
+  function cardHtml(entry, level) {
     const { item, category } = entry;
     const image = item.images[0];
     const mat = image
-      ? `<img class="${imgClass(entry)}" src="${asset(image.src)}" alt="" loading="lazy" />`
+      ? `<img class="${imgClass(entry)}" src="${esc(image.src)}" alt="" loading="lazy" />`
       : noPreview(item);
     const tags = [
       ...(category.tag ? [`<li class="kind mat-${category.mat}">${esc(category.tag)}</li>`] : []),
@@ -40,44 +136,36 @@
     ].join("");
     return `
       <li>
-        <button class="card" type="button" data-id="${esc(item.id)}" aria-label="${esc(item.name)}: ${esc(item.desc)}">
+        <article class="card">
           <div class="card-mat mat-${category.mat}">${mat}</div>
-          <div class="card-body">
-            <h4>${esc(item.name)}</h4>
-            <p>${esc(item.desc)}</p>
-            <ul class="tags">${tags}</ul>
-          </div>
-        </button>
+          <h${level} class="card-title"><a class="card-link" href="${itemHref(item.id)}" data-id="${esc(item.id)}">${esc(item.name)}</a></h${level}>
+          <p class="card-desc">${esc(item.desc)}</p>
+          <ul class="tags" aria-label="Tags">${tags}</ul>
+        </article>
       </li>`;
   }
+
+  const anchor = (id, name) => `<a class="anchor" href="#${id}" aria-label="Link to the ${esc(name)} section">#</a>`;
 
   function matches(item, query) {
     if (!query) return true;
     const hay = [item.name, item.desc, item.publisher || "", ...item.tags, ...(item.features || [])].join(" ").toLowerCase();
-    return query.split(/\s+/).every((word) => hay.includes(word));
+    return query.toLowerCase().split(/\s+/).every((word) => hay.includes(word));
   }
 
-  // Templates render as one catalog with type and publisher filters.
-  const filters = { kind: "all", publisher: "all" };
-  const templateGroup = groups.find((g) => g.id === "templates");
-  const templateEntries = templateGroup.categories.flatMap((category) =>
-    category.items.map((item) => ({ item, category }))
-  );
-  const publishers = [...new Set(templateEntries.map((e) => e.item.publisher).filter(Boolean))].sort();
-
-  function templatesSection(query) {
-    const searched = templateEntries.filter((e) => matches(e.item, query));
-    const byPublisher = searched.filter((e) => filters.publisher === "all" || e.item.publisher === filters.publisher);
-    const visible = byPublisher.filter((e) => filters.kind === "all" || e.category.id === filters.kind);
+  function templatesSection() {
+    const searched = templateEntries.filter((e) => matches(e.item, view.q));
+    const byPublisher = searched.filter((e) => view.publisher === "all" || e.item.publisher === view.publisher);
+    const visible = byPublisher.filter((e) => view.type === "all" || e.category.id === view.type);
 
     const kindCount = (id) => byPublisher.filter((e) => id === "all" || e.category.id === id).length;
     const kindButton = (id, label) =>
-      `<button type="button" data-filter="kind" data-value="${id}" aria-pressed="${filters.kind === id}">${esc(label)} <span class="count">${kindCount(id)}</span></button>`;
+      `<button type="button" data-filter="type" data-value="${id}" aria-pressed="${view.type === id}">${esc(label)}<span class="count">${kindCount(id)}</span></button>`;
 
     const filtersHtml = `
       <div class="filters">
-        <div class="filter" role="group" aria-labelledby="filter-kind-label">
-          <span class="filter-label" id="filter-kind-label">Type</span>
+        <div class="filter" role="group" aria-labelledby="filter-type-label">
+          <span class="filter-label" id="filter-type-label">Type</span>
           <div class="segmented">
             ${kindButton("all", "All")}
             ${templateGroup.categories.map((c) => kindButton(c.id, c.tag)).join("")}
@@ -87,21 +175,21 @@
           <label class="filter-label" for="filter-publisher">Publisher</label>
           <select id="filter-publisher" data-filter="publisher">
             <option value="all">All publishers</option>
-            ${publishers.map((p) => `<option value="${esc(p)}"${filters.publisher === p ? " selected" : ""}>${esc(p)}</option>`).join("")}
+            ${publishers.map((p) => `<option value="${esc(p)}"${view.publisher === p ? " selected" : ""}>${esc(p)}</option>`).join("")}
           </select>
         </div>
       </div>`;
 
-    const kindNote = filters.kind === "all" ? "" : templateGroup.categories.find((c) => c.id === filters.kind).blurb;
+    const kindNote = view.type === "all" ? "" : templateGroup.categories.find((c) => c.id === view.type).blurb;
     const body = visible.length
-      ? `<ul class="grid" role="list">${visible.map(cardHtml).join("")}</ul>`
-      : `<div class="empty inline"><p>No templates match these filters.</p><button class="button" type="button" data-clear-filters>Clear filters</button></div>`;
+      ? `<ul class="grid" role="list">${visible.map((e) => cardHtml(e, 3)).join("")}</ul>`
+      : `<div class="empty"><p>No templates match these filters.</p><button class="button" type="button" data-clear-filters>Clear filters</button></div>`;
 
     const html = searched.length
       ? `
         <section class="group" id="templates" aria-labelledby="templates-title">
           <header class="group-head">
-            <h2 id="templates-title">${esc(templateGroup.name)}</h2>
+            <div class="heading-row"><h2 id="templates-title">${esc(templateGroup.name)}</h2>${anchor("templates", templateGroup.name)}</div>
             <p>${esc(templateGroup.intro)}</p>
           </header>
           ${filtersHtml}
@@ -110,13 +198,21 @@
         </section>`
       : "";
 
+    const typeLink = (id, label, count, swatch) => {
+      const params = new URLSearchParams();
+      if (id !== "all") params.set("type", id);
+      const current = view.type === id ? ' aria-current="true"' : "";
+      const sw = swatch ? `<span class="swatch mat-${swatch}"></span>` : "";
+      return `<a href="?${params}#templates" data-filter="type" data-value="${id}"${current}>${sw}${esc(label)}<span class="count">${count}</span></a>`;
+    };
+
     const nav = `
       <div class="index-group">
-        <a href="#templates" data-filter="kind" data-value="all">${esc(templateGroup.name)}<span class="count">${searched.length}</span></a>
+        ${typeLink("all", templateGroup.name, searched.length)}
         <ul>${templateGroup.categories
           .map((c) => {
             const n = searched.filter((e) => e.category.id === c.id).length;
-            return `<li class="${n ? "" : "is-empty"}"><a href="#templates" data-filter="kind" data-value="${c.id}"><span class="swatch mat-${c.mat}"></span>${esc(c.name)}<span class="count">${n}</span></a></li>`;
+            return `<li class="${n ? "" : "is-empty"}">${typeLink(c.id, c.name, n, c.mat)}</li>`;
           })
           .join("")}</ul>
       </div>`;
@@ -125,13 +221,13 @@
   }
 
   function render() {
-    const query = searchEl.value.trim().toLowerCase();
     // Sections are re-rendered wholesale, so remember which control had focus.
     const active = document.activeElement;
-    const focusKey = active?.dataset?.filter ? `[data-filter="${active.dataset.filter}"]${active.dataset.value ? `[data-value="${active.dataset.value}"]` : ""}` : null;
-    const focusInSections = sectionsEl.contains(active);
+    const focusKey = sectionsEl.contains(active) && active.dataset.filter
+      ? `[data-filter="${active.dataset.filter}"]${active.dataset.value ? `[data-value="${active.dataset.value}"]` : ""}`
+      : null;
 
-    const templates = templatesSection(query);
+    const templates = templatesSection();
     let shown = templates.count;
     let sectionsHtml = templates.html;
     let navHtml = templates.nav;
@@ -143,7 +239,7 @@
       let navItems = "";
 
       for (const category of group.categories) {
-        const visible = category.items.filter((item) => matches(item, query));
+        const visible = category.items.filter((item) => matches(item, view.q));
         groupCount += visible.length;
         navItems += `
           <li class="${visible.length ? "" : "is-empty"}">
@@ -153,11 +249,11 @@
         categoriesHtml += `
           <section class="category" id="${category.id}" aria-labelledby="${category.id}-title">
             <div class="category-head">
-              <h3 id="${category.id}-title"><span class="swatch mat-${category.mat}"></span>${esc(category.name)}</h3>
+              <div class="heading-row"><h3 id="${category.id}-title"><span class="swatch mat-${category.mat}"></span>${esc(category.name)}</h3>${anchor(category.id, category.name)}</div>
               <p>${esc(category.blurb)}</p>
             </div>
             <ul class="grid" role="list">
-              ${visible.map((item) => cardHtml(items.get(item.id))).join("")}
+              ${visible.map((item) => cardHtml(items.get(item.id), 4)).join("")}
             </ul>
           </section>`;
       }
@@ -172,7 +268,7 @@
         sectionsHtml += `
           <section class="group" id="${group.id}" aria-labelledby="${group.id}-title">
             <header class="group-head">
-              <h2 id="${group.id}-title">${esc(group.name)}</h2>
+              <div class="heading-row"><h2 id="${group.id}-title">${esc(group.name)}</h2>${anchor(group.id, group.name)}</div>
               <p>${esc(group.intro)}</p>
             </header>
             ${categoriesHtml}
@@ -183,68 +279,54 @@
     if (!sectionsHtml) {
       sectionsHtml = `
         <div class="empty">
-          <h2>Nothing matches “${esc(searchEl.value.trim())}”</h2>
+          <h2>Nothing matches “${esc(view.q)}”</h2>
           <p>Try a framework like React or Vue, or a capability like upload, sign-in, or localization.</p>
+          <button class="button" type="button" data-clear-search>Clear search</button>
         </div>`;
     }
 
     sectionsEl.innerHTML = sectionsHtml;
     navEl.innerHTML = navHtml;
-    const filtered = query || filters.kind !== "all" || filters.publisher !== "all";
-    countEl.textContent = filtered ? `${shown} of ${total} shown` : `${total} templates and samples`;
-    if (focusKey && focusInSections) sectionsEl.querySelector(focusKey)?.focus({ preventScroll: true });
+    countEl.textContent = isFiltered() ? `Showing ${shown} of ${total} templates and samples` : `${total} templates and samples`;
+    copyViewEl.hidden = !isFiltered();
+    if (focusKey) sectionsEl.querySelector(focusKey)?.focus({ preventScroll: true });
   }
 
-  function setFilter(name, value) {
-    filters[name] = value;
+  function updateView(changes) {
+    Object.assign(view, changes);
+    history.replaceState(null, "", viewUrl());
     render();
   }
 
-  sectionsEl.addEventListener("click", (event) => {
-    const button = event.target.closest("button[data-filter]");
-    if (button) return setFilter(button.dataset.filter, button.dataset.value);
-    if (event.target.closest("[data-clear-filters]")) {
-      filters.kind = "all";
-      filters.publisher = "all";
-      render();
-    }
-  });
+  // ---------------------------------------------------------------------------
+  // Detail panel
+  // ---------------------------------------------------------------------------
 
-  sectionsEl.addEventListener("change", (event) => {
-    if (event.target.matches("select[data-filter]")) setFilter(event.target.dataset.filter, event.target.value);
-  });
-
-  navEl.addEventListener("click", (event) => {
-    const link = event.target.closest("a[data-filter]");
-    if (link) setFilter(link.dataset.filter, link.dataset.value);
-  });
-
-  function openDetail(id, { push = true } = {}) {
-    const entry = items.get(id);
-    if (!entry) return;
+  function openDetail({ push }) {
+    const entry = items.get(detail.id);
     const { item, category, group } = entry;
-    let index = 0;
-    let device = "desktop";
+    const pageIndex = () => Math.max(0, item.images.findIndex((img) => slug(img.label) === detail.page));
 
     const stageHtml = () => {
       if (!item.images.length) return noPreview(item);
-      const image = item.images[index];
-      const src = device === "mobile" && image.mobile ? image.mobile : image.src;
-      return `<img class="${imgClass(entry)}" src="${asset(src)}" alt="${esc(item.name)}, ${esc(image.label)}${device === "mobile" ? " on mobile" : ""}" />`;
+      const image = item.images[pageIndex()];
+      const mobile = detail.view === "mobile" && image.mobile;
+      const src = mobile ? image.mobile : image.src;
+      return `<img class="${imgClass(entry)}" src="${esc(src)}" alt="${esc(item.name)}, ${esc(image.label)}${mobile ? " on mobile" : ""}" />`;
     };
 
     const thumbsHtml = () =>
       item.images.length > 1
         ? `<div class="thumbs" role="group" aria-label="Pages">${item.images
-            .map((img, i) => `<button type="button" data-page="${i}" aria-pressed="${i === index}">${esc(img.label)}</button>`)
+            .map((img, i) => `<button type="button" data-page="${slug(img.label)}" aria-pressed="${i === pageIndex()}">${esc(img.label)}</button>`)
             .join("")}</div>`
         : "<span></span>";
 
     const devicesHtml = () =>
       item.devices
         ? `<div class="segmented" role="group" aria-label="Device">
-            <button type="button" data-device="desktop" aria-pressed="${device === "desktop"}">Desktop</button>
-            <button type="button" data-device="mobile" aria-pressed="${device === "mobile"}">Mobile</button>
+            <button type="button" data-device="desktop" aria-pressed="${detail.view === "desktop"}">Desktop</button>
+            <button type="button" data-device="mobile" aria-pressed="${detail.view === "mobile"}">Mobile</button>
           </div>`
         : "";
 
@@ -256,12 +338,16 @@
       <div class="detail">
         <div class="detail-top">
           <span class="chip mat-${category.mat}">${esc(category.short)}</span>
+          <button class="text-button" type="button" data-copy-detail>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/></svg>
+            <span data-label>Copy link</span>
+          </button>
           <button class="close" type="button" aria-label="Close">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
           </button>
         </div>
         <div class="detail-body">
-          <h2 id="detail-title">${esc(item.name)}</h2>
+          <h2 id="detail-title" tabindex="-1">${esc(item.name)}</h2>
           <p class="detail-lede">${esc(item.desc)}</p>
           <div class="stage mat-${category.mat}">
             <div class="stage-frame" data-stage>${stageHtml()}</div>
@@ -275,12 +361,12 @@
               <div class="recommend">
                 <h4>Recommended: use the Power Pages plugin</h4>
                 <p>Install the Power Pages plugin for GitHub Copilot CLI or Claude Code, then let an AI agent help you set up, customize, and deploy this ${group.id === "templates" ? "template" : "sample"}.</p>
-                <a href="https://aka.ms/ppskills" target="_blank" rel="noopener">Get the plugin at aka.ms/ppskills</a>
+                <a href="https://aka.ms/ppskills">Get the plugin at aka.ms/ppskills</a>
               </div>
             </div>
           </div>
           <div class="detail-actions">
-            <a class="button primary" href="${repo}${item.path}" target="_blank" rel="noopener">Open on GitHub</a>
+            <a class="button primary" href="${repo}${esc(item.path)}">Open on GitHub</a>
           </div>
           <p class="path">${esc(item.path)}</p>
         </div>
@@ -290,47 +376,125 @@
       dialog.querySelector("[data-stage]").innerHTML = stageHtml();
       const controls = dialog.querySelector("[data-controls]");
       if (controls) controls.innerHTML = thumbsHtml() + devicesHtml();
+      history.replaceState(null, "", detailUrl());
     };
 
     dialog.onclick = (event) => {
       if (event.target === dialog || event.target.closest(".close")) return dialog.close();
+      const copy = event.target.closest("[data-copy-detail]");
+      if (copy) return copyLink(absolute(detailUrl()), copy);
       const page = event.target.closest("[data-page]");
       if (page) {
-        index = Number(page.dataset.page);
+        detail.page = page.dataset.page;
         refresh();
-        dialog.querySelector(`[data-page="${index}"]`)?.focus({ preventScroll: true });
+        dialog.querySelector(`[data-page="${detail.page}"]`)?.focus({ preventScroll: true });
       }
-      const dev = event.target.closest("[data-device]");
-      if (dev) {
-        device = dev.dataset.device;
+      const device = event.target.closest("[data-device]");
+      if (device) {
+        detail.view = device.dataset.device;
         refresh();
-        dialog.querySelector(`[data-device="${device}"]`)?.focus({ preventScroll: true });
+        dialog.querySelector(`[data-device="${detail.view}"]`)?.focus({ preventScroll: true });
       }
     };
 
+    if (push) {
+      history.pushState(null, "", detailUrl());
+      detailPushed = true;
+    } else {
+      history.replaceState(null, "", detailUrl());
+    }
+    document.title = `${item.name} - Power Pages templates and samples`;
     if (!dialog.open) dialog.showModal();
-    dialog.querySelector(".close").focus();
-    if (push) history.pushState(null, "", `#item=${encodeURIComponent(id)}`);
+    dialog.scrollTop = 0;
+    // Start screen readers at the entry's name rather than on the close button.
+    dialog.querySelector("#detail-title").focus();
   }
 
   dialog.addEventListener("close", () => {
-    if (location.hash.startsWith("#item=")) history.pushState(null, "", location.pathname);
+    document.title = "Power Pages templates and samples";
+    if (closingFromHistory) {
+      closingFromHistory = false;
+      return;
+    }
+    detail = null;
+    if (detailPushed) {
+      detailPushed = false;
+      history.back();
+    } else {
+      history.replaceState(null, "", viewUrl());
+    }
   });
+
+  // ---------------------------------------------------------------------------
+  // Events
+  // ---------------------------------------------------------------------------
 
   sectionsEl.addEventListener("click", (event) => {
-    const card = event.target.closest(".card");
-    if (card) openDetail(card.dataset.id);
+    const card = event.target.closest(".card-link");
+    if (card) {
+      // Let the browser handle new-tab and new-window clicks on the real link.
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      detail = { id: card.dataset.id, page: "", view: "desktop" };
+      return openDetail({ push: true });
+    }
+    const filter = event.target.closest("button[data-filter]");
+    if (filter) return updateView({ [filter.dataset.filter]: filter.dataset.value });
+    if (event.target.closest("[data-clear-filters]")) return updateView({ type: "all", publisher: "all" });
+    if (event.target.closest("[data-clear-search]")) {
+      searchEl.value = "";
+      updateView({ q: "" });
+      searchEl.focus();
+    }
   });
 
-  searchEl.addEventListener("input", render);
+  sectionsEl.addEventListener("change", (event) => {
+    if (event.target.matches("select[data-filter]")) updateView({ [event.target.dataset.filter]: event.target.value });
+  });
 
-  const fromHash = () => {
-    const match = location.hash.match(/^#item=(.+)$/);
-    if (match) openDetail(decodeURIComponent(match[1]), { push: false });
-    else if (dialog.open) dialog.close();
-  };
-  window.addEventListener("popstate", fromHash);
+  navEl.addEventListener("click", (event) => {
+    const link = event.target.closest("a[data-filter]");
+    if (!link || event.metaKey || event.ctrlKey || event.shiftKey) return;
+    event.preventDefault();
+    updateView({ [link.dataset.filter]: link.dataset.value });
+    history.replaceState(null, "", `${viewUrl().split("#")[0]}#templates`);
+    document.getElementById("templates")?.scrollIntoView();
+  });
 
+  searchEl.addEventListener("input", () => updateView({ q: searchEl.value.trim() }));
+
+  searchForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    document.getElementById("catalog").scrollIntoView();
+  });
+
+  copyViewEl.addEventListener("click", () => copyLink(absolute(viewUrl()), copyViewEl));
+
+  window.addEventListener("popstate", () => {
+    readUrl();
+    searchEl.value = view.q;
+    render();
+    detailPushed = false;
+    if (detail) {
+      openDetail({ push: false });
+    } else if (dialog.open) {
+      closingFromHistory = true;
+      dialog.close();
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Start
+  // ---------------------------------------------------------------------------
+
+  readUrl();
+  searchEl.value = view.q;
   render();
-  fromHash();
+  if (detail) {
+    openDetail({ push: false });
+  } else if (sectionHash()) {
+    // The catalog renders after load, so the browser's own jump to the anchor
+    // has already missed it; scroll once the sections exist.
+    requestAnimationFrame(() => document.getElementById(decodeURIComponent(sectionHash().slice(1)))?.scrollIntoView());
+  }
 })();
