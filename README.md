@@ -2,6 +2,7 @@
 
 This repository contains samples and templates for Microsoft Power Pages.
 Use the tables below to find a template for a new site or a sample that explains a framework, scenario, or Power Pages capability.
+To browse everything with previews and filters, visit the [showcase site](https://microsoft.github.io/power-pages-samples/).
 
 Each sample includes its own README with setup steps, deployment notes, and a screenshot so you can preview the experience before running it locally.
 

@@ -37,6 +37,8 @@ Samples live under `samples/`, grouped by how they are delivered to Power Pages:
 **Server logic → `extensions/` graduation:** `server-logic/` is currently a top-level category because it is the only runtime-feature sample. When a **second, different** runtime-feature category is needed (for example a non-server-logic runtime extension), introduce a shared parent `extensions/` and move `server-logic/` under it (`extensions/server-logic/`) at that point - do not add the new feature as another top-level peer.
 
 When adding a sample, follow the structure and README conventions of an existing sample in the same category (README with setup steps, deployment notes, and a `screenshot.png`).
+Also add the sample to the showcase site catalog in `site/data.js` and run `node site/build.mjs` to check it.
+See [site/README.md](site/README.md) for details.
 
 ## Contributing a template
 
@@ -66,7 +68,8 @@ To contribute a template:
 8. Append or update the template family entry in `templates/manifest.json`.
 9. Add the variant under `variants.<framework>`.
 10. Run `node templates/scripts/validate-templates.js`.
-11. Open a pull request and follow the existing CLA bot instructions.
+11. Add the template to the showcase site catalog in `site/data.js`, then run `node site/build.mjs`. See [site/README.md](site/README.md).
+12. Open a pull request and follow the existing CLA bot instructions.
 
 Supporting solutions must be independently importable.
 Do not add dependencies between sibling solutions in the same template family.

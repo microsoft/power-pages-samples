@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Power Pages templates and samples</title>
+  <meta name="description" content="Browse Power Pages templates and samples with previews, and open their source on GitHub." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip" href="#catalog">Skip to catalog</a>
+
+  <header class="masthead">
+    <a class="wordmark" href="#top">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2" opacity=".55"/><rect x="3" y="13" width="8" height="8" rx="2" opacity=".55"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
+      Power Pages samples
+    </a>
+    <nav class="masthead-links" aria-label="Primary">
+      <a href="#templates">Templates</a>
+      <a href="#samples">Samples</a>
+      <a href="https://github.com/microsoft/power-pages-samples">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <h1>Templates and samples for Power Pages</h1>
+        <p>Start a new site from a template, or learn a pattern from a working sample. Every entry links to its source on GitHub.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#templates">Browse templates</a>
+          <a class="button" href="#samples">Browse samples</a>
+        </div>
+      </div>
+      <div class="hero-wall" aria-hidden="true">
+        <figure class="wall-piece mat-nonspa p1"><img src="templates/non-spa/program-registration/previews/desktop-event-catalog.png" alt="" /></figure>
+        <figure class="wall-piece mat-spa p2"><img class="screen" src="templates/spa/311-portal/previews/home.png" alt="" /></figure>
+        <figure class="wall-piece mat-apps p3"><img class="screen" src="samples/spa/apps/credit-cards-website/react/screenshot.png" alt="" /></figure>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <label class="search">
+        <span class="visually-hidden">Search templates and samples</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+        <input id="search" type="search" placeholder="Search by name, framework, or feature" autocomplete="off" />
+      </label>
+      <p id="result-count" class="result-count" aria-live="polite"></p>
+    </div>
+
+    <div class="layout" id="catalog">
+      <aside class="index" aria-label="Catalog sections">
+        <nav id="index-nav"></nav>
+      </aside>
+      <div id="sections"></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>Code in this repository is licensed under MIT. <a href="https://github.com/microsoft/power-pages-samples/blob/main/CONTRIBUTING.md">Contribute a sample</a></p>
+  </footer>
+
+  <dialog id="detail" aria-labelledby="detail-title"></dialog>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
