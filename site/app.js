@@ -13,6 +13,52 @@
   announcer.setAttribute("role", "status");
   document.body.append(announcer);
 
+  // ---------------------------------------------------------------------------
+  // Theme: light, dark, or follow the system (the default). The head script in
+  // index.html applies the saved choice before first paint; this keeps the
+  // switch, the browser's theme-color, and system changes in sync afterwards.
+  // ---------------------------------------------------------------------------
+
+  const THEME_KEY = "pp-theme";
+  const systemDark = matchMedia("(prefers-color-scheme: dark)");
+  const themeColor = document.getElementById("theme-color");
+  const themeButtons = [...document.querySelectorAll("[data-theme-choice]")];
+
+  function savedTheme() {
+    try {
+      const value = localStorage.getItem(THEME_KEY);
+      return value === "light" || value === "dark" ? value : "system";
+    } catch {
+      return "system";
+    }
+  }
+
+  function applyTheme(choice) {
+    const dark = choice === "system" ? systemDark.matches : choice === "dark";
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    themeColor.content = getComputedStyle(document.documentElement).getPropertyValue("--color-bg").trim();
+    for (const button of themeButtons) button.setAttribute("aria-pressed", String(button.dataset.themeChoice === choice));
+  }
+
+  let themeChoice = savedTheme();
+
+  function chooseTheme(choice) {
+    themeChoice = choice;
+    try {
+      if (choice === "system") localStorage.removeItem(THEME_KEY);
+      else localStorage.setItem(THEME_KEY, choice);
+    } catch {
+      // Storage is blocked; the choice still applies for this visit.
+    }
+    applyTheme(choice);
+  }
+
+  for (const button of themeButtons) button.addEventListener("click", () => chooseTheme(button.dataset.themeChoice));
+  systemDark.addEventListener("change", () => {
+    if (themeChoice === "system") applyTheme("system");
+  });
+  applyTheme(themeChoice);
+
   const esc = (value) =>
     String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const slug = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -118,20 +164,18 @@
   // screenshots get the thin screen outline.
   const imgClass = (entry) => (entry.item.devices ? "" : "screen");
 
-  const noPreview = (item) =>
-    item.planned
-      ? `<div class="no-preview"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Planned. Not built yet.</div>`
-      : `<div class="no-preview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4"/></svg>Runs on the server. No screen to preview.</div>`;
+  // Entries without screenshots are server-side samples with no UI of their own.
+  const noPreview = () =>
+    `<div class="no-preview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4"/></svg>Runs on the server. No screen to preview.</div>`;
 
   function cardHtml(entry, level) {
     const { item, category } = entry;
     const image = item.images[0];
     const mat = image
       ? `<img class="${imgClass(entry)}" src="${esc(image.src)}" alt="" loading="lazy" />`
-      : noPreview(item);
+      : noPreview();
     const tags = [
       ...(category.tag ? [`<li class="kind mat-${category.mat}">${esc(category.tag)}</li>`] : []),
-      ...(item.planned ? [`<li class="planned">Planned</li>`] : []),
       ...item.tags.map((t) => `<li>${esc(t)}</li>`)
     ].join("");
     return `
@@ -308,7 +352,7 @@
     const pageIndex = () => Math.max(0, item.images.findIndex((img) => slug(img.label) === detail.page));
 
     const stageHtml = () => {
-      if (!item.images.length) return noPreview(item);
+      if (!item.images.length) return noPreview();
       const image = item.images[pageIndex()];
       const mobile = detail.view === "mobile" && image.mobile;
       const src = mobile ? image.mobile : image.src;
@@ -331,7 +375,7 @@
         : "";
 
     const features = item.features?.length
-      ? `<div><h3>What’s included</h3><ul class="features">${item.features.map((f) => `<li>${esc(f)}</li>`).join("")}</ul></div>`
+      ? `<div><h3>${esc(item.featuresTitle || "What’s included")}</h3><ul class="features">${item.features.map((f) => `<li>${esc(f)}</li>`).join("")}</ul></div>`
       : `<div><h3>Built with</h3><ul class="features">${item.tags.map((f) => `<li>${esc(f)}</li>`).join("")}</ul></div>`;
 
     dialog.innerHTML = `

@@ -11,6 +11,8 @@
  * and pastel mats that mark each kind of entry.
  */
 :root {
+  color-scheme: light;
+
   /* Color roles - neutrals carry the page; violet is reserved for actions */
   --color-bg: #f5f6fa;
   --color-bg-translucent: rgb(245 246 250 / 0.92);
@@ -36,7 +38,6 @@
   --mat-apps: #f9e0d2;
   --mat-snippets: #f7ecc2;
   --mat-server: #d6e4f7;
-  --mat-traditional: #e7e5ee;
 
   /* Type */
   --font-display: "Schibsted Grotesk", system-ui, sans-serif;
@@ -91,7 +92,46 @@
   --duration-slow: 700ms;
 }
 
-@media (max-width: 720px) {
+/*
+ * Dark theme. The head script sets data-theme from the visitor's saved choice,
+ * or from the system setting when they have not chosen one. Every text and
+ * control pair below meets WCAG 2.2 AA against its background.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg: #14121f;
+  --color-bg-translucent: rgb(20 18 31 / 0.9);
+  --color-surface: #1d1a2b;
+  --color-surface-strong: #262238;
+  --color-text: #ece9f6;
+  --color-text-muted: #a9a4bd;
+  --color-border: #2f2b42;
+  --color-border-strong: #7a7494;
+  --color-primary: #a58bff;
+  --color-primary-hover: #bba7ff;
+  --color-on-primary: #14121f;
+  --color-primary-tint: #2a2347;
+  --color-on-primary-muted: #2e2350;
+  --color-focus: #b9a3ff;
+  --color-hover-wash: rgb(255 255 255 / 0.06);
+  --color-overlay: rgb(0 0 0 / 0.6);
+  --color-success: #6fcf97;
+
+  --mat-spa: #2e2650;
+  --mat-nonspa: #1f3a31;
+  --mat-apps: #43291f;
+  --mat-snippets: #3a3218;
+  --mat-server: #1e2d45;
+
+  --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ece9f6' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+
+  --shadow-screen: 0 0 0 1px rgb(255 255 255 / 0.08);
+  --shadow-piece: 0 18px 40px -22px rgb(0 0 0 / 0.7);
+  --shadow-panel: -24px 0 60px rgb(0 0 0 / 0.5);
+}
+
+@media (max-width: 960px) {
   :root {
     --header-height: 124px;
   }

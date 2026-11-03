@@ -182,7 +182,7 @@ a:hover {
 
 .masthead-inner {
   display: grid;
-  grid-template-columns: 1fr minmax(0, 560px) 1fr;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-6);
   max-width: var(--container);
@@ -215,7 +215,9 @@ a:hover {
 
 .search {
   position: relative;
+  justify-self: center;
   width: 100%;
+  max-width: 560px;
   margin: 0;
 }
 
@@ -254,10 +256,58 @@ a:hover {
   outline-offset: 2px;
 }
 
+.masthead-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-5);
+}
+
 .masthead-links {
   display: flex;
-  justify-content: flex-end;
   gap: var(--space-6);
+}
+
+.theme-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+}
+
+.theme-switch button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.theme-switch button:hover {
+  color: var(--color-text);
+  background: var(--color-hover-wash);
+}
+
+.theme-switch button[aria-pressed="true"] {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+.theme-switch svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .masthead-links a {
@@ -371,7 +421,6 @@ a:hover {
 .mat-apps { background: var(--mat-apps); }
 .mat-snippets { background: var(--mat-snippets); }
 .mat-server { background: var(--mat-server); }
-.mat-traditional { background: var(--mat-traditional); }
 
 /* Catalog layout */
 
@@ -670,12 +719,6 @@ a:hover {
   border-color: transparent;
   color: var(--color-text);
   font-weight: 600;
-}
-
-.tags li.planned {
-  border-color: transparent;
-  background: var(--color-text);
-  color: var(--color-on-primary);
 }
 
 /* Template filters */
@@ -1069,12 +1112,28 @@ dialog[open] {
 /* Responsive */
 
 @media (max-width: 1080px) {
-  .masthead-inner {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+  .masthead-links a:not(:last-child) {
+    display: none;
   }
 }
 
 @media (max-width: 960px) {
+  .masthead-inner {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "brand links"
+      "search search";
+    gap: var(--space-3) var(--space-4);
+  }
+
+  .wordmark { grid-area: brand; }
+  .search { grid-area: search; max-width: none; }
+  .masthead-actions { grid-area: links; gap: var(--space-4); }
+
+  .masthead-links a:not(:last-child) {
+    display: none;
+  }
+
   .hero {
     grid-template-columns: 1fr;
   }
@@ -1108,28 +1167,19 @@ dialog[open] {
 }
 
 @media (max-width: 720px) {
-  .masthead-inner {
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      "brand links"
-      "search search";
-    gap: var(--space-3) var(--space-4);
-  }
-
-  .wordmark { grid-area: brand; }
-  .search { grid-area: search; }
-  .masthead-links { grid-area: links; }
-
-  .masthead-links a:not(:last-child) {
-    display: none;
-  }
-
   .hero-wall {
     max-width: 380px;
   }
 
   .detail-columns {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Keep the wordmark on one line on small phones; GitHub stays in the footer and detail panel. */
+@media (max-width: 480px) {
+  .masthead-links {
+    display: none;
   }
 }
 

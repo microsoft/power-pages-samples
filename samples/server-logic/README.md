@@ -1,9 +1,9 @@
 # Server logic samples
 
 Server-side JavaScript that runs on the Power Pages runtime and is callable from
-both SPA sites ([`../spa/`](../spa/)) and non-SPA sites
-([`../traditional/`](../traditional/)). Server logic keeps secrets off the client
-and lets a site reach services that the portal Web API can't.
+both SPA sites ([`../spa/`](../spa/)) and non-SPA sites. Server logic keeps
+secrets off the client and lets a site reach services that the portal Web API
+can't.
 
 | Sample | Integrates | Use this sample to learn |
 | --- | --- | --- |
