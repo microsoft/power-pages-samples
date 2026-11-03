@@ -31,6 +31,9 @@ Run `npm install -g @angular/cli` to install Angular CLI.
 
 ## Development server
 
+The `fast-uri` override keeps AJV's URI parser on the patched version for [GHSA-333x-w4r6-6crp](https://github.com/advisories/GHSA-333x-w4r6-6crp) and related advisories.
+Remove it once the Angular dependency tree resolves a patched parser without an override.
+
 To start a local development server, run:
 
 ```powershell

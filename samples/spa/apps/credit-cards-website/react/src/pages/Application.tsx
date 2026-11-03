@@ -20,7 +20,7 @@ const Application: React.FC = () => {
         Apply for a Card
       </h1>
       {/* Application Form */ }
-      <section className="bg-gray-100 dark:bg-gray-800 p-10 rounded-xl shadow-lg dark:shadow-gray-900/50 max-w-3xl mx-auto w-full mb-8 border dark:border-gray-700">
+      <section className="bg-gray-100 dark:bg-gray-800 p-4 sm:p-10 rounded-xl shadow-lg dark:shadow-gray-900/50 max-w-3xl mx-auto w-full mb-8 border dark:border-gray-700">
         <h2 className="text-2xl font-bold text-center mb-4 text-gray-900 dark:text-gray-100">
           Application Form
         </h2>
