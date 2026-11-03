@@ -39,6 +39,8 @@
   /* Type */
   --font-display: "Schibsted Grotesk", system-ui, sans-serif;
   --font-body: "Public Sans", system-ui, sans-serif;
+  /* System monospace for the copyable prompt only; no extra font download. */
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas, monospace;
   --text-xs: 0.8125rem;
   --text-sm: 0.875rem;
   --text-md: 0.9375rem;

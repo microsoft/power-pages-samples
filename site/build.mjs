@@ -41,7 +41,36 @@ function loadCatalog() {
   return JSON.parse(JSON.stringify(context.window.CATALOG));
 }
 
+// A one-line /create-site prompt for the Power Pages plugin (aka.ms/ppskills).
+// The create-site skill skips its discovery questions when the site name,
+// purpose, and audience are in the request, and matches the template by its
+// catalog ID. It still asks its consent questions (target environment,
+// provisioning), which a prompt must not try to bypass. One line, because a
+// pasted newline would send the prompt early in a terminal agent.
+function createSitePrompt(template, item) {
+  // Manifest descriptions often open with "A Power Pages SPA template for ...",
+  // which reads oddly as a purpose, so keep only what the site is for.
+  const purpose = item.desc
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^an? Power Pages (?:SPA |non-SPA )?template for /i, "")
+    .replace(/\.$/, "");
+  const common = `Purpose: ${purpose}. Audience: external, public-facing.`;
+  if (template.kind === "spa") {
+    const variant = Object.keys(template.variants || {})[0];
+    const framework = variant ? `, ${FRAMEWORKS[variant] || capitalize(variant)} variant` : "";
+    return `/create-site Create a site named "${template.displayName}" from the ${template.displayName} SPA template (template ID ${template.id}${framework}) in the Power Pages samples catalog. ${common} Skip template browsing and use this template directly, create the project in a new folder in the current directory, and use the recommended defaults for anything else.`;
+  }
+  const apiName = template.provisioning?.templateName ? `, Create Website template name ${template.provisioning.templateName}` : "";
+  return `/create-site Create a site named "${template.displayName}" from the ${template.displayName} non-SPA template (template ID ${template.id}${apiName}) in the Power Pages samples catalog. ${common} Use the Enhanced data model with Bootstrap 5, the organization's default language, and the suggested subdomain. Skip template browsing and use this template directly, and use the recommended defaults for anything else.`;
+}
+
 function templateItem(template, override) {
+  const item = baseTemplateItem(template, override);
+  return { ...item, prompt: createSitePrompt(template, item) };
+}
+
+function baseTemplateItem(template, override) {
   const folder = `templates/${template.kind}/${template.id}/`;
   const base = {
     id: template.id,
@@ -75,7 +104,8 @@ function templateItem(template, override) {
   }));
   return {
     ...base,
-    tags: ["Design studio"],
+    // Every non-SPA template is built in the design studio, so a tag would say nothing.
+    tags: [],
     features: template.capabilities || [],
     devices: true,
     images,

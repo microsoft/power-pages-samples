@@ -132,12 +132,12 @@
 
   const isFiltered = () => Boolean(view.q) || view.type !== "all" || view.publisher !== "all";
 
-  async function copyLink(url, button) {
+  async function copyText(text, button, { done = "Link copied", announce = "Link copied to clipboard" } = {}) {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(text);
     } catch {
       // Clipboard API needs a secure context; fall back for http previews.
-      const field = Object.assign(document.createElement("textarea"), { value: url });
+      const field = Object.assign(document.createElement("textarea"), { value: text });
       document.body.append(field);
       field.select();
       document.execCommand("copy");
@@ -146,8 +146,8 @@
     const label = button.querySelector("[data-label]") || button;
     const original = label.textContent;
     button.dataset.copied = "true";
-    label.textContent = "Link copied";
-    announcer.textContent = "Link copied to clipboard";
+    label.textContent = done;
+    announcer.textContent = announce;
     setTimeout(() => {
       button.dataset.copied = "false";
       label.textContent = original;
@@ -309,7 +309,7 @@
 
     const features = item.features?.length
       ? `<div><h3>${esc(item.featuresTitle || "What’s included")}</h3><ul class="features">${item.features.map((f) => `<li>${esc(f)}</li>`).join("")}</ul></div>`
-      : `<div><h3>Built with</h3><ul class="features">${item.tags.map((f) => `<li>${esc(f)}</li>`).join("")}</ul></div>`;
+      : "<div></div>";
 
     dialog.innerHTML = `
       <div class="detail">
@@ -330,16 +330,24 @@
             <div class="stage-frame" data-stage>${stageHtml()}</div>
             ${item.images.length ? `<div class="stage-controls" data-controls>${thumbsHtml()}${devicesHtml()}</div>` : ""}
           </div>
+          ${item.prompt ? `
+          <section class="prompt-block" aria-labelledby="prompt-title">
+            <div class="prompt-head">
+              <h3 id="prompt-title">Create it with the Power Pages plugin</h3>
+              <button class="text-button" type="button" data-copy-prompt>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5.5a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></svg>
+                <span data-label>Copy prompt</span>
+              </button>
+            </div>
+            <p>Paste this into GitHub Copilot CLI or Claude Code with the Power Pages plugin installed. It picks this template and fills in the details, so you only confirm your environment and a few settings. Change the site name first if you like.</p>
+            <pre class="prompt"><code>${esc(item.prompt)}</code></pre>
+            <p class="prompt-foot">Don’t have the plugin? <a href="https://aka.ms/ppskills">Get it at aka.ms/ppskills</a></p>
+          </section>` : ""}
           <div class="detail-columns">
             ${features}
             <div>
-              <h3>How to use it</h3>
+              <h3>Set it up yourself</h3>
               <p>${esc(category.howTo)}</p>
-              <div class="recommend">
-                <h4>Recommended: use the Power Pages plugin</h4>
-                <p>Install the Power Pages plugin for GitHub Copilot CLI or Claude Code, then let an AI agent help you set up, customize, and deploy this template.</p>
-                <a href="https://aka.ms/ppskills">Get the plugin at aka.ms/ppskills</a>
-              </div>
             </div>
           </div>
           <div class="detail-actions">
@@ -359,7 +367,9 @@
     dialog.onclick = (event) => {
       if (event.target === dialog || event.target.closest(".close")) return dialog.close();
       const copy = event.target.closest("[data-copy-detail]");
-      if (copy) return copyLink(absolute(detailUrl()), copy);
+      if (copy) return copyText(absolute(detailUrl()), copy);
+      const copyPrompt = event.target.closest("[data-copy-prompt]");
+      if (copyPrompt) return copyText(item.prompt, copyPrompt, { done: "Copied", announce: "Prompt copied to clipboard" });
       const page = event.target.closest("[data-page]");
       if (page) {
         detail.page = page.dataset.page;
@@ -436,7 +446,7 @@
     document.getElementById("catalog").scrollIntoView();
   });
 
-  copyViewEl.addEventListener("click", () => copyLink(absolute(viewUrl()), copyViewEl));
+  copyViewEl.addEventListener("click", () => copyText(absolute(viewUrl()), copyViewEl));
 
   window.addEventListener("popstate", () => {
     readUrl();

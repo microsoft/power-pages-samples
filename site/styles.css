@@ -965,26 +965,54 @@ dialog[open] {
   border-top: 1px solid var(--color-border);
 }
 
-.recommend {
-  margin-top: var(--space-5);
-  padding: var(--space-4) var(--space-5);
+.prompt-block {
+  margin-top: var(--space-8);
+  padding: var(--space-5) var(--space-6) var(--space-6);
   border-radius: var(--radius-md);
   background: var(--color-primary-tint);
 }
 
-.recommend h4 {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-md);
+.prompt-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.prompt-head h3 {
+  margin: 0;
+  font-size: var(--text-base);
   font-weight: 700;
 }
 
-.detail-columns .recommend p {
-  margin: 0 0 var(--space-3);
-  color: var(--color-text);
+.prompt-block > p {
+  margin: var(--space-2) 0 0;
+  max-width: var(--measure);
   font-size: var(--text-md);
 }
 
-.recommend a {
+.prompt {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.prompt-block .prompt-foot {
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.prompt-foot a {
   font-weight: 600;
 }
 

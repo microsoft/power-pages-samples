@@ -38,6 +38,13 @@ Parameters combine, for example `?q=react&type=spa#templates`.
 `page` is the preview's label in lowercase with dashes.
 Links from the first release that used `#item=<id>` still open the right template.
 
+## Create-site prompts
+
+Each template's detail panel has a **Copy prompt** button with a one-line `/create-site` prompt for the Power Pages plugin from [Power Platform Skills](https://aka.ms/ppskills).
+The build writes the prompt from the manifest entry: the template ID, SPA framework or non-SPA Create Website template name, a site name, purpose, and audience.
+With those details in the request, the plugin's `create-site` skill skips its discovery questions and template browsing, so people only answer its consent questions, such as confirming the target environment.
+The prompt stays on one line because a newline pasted into a terminal agent would send it early.
+
 ## Design
 
 The site follows the design standard in the Power Pages plugin's `exceptional-web-design` skill from [Power Platform Skills](https://aka.ms/ppskills).

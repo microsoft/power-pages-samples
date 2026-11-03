@@ -20,7 +20,7 @@ window.CATALOG = (() => {
       {
         id: "templates",
         name: "Templates",
-        intro: "Starting points for a new site. SPA templates give you framework code you own. Non-SPA templates are ready to use in the design studio with no code.",
+        intro: "Starting points for a new site. SPA templates give you framework code you own. Non-SPA templates are ready-to-use sites built with Liquid and web templates.",
         categories: [
           {
             id: "spa",
@@ -39,7 +39,7 @@ window.CATALOG = (() => {
             short: "Non-SPA template",
             tag: "Non-SPA",
             mat: "nonspa",
-            blurb: "Ready in the design studio. Pick one when you create a site and customize it without writing code.",
+            blurb: "Ready-to-use sites built with Liquid and web templates. Pick one when you create a site in the design studio and customize it there.",
             howTo: "Choose this template when you create a site in Power Pages design studio, or provision it with the Create Website API.",
             // Filled from templates/manifest.json by build.mjs.
             items: []
