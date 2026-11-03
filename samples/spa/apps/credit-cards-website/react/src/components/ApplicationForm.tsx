@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import ExtendedWindow from "@/ExtendedWindow";
 import { useAuth } from "../context/AuthContext";
 
 interface UserData {
@@ -77,7 +76,11 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
   const { getIdToken } = useAuth();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<
+    z.input<(typeof stepSchemas)[number]>,
+    unknown,
+    z.output<(typeof stepSchemas)[number]>
+  >({
     resolver: zodResolver(stepSchemas[Math.min(step, stepSchemas.length - 1)]),
     defaultValues: {
       FirstName: userData?.firstName || "",
@@ -255,7 +258,7 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
     }
   };
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white dark:!bg-gray-800 shadow-lg dark:shadow-gray-900/50 rounded-lg relative overflow-hidden border dark:!border-gray-700">
+    <div className="max-w-xl mx-auto p-4 sm:p-6 bg-white dark:!bg-gray-800 shadow-lg dark:shadow-gray-900/50 rounded-lg relative overflow-hidden border dark:!border-gray-700">
       { submitted ? (
         <div className="text-center relative">
           <motion.h2
@@ -316,7 +319,7 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
           </div>
 
             <form className="space-y-6" onSubmit={ handleSubmit(onSubmit) }>
-              { Object.keys(stepSchemas[step].shape).map((key) => (
+              { stepSchemas[step].keyof().options.map((key) => (
                 <div key={ key } className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{ key.replace(/([A-Z])/g, " $1").trim() }</label>
                   { key === "CardType" ? (
@@ -335,7 +338,7 @@ const MultiStepForm: React.FC<ApplicationFormProps> = ({ userData }) => {
                 </div>
               )) }
 
-              <div className="flex justify-between mt-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-between mt-4">
                 { step > 0 && (
                   <button
                     type="button"
