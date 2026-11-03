@@ -1,7 +1,6 @@
 (() => {
   const { repo, groups } = window.CATALOG;
   const sectionsEl = document.getElementById("sections");
-  const navEl = document.getElementById("index-nav");
   const countEl = document.getElementById("result-count");
   const copyViewEl = document.getElementById("copy-view");
   const searchEl = document.getElementById("search");
@@ -76,9 +75,8 @@
   const kindIds = templateGroup.categories.map((c) => c.id);
   const publishers = [...new Set(templateEntries.map((e) => e.item.publisher).filter(Boolean))].sort();
 
-  const sampleCount = total - templateEntries.length;
-  document.getElementById("hero-proof").textContent =
-    `${templateEntries.length} templates and ${sampleCount} samples, published by Microsoft under the MIT license.`;
+  const byline = publishers.length === 1 ? `published by ${publishers[0]}` : `from ${publishers.length} publishers`;
+  document.getElementById("hero-proof").textContent = `${total} templates, ${byline} under the MIT license.`;
 
   // ---------------------------------------------------------------------------
   // Shareable URL state
@@ -164,9 +162,9 @@
   // screenshots get the thin screen outline.
   const imgClass = (entry) => (entry.item.devices ? "" : "screen");
 
-  // Entries without screenshots are server-side samples with no UI of their own.
+  // The manifest allows a template without preview images while screenshots are pending.
   const noPreview = () =>
-    `<div class="no-preview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4"/></svg>Runs on the server. No screen to preview.</div>`;
+    `<div class="no-preview"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="m3.5 15 4.5-4.5 4 4 3-3 5 5"/></svg>No preview yet.</div>`;
 
   function cardHtml(entry, level) {
     const { item, category } = entry;
@@ -242,26 +240,7 @@
         </section>`
       : "";
 
-    const typeLink = (id, label, count, swatch) => {
-      const params = new URLSearchParams();
-      if (id !== "all") params.set("type", id);
-      const current = view.type === id ? ' aria-current="true"' : "";
-      const sw = swatch ? `<span class="swatch mat-${swatch}"></span>` : "";
-      return `<a href="?${params}#templates" data-filter="type" data-value="${id}"${current}>${sw}${esc(label)}<span class="count">${count}</span></a>`;
-    };
-
-    const nav = `
-      <div class="index-group">
-        ${typeLink("all", templateGroup.name, searched.length)}
-        <ul>${templateGroup.categories
-          .map((c) => {
-            const n = searched.filter((e) => e.category.id === c.id).length;
-            return `<li class="${n ? "" : "is-empty"}">${typeLink(c.id, c.name, n, c.mat)}</li>`;
-          })
-          .join("")}</ul>
-      </div>`;
-
-    return { html, nav, count: visible.length };
+    return { html, count: visible.length };
   }
 
   function render() {
@@ -272,67 +251,21 @@
       : null;
 
     const templates = templatesSection();
-    let shown = templates.count;
     let sectionsHtml = templates.html;
-    let navHtml = templates.nav;
-
-    for (const group of groups) {
-      if (group === templateGroup) continue;
-      let groupCount = 0;
-      let categoriesHtml = "";
-      let navItems = "";
-
-      for (const category of group.categories) {
-        const visible = category.items.filter((item) => matches(item, view.q));
-        groupCount += visible.length;
-        navItems += `
-          <li class="${visible.length ? "" : "is-empty"}">
-            <a href="#${category.id}"><span class="swatch mat-${category.mat}"></span>${esc(category.name)}<span class="count">${visible.length}</span></a>
-          </li>`;
-        if (!visible.length) continue;
-        categoriesHtml += `
-          <section class="category" id="${category.id}" aria-labelledby="${category.id}-title">
-            <div class="category-head">
-              <div class="heading-row"><h3 id="${category.id}-title"><span class="swatch mat-${category.mat}"></span>${esc(category.name)}</h3>${anchor(category.id, category.name)}</div>
-              <p>${esc(category.blurb)}</p>
-            </div>
-            <ul class="grid" role="list">
-              ${visible.map((item) => cardHtml(items.get(item.id), 4)).join("")}
-            </ul>
-          </section>`;
-      }
-
-      shown += groupCount;
-      navHtml += `
-        <div class="index-group">
-          <a href="#${group.id}">${esc(group.name)}<span class="count">${groupCount}</span></a>
-          <ul>${navItems}</ul>
-        </div>`;
-      if (groupCount) {
-        sectionsHtml += `
-          <section class="group" id="${group.id}" aria-labelledby="${group.id}-title">
-            <header class="group-head">
-              <div class="heading-row"><h2 id="${group.id}-title">${esc(group.name)}</h2>${anchor(group.id, group.name)}</div>
-              <p>${esc(group.intro)}</p>
-            </header>
-            ${categoriesHtml}
-          </section>`;
-      }
-    }
 
     if (!sectionsHtml) {
       sectionsHtml = `
         <div class="empty">
           <h2>Nothing matches “${esc(view.q)}”</h2>
-          <p>Try a framework like React or Vue, or a capability like upload, sign-in, or localization.</p>
+          <p>Try a framework like React, or a feature like registration, invoices, or maps.</p>
           <button class="button" type="button" data-clear-search>Clear search</button>
         </div>`;
     }
 
     sectionsEl.innerHTML = sectionsHtml;
-    navEl.innerHTML = navHtml;
-    countEl.textContent = isFiltered() ? `Showing ${shown} of ${total} templates and samples` : `${total} templates and samples`;
-    copyViewEl.hidden = !isFiltered();
+    countEl.textContent = isFiltered() ? `Showing ${templates.count} of ${total} templates` : `${total} templates`;
+    // The hero already states the total, so the status row only appears for a filtered view.
+    document.getElementById("status").hidden = !isFiltered();
     if (focusKey) sectionsEl.querySelector(focusKey)?.focus({ preventScroll: true });
   }
 
@@ -348,7 +281,7 @@
 
   function openDetail({ push }) {
     const entry = items.get(detail.id);
-    const { item, category, group } = entry;
+    const { item, category } = entry;
     const pageIndex = () => Math.max(0, item.images.findIndex((img) => slug(img.label) === detail.page));
 
     const stageHtml = () => {
@@ -404,7 +337,7 @@
               <p>${esc(category.howTo)}</p>
               <div class="recommend">
                 <h4>Recommended: use the Power Pages plugin</h4>
-                <p>Install the Power Pages plugin for GitHub Copilot CLI or Claude Code, then let an AI agent help you set up, customize, and deploy this ${group.id === "templates" ? "template" : "sample"}.</p>
+                <p>Install the Power Pages plugin for GitHub Copilot CLI or Claude Code, then let an AI agent help you set up, customize, and deploy this template.</p>
                 <a href="https://aka.ms/ppskills">Get the plugin at aka.ms/ppskills</a>
               </div>
             </div>
@@ -447,7 +380,7 @@
     } else {
       history.replaceState(null, "", detailUrl());
     }
-    document.title = `${item.name} - Power Pages templates and samples`;
+    document.title = `${item.name} - Power Pages templates`;
     if (!dialog.open) dialog.showModal();
     dialog.scrollTop = 0;
     // Start screen readers at the entry's name rather than on the close button.
@@ -455,7 +388,7 @@
   }
 
   dialog.addEventListener("close", () => {
-    document.title = "Power Pages templates and samples";
+    document.title = "Power Pages templates";
     if (closingFromHistory) {
       closingFromHistory = false;
       return;
@@ -494,15 +427,6 @@
 
   sectionsEl.addEventListener("change", (event) => {
     if (event.target.matches("select[data-filter]")) updateView({ [event.target.dataset.filter]: event.target.value });
-  });
-
-  navEl.addEventListener("click", (event) => {
-    const link = event.target.closest("a[data-filter]");
-    if (!link || event.metaKey || event.ctrlKey || event.shiftKey) return;
-    event.preventDefault();
-    updateView({ [link.dataset.filter]: link.dataset.value });
-    history.replaceState(null, "", `${viewUrl().split("#")[0]}#templates`);
-    document.getElementById("templates")?.scrollIntoView();
   });
 
   searchEl.addEventListener("input", () => updateView({ q: searchEl.value.trim() }));

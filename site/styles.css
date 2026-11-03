@@ -414,89 +414,18 @@ a:hover {
   }
 }
 
-/* Mats encode the kind of entry. Used by cards, chips, and index swatches. */
+/* Mats encode the kind of template. Used by cards, tags, and the detail panel. */
 
 .mat-spa { background: var(--mat-spa); }
 .mat-nonspa { background: var(--mat-nonspa); }
-.mat-apps { background: var(--mat-apps); }
-.mat-snippets { background: var(--mat-snippets); }
-.mat-server { background: var(--mat-server); }
 
 /* Catalog layout */
 
 .layout {
-  display: grid;
-  grid-template-columns: var(--sidebar) minmax(0, 1fr);
-  gap: clamp(var(--space-8), 4vw, var(--space-12));
   max-width: var(--container);
   margin: 0 auto;
   padding: var(--space-8) var(--gutter) var(--section-space);
   border-top: 1px solid var(--color-border);
-}
-
-.index {
-  position: sticky;
-  top: calc(var(--header-height) + var(--space-8));
-  align-self: start;
-}
-
-.index-group + .index-group {
-  margin-top: var(--space-6);
-}
-
-.index-group > a {
-  display: flex;
-  justify-content: space-between;
-  padding: var(--space-1) 0;
-  color: var(--color-text);
-  font-family: var(--font-display);
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.index ul {
-  margin: var(--space-1) 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.index li a {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) 0;
-  color: var(--color-text-muted);
-  font-size: var(--text-md);
-  text-decoration: none;
-}
-
-.index li a:hover,
-.index li a[aria-current="true"] {
-  color: var(--color-text);
-}
-
-.index li a[aria-current="true"] {
-  font-weight: 600;
-}
-
-.index .count {
-  margin-left: auto;
-  color: var(--color-text-muted);
-  font-family: var(--font-body);
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-}
-
-.index li.is-empty a {
-  opacity: 0.45;
-}
-
-.swatch {
-  flex: none;
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  box-shadow: inset 0 0 0 1px var(--color-border-strong);
 }
 
 .status {
@@ -516,10 +445,6 @@ a:hover {
 }
 
 /* Sections */
-
-.group + .group {
-  margin-top: var(--section-space);
-}
 
 .heading-row {
   display: flex;
@@ -555,37 +480,6 @@ a:hover {
   max-width: var(--measure);
   color: var(--color-text-muted);
   font-size: var(--text-lg);
-}
-
-.category {
-  margin-top: var(--space-12);
-}
-
-.category-head {
-  margin-bottom: var(--space-6);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--color-border);
-}
-
-.category-head h3 {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin: 0;
-  font-size: var(--text-h3);
-  font-weight: 700;
-  letter-spacing: -0.015em;
-}
-
-.category-head h3 .swatch {
-  width: 14px;
-  height: 14px;
-}
-
-.category-head p {
-  margin: var(--space-2) 0 0;
-  max-width: var(--measure);
-  color: var(--color-text-muted);
 }
 
 .grid {
@@ -1142,28 +1036,6 @@ dialog[open] {
     width: 100%;
     max-width: 560px;
   }
-
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  /* On narrow screens the index becomes a compact jump list above the catalog. */
-  .index {
-    position: static;
-    display: grid;
-    padding-bottom: var(--space-6);
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .index nav {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--space-4) var(--space-8);
-  }
-
-  .index-group + .index-group {
-    margin-top: 0;
-  }
 }
 
 @media (max-width: 720px) {
@@ -1180,6 +1052,15 @@ dialog[open] {
 @media (max-width: 480px) {
   .masthead-links {
     display: none;
+  }
+
+  .wordmark {
+    white-space: nowrap;
+  }
+
+  .theme-switch button {
+    width: 28px;
+    height: 28px;
   }
 }
 

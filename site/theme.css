@@ -32,12 +32,9 @@
   --color-overlay: rgb(30 26 51 / 0.45);
   --color-success: #2a7046;
 
-  /* Mats - the background behind each preview encodes the kind of entry */
+  /* Mats - the background behind each preview encodes the kind of template */
   --mat-spa: #e1d8fa;
   --mat-nonspa: #d3ebe1;
-  --mat-apps: #f9e0d2;
-  --mat-snippets: #f7ecc2;
-  --mat-server: #d6e4f7;
 
   /* Type */
   --font-display: "Schibsted Grotesk", system-ui, sans-serif;
@@ -82,7 +79,6 @@
   --container: 1320px;
   --measure: 66ch;
   --gutter: clamp(1rem, 0.5rem + 2.5vw, 2.5rem);
-  --sidebar: 220px;
   --header-height: 72px;
 
   /* Motion */
@@ -120,9 +116,6 @@
 
   --mat-spa: #2e2650;
   --mat-nonspa: #1f3a31;
-  --mat-apps: #43291f;
-  --mat-snippets: #3a3218;
-  --mat-server: #1e2d45;
 
   --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ece9f6' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
 
