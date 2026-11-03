@@ -43,7 +43,6 @@ Samples are organized under `samples/`:
 
 - **`spa/apps/`** — full, multi-feature reference applications.
 - **`spa/snippets/`** — small, single-topic samples that each teach one capability.
-- **`traditional/`** — non-SPA sites built with Liquid and web templates on the enhanced data model.
 - **`server-logic/`** — server-side JavaScript that runs on the Power Pages runtime, callable from both SPA and non-SPA sites.
 
 ### Full applications (`samples/spa/apps/`)
@@ -69,14 +68,6 @@ Samples are organized under `samples/`:
 | <img src="samples/spa/snippets/file-upload/sharepoint/screenshot.png" alt="SharePoint file upload sample screenshot" width="180" /> | [File Upload (SharePoint) Sample](samples/spa/snippets/file-upload/sharepoint/) | React + Vite | Upload, list, download, and delete files in a SharePoint document library, reached from an SPA site through server logic and Microsoft Graph. |
 | <img src="samples/spa/snippets/file-upload/azure-blob/screenshot.png" alt="Azure Blob file upload sample screenshot" width="180" /> | [File Upload (Azure Blob) Sample](samples/spa/snippets/file-upload/azure-blob/) | React + Vite | Upload, list, download, and delete files via the Web API, stored in your own Azure Blob container (chunked uploads, up to 10 GB). |
 
-### Non-SPA sites (`samples/traditional/`)
-
-Non-SPA sites built with Liquid and web templates on the enhanced data model.
-
-| Sample | Type | Use this sample to learn |
-| --- | --- | --- |
-| [EDM Liquid Web Template Starter](samples/traditional/edm-liquid-webtemplate-starter/) _(planned — placeholder)_ | Liquid + web template | Render Dataverse data on a non-SPA site with a web template and Liquid on the enhanced data model. |
-
 ### Server logic (`samples/server-logic/`)
 
 Server-side JavaScript that runs on the Power Pages runtime, callable from both SPA and non-SPA sites.
@@ -90,7 +81,6 @@ Server-side JavaScript that runs on the Power Pages runtime, callable from both 
 ## Sample categories
 
 - [SPA Samples](samples/spa/) - SPA samples built with popular frontend frameworks and uploaded to Power Pages with the Power Platform CLI. Split into [full applications](samples/spa/apps/) and [single-topic snippets](samples/spa/snippets/).
-- [Non-SPA Samples](samples/traditional/) - non-SPA sites built with Liquid and web templates on the enhanced data model.
 - [Server Logic Samples](samples/server-logic/) - server-side JavaScript that runs on the Power Pages runtime.
 
 ## Resources

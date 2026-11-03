@@ -1,0 +1,138 @@
+/*
+ * Design tokens for the showcase site.
+ * Token names follow the Power Pages plugin design system
+ * (power-platform-skills, references/design-aesthetics.md): components in
+ * styles.css use these variables only, so raw colors, fonts, and shadows live
+ * here and nowhere else.
+ *
+ * Design thesis: a calm gallery of real Power Pages sites. Cool paper
+ * surfaces, ink text, one confident violet for actions, Schibsted Grotesk
+ * headlines with tight tracking over Public Sans body text, soft 10px corners,
+ * and pastel mats that mark each kind of entry.
+ */
+:root {
+  color-scheme: light;
+
+  /* Color roles - neutrals carry the page; violet is reserved for actions */
+  --color-bg: #f5f6fa;
+  --color-bg-translucent: rgb(245 246 250 / 0.92);
+  --color-surface: #ffffff;
+  --color-surface-strong: #eceaf4;
+  --color-text: #1e1a33;
+  --color-text-muted: #5b5770;
+  --color-border: #dedde8;
+  --color-border-strong: #7c7791; /* input and control boundaries, 3:1 or better */
+  --color-primary: #5b2fc4;
+  --color-primary-hover: #4a22a8;
+  --color-on-primary: #ffffff;
+  --color-primary-tint: #efeafc;
+  --color-on-primary-muted: #e9e4fb;
+  --color-focus: #5b2fc4;
+  --color-hover-wash: rgb(30 26 51 / 0.06);
+  --color-overlay: rgb(30 26 51 / 0.45);
+  --color-success: #2a7046;
+
+  /* Mats - the background behind each preview encodes the kind of entry */
+  --mat-spa: #e1d8fa;
+  --mat-nonspa: #d3ebe1;
+  --mat-apps: #f9e0d2;
+  --mat-snippets: #f7ecc2;
+  --mat-server: #d6e4f7;
+
+  /* Type */
+  --font-display: "Schibsted Grotesk", system-ui, sans-serif;
+  --font-body: "Public Sans", system-ui, sans-serif;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-md: 0.9375rem;
+  --text-base: 1.0625rem;
+  --text-lg: clamp(1.125rem, 0.95rem + 0.5vw, 1.3125rem);
+  --text-h3: clamp(1.25rem, 1.1rem + 0.5vw, 1.4375rem);
+  --text-h2: clamp(2rem, 1.4rem + 2vw, 2.875rem);
+  --text-detail: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+  /* At least 3x the body size at every width */
+  --text-hero: clamp(3.1875rem, 1.9rem + 3.6vw, 4.5rem);
+
+  /* Space - 4px base */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --section-space: clamp(4rem, 3rem + 4vw, 7rem);
+
+  /* Icons drawn in --color-text, for places CSS cannot inherit color */
+  --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231e1a33' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+
+  /* Shape and elevation - one corner language; shadows tinted with the ink */
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+  --shadow-screen: 0 0 0 1px rgb(30 26 51 / 0.08);
+  --shadow-piece: 0 18px 40px -22px rgb(30 26 51 / 0.35);
+  --shadow-panel: -24px 0 60px rgb(30 26 51 / 0.18);
+
+  /* Layout */
+  --container: 1320px;
+  --measure: 66ch;
+  --gutter: clamp(1rem, 0.5rem + 2.5vw, 2.5rem);
+  --sidebar: 220px;
+  --header-height: 72px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 700ms;
+}
+
+/*
+ * Dark theme. The head script sets data-theme from the visitor's saved choice,
+ * or from the system setting when they have not chosen one. Every text and
+ * control pair below meets WCAG 2.2 AA against its background.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg: #14121f;
+  --color-bg-translucent: rgb(20 18 31 / 0.9);
+  --color-surface: #1d1a2b;
+  --color-surface-strong: #262238;
+  --color-text: #ece9f6;
+  --color-text-muted: #a9a4bd;
+  --color-border: #2f2b42;
+  --color-border-strong: #7a7494;
+  --color-primary: #a58bff;
+  --color-primary-hover: #bba7ff;
+  --color-on-primary: #14121f;
+  --color-primary-tint: #2a2347;
+  --color-on-primary-muted: #2e2350;
+  --color-focus: #b9a3ff;
+  --color-hover-wash: rgb(255 255 255 / 0.06);
+  --color-overlay: rgb(0 0 0 / 0.6);
+  --color-success: #6fcf97;
+
+  --mat-spa: #2e2650;
+  --mat-nonspa: #1f3a31;
+  --mat-apps: #43291f;
+  --mat-snippets: #3a3218;
+  --mat-server: #1e2d45;
+
+  --icon-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ece9f6' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+
+  --shadow-screen: 0 0 0 1px rgb(255 255 255 / 0.08);
+  --shadow-piece: 0 18px 40px -22px rgb(0 0 0 / 0.7);
+  --shadow-panel: -24px 0 60px rgb(0 0 0 / 0.5);
+}
+
+@media (max-width: 960px) {
+  :root {
+    --header-height: 124px;
+  }
+}
