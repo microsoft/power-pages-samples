@@ -75,7 +75,8 @@ function templateItem(template, override) {
   }));
   return {
     ...base,
-    tags: ["Design studio"],
+    // Every non-SPA template is built in the design studio, so a tag would say nothing.
+    tags: [],
     features: template.capabilities || [],
     devices: true,
     images,

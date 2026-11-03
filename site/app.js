@@ -309,7 +309,7 @@
 
     const features = item.features?.length
       ? `<div><h3>${esc(item.featuresTitle || "What’s included")}</h3><ul class="features">${item.features.map((f) => `<li>${esc(f)}</li>`).join("")}</ul></div>`
-      : `<div><h3>Built with</h3><ul class="features">${item.tags.map((f) => `<li>${esc(f)}</li>`).join("")}</ul></div>`;
+      : "<div></div>";
 
     dialog.innerHTML = `
       <div class="detail">
