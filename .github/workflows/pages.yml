@@ -1,7 +1,7 @@
 name: GitHub Pages
 
 # Publishes one GitHub Pages site that contains:
-#   - the template and sample catalog from site/, at the site root
+#   - the template catalog from site/, at the site root
 #   - the GitHub Repo Stats report, copied read-only from the github-repo-stats
 #     branch into microsoft/, so its existing URLs keep working
 # The github-repo-stats branch is only read here, never written.
@@ -13,14 +13,12 @@ on:
       - ".github/workflows/pages.yml"
       - "site/**"
       - "templates/**"
-      - "samples/**"
   pull_request:
     branches: [ "main" ]
     paths:
       - ".github/workflows/pages.yml"
       - "site/**"
       - "templates/**"
-      - "samples/**"
   # Republish after the daily stats run so the report stays current.
   workflow_run:
     workflows: [ "GitHub Repo Stats" ]

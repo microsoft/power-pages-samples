@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Power Pages templates and samples</title>
-  <meta name="description" content="Browse Power Pages templates and samples with previews, filter by type and publisher, and open their source on GitHub." />
+  <title>Power Pages templates</title>
+  <meta name="description" content="Browse Power Pages templates with page-by-page previews, filter by SPA or non-SPA and publisher, and open their source on GitHub." />
   <link rel="canonical" href="https://microsoft.github.io/power-pages-samples/" />
   <meta name="theme-color" content="#f5f6fa" id="theme-color" />
   <script>
@@ -21,9 +21,9 @@
 
   <!-- Link previews for chat and social apps; crawlers do not run scripts, so these stay static. -->
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Power Pages samples" />
-  <meta property="og:title" content="Power Pages templates and samples" />
-  <meta property="og:description" content="Start from a working Power Pages site. Browse templates and samples with previews and open their source on GitHub." />
+  <meta property="og:site_name" content="Power Pages templates" />
+  <meta property="og:title" content="Power Pages templates" />
+  <meta property="og:description" content="Start from a working Power Pages site. Browse templates with previews and open their source on GitHub." />
   <meta property="og:url" content="https://microsoft.github.io/power-pages-samples/" />
   <meta property="og:image" content="https://microsoft.github.io/power-pages-samples/templates/spa/311-portal/previews/home.png" />
   <meta property="og:image:width" content="1440" />
@@ -45,17 +45,15 @@
     <div class="masthead-inner">
       <a class="wordmark" href="./">
         <img src="assets/power-pages-icon.png" alt="" width="32" height="32" />
-        <span>Power Pages samples</span>
+        <span>Power Pages templates</span>
       </a>
       <form class="search" role="search" action="./#catalog">
-        <label class="visually-hidden" for="search">Search templates and samples</label>
+        <label class="visually-hidden" for="search">Search templates</label>
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
-        <input id="search" name="q" type="search" placeholder="Search templates and samples" autocomplete="off" />
+        <input id="search" name="q" type="search" placeholder="Search templates" autocomplete="off" />
       </form>
       <div class="masthead-actions">
         <nav class="masthead-links" aria-label="Primary">
-          <a href="#templates">Templates</a>
-          <a href="#samples">Samples</a>
           <a href="https://github.com/microsoft/power-pages-samples">GitHub</a>
         </nav>
         <div class="theme-switch" role="group" aria-label="Color theme">
@@ -77,10 +75,9 @@
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero-copy">
         <h1 id="hero-title">Start from a working Power Pages site</h1>
-        <p class="hero-lede">Pick a template for a new site, or learn a pattern from a sample. Each one has previews and links to its source on GitHub.</p>
+        <p class="hero-lede">Pick a template for your next site, from no-code layouts in the design studio to full code sites with Dataverse data. Each one has page-by-page previews and links to its source on GitHub.</p>
         <div class="hero-actions">
           <a class="button primary" href="#templates">Browse templates</a>
-          <a class="button" href="#samples">Browse samples</a>
         </div>
         <p class="hero-proof" id="hero-proof">Published by Microsoft under the MIT license.</p>
       </div>
@@ -92,13 +89,10 @@
     </section>
 
     <div class="layout" id="catalog">
-      <aside class="index" aria-label="Catalog sections">
-        <nav id="index-nav"></nav>
-      </aside>
       <div class="catalog-main">
-        <div class="status">
+        <div class="status" id="status" hidden>
           <p id="result-count" class="result-count" aria-live="polite"></p>
-          <button id="copy-view" class="text-button" type="button" hidden>Copy link to this view</button>
+          <button id="copy-view" class="text-button" type="button">Copy link to this view</button>
         </div>
         <div id="sections"></div>
       </div>
@@ -107,10 +101,10 @@
     <section class="contribute" aria-labelledby="contribute-title">
       <div class="contribute-inner">
         <div>
-          <h2 id="contribute-title">Share a template or sample</h2>
-          <p>Built something other Power Pages makers could learn from? The contribution guide explains where it goes and how to add it to this catalog.</p>
+          <h2 id="contribute-title">Share a template</h2>
+          <p>Built a site other Power Pages makers could start from? The contribution guide explains how to package it and add it to the template catalog.</p>
         </div>
-        <a class="button on-primary" href="https://github.com/microsoft/power-pages-samples/blob/main/CONTRIBUTING.md">Read the contribution guide</a>
+        <a class="button on-primary" href="https://github.com/microsoft/power-pages-samples/blob/main/CONTRIBUTING.md#contributing-a-template">Read the contribution guide</a>
       </div>
     </section>
   </main>
@@ -120,6 +114,7 @@
       <p>© Microsoft 2026</p>
       <nav aria-label="Footer">
         <a href="https://github.com/microsoft/power-pages-samples">GitHub repository</a>
+        <a href="https://github.com/microsoft/power-pages-samples/tree/main/samples">Code samples</a>
         <a href="microsoft/power-pages-samples/latest-report/report.html">Repository stats</a>
         <a href="https://go.microsoft.com/fwlink/?LinkId=521839">Privacy &amp; cookies</a>
         <a href="https://go.microsoft.com/fwlink/?LinkID=206977">Terms of use</a>

@@ -4,11 +4,10 @@
 //   node site/build.mjs              -> writes _site/
 //   node site/build.mjs --out <dir>  -> writes <dir>/
 //
-// Templates are generated from templates/manifest.json, so a new template shows
-// up once its manifest entry merges. Samples are listed by hand in data.js, and
-// the build fails when a sample folder is missing from that list. The output
-// holds the site files, a generated data.js, and only the images the catalog uses.
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+// Every template is generated from templates/manifest.json, so a new template
+// shows up once its manifest entry merges. The output holds the site files, a
+// generated data.js, and only the images the catalog uses.
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
@@ -22,12 +21,8 @@ const staticDirs = ["assets"];
 // with a capital first letter, so a new framework never breaks the build.
 const FRAMEWORKS = { react: "React", vue: "Vue", angular: "Angular", astro: "Astro" };
 
-// Folders under samples/ that hold build output or tooling, not samples.
-const IGNORED_DIRS = new Set(["node_modules", ".powerpages-site", "dist", "build", ".git"]);
-
 const capitalize = (value) => value.charAt(0).toUpperCase() + value.slice(1);
 const humanize = (value) => capitalize(value.replace(/[-_]+/g, " "));
-const toPosix = (value) => value.split(path.sep).join("/");
 
 function parseOutDir(argv) {
   const index = argv.indexOf("--out");
@@ -123,32 +118,8 @@ function collectAssets(catalog, indexHtml) {
       if (image.mobile) assets.add(image.mobile);
     }
   }
-  for (const match of indexHtml.matchAll(/\bsrc="((?:templates|samples)\/[^"]+)"/g)) assets.add(match[1]);
+  for (const match of indexHtml.matchAll(/\bsrc="(templates\/[^"]+)"/g)) assets.add(match[1]);
   return [...assets].sort();
-}
-
-// A sample is a folder with a README and no README in any folder below it.
-// Parent folders with a README, such as samples/spa/snippets/file-upload/,
-// only index the samples inside them.
-function sampleFolders() {
-  const found = [];
-  const walk = (dir) => {
-    let hasReadme = false;
-    let childHasReadme = false;
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
-        if (!IGNORED_DIRS.has(entry.name) && walk(path.join(dir, entry.name))) childHasReadme = true;
-      } else if (entry.name.toLowerCase() === "readme.md") {
-        hasReadme = true;
-      }
-    }
-    if (hasReadme && !childHasReadme) found.push(`${toPosix(path.relative(repoRoot, dir))}/`);
-    return hasReadme || childHasReadme;
-  };
-  for (const entry of readdirSync(path.join(repoRoot, "samples"), { withFileTypes: true })) {
-    if (entry.isDirectory()) walk(path.join(repoRoot, "samples", entry.name));
-  }
-  return found.sort();
 }
 
 function validate(catalog, assets, errors) {
@@ -164,11 +135,6 @@ function validate(catalog, assets, errors) {
 
   for (const asset of assets) {
     if (!existsSync(path.join(repoRoot, asset))) errors.push(`missing image: ${asset}`);
-  }
-
-  const listed = new Set(entries.filter((e) => e.group.id === "samples").map((e) => e.item.path));
-  for (const folder of sampleFolders()) {
-    if (!listed.has(folder)) errors.push(`sample ${folder} is not listed in site/data.js`);
   }
 }
 
@@ -207,7 +173,7 @@ function build(outDir) {
   }
 
   const items = catalogEntries(catalog).length;
-  console.log(`Built ${items} catalog entries and ${assets.length} images into ${path.relative(process.cwd(), outDir) || "."}`);
+  console.log(`Built ${items} templates and ${assets.length} images into ${path.relative(process.cwd(), outDir) || "."}`);
 }
 
 try {
