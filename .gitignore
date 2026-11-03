@@ -136,3 +136,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Showcase site build output (site/build.mjs)
+_site/
