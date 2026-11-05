@@ -1,6 +1,6 @@
-# Partner Portal website code
+# Partner Portal (Enhanced) website code
 
-This React + Vite project is the downloadable website-code variant of the [Partner Portal template](../../../README.md). Local development and browser tests use the in-memory/localStorage mock data; Power Pages-hosted deployments use live services.
+This React + Vite project is the downloadable website-code variant of the [Partner Portal (Enhanced) template](../../../README.md). Local development and browser tests use the in-memory/localStorage mock data; Power Pages-hosted deployments use live services.
 
 ```bash
 npm ci

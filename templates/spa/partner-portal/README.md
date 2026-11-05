@@ -1,6 +1,6 @@
-# Partner Portal template
+# Partner Portal (Enhanced) template
 
-The Partner Portal is a React + Vite Power Pages SPA for partner onboarding, customer and opportunity management, access administration, and a technician work-order workspace. The local development app uses browser-backed mock data; deploying the website code enables live behavior through Power Pages, Dataverse, and server logic.
+The Partner Portal (Enhanced) is a React + Vite Power Pages SPA for partner onboarding, customer and opportunity management, access administration, and a technician work-order workspace. The local development app uses browser-backed mock data; deploying the website code enables live behavior through Power Pages, Dataverse, and server logic.
 
 ## Included
 
