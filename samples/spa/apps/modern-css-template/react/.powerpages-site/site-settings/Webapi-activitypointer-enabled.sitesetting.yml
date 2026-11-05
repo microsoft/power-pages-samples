@@ -1,0 +1,4 @@
+description: Prevent direct access; only approved guarded support endpoints may access this table.
+id: a65afba2-9c32-4f1e-b1fe-ed32c560b9c8
+name: Webapi/activitypointer/enabled
+value: false

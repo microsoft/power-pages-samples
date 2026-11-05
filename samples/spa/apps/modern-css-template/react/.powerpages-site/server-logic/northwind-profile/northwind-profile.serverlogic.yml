@@ -1,0 +1,6 @@
+adx_serverlogic_adx_webrole:
+  - ba9c8c1a-db48-46e3-b1b9-325702839728
+description: 'Scoped authenticated Northwind support operation: northwind-profile'
+display_name: 'northwind-profile'
+id: 9c2deddf-c36f-417e-8a04-c5af8abeb6fb
+name: northwind-profile

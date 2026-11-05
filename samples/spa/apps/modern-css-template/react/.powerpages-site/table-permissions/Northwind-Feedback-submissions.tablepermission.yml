@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- ba9c8c1a-db48-46e3-b1b9-325702839728
+append: true
+appendto: false
+create: true
+delete: false
+entitylogicalname: feedback
+entityname: Northwind - Feedback submissions
+id: 4dcd55a8-ffc2-42af-b838-22d3960b0603
+read: false
+scope: 756150000
+write: false

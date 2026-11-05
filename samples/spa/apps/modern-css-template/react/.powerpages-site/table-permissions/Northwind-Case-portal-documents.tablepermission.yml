@@ -1,0 +1,14 @@
+adx_entitypermission_webrole:
+- ba9c8c1a-db48-46e3-b1b9-325702839728
+append: true
+appendto: false
+create: true
+delete: false
+entitylogicalname: annotation
+entityname: Northwind - Case portal documents
+id: 03bc1c25-4945-443f-8a88-0d99b181c91c
+parententitypermission: 49884962-d853-4847-9256-649811e3f133
+parentrelationship: Incident_Annotation
+read: true
+scope: 756150003
+write: false

@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- ba9c8c1a-db48-46e3-b1b9-325702839728
+append: true
+appendto: true
+contactrelationship: incident_customer_contacts
+create: true
+delete: false
+entitylogicalname: incident
+entityname: Northwind - Personal cases
+id: 49884962-d853-4847-9256-649811e3f133
+read: true
+scope: 756150001
+write: true

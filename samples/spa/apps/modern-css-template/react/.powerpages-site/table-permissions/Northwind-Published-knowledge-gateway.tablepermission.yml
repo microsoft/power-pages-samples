@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- ba9c8c1a-db48-46e3-b1b9-325702839728
+append: false
+appendto: true
+create: false
+delete: false
+entitylogicalname: knowledgearticle
+entityname: Northwind - Published knowledge gateway
+id: 0bdbec36-5780-431a-acc0-b91e4d062bbe
+read: true
+scope: 756150000
+write: false

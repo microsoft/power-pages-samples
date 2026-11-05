@@ -1,0 +1,6 @@
+adx_serverlogic_adx_webrole:
+  - ba9c8c1a-db48-46e3-b1b9-325702839728
+description: 'Scoped authenticated Northwind support operation: northwind-feedback'
+display_name: 'northwind-feedback'
+id: 86f1d488-541b-4274-9184-b0cbeb98909b
+name: northwind-feedback

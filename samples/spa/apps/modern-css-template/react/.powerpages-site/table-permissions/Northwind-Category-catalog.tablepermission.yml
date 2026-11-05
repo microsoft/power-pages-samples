@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- ba9c8c1a-db48-46e3-b1b9-325702839728
+append: false
+appendto: false
+create: false
+delete: false
+entitylogicalname: category
+entityname: Northwind - Category catalog
+id: 55f371cc-da7a-4fd0-b6ff-2d0957aef2bb
+read: true
+scope: 756150000
+write: false

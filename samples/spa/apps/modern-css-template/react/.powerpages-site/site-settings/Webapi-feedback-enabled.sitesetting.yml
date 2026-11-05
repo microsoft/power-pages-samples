@@ -1,0 +1,4 @@
+description: Prevent direct access; only approved guarded support endpoints may access this table.
+id: 3c9d3c36-40e0-4234-823b-403a9d6b06f9
+name: Webapi/feedback/enabled
+value: false

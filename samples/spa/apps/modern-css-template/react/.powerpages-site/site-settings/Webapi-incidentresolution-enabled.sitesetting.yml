@@ -1,0 +1,4 @@
+description: Prevent direct access; only approved guarded support endpoints may access this table.
+id: c7123dc4-d423-4286-9691-d5eb4ff3dfe2
+name: Webapi/incidentresolution/enabled
+value: false

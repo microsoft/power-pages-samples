@@ -1,0 +1,4 @@
+description: Prevent direct access; only approved guarded support endpoints may access this table.
+id: 18b9a9ba-1604-467f-868a-40eb2cbbab6b
+name: Webapi/annotation/enabled
+value: false

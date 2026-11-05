@@ -1,0 +1,271 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)": {
+          "defaultValue": "",
+          "type": "String",
+          "metadata": {
+            "schemaName": "ppst_ModernCss_PortalApplicationUserId"
+          }
+        }
+      },
+      "triggers": {
+        "When_Northwind_web_case_is_added": {
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "SubscribeWebhookTrigger",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "subscriptionRequest/message": 1,
+              "subscriptionRequest/entityname": "incident",
+              "subscriptionRequest/scope": 4,
+              "subscriptionRequest/filterexpression": "@concat('caseorigincode eq 3 and _createdby_value eq ', parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)'), ' and statecode eq 0')"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      },
+      "actions": {
+        "Read_case": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "incidents",
+              "recordId": "@triggerOutputs()?['body/incidentid']",
+              "$select": "incidentid,caseorigincode,_createdby_value,statecode"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {}
+        },
+        "Guard_portal_case": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@outputs('Read_case')?['body/caseorigincode']",
+                  3
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_case')?['body/_createdby_value']",
+                  "@parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')"
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_case')?['body/statecode']",
+                  0
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Read_effective_agent_settings": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "PerformUnboundAction",
+                  "connectionName": "shared_commondataserviceforapps"
+                },
+                "parameters": {
+                  "actionName": "msdyn_GetCaseManagementAgentSettings",
+                  "item/Entity": "@concat('incidents(', outputs('Read_case')?['body/incidentid'], ')')",
+                  "item/Actions": "[\"resolve\"]",
+                  "item/RefreshIntentFamily": true
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {}
+            },
+            "Enforce_human_review": {
+              "type": "If",
+              "expression": "@not(and(equals(json(outputs('Read_effective_agent_settings')?['body/Result'])?['isEnabled'], true), equals(json(outputs('Read_effective_agent_settings')?['body/Result'])?['resolution']?['isEnabled'], true), equals(json(outputs('Read_effective_agent_settings')?['body/Result'])?['resolution']?['automationLevel'], 'Semi')))",
+              "actions": {
+                "Stop_unsafe_or_disabled_agent": {
+                  "type": "Terminate",
+                  "inputs": {
+                    "runStatus": "Failed",
+                    "runError": {
+                      "code": "HumanReviewRequired",
+                      "message": "Case remains saved. Agent dispatch blocked because its effective mode is not enabled Semi. Check Northwind business-line routing and configuration."
+                    }
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Read_effective_agent_settings": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Create_dispatch_receipt": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "CreateRecord",
+                  "connectionName": "shared_commondataserviceforapps"
+                },
+                "parameters": {
+                  "entityName": "annotations",
+                  "item/annotationid": "@outputs('Read_case')?['body/incidentid']",
+                  "item/subject": "Northwind portal: Case Management Agent dispatch",
+                  "item/notetext": "Dispatch pending; automationLevel=Semi. Flow run: @{workflow()?['run']?['name']}. This internal receipt blocks duplicate dispatch. Review the flow run before manually retrying.",
+                  "item/isdocument": false,
+                  "item/objectid_incident@odata.bind": "@concat('incidents(', outputs('Read_case')?['body/incidentid'], ')')"
+                },
+                "authentication": "@parameters('$authentication')",
+                "retryPolicy": {
+                  "type": "none"
+                }
+              },
+              "runAfter": {
+                "Enforce_human_review": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Invoke_case_management_agent": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "PerformUnboundAction",
+                  "connectionName": "shared_commondataserviceforapps"
+                },
+                "parameters": {
+                  "actionName": "msdyn_invokeCaseProcessingAgent",
+                  "item/msdyn_incidentId": "@outputs('Read_case')?['body/incidentid']",
+                  "item/msdyn_actions": "[{\"action\":\"resolve\",\"automationLevel\":\"Semi\"}]"
+                },
+                "authentication": "@parameters('$authentication')",
+                "retryPolicy": {
+                  "type": "none"
+                }
+              },
+              "runAfter": {
+                "Create_dispatch_receipt": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Mark_dispatch_accepted": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "UpdateOnlyRecord",
+                  "connectionName": "shared_commondataserviceforapps"
+                },
+                "parameters": {
+                  "entityName": "annotations",
+                  "recordId": "@outputs('Read_case')?['body/incidentid']",
+                  "item/notetext": "Dispatch accepted by Case Management Agent; automationLevel=Semi. This is not a resolution confirmation. Review agent results and draft emails in Dynamics 365. Flow run: @{workflow()?['run']?['name']}."
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {
+                "Invoke_case_management_agent": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Mark_dispatch_unconfirmed": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "UpdateOnlyRecord",
+                  "connectionName": "shared_commondataserviceforapps"
+                },
+                "parameters": {
+                  "entityName": "annotations",
+                  "recordId": "@outputs('Read_case')?['body/incidentid']",
+                  "item/notetext": "Agent dispatch failed or is unconfirmed; automationLevel=Semi. No automatic retry was attempted. Review this flow run and managed agent runs before a manual retry: @{workflow()?['run']?['name']}."
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {
+                "Invoke_case_management_agent": [
+                  "Failed",
+                  "TimedOut"
+                ]
+              }
+            },
+            "Report_dispatch_failure": {
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "AgentDispatchUnconfirmed",
+                  "message": "Case remains saved. Review this run and the managed agent's run history before attempting a manual retry."
+                }
+              },
+              "runAfter": {
+                "Mark_dispatch_unconfirmed": [
+                  "Succeeded",
+                  "Failed",
+                  "TimedOut"
+                ]
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Skip_ineligible_case": {
+                "type": "Terminate",
+                "inputs": {
+                  "runStatus": "Cancelled"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Read_case": [
+              "Succeeded"
+            ]
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

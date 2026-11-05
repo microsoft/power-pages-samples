@@ -1,0 +1,543 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_conversionservice": {
+        "api": {
+          "name": "shared_conversionservice"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr719_northwindportalresponseconversion"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "4.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)": {
+          "defaultValue": "",
+          "type": "String",
+          "metadata": {
+            "schemaName": "ppst_ModernCss_PortalApplicationUserId"
+          }
+        },
+        "Modern CSS - Portal URL (ppst_ModernCss_PortalUrl)": {
+          "defaultValue": "",
+          "type": "String",
+          "metadata": {
+            "schemaName": "ppst_ModernCss_PortalUrl"
+          }
+        },
+        "Modern CSS - Approval writer (SYSTEM) user ID (ppst_ModernCss_ApprovalWriterUserId)": {
+          "defaultValue": "",
+          "type": "String",
+          "metadata": {
+            "schemaName": "ppst_ModernCss_ApprovalWriterUserId"
+          }
+        }
+      },
+      "triggers": {
+        "When_reviewed_Send_is_captured": {
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "SubscribeWebhookTrigger",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "subscriptionRequest/message": 1,
+              "subscriptionRequest/entityname": "annotation",
+              "subscriptionRequest/scope": 4,
+              "subscriptionRequest/filterexpression": "@concat('subject eq ''Northwind portal: Reviewed Send approval'' and isdocument eq false and _createdby_value eq ', parameters('Modern CSS - Approval writer (SYSTEM) user ID (ppst_ModernCss_ApprovalWriterUserId)'))"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      },
+      "actions": {
+        "Approval": {
+          "type": "Compose",
+          "inputs": "@json(triggerBody()?['notetext'])",
+          "runAfter": {}
+        },
+        "Require_trusted_approval": {
+          "type": "If",
+          "expression": "@not(and(equals(triggerBody()?['subject'], 'Northwind portal: Reviewed Send approval'), equals(triggerBody()?['isdocument'], false), equals(triggerBody()?['_createdby_value'], parameters('Modern CSS - Approval writer (SYSTEM) user ID (ppst_ModernCss_ApprovalWriterUserId)')), equals(outputs('Approval')?['schemaVersion'], 1), equals(outputs('Approval')?['approvalMethod'], 'NativeSend'), equals(outputs('Approval')?['outsideTransaction'], true), equals(triggerBody()?['_objectid_value'], outputs('Approval')?['caseId']), not(empty(outputs('Approval')?['emailId'])), not(empty(outputs('Approval')?['contactId'])), not(empty(outputs('Approval')?['approvedBy'])), not(empty(outputs('Approval')?['approvedAt'])), not(empty(outputs('Approval')?['sourceEmailVersion'])), not(equals(outputs('Approval')?['htmlBase64'], null))))",
+          "actions": {
+            "Stop_untrusted_approval": {
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "UntrustedSendApproval",
+                  "message": "Only a SYSTEM-authored, non-transactional Native Send approval can release a portal response. Nothing was published."
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {}
+          },
+          "runAfter": {
+            "Approval": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Read_case": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "incidents",
+              "recordId": "@outputs('Approval')?['caseId']",
+              "$select": "incidentid,ticketnumber,caseorigincode,_createdby_value,_customerid_value",
+              "$expand": "customerid_contact($select=contactid)"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Require_trusted_approval": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Require_Northwind_personal_case": {
+          "type": "If",
+          "expression": "@not(and(equals(outputs('Read_case')?['body/caseorigincode'], 3), equals(outputs('Read_case')?['body/_createdby_value'], parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')), not(empty(outputs('Read_case')?['body/customerid_contact']?['contactid'])), equals(outputs('Read_case')?['body/customerid_contact']?['contactid'], outputs('Approval')?['contactId']), equals(outputs('Read_case')?['body/_customerid_value'], outputs('Approval')?['contactId'])))",
+          "actions": {
+            "Stop_changed_approved_case": {
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "ApprovedCaseChanged",
+                  "message": "The approved case is no longer a Northwind Web case for the captured Contact. Nothing was published; review its ownership and the approval request."
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {}
+          },
+          "runAfter": {
+            "Read_case": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Find_publication_receipt": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "annotations",
+              "$select": "annotationid,subject,notetext,_objectid_value",
+              "$filter": "@concat('annotationid eq ', outputs('Approval')?['emailId'])",
+              "$top": 1
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Require_Northwind_personal_case": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Publication_exists": {
+          "type": "If",
+          "expression": "@greater(length(outputs('Find_publication_receipt')?['body/value']), 0)",
+          "actions": {
+            "Existing_receipt": {
+              "type": "Compose",
+              "inputs": "@json(first(outputs('Find_publication_receipt')?['body/value'])?['notetext'])",
+              "runAfter": {}
+            },
+            "Require_matching_completed_receipt": {
+              "type": "If",
+              "expression": "@not(and(equals(first(outputs('Find_publication_receipt')?['body/value'])?['subject'], 'Northwind portal: Approved response publication'), equals(first(outputs('Find_publication_receipt')?['body/value'])?['_objectid_value'], outputs('Read_case')?['body/incidentid']), or(and(equals(outputs('Existing_receipt')?['schemaVersion'], 4), equals(outputs('Existing_receipt')?['publicationMethod'], 'NativeSend'), not(empty(outputs('Existing_receipt')?['approvalRequestId'])), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['approvedBy'])), not(empty(outputs('Existing_receipt')?['approvedAt']))), and(equals(outputs('Existing_receipt')?['schemaVersion'], 3), equals(outputs('Existing_receipt')?['publicationMethod'], 'SentEmail'), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['sourceSentOn']))), equals(outputs('Existing_receipt')?['schemaVersion'], 1), and(equals(outputs('Existing_receipt')?['schemaVersion'], 2), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['approvalId'])), not(empty(outputs('Existing_receipt')?['approvedBy'])))), equals(outputs('Existing_receipt')?['status'], 'Published'), equals(outputs('Existing_receipt')?['emailId'], outputs('Approval')?['emailId']), equals(outputs('Existing_receipt')?['caseId'], outputs('Read_case')?['body/incidentid']), equals(outputs('Existing_receipt')?['contactId'], outputs('Read_case')?['body/customerid_contact']?['contactid']), not(empty(outputs('Existing_receipt')?['approvedText'])), not(empty(outputs('Existing_receipt')?['commentId']))))",
+              "actions": {
+                "Stop_conflicting_or_unconfirmed_publication": {
+                  "type": "Terminate",
+                  "inputs": {
+                    "runStatus": "Failed",
+                    "runError": {
+                      "code": "PublicationConflictOrUnconfirmed",
+                      "message": "This email has a different or unfinished publication receipt. Review its reserved comment ID and prior run; do not resend the email or create another response blindly."
+                    }
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Existing_receipt": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Read_existing_response": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "GetItem",
+                  "connectionName": "shared_commondataserviceforapps"
+                },
+                "parameters": {
+                  "entityName": "adx_portalcomments",
+                  "recordId": "@outputs('Existing_receipt')?['commentId']",
+                  "$select": "activityid,subject,description,_regardingobjectid_value,adx_portalcommentdirectioncode"
+                },
+                "authentication": "@parameters('$authentication')"
+              },
+              "runAfter": {
+                "Require_matching_completed_receipt": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Verify_existing_response": {
+              "type": "If",
+              "expression": "@not(and(equals(outputs('Read_existing_response')?['body/_regardingobjectid_value'], outputs('Read_case')?['body/incidentid']), equals(outputs('Read_existing_response')?['body/subject'], if(equals(outputs('Existing_receipt')?['schemaVersion'], 4), '*WEB* Reviewed support response', if(equals(outputs('Existing_receipt')?['schemaVersion'], 3), '*WEB* Support email response', '*WEB* AI-assisted support response'))), equals(outputs('Read_existing_response')?['body/adx_portalcommentdirectioncode'], 2), equals(outputs('Read_existing_response')?['body/description'], outputs('Existing_receipt')?['approvedText'])))",
+              "actions": {
+                "Stop_changed_response": {
+                  "type": "Terminate",
+                  "inputs": {
+                    "runStatus": "Failed",
+                    "runError": {
+                      "code": "PublishedResponseChanged",
+                      "message": "The existing published response no longer matches its receipt. Review it in Dynamics 365; it was not recreated or overwritten."
+                    }
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Read_existing_response": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Already_published": {
+              "type": "Compose",
+              "inputs": {
+                "status": "AlreadyPublished",
+                "message": "This email already has a published snapshot. Later Send attempts or draft edits do not replace it; use a new email for a follow-up.",
+                "caseId": "@outputs('Read_case')?['body/incidentid']",
+                "commentId": "@outputs('Existing_receipt')?['commentId']",
+                "portalCaseUrl": "@concat(parameters('Modern CSS - Portal URL (ppst_ModernCss_PortalUrl)'), '/cases/', outputs('Read_case')?['body/incidentid'])"
+              },
+              "runAfter": {
+                "Verify_existing_response": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Convert_approved_snapshot_to_text": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_conversionservice",
+                    "operationId": "HtmlToText",
+                    "connectionName": "shared_conversionservice"
+                  },
+                  "parameters": {
+                    "Content": "@base64ToString(outputs('Approval')?['htmlBase64'])"
+                  }
+                },
+                "runAfter": {}
+              },
+              "Approved_text": {
+                "type": "Compose",
+                "inputs": "@trim(body('Convert_approved_snapshot_to_text'))",
+                "runAfter": {
+                  "Convert_approved_snapshot_to_text": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Require_publishable_text": {
+                "type": "If",
+                "expression": "@not(and(not(empty(outputs('Approved_text'))), lessOrEquals(length(outputs('Approved_text')), 4000)))",
+                "actions": {
+                  "Stop_invalid_approved_text": {
+                    "type": "Terminate",
+                    "inputs": {
+                      "runStatus": "Failed",
+                      "runError": {
+                        "code": "InvalidApprovedText",
+                        "message": "The reviewed snapshot must contain 1-4,000 converted characters. Nothing was truncated or published. Email delivery is independent; do not resend merely to recover a portal publication."
+                      }
+                    }
+                  }
+                },
+                "else": {
+                  "actions": {}
+                },
+                "runAfter": {
+                  "Approved_text": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Read_case_before_publish": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "GetItem",
+                    "connectionName": "shared_commondataserviceforapps"
+                  },
+                  "parameters": {
+                    "entityName": "incidents",
+                    "recordId": "@outputs('Read_case')?['body/incidentid']",
+                    "$select": "incidentid,caseorigincode,_createdby_value,_customerid_value",
+                    "$expand": "customerid_contact($select=contactid)"
+                  },
+                  "authentication": "@parameters('$authentication')"
+                },
+                "runAfter": {
+                  "Require_publishable_text": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Require_unchanged_case_audience": {
+                "type": "If",
+                "expression": "@not(and(equals(outputs('Read_case_before_publish')?['body/caseorigincode'], 3), equals(outputs('Read_case_before_publish')?['body/_createdby_value'], parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')), equals(outputs('Read_case_before_publish')?['body/customerid_contact']?['contactid'], outputs('Approval')?['contactId']), equals(outputs('Read_case_before_publish')?['body/_customerid_value'], outputs('Approval')?['contactId'])))",
+                "actions": {
+                  "Stop_changed_case_audience": {
+                    "type": "Terminate",
+                    "inputs": {
+                      "runStatus": "Failed",
+                      "runError": {
+                        "code": "ApprovedCaseChanged",
+                        "message": "The approved case audience changed before publication. Nothing was published; review the approval and case ownership."
+                      }
+                    }
+                  }
+                },
+                "else": {
+                  "actions": {}
+                },
+                "runAfter": {
+                  "Read_case_before_publish": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "New_comment_id": {
+                "type": "Compose",
+                "inputs": "@guid()",
+                "runAfter": {
+                  "Require_unchanged_case_audience": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Publication_receipt": {
+                "type": "Compose",
+                "inputs": {
+                  "schemaVersion": 4,
+                  "status": "Reserved",
+                  "emailId": "@outputs('Approval')?['emailId']",
+                  "caseId": "@outputs('Read_case')?['body/incidentid']",
+                  "contactId": "@outputs('Read_case')?['body/customerid_contact']?['contactid']",
+                  "commentId": "@outputs('New_comment_id')",
+                  "approvedText": "@outputs('Approved_text')",
+                  "sourceEmailVersion": "@outputs('Approval')?['sourceEmailVersion']",
+                  "flowRunId": "@workflow()?['run']?['name']",
+                  "publicationMethod": "NativeSend",
+                  "approvalRequestId": "@triggerBody()?['annotationid']",
+                  "approvedBy": "@outputs('Approval')?['approvedBy']",
+                  "approvedAt": "@outputs('Approval')?['approvedAt']"
+                },
+                "runAfter": {
+                  "New_comment_id": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Reserve_publication": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "CreateRecord",
+                    "connectionName": "shared_commondataserviceforapps"
+                  },
+                  "parameters": {
+                    "entityName": "annotations",
+                    "item/annotationid": "@outputs('Approval')?['emailId']",
+                    "item/subject": "Northwind portal: Approved response publication",
+                    "item/notetext": "@string(outputs('Publication_receipt'))",
+                    "item/isdocument": false,
+                    "item/objectid_incident@odata.bind": "@concat('incidents(', outputs('Read_case')?['body/incidentid'], ')')"
+                  },
+                  "authentication": "@parameters('$authentication')",
+                  "retryPolicy": {
+                    "type": "none"
+                  }
+                },
+                "runAfter": {
+                  "Publication_receipt": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Create_portal_response": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "CreateRecord",
+                    "connectionName": "shared_commondataserviceforapps"
+                  },
+                  "parameters": {
+                    "entityName": "adx_portalcomments",
+                    "item/activityid": "@outputs('New_comment_id')",
+                    "item/subject": "*WEB* Reviewed support response",
+                    "item/description": "@outputs('Publication_receipt')?['approvedText']",
+                    "item/adx_portalcommentdirectioncode": 2,
+                    "item/regardingobjectid_incident_adx_portalcomment@odata.bind": "@concat('incidents(', outputs('Read_case')?['body/incidentid'], ')')"
+                  },
+                  "authentication": "@parameters('$authentication')",
+                  "retryPolicy": {
+                    "type": "none"
+                  }
+                },
+                "runAfter": {
+                  "Reserve_publication": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Read_published_response": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "GetItem",
+                    "connectionName": "shared_commondataserviceforapps"
+                  },
+                  "parameters": {
+                    "entityName": "adx_portalcomments",
+                    "recordId": "@outputs('New_comment_id')",
+                    "$select": "activityid,subject,description,_regardingobjectid_value,adx_portalcommentdirectioncode"
+                  },
+                  "authentication": "@parameters('$authentication')"
+                },
+                "runAfter": {
+                  "Create_portal_response": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Verify_published_response": {
+                "type": "If",
+                "expression": "@not(and(equals(outputs('Read_published_response')?['body/activityid'], outputs('New_comment_id')), equals(outputs('Read_published_response')?['body/_regardingobjectid_value'], outputs('Read_case')?['body/incidentid']), equals(outputs('Read_published_response')?['body/subject'], '*WEB* Reviewed support response'), equals(outputs('Read_published_response')?['body/adx_portalcommentdirectioncode'], 2), equals(outputs('Read_published_response')?['body/description'], outputs('Publication_receipt')?['approvedText'])))",
+                "actions": {
+                  "Stop_unconfirmed_response": {
+                    "type": "Terminate",
+                    "inputs": {
+                      "runStatus": "Failed",
+                      "runError": {
+                        "code": "PublicationUnconfirmed",
+                        "message": "The saved response could not be confirmed. Review the reserved comment ID before any manual retry."
+                      }
+                    }
+                  }
+                },
+                "else": {
+                  "actions": {}
+                },
+                "runAfter": {
+                  "Read_published_response": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Complete_publication_receipt": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "UpdateOnlyRecord",
+                    "connectionName": "shared_commondataserviceforapps"
+                  },
+                  "parameters": {
+                    "entityName": "annotations",
+                    "recordId": "@outputs('Approval')?['emailId']",
+                    "item/notetext": "@string(setProperty(setProperty(outputs('Publication_receipt'), 'status', 'Published'), 'publishedAt', utcNow()))"
+                  },
+                  "authentication": "@parameters('$authentication')"
+                },
+                "runAfter": {
+                  "Verify_published_response": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Published": {
+                "type": "Compose",
+                "inputs": {
+                  "status": "Published",
+                  "message": "The reviewed Send snapshot was published independently of email delivery. This flow does not send or retry email.",
+                  "caseId": "@outputs('Read_case')?['body/incidentid']",
+                  "commentId": "@outputs('New_comment_id')",
+                  "portalCaseUrl": "@concat(parameters('Modern CSS - Portal URL (ppst_ModernCss_PortalUrl)'), '/cases/', outputs('Read_case')?['body/incidentid'])"
+                },
+                "runAfter": {
+                  "Complete_publication_receipt": [
+                    "Succeeded"
+                  ]
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Find_publication_receipt": [
+              "Succeeded"
+            ]
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- 4ab91fb9-b350-4de5-81ed-8f1f00b09852
+append: false
+appendto: false
+create: false
+delete: false
+entitylogicalname: knowledgearticle
+entityname: Northwind - Anonymous published knowledge
+id: d4b79654-f251-4716-bb82-c055393a9d13
+read: true
+scope: 756150000
+write: false

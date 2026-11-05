@@ -1,0 +1,4 @@
+description: Prevent direct access; only approved guarded support endpoints may access this table.
+id: f203884c-7cb6-439c-a0f0-76062a41ae23
+name: Webapi/adx_portalcomment/enabled
+value: false

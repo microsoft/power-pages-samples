@@ -1,0 +1,4 @@
+description: Enable read-only support catalog access.
+id: 03ec7e3a-47e8-45a4-a8be-826f744a1fef
+name: Webapi/product/enabled
+value: true

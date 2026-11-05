@@ -1,0 +1,4 @@
+description: Personal-case create and read; column permissions restrict creation fields and prevent direct updates.
+id: c1db0713-f54a-4a8d-994b-b6fcf61d58ff
+name: Webapi/incident/enabled
+value: true

@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- ba9c8c1a-db48-46e3-b1b9-325702839728
+append: true
+appendto: true
+create: false
+delete: false
+entitylogicalname: product
+entityname: Northwind - Product choices
+id: 7cec41b6-0694-4e02-a628-376e3105a201
+read: true
+scope: 756150000
+write: false

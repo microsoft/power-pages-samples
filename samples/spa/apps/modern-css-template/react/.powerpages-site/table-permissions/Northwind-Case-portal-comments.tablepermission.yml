@@ -1,0 +1,14 @@
+adx_entitypermission_webrole:
+- ba9c8c1a-db48-46e3-b1b9-325702839728
+append: true
+appendto: false
+create: true
+delete: false
+entitylogicalname: adx_portalcomment
+entityname: Northwind - Case portal comments
+id: 89d816d7-33ff-4a86-a327-33d55fdbf34f
+parententitypermission: 49884962-d853-4847-9256-649811e3f133
+parentrelationship: incident_adx_portalcomments
+read: true
+scope: 756150003
+write: false

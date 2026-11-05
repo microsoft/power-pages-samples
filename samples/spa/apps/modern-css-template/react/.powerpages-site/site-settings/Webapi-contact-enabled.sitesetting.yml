@@ -1,0 +1,4 @@
+description: Prevent direct access; only approved guarded support endpoints may access this table.
+id: a6c2d660-f685-4553-91c7-04774b23d958
+name: Webapi/contact/enabled
+value: false

@@ -1,0 +1,4 @@
+description: Prevent direct access; only approved guarded support endpoints may access this table.
+id: 57d26c99-5850-4ab3-8125-a81bffa908f0
+name: Webapi/adx_setting/enabled
+value: false

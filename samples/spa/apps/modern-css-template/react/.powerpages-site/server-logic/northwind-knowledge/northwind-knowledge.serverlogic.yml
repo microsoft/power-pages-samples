@@ -1,0 +1,7 @@
+adx_serverlogic_adx_webrole:
+  - ba9c8c1a-db48-46e3-b1b9-325702839728
+  - 4ab91fb9-b350-4de5-81ed-8f1f00b09852
+description: 'Published Northwind knowledge for anonymous and signed-in visitors: northwind-knowledge'
+display_name: 'northwind-knowledge'
+id: 1fd92555-029d-4f8a-a260-8f73dc334e43
+name: northwind-knowledge

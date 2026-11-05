@@ -1,0 +1,13 @@
+<environmentvariabledefinition schemaname="ppst_ModernCss_PortalUrl">
+  <description default="Base URL of the customer support site, used in published response metadata.">
+    <label description="Base URL of the customer support site, used in published response metadata." languagecode="1033" />
+  </description>
+  <displayname default="Modern CSS - Portal URL">
+    <label description="Modern CSS - Portal URL" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

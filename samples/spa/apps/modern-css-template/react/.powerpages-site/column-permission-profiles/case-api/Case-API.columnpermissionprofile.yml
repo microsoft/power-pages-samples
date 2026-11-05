@@ -1,0 +1,7 @@
+adx_columnpermissionprofile_webrole:
+- ba9c8c1a-db48-46e3-b1b9-325702839728
+allcolumnpermissions:
+- 746610001
+id: 25936381-8ad4-4d18-9f6a-1da8a415d103
+profilename: Case API
+tablename: incident

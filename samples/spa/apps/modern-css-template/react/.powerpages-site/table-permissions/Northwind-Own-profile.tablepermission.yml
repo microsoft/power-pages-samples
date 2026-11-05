@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- ba9c8c1a-db48-46e3-b1b9-325702839728
+append: true
+appendto: true
+create: false
+delete: false
+entitylogicalname: contact
+entityname: Northwind - Own profile
+id: 04a818e1-1593-4384-ae0a-9db32b8b04cb
+read: true
+scope: 756150004
+write: true

@@ -1,0 +1,4 @@
+description: Prevent direct access; only approved guarded support endpoints may access this table.
+id: 596516d1-91cf-4182-a45f-b1af9a502060
+name: Webapi/lead/enabled
+value: false

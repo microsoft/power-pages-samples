@@ -1,0 +1,123 @@
+<ImportExportXml version="9.2.26094.166" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26094.166" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26094.00166">
+  <SolutionManifest>
+    <UniqueName>ModernCSSMetadata</UniqueName>
+    <LocalizedNames>
+      <LocalizedName description="Modern CSS Metadata" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions />
+    <Version>1.0.0.1</Version>
+    <Managed>0</Managed>
+    <Publisher>
+      <UniqueName>PowerPages_SPA_Templates</UniqueName>
+      <LocalizedNames>
+        <LocalizedName description="Power Pages SPA Templates" languagecode="1033" />
+      </LocalizedNames>
+      <Descriptions />
+      <EMailAddress xsi:nil="true"></EMailAddress>
+      <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
+      <CustomizationPrefix>ppst</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>42817</CustomizationOptionValuePrefix>
+      <Addresses>
+        <Address>
+          <AddressNumber>1</AddressNumber>
+          <AddressTypeCode>1</AddressTypeCode>
+          <City xsi:nil="true"></City>
+          <County xsi:nil="true"></County>
+          <Country xsi:nil="true"></Country>
+          <Fax xsi:nil="true"></Fax>
+          <FreightTermsCode xsi:nil="true"></FreightTermsCode>
+          <ImportSequenceNumber xsi:nil="true"></ImportSequenceNumber>
+          <Latitude xsi:nil="true"></Latitude>
+          <Line1 xsi:nil="true"></Line1>
+          <Line2 xsi:nil="true"></Line2>
+          <Line3 xsi:nil="true"></Line3>
+          <Longitude xsi:nil="true"></Longitude>
+          <Name xsi:nil="true"></Name>
+          <PostalCode xsi:nil="true"></PostalCode>
+          <PostOfficeBox xsi:nil="true"></PostOfficeBox>
+          <PrimaryContactName xsi:nil="true"></PrimaryContactName>
+          <ShippingMethodCode>1</ShippingMethodCode>
+          <StateOrProvince xsi:nil="true"></StateOrProvince>
+          <Telephone1 xsi:nil="true"></Telephone1>
+          <Telephone2 xsi:nil="true"></Telephone2>
+          <Telephone3 xsi:nil="true"></Telephone3>
+          <TimeZoneRuleVersionNumber xsi:nil="true"></TimeZoneRuleVersionNumber>
+          <UPSZone xsi:nil="true"></UPSZone>
+          <UTCOffset xsi:nil="true"></UTCOffset>
+          <UTCConversionTimeZoneCode xsi:nil="true"></UTCConversionTimeZoneCode>
+        </Address>
+        <Address>
+          <AddressNumber>2</AddressNumber>
+          <AddressTypeCode>1</AddressTypeCode>
+          <City xsi:nil="true"></City>
+          <County xsi:nil="true"></County>
+          <Country xsi:nil="true"></Country>
+          <Fax xsi:nil="true"></Fax>
+          <FreightTermsCode xsi:nil="true"></FreightTermsCode>
+          <ImportSequenceNumber xsi:nil="true"></ImportSequenceNumber>
+          <Latitude xsi:nil="true"></Latitude>
+          <Line1 xsi:nil="true"></Line1>
+          <Line2 xsi:nil="true"></Line2>
+          <Line3 xsi:nil="true"></Line3>
+          <Longitude xsi:nil="true"></Longitude>
+          <Name xsi:nil="true"></Name>
+          <PostalCode xsi:nil="true"></PostalCode>
+          <PostOfficeBox xsi:nil="true"></PostOfficeBox>
+          <PrimaryContactName xsi:nil="true"></PrimaryContactName>
+          <ShippingMethodCode>1</ShippingMethodCode>
+          <StateOrProvince xsi:nil="true"></StateOrProvince>
+          <Telephone1 xsi:nil="true"></Telephone1>
+          <Telephone2 xsi:nil="true"></Telephone2>
+          <Telephone3 xsi:nil="true"></Telephone3>
+          <TimeZoneRuleVersionNumber xsi:nil="true"></TimeZoneRuleVersionNumber>
+          <UPSZone xsi:nil="true"></UPSZone>
+          <UTCOffset xsi:nil="true"></UTCOffset>
+          <UTCConversionTimeZoneCode xsi:nil="true"></UTCConversionTimeZoneCode>
+        </Address>
+      </Addresses>
+    </Publisher>
+    <RootComponents>
+      <RootComponent type="1" schemaName="knowledgearticle" behavior="2" />
+      <RootComponent type="29" id="{562c123b-d7c2-4bc5-9b7a-fcc702843f35}" behavior="0" />
+      <RootComponent type="29" id="{7f4800dc-d0ab-4a3b-858c-ea6829a64fe9}" behavior="0" />
+      <RootComponent type="91" id="{040191f5-4cc7-4358-90a6-bd1c426d2648}" schemaName="Northwind.SendApproval, Version=1.0.1.0, Culture=neutral, PublicKeyToken=2d725bbbd99e9a28" behavior="0" />
+      <RootComponent type="92" id="{4c5daa98-5eef-45c6-b0f2-7ed9a8a88b8a}" behavior="0" />
+    </RootComponents>
+    <MissingDependencies>
+      <MissingDependency>
+        <Required type="1" schemaName="adx_portalcomment" displayName="Portal Comment" solution="PowerPages_RuntimeCore (1.0.2609.1)">
+          <package appName="Power Pages Core Package" version="1.1.2610.280">PowerPages_Core (1.1.2610.280)</package>
+        </Required>
+        <Dependent type="29" displayName="Northwind - Publish reviewed response to portal" id="{562c123b-d7c2-4bc5-9b7a-fcc702843f35}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="incident" displayName="Case" solution="msdynce_Service (9.0.5.56)">
+          <package appName="msdynce_Service" version="9.0.26094.1010">msdynce_ServiceAnchor (9.0.26094.1010)</package>
+        </Required>
+        <Dependent type="29" displayName="Northwind - Publish reviewed response to portal" id="{562c123b-d7c2-4bc5-9b7a-fcc702843f35}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="incident" displayName="Case" solution="msdynce_Service (9.0.5.56)">
+          <package appName="msdynce_Service" version="9.0.26094.1010">msdynce_ServiceAnchor (9.0.26094.1010)</package>
+        </Required>
+        <Dependent type="29" displayName="Northwind - Case Management Agent (review required)" id="{7f4800dc-d0ab-4a3b-858c-ea6829a64fe9}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="connectionreference" displayName="msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps" solution="msdyn_CaseManagementIntelligence (9.2.26094.1066)" id.connectionreferencelogicalname="msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps">
+          <package appName="Service Intelligence Package" version="9.2.26094.1066">msdyn_ServiceIntelligenceAnchor (9.2.26094.1066)</package>
+        </Required>
+        <Dependent type="29" displayName="Northwind - Publish reviewed response to portal" id="{562c123b-d7c2-4bc5-9b7a-fcc702843f35}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="connectionreference" displayName="msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps" solution="msdyn_CaseManagementIntelligence (9.2.26094.1066)" id.connectionreferencelogicalname="msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps">
+          <package appName="Service Intelligence Package" version="9.2.26094.1066">msdyn_ServiceIntelligenceAnchor (9.2.26094.1066)</package>
+        </Required>
+        <Dependent type="29" displayName="Northwind - Case Management Agent (review required)" id="{7f4800dc-d0ab-4a3b-858c-ea6829a64fe9}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="knowledgearticle" displayName="KnowledgeArticle" parentSchemaName="" solution="msdyn_KBSuggestionsAiBCore (1.1.22101.4)" />
+        <Dependent type="1" schemaName="knowledgearticle" displayName="KnowledgeArticle" />
+      </MissingDependency>
+    </MissingDependencies>
+  </SolutionManifest>
+</ImportExportXml>

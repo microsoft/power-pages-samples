@@ -1,0 +1,6 @@
+adx_serverlogic_adx_webrole:
+  - ba9c8c1a-db48-46e3-b1b9-325702839728
+description: 'Scoped authenticated Northwind support operation: northwind-cases'
+display_name: 'northwind-cases'
+id: ae68a962-27d0-48ee-83dc-335f449665bf
+name: northwind-cases

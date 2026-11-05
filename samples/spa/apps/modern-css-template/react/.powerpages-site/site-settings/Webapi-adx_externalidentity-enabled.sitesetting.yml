@@ -1,0 +1,4 @@
+description: Prevent direct access; only approved guarded support endpoints may access this table.
+id: 03a07e3b-b72a-4490-824a-7e5814d72564
+name: Webapi/adx_externalidentity/enabled
+value: false

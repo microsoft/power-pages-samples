@@ -1,0 +1,13 @@
+<environmentvariabledefinition schemaname="ppst_ModernCss_PortalApplicationUserId">
+  <description default="Systemuser ID of the Power Pages site application user (Portals-&lt;site name&gt;). Only Web cases created by this user start the Case Management Agent flow and the Send approval capture.">
+    <label description="Systemuser ID of the Power Pages site application user (Portals-&lt;site name&gt;). Only Web cases created by this user start the Case Management Agent flow and the Send approval capture." languagecode="1033" />
+  </description>
+  <displayname default="Modern CSS - Portal application user ID">
+    <label description="Modern CSS - Portal application user ID" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

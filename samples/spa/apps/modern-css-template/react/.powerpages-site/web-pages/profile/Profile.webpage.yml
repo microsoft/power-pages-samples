@@ -1,0 +1,13 @@
+enablerating: false
+enabletracking: false
+excludefromsearch: false
+hiddenfromsitemap: true
+id: e69a0db3-65ac-4af9-91b9-fd03613e3f71
+isroot: true
+name: Profile
+pagetemplateid: 6cce54bd-de05-4c69-816c-0aab3a4ba5eb
+parentpageid: 07ade775-23f7-40be-887a-5005ee0caafe
+partialurl: profile
+publishingstateid: 328f53e7-8e53-471c-8a76-5fdb6a268e89
+sharedpageconfiguration: false
+title: Profile

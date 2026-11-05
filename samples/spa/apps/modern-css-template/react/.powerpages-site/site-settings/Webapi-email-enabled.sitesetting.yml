@@ -1,0 +1,4 @@
+description: Prevent direct access; only approved guarded support endpoints may access this table.
+id: 5fbd9ef1-1fd3-40f5-a0e7-10be6e6e286d
+name: Webapi/email/enabled
+value: false

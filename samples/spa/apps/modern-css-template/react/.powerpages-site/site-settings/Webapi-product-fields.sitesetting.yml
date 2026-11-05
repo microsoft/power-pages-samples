@@ -1,0 +1,4 @@
+description: Exact readable fields used by the support catalog.
+id: e1744df9-6057-4cff-8d31-e6b862d5fb3f
+name: Webapi/product/fields
+value: "productid,name,statecode"

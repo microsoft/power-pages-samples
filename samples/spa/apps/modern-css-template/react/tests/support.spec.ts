@@ -1,0 +1,387 @@
+import { test as base, expect, type Page } from '@playwright/test'
+
+const test = base.extend<{ browserErrors: string[] }>({
+  browserErrors: [async ({ page }, use) => {
+    const errors: string[] = []
+    page.on('pageerror', error => errors.push(error.message))
+    page.on('console', message => { if (message.type() === 'error') errors.push(message.text()) })
+    page.on('request', request => {
+      if (!['GET', 'HEAD'].includes(request.method())) errors.push(`Unexpected write: ${request.method()} ${request.url()}`)
+    })
+    await use(errors)
+    expect(errors).toEqual([])
+  }, { auto: true }],
+})
+
+const firstCase = '/cases/CAS-01000-M8J4J8'
+const secondCase = '/cases/CAS-01001-S9D5F3'
+
+async function navigateFromMenu(page: Page, name: string) {
+  const desktop = page.locator('.sidebar')
+  if (await desktop.isVisible()) await desktop.getByRole('link', { name, exact: true }).click()
+  else {
+    await page.getByRole('button', { name: 'Open navigation' }).click()
+    await page.getByRole('dialog', { name: 'Navigation', exact: true }).getByRole('link', { name, exact: true }).click()
+  }
+}
+
+test('every route has distinct content, a title, and no horizontal overflow', async ({ page }) => {
+  const routes = [
+    '/', '/cases', firstCase, secondCase, '/cases/CAS-00982-R4T7X1',
+    ...['KA-0182', 'KA-0214', 'KA-0341', 'KA-0408', 'KA-0430', 'KA-0362'].map(id => `/articles/${id}`),
+    '/account', '/cases/missing', '/articles/missing', '/not-found',
+  ]
+  for (const route of routes) {
+    await page.goto(route)
+    await expect(page.locator('main h1')).toHaveCount(1)
+    await expect(page).toHaveTitle(/Northwind Customer Support/)
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en-US')
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
+  }
+})
+
+test('unified search supports matches, keyboard selection, Escape, and empty results', async ({ page }) => {
+  await page.goto('/')
+  const inquiry = page.getByLabel('Search cases and articles')
+  await inquiry.fill('gateway')
+  const results = page.getByRole('region', { name: 'Support search results' })
+  await expect(results.getByRole('link').first()).toBeVisible()
+  await inquiry.press('ArrowDown')
+  await expect(results.getByRole('link').first()).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(inquiry).toBeFocused()
+  await expect(results).toBeHidden()
+  await inquiry.fill('no-such-resource-xyz')
+  await expect(results).toContainText('No matching cases or articles')
+  await inquiry.fill('status lights')
+  await results.getByRole('link', { name: /Understand Edge Gateway status lights/ }).click()
+  await expect(page).toHaveURL(/\/articles\/KA-0182$/)
+})
+
+test('search button aligns with the input rather than its label in both directions', async ({ page }) => {
+  await page.goto('/')
+  await page.evaluate(() => document.fonts.ready)
+  const form = page.getByRole('search')
+  const input = form.getByLabel('Search cases and articles')
+  const button = form.getByRole('button', { name: 'Search support', exact: true })
+  for (const direction of ['ltr', 'rtl'] as const) {
+    await page.evaluate(dir => { document.documentElement.dir = dir }, direction)
+    await expect(input).toBeVisible()
+    const inputBox = await input.boundingBox()
+    const buttonBox = await button.boundingBox()
+    if (!inputBox || !buttonBox) throw new Error('Search input and button must be visible')
+    expect(Math.abs(inputBox.y + inputBox.height - buttonBox.y - buttonBox.height)).toBeLessThanOrEqual(1)
+    expect(buttonBox.width).toBeGreaterThanOrEqual(44)
+    expect(buttonBox.height).toBeGreaterThanOrEqual(44)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
+  }
+})
+
+test('article bookmarks, feedback, and composed library filters survive SPA navigation', async ({ page }) => {
+  await page.goto('/articles/KA-0182')
+  await page.getByRole('button', { name: 'Save article', exact: true }).click()
+  await page.getByRole('button', { name: 'Yes, helpful', exact: true }).click()
+  await page.getByRole('link', { name: 'View saved articles' }).click()
+  await expect(page.locator('.library-grid article')).toHaveCount(1)
+  await page.getByRole('button', { name: 'Equipment', exact: true }).click()
+  await page.getByLabel('Search support articles').fill('unmatched')
+  await expect(page.getByText('No articles match these filters.')).toBeVisible()
+  await page.getByLabel('Search support articles').fill('status')
+  await page.getByRole('link', { name: 'Read Understand Edge Gateway status lights' }).click()
+  await expect(page.getByRole('button', { name: 'Saved to bookmarks' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('button', { name: 'Yes, helpful', exact: true })).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('case filters, separate records, and keyboard tabs work in both directions', async ({ page }) => {
+  await page.goto('/cases')
+  await expect(page.locator('.case-card')).toHaveCount(3)
+  for (const filter of ['Action needed', 'In progress', 'Resolved']) {
+    await page.getByRole('button', { name: filter, exact: true }).click()
+    await expect(page.locator('.case-card')).toHaveCount(1)
+  }
+  await page.getByRole('button', { name: 'Local drafts', exact: true }).click()
+  await expect(page.getByText('No cases in this view')).toBeVisible()
+  await page.goto(firstCase)
+  const firstTitle = await page.locator('h1').innerText()
+  await page.getByRole('tab', { name: 'Timeline', exact: true }).focus()
+  await page.keyboard.press('ArrowRight')
+  await expect(page.getByRole('tab', { name: 'Documents', exact: true })).toBeFocused()
+  await page.keyboard.press('End')
+  await expect(page.getByRole('tab', { name: 'Original request', exact: true })).toBeFocused()
+  await page.evaluate(() => { document.documentElement.dir = 'rtl' })
+  await page.keyboard.press('ArrowRight')
+  await expect(page.getByRole('tab', { name: 'Documents', exact: true })).toBeFocused()
+  await page.keyboard.press('Home')
+  await expect(page.getByRole('tab', { name: 'Timeline', exact: true })).toBeFocused()
+  await page.goto(secondCase)
+  await expect(page.locator('h1')).not.toHaveText(firstTitle)
+  await expect(page.locator('.timeline')).toContainText(/firmware/i)
+})
+
+test('an issue creates an honest local draft and never submits a request', async ({ page }) => {
+  await page.goto('/')
+  await page.locator('.hero-actions').getByRole('button', { name: 'Report an issue' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Report an issue', exact: true })
+  await expect(dialog.getByRole('button', { name: 'Check for matches' })).toBeDisabled()
+  await dialog.getByLabel('What do you need help with?').fill('Sample gateway concern')
+  await dialog.getByLabel('How is this affecting you?').selectOption({ label: 'Service is impaired' })
+  await dialog.getByRole('button', { name: 'Check for matches' }).click()
+  await dialog.getByRole('button', { name: 'Save local issue draft' }).click()
+  await expect(page).toHaveURL(/\/cases\/DRAFT-/)
+  await expect(page.locator('h1')).toHaveText('Sample gateway concern')
+  await expect(page.locator('.case-hero')).toContainText('Local draft')
+  await expect(page.locator('.case-action')).toContainText('Not submitted')
+  await page.getByRole('link', { name: 'My cases', exact: true }).last().click()
+  await page.getByRole('button', { name: 'Local drafts', exact: true }).click()
+  await expect(page.locator('.case-card')).toHaveCount(1)
+  await page.reload()
+  await page.getByRole('button', { name: 'Local drafts', exact: true }).click()
+  await expect(page.locator('.case-card')).toHaveCount(0)
+})
+
+test('file validation records metadata only and keeps it scoped to each case', async ({ page }) => {
+  await page.goto(firstCase)
+  await page.getByRole('button', { name: 'Review document options' }).click()
+  await expect(page.getByText('Never select a real passport', { exact: false })).toBeVisible()
+  const input = page.getByLabel('Select a non-sensitive demonstration file')
+  await input.setInputFiles({ name: 'sample.txt', mimeType: 'text/plain', buffer: Buffer.from('sample') })
+  await expect(page.locator('#document-error')).toContainText('Choose a PDF')
+  await input.setInputFiles({ name: 'large.pdf', mimeType: 'application/pdf', buffer: Buffer.alloc(5 * 1024 * 1024 + 1) })
+  await expect(page.locator('#document-error')).toContainText('no larger than 5 MB')
+  await input.setInputFiles({ name: 'sample.pdf', mimeType: 'application/pdf', buffer: Buffer.from('non-sensitive sample') })
+  await expect(page.getByRole('tabpanel')).toContainText('No file content was saved or uploaded')
+  await expect(page.getByRole('button', { name: 'Remove sample.pdf', exact: true })).toBeVisible()
+  await page.getByRole('link', { name: 'My cases', exact: true }).last().click()
+  await page.getByRole('link', { name: /Open.*firmware/i }).click()
+  await page.getByRole('tab', { name: 'Documents', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Remove sample.pdf', exact: true })).toHaveCount(0)
+  await page.getByRole('link', { name: 'My cases', exact: true }).last().click()
+  await page.locator(`.case-card a[href="${firstCase}"]`).click()
+  await page.getByRole('tab', { name: 'Documents', exact: true }).click()
+  await page.getByRole('button', { name: 'Remove sample.pdf', exact: true }).click()
+  await expect(input).toBeFocused()
+  await expect(page.getByRole('tabpanel')).toContainText('No demonstration files selected')
+})
+
+test('profile and saved preferences remain consistent across routes', async ({ page }) => {
+  await page.goto('/account')
+  await page.getByLabel('Name', { exact: true }).fill('  Ada Lovelace  ')
+  await page.getByRole('button', { name: 'Save profile locally' }).click()
+  await page.getByText('Notification preferences', { exact: true }).click()
+  const guidance = page.getByRole('checkbox', { name: /Recommended support guidance/ })
+  await guidance.check()
+  await page.getByRole('button', { name: 'Save preferences locally' }).click()
+  await navigateFromMenu(page, 'Ask Northwind')
+  await expect(page.locator('h1')).toContainText('Hi Ada!')
+  await navigateFromMenu(page, 'Account & support')
+  await page.getByText('Notification preferences', { exact: true }).click()
+  await expect(guidance).toBeChecked()
+  await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Ada Lovelace')
+})
+
+test('notifications and dialogs retain keyboard focus and can be reopened', async ({ page }) => {
+  await page.goto('/')
+  const trigger = page.getByRole('button', { name: /Notifications/ })
+  await trigger.click()
+  const dialog = page.getByRole('dialog', { name: 'Notifications', exact: true })
+  await dialog.getByRole('button', { name: 'Mark all as read' }).click()
+  await expect(dialog.getByText('Read', { exact: true })).toHaveCount(2)
+  await dialog.getByRole('button', { name: 'Dismiss', exact: true }).first().click()
+  await expect(dialog.locator('h2')).toBeFocused()
+  await dialog.getByRole('button', { name: 'Dismiss', exact: true }).click()
+  await expect(dialog).toContainText('No notifications to show')
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  await expect(trigger).toBeFocused()
+  await trigger.click()
+  await expect(dialog).toBeVisible()
+})
+
+async function openAssistant(page: Page) {
+  await page.locator('.hero-actions').getByRole('button', { name: /Ask assistant/ }).click()
+  const dialog = page.getByRole('dialog', { name: 'Northwind Assistant', exact: true })
+  await expect(dialog.getByLabel('Your question')).toBeFocused()
+  return dialog
+}
+
+test('assistant handles matches, status choices, no match, honest ticket drafts and a contextual handoff', async ({ page }) => {
+  await page.goto('/')
+  let dialog = await openAssistant(page)
+  await expect(dialog).toContainText('not live AI')
+  await dialog.getByLabel('Your question').fill('zzzz no-match-xyz')
+  await dialog.getByRole('button', { name: 'Send message' }).click()
+  await expect(dialog.getByRole('log')).toContainText('couldn’t find a close match')
+  await dialog.getByRole('button', { name: 'Still need help? Raise a ticket' }).click()
+  const ticket = dialog.getByLabel('Review your issue before submitting')
+  await expect(ticket).toHaveValue('zzzz no-match-xyz')
+  await expect(ticket).toBeFocused()
+  await dialog.getByLabel('How is this affecting you?').selectOption('I have a question')
+  await dialog.getByRole('button', { name: 'Save ticket draft' }).click()
+  await expect(dialog.getByRole('status').filter({ hasText: 'Draft saved' })).toContainText('nothing was sent to support')
+  await dialog.getByRole('button', { name: 'View my open cases' }).click()
+  await expect(page).toHaveURL(/\/cases$/)
+  await page.getByRole('button', { name: 'Local drafts', exact: true }).click()
+  await expect(page.locator('.case-card')).toHaveCount(1)
+  await navigateFromMenu(page, 'Ask Northwind')
+  dialog = await openAssistant(page)
+  await expect(dialog.getByRole('log')).toContainText('zzzz')
+  await dialog.getByRole('button', { name: 'Close assistant' }).click()
+  await expect(dialog).toBeHidden()
+  dialog = await openAssistant(page)
+  await expect(dialog.getByRole('log')).not.toContainText('zzzz')
+  await dialog.getByRole('button', { name: 'Track my open cases' }).click()
+  await expect(dialog.locator('.chat-resource')).toHaveCount(4)
+  await dialog.getByRole('button', { name: 'Get help with a gateway issue' }).click()
+  await dialog.getByRole('button', { name: 'Amber', exact: true }).click()
+  await expect(dialog.getByRole('button', { name: 'Amber', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await dialog.getByRole('button', { name: 'Yes, that solved it' }).click()
+  await expect(dialog.getByRole('log')).toContainText('Glad that helped')
+  await dialog.getByRole('button', { name: 'Contact support', exact: true }).click()
+  await expect(page).toHaveURL(/\/account\?context=/)
+  await expect(page.getByLabel('Message', { exact: true })).toHaveValue(/Observed status: Amber/)
+  await expect(page.locator('#contact-support')).toBeFocused()
+})
+
+test('assistant widget minimizes to a launcher and its shortcuts open the panel', async ({ page }) => {
+  await page.goto('/')
+  const narrow = test.info().project.name === 'narrow'
+  const launcher = page.getByRole('button', { name: 'Assistant', exact: true })
+  const widget = page.getByRole('region', { name: 'Northwind Assistant' })
+  if (narrow) {
+    await expect(widget).toHaveCount(0)
+    await launcher.click()
+  }
+  await expect(widget).toBeVisible()
+  await expect(widget).toContainText('Need a hand, Mona?')
+  await widget.getByRole('button', { name: 'Minimize assistant' }).click()
+  await expect(widget).toHaveCount(0)
+  await expect(launcher).toBeFocused()
+  await launcher.click()
+  await expect(widget.getByRole('button', { name: 'Expand assistant' })).toBeFocused()
+  await widget.getByRole('button', { name: /Get help with case CAS-01000/ }).click()
+  const dialog = page.getByRole('dialog', { name: 'Northwind Assistant', exact: true })
+  await expect(dialog.locator('.chat-resource')).toContainText('Name change for Seattle event ticket')
+  await dialog.getByRole('button', { name: 'Expand assistant' }).click()
+  await expect(dialog.getByRole('button', { name: 'Restore assistant size' })).toHaveAttribute('aria-pressed', 'true')
+  await dialog.getByRole('button', { name: 'Minimize assistant' }).click()
+  await expect(widget.getByRole('button', { name: 'Expand assistant' })).toBeFocused()
+  await widget.getByLabel('Ask Northwind Assistant a question').fill('status lights')
+  await widget.getByRole('button', { name: 'Continue in assistant' }).click()
+  await expect(dialog.getByRole('log')).toContainText('Name change for Seattle event ticket')
+  await expect(dialog.locator('.chat-resource').filter({ hasText: 'Understand Edge Gateway status lights' })).toBeVisible()
+})
+
+test('demo sign-out hides personal navigation and sign-in restores the workspace', async ({ page }) => {
+  await page.goto('/')
+  const narrow = test.info().project.name === 'narrow'
+  if (narrow) await page.getByRole('button', { name: 'Open navigation' }).click()
+  await page.locator(narrow ? '.mobile-nav' : '.sidebar').getByRole('button', { name: 'Sign out' }).click()
+  await expect(page.getByRole('dialog', { name: 'Navigation', exact: true })).toBeHidden()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.locator('main h1')).toHaveText('Welcome to Northwind support')
+  await expect(page.getByRole('button', { name: /^Notifications,/ })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'My cases', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('region', { name: 'Northwind Assistant' })).toHaveCount(0)
+  await expect(page.locator('.case-card')).toHaveCount(0)
+  await expect(page.locator('.article-card')).toHaveCount(6)
+  const inquiry = page.getByLabel('Search knowledge articles')
+  await inquiry.fill('status lights')
+  await expect(page.getByRole('region', { name: 'Support search results' }).getByRole('group', { name: 'Cases' })).toHaveCount(0)
+  await inquiry.press('Enter')
+  await expect(page.locator('#support-library')).toBeFocused()
+  await expect(page.locator('.article-card')).toHaveCount(1)
+  await page.getByRole('link', { name: 'Read Understand Edge Gateway status lights' }).click()
+  await expect(page.locator('main h1')).toHaveText('Understand Edge Gateway status lights')
+  await expect(page.getByRole('link', { name: 'Sign in to give feedback' })).toBeVisible()
+  await page.goBack()
+  await page.locator('.quick-paths').getByRole('link', { name: /Contact support/ }).click()
+  const signIn = page.getByRole('dialog', { name: 'Sign in to continue', exact: true })
+  await signIn.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await expect(signIn.getByRole('alert')).toContainText('Select a profile')
+  await signIn.getByRole('radio', { name: /Mona Kane/ }).check()
+  await signIn.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await expect(signIn).toBeHidden()
+  await expect(page).toHaveURL(/\/account#contact-support$/)
+  await expect(page.getByRole('button', { name: /^Notifications,/ })).toBeVisible()
+})
+
+test('callback validation and draft preparation never imply delivery', async ({ page }) => {
+  await page.goto('/account#contact-support')
+  await page.getByLabel('Message', { exact: true }).fill('A sample callback request')
+  await page.getByLabel('Support channel', { exact: true }).selectOption('Callback')
+  await page.getByLabel('Preferred callback time').fill('2020-01-01T10:00')
+  await page.getByRole('button', { name: 'Prepare local request' }).click()
+  await expect(page.getByRole('alert').filter({ hasText: 'future callback time' })).toBeVisible()
+  await page.getByLabel('Message', { exact: true }).fill('Updated callback request')
+  await expect(page.getByRole('alert').filter({ hasText: 'future callback time' })).toHaveCount(0)
+  await page.getByLabel('Preferred callback time').fill('2099-01-01T10:00')
+  await page.getByRole('button', { name: 'Prepare local request' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Callback draft prepared locally' })).toContainText('No message was delivered')
+})
+
+test('assistant panel keeps its header visible, every action keyboard reachable, and minimizes with Escape', async ({ page }) => {
+  for (const direction of ['ltr', 'rtl'] as const) {
+    await page.goto('/')
+    await page.evaluate(dir => { document.documentElement.dir = dir }, direction)
+    const dialog = await openAssistant(page)
+    await dialog.getByRole('button', { name: 'Get help with a gateway issue' }).click()
+    await dialog.getByRole('button', { name: 'Amber', exact: true }).click()
+    const heading = dialog.getByRole('heading', { name: 'Northwind Assistant' })
+    const controls = dialog.locator('button:not(:disabled), a[href], input, textarea, select')
+    await controls.first().focus()
+    const count = await controls.count()
+    for (let index = 1; index < count; index++) {
+      await page.keyboard.press('Tab')
+      await expect(controls.nth(index)).toBeFocused()
+      await expect(controls.nth(index)).toBeInViewport()
+      await expect(heading).toBeInViewport()
+      await expect(dialog.getByRole('button', { name: 'Close assistant' })).toBeInViewport()
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
+    await page.keyboard.press('Escape')
+    await expect(dialog).toBeHidden()
+    await expect(page.getByRole('button', { name: test.info().project.name === 'narrow' ? 'Assistant' : 'Expand assistant', exact: true })).toBeFocused()
+  }
+})
+
+test('free-form controls adapt direction, preserve metadata, and render injected markup as text', async ({ page }) => {
+  await page.goto('/account')
+  for (const direction of ['ltr', 'rtl'] as const) {
+    await page.evaluate(dir => { document.documentElement.dir = dir }, direction)
+    for (const id of ['profile-name', 'profile-address', 'support-name', 'support-message']) {
+      const field = page.locator(`#${id}`)
+      await expect(field).toHaveAttribute('dirname', `${id}.dir`)
+      for (const value of ['مرحبا بالعالم', 'Ada gateway', '']) {
+        await field.fill(value)
+        await expect(field).toHaveCSS('direction', value ? value.startsWith('Ada') ? 'ltr' : 'rtl' : direction)
+      }
+      await field.fill('مرحبا')
+      await field.fill('')
+      await expect(field).toHaveCSS('direction', direction)
+    }
+    await expect(page.locator('#support-email')).toHaveCSS('direction', 'ltr')
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
+  }
+  await page.locator('#profile-name').fill('<img src=x onerror=alert(1)>')
+  await page.getByRole('button', { name: 'Save profile locally' }).click()
+  await navigateFromMenu(page, 'Ask Northwind')
+  await expect(page.locator('#welcome-heading img')).toHaveCount(0)
+  await expect(page.locator('#welcome-heading')).toContainText('Hi <img!')
+})
+
+test('narrow navigation traps focus, closes with Escape, and follows route focus', async ({ page }) => {
+  test.skip(test.info().project.name !== 'narrow', 'Narrow-only menu')
+  await page.goto('/')
+  const trigger = page.getByRole('button', { name: 'Open navigation' })
+  await trigger.click()
+  const dialog = page.getByRole('dialog', { name: 'Navigation', exact: true })
+  await expect(dialog).toBeVisible()
+  await page.keyboard.press('Shift+Tab')
+  expect(await page.evaluate(() => Boolean(document.activeElement?.closest('dialog')))).toBe(true)
+  await page.keyboard.press('Escape')
+  await expect(trigger).toBeFocused()
+  await trigger.click()
+  await dialog.getByRole('link', { name: 'My cases', exact: true }).click()
+  await expect(dialog).toBeHidden()
+  await expect(page.locator('main')).toBeFocused()
+})

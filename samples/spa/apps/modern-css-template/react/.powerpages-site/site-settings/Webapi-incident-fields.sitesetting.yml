@@ -1,0 +1,4 @@
+description: Minimal personal-case read fields and create bindings; column profile prevents direct updates.
+id: fb022423-6538-46af-b516-52f1b48a665b
+name: Webapi/incident/fields
+value: "_customerid_value,caseorigincode,createdon,customerid_contact,description,incidentid,modifiedon,productid,statecode,statuscode,ticketnumber,title"

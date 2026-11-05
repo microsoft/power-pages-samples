@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- ba9c8c1a-db48-46e3-b1b9-325702839728
+append: false
+appendto: false
+contactrelationship: contact_customer_accounts
+create: false
+delete: false
+entitylogicalname: account
+entityname: Northwind - Related account
+id: 05f4fe1d-b70c-4481-948d-9658effc8ab6
+read: true
+scope: 756150001
+write: false

@@ -1,0 +1,13 @@
+<environmentvariabledefinition schemaname="ppst_ModernCss_ApprovalWriterUserId">
+  <description default="Systemuser ID of the SYSTEM user in this environment. The publish flow only trusts Send approval notes created by this user.">
+    <label description="Systemuser ID of the SYSTEM user in this environment. The publish flow only trusts Send approval notes created by this user." languagecode="1033" />
+  </description>
+  <displayname default="Modern CSS - Approval writer (SYSTEM) user ID">
+    <label description="Modern CSS - Approval writer (SYSTEM) user ID" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0.0.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>
