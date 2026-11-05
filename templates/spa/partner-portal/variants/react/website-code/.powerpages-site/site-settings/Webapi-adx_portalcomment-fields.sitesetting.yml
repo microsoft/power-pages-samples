@@ -1,0 +1,4 @@
+description: Web API columns for adx_portalcomment (§5.3 + backend plan v4)
+id: 5f69847a-9996-401c-849c-290fe1470e80
+name: Webapi/adx_portalcomment/fields
+value: "activityid,subject,description,regardingobjectid,adx_portalcommentdirectioncode,statecode,createdon,modifiedon,createdby,_regardingobjectid_value,_createdby_value,regardingobjectid_opportunity_adx_portalcomment,regardingobjectid_contact_adx_portalcomment,regardingobjectid_account_adx_portalcomment"

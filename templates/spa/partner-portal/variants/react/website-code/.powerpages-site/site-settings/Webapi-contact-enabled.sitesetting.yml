@@ -1,0 +1,4 @@
+description: Enable Web API for contact (REQ-API)
+id: f9304947-760c-40cb-b8db-9b146e6df6cf
+name: Webapi/contact/enabled
+value: true

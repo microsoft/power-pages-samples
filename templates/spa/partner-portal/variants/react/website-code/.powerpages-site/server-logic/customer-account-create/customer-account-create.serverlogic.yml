@@ -1,0 +1,7 @@
+adx_serverlogic_adx_webrole:
+  - a83de8fe-a694-496e-a654-e49c34e2ebf6
+  - d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+description: 'Validated customer account creation (classification set server-side)'
+display_name: 'Create customer account'
+id: e283faa0-1eab-45b4-b056-a932ede71049
+name: customer-account-create

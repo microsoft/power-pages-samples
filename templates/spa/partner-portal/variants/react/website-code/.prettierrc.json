@@ -1,0 +1,13 @@
+{
+  "semi": false,
+  "singleQuote": true,
+  "printWidth": 160,
+  "arrowParens": "avoid",
+  "trailingComma": "all",
+  "overrides": [
+    {
+      "files": ".powerpages-site/server-logic/**/*.js",
+      "options": { "semi": true }
+    }
+  ]
+}

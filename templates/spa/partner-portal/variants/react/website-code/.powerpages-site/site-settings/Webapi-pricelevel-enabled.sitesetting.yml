@@ -1,0 +1,4 @@
+description: Enable Web API for pricelevel (REQ-API)
+id: 1bf659dc-0b0a-499f-8868-8400f832a2e3
+name: Webapi/pricelevel/enabled
+value: true

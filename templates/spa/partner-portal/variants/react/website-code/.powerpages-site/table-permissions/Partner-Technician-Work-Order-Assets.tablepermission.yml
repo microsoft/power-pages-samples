@@ -1,0 +1,14 @@
+adx_entitypermission_webrole:
+- fe1a23f5-8064-45ea-bb5f-d03a61321c55
+append: false
+appendto: false
+create: false
+delete: false
+entitylogicalname: msdyn_customerasset
+entityname: Partner Technician - Work Order Assets
+id: 25000e94-99f3-4df5-8022-bc153cf80fa4
+parententitypermission: 034d9bed-5c13-4584-84e1-03b3f1920e8e
+parentrelationship: msdyn_msdyn_customerasset_msdyn_workorder_CustomerAsset
+read: true
+scope: 756150003
+write: false

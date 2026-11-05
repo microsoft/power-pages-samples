@@ -1,0 +1,4 @@
+description: Web API columns for uom (§5.3 + backend plan v4)
+id: 891bd6d4-91b2-4d4b-9a35-593366f7e148
+name: Webapi/uom/fields
+value: "uomid,name"

@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- 1692b00f-7715-4c82-88e9-cf71c94af390
+append: true
+appendto: true
+create: false
+delete: false
+entitylogicalname: contact
+entityname: Customer Service - User's own contact
+id: 23876c4f-dd9b-4eca-a34c-5777fb0fb08d
+read: true
+scope: 756150004
+write: true

@@ -1,0 +1,8 @@
+adx_serverlogic_adx_webrole:
+  - a83de8fe-a694-496e-a654-e49c34e2ebf6
+  - d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+  - 3f8e01b2-0b59-4990-9f82-4051540f211b
+description: 'Permission-scoped search across opportunities (with deal registration), customer accounts, customer contacts and partner contacts for the top-bar global search'
+display_name: 'Global search'
+id: 265cc6d4-e3e0-46bb-857c-d2a72111a0d2
+name: global-search

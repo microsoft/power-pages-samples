@@ -1,0 +1,15 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+append: true
+appendto: true
+create: true
+delete: false
+entitylogicalname: adx_dealregistrationrequest
+entityname: Access to Partner Manager Channel Deal Registration Requests
+id: 9f991e4e-6a1f-413b-adb7-fd1c6992bb92
+parententitypermission: c981ceca-8212-4737-a10d-cba2362c7874
+parentrelationship: adx_opportunity_adx_dealregistrationrequest
+read: true
+scope: 756150003
+write: false

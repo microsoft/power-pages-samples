@@ -1,0 +1,4 @@
+description: Web API columns for account (§5.3 + backend plan v4)
+id: f78277d3-90d7-4273-a3d7-bc88bdc99edf
+name: Webapi/account/fields
+value: "accountid,name,accountnumber,telephone1,emailaddress1,fax,websiteurl,description,address1_composite,address1_line1,address1_line2,address1_line3,address1_city,address1_stateorprovince,address1_postalcode,address1_country,primarycontactid,adx_createdbyportalcontactid,statecode,statuscode,createdon,_primarycontactid_value,_adx_createdbyportalcontactid_value"

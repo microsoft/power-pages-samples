@@ -1,0 +1,14 @@
+adx_entitypermission_webrole:
+- fe1a23f5-8064-45ea-bb5f-d03a61321c55
+append: true
+appendto: true
+create: true
+delete: false
+entitylogicalname: annotation
+entityname: Partner Technician - Work Order Notes
+id: 2871fff0-390d-40d0-abc1-7b75fcc6353d
+parententitypermission: 034d9bed-5c13-4584-84e1-03b3f1920e8e
+parentrelationship: msdyn_workorder_Annotations
+read: true
+scope: 756150003
+write: false

@@ -1,0 +1,16 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+- 3f8e01b2-0b59-4990-9f82-4051540f211b
+append: false
+appendto: false
+create: false
+delete: false
+entitylogicalname: contact
+entityname: Access To Collaborative Shared Contacts
+id: a66baabc-bfec-4178-b421-508b9ca7141a
+parententitypermission: e904b505-0c0d-4ec7-afa1-5a1dea796f9b
+parentrelationship: adx_internal_collaboration
+read: true
+scope: 756150003
+write: false

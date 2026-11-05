@@ -1,0 +1,8 @@
+adx_serverlogic_adx_webrole:
+  - a83de8fe-a694-496e-a654-e49c34e2ebf6
+  - d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+  - 3f8e01b2-0b59-4990-9f82-4051540f211b
+description: 'Opportunity with products, customer and shared contacts, collaborators, registrations, comments and optional lookups'
+display_name: 'Opportunity workspace'
+id: 22011772-fa2b-4caf-90f9-080ae2dc5026
+name: opportunity-workspace

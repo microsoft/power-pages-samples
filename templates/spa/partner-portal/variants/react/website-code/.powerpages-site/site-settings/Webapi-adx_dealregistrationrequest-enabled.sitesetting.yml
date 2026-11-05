@@ -1,0 +1,4 @@
+description: Enable Web API for adx_dealregistrationrequest (REQ-API)
+id: ee8ca1dc-f3da-4733-9906-553c9386e4f5
+name: Webapi/adx_dealregistrationrequest/enabled
+value: true

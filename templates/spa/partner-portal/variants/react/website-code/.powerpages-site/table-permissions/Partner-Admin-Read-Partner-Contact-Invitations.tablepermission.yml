@@ -1,0 +1,14 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+append: false
+appendto: false
+create: false
+delete: false
+entitylogicalname: adx_invitation
+entityname: Partner Admin Read Partner Contact Invitations
+id: 99cf6fa8-c653-4a2b-bbef-c800fc63386a
+parententitypermission: cb083766-de45-4466-9912-6018befc7780
+parentrelationship: adx_invitation_invitecontact
+read: true
+scope: 756150003
+write: false

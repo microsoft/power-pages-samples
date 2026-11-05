@@ -1,0 +1,4 @@
+description: Web API columns for product (§5.3 + backend plan v4)
+id: 1013d8fd-0571-4011-8d00-b195fefcfae0
+name: Webapi/product/fields
+value: "productid,name,productnumber"

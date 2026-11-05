@@ -1,0 +1,16 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+- 3f8e01b2-0b59-4990-9f82-4051540f211b
+append: true
+appendto: true
+create: true
+delete: false
+entitylogicalname: adx_dealregistrationrequest
+entityname: Access to Assigned Deal Registration Requests
+id: 5bca41d7-9494-447c-ade0-e9c37b69d09c
+parententitypermission: 963d6829-c941-474c-82e4-2659f560ae2f
+parentrelationship: adx_opportunity_adx_dealregistrationrequest
+read: true
+scope: 756150003
+write: false

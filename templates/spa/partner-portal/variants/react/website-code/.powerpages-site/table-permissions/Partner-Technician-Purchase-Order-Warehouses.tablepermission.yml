@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- fe1a23f5-8064-45ea-bb5f-d03a61321c55
+append: true
+appendto: true
+create: false
+delete: false
+entitylogicalname: msdyn_warehouse
+entityname: Partner Technician - Purchase Order Warehouses
+id: 27e27c59-e29e-4654-bab0-a1d6cef97f6c
+read: false
+scope: 756150000
+write: false

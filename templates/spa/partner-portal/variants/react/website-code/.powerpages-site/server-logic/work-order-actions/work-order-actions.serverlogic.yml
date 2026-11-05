@@ -1,0 +1,6 @@
+adx_serverlogic_adx_webrole:
+  - fe1a23f5-8064-45ea-bb5f-d03a61321c55
+description: 'Validated Partner Technician writes on their own bookings: travel, arrival, diagnosis and service report'
+display_name: 'Work order actions'
+id: a51e8623-8d0d-487f-a0ca-1637749a78b9
+name: work-order-actions

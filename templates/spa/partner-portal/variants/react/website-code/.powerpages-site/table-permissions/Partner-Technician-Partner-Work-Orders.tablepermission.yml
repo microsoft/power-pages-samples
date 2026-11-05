@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- fe1a23f5-8064-45ea-bb5f-d03a61321c55
+accountrelationship: cr798_account_msdyn_workorder_servicepartnerid
+append: true
+appendto: true
+create: false
+delete: false
+entitylogicalname: msdyn_workorder
+entityname: Partner Technician - Partner Work Orders
+id: 034d9bed-5c13-4584-84e1-03b3f1920e8e
+read: true
+scope: 756150002
+write: true

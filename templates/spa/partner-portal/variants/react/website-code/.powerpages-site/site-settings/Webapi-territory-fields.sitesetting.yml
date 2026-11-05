@@ -1,0 +1,4 @@
+description: Web API columns for territory (§5.3 + backend plan v4)
+id: ebbdd244-41e4-48cd-8341-d81493c962d3
+name: Webapi/territory/fields
+value: "territoryid,name"

@@ -1,0 +1,4 @@
+description: Re-apply claim mapping on every sign-in so contact fields stay in sync with Entra
+id: 5cc7becb-ef15-4566-b109-5e11c2ec9cb5
+name: Authentication/OpenIdConnect/AzureAD/LoginClaimsMapping
+value: "firstname=given_name,lastname=family_name,emailaddress1=upn"

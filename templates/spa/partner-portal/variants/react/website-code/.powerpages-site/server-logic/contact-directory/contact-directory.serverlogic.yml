@@ -1,0 +1,6 @@
+adx_serverlogic_adx_webrole:
+  - 1692b00f-7715-4c82-88e9-cf71c94af390
+description: 'Contact reads that include the partner role, parent account and application columns (not exposed through the Web API)'
+display_name: 'Contact directory'
+id: c9e19dff-9395-49c1-bacd-80902e415a3b
+name: contact-directory

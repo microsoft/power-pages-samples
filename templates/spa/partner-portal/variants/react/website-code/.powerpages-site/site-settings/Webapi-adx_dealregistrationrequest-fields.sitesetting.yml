@@ -1,0 +1,4 @@
+description: Web API columns for adx_dealregistrationrequest (§5.3 + backend plan v4)
+id: c51025bf-0c96-472c-9b79-b6ac973bed8f
+name: Webapi/adx_dealregistrationrequest/fields
+value: "adx_dealregistrationrequestid,adx_name,adx_opportunityid,adx_partnercontact,adx_reasonforregistering,adx_renewalreason,adx_submissiondate,createdon,_adx_opportunityid_value,_adx_partnercontact_value,adx_OpportunityId,adx_PartnerContact"

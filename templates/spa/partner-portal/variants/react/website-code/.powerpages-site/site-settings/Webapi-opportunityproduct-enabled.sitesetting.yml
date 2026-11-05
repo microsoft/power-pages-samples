@@ -1,0 +1,4 @@
+description: Enable Web API for opportunityproduct (REQ-API)
+id: 179ab909-84f0-4124-b6b4-2cad81e1cc1d
+name: Webapi/opportunityproduct/enabled
+value: true

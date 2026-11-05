@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- fe1a23f5-8064-45ea-bb5f-d03a61321c55
+append: true
+appendto: true
+create: false
+delete: false
+entitylogicalname: account
+entityname: Partner Technician - Purchase Order Vendors
+id: 8d66419f-c6df-4283-8626-448281a52eeb
+read: false
+scope: 756150000
+write: false

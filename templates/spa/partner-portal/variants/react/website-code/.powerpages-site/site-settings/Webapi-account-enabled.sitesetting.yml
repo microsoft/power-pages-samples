@@ -1,0 +1,4 @@
+description: Enable Web API for account (REQ-API)
+id: f82e88b6-1330-40cd-8db3-c2458ec9bb23
+name: Webapi/account/enabled
+value: true

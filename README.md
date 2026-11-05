@@ -36,6 +36,7 @@ Follow each template's README to import the solutions and seed data, then deploy
 | --- | --- | --- | --- |
 | <img src="templates/spa/311-portal/previews/home.png" alt="311 Portal home page" width="180" /> | [311 Portal](templates/spa/311-portal/) | React + Vite | Citizen service requests, request tracking, maps, and knowledge articles. |
 | <img src="templates/spa/supplier-invoice-portal/previews/home.png" alt="Supplier Invoice Portal home page" width="180" /> | [Supplier Invoice Portal](templates/spa/supplier-invoice-portal/) | React + Vite | Supplier onboarding, purchase orders, invoice submission, and review. |
+| — | [Partner Portal](templates/spa/partner-portal/) | React + Vite | Partner onboarding, customer and opportunity management, and technician work orders. |
 
 ## Samples at a glance
 

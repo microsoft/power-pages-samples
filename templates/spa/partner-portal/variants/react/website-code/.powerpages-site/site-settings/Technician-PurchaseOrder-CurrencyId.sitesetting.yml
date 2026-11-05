@@ -1,0 +1,4 @@
+description: 'Transaction currency for technician purchase orders. US Dollar.'
+id: e00f5c99-43ec-4f8c-ac7f-d839506c6047
+name: Technician/PurchaseOrder/CurrencyId
+value:

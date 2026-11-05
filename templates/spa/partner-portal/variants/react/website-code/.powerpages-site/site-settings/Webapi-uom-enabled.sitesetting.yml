@@ -1,0 +1,4 @@
+description: Enable Web API for uom (REQ-API)
+id: d4ca2570-a1d6-4db6-9196-6c034769fa7c
+name: Webapi/uom/enabled
+value: true

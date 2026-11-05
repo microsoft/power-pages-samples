@@ -1,0 +1,4 @@
+description: 'zava_vendoraccount on technician purchase orders; must match the supplier''s other orders in the Zava Supplier portal.'
+id: 6021596c-075e-4224-88b9-d868955314ba
+name: Technician/PurchaseOrder/VendorAccount
+value:

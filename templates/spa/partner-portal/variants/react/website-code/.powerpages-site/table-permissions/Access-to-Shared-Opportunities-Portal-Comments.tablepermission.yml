@@ -1,0 +1,16 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+- 3f8e01b2-0b59-4990-9f82-4051540f211b
+append: true
+appendto: true
+create: true
+delete: false
+entitylogicalname: adx_portalcomment
+entityname: Access to Shared Opportunities Portal Comments
+id: 3b4d5760-8cb5-4193-993f-4a8a74063143
+parententitypermission: 85e1fbc5-41d2-481b-bc90-804bec849830
+parentrelationship: opportunity_adx_portalcomments
+read: true
+scope: 756150003
+write: false

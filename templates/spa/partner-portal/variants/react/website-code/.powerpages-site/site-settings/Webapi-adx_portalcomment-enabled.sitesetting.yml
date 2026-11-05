@@ -1,0 +1,4 @@
+description: Enable Web API for adx_portalcomment (REQ-API)
+id: 6925f6e8-95c5-46be-8c8d-5188b2d8f22d
+name: Webapi/adx_portalcomment/enabled
+value: true

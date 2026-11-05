@@ -1,0 +1,4 @@
+description: 'Supplier portal Contact (msdyn_contactpersonid) assigned to technician purchase orders, so the Zava Supplier portal lists them. Lee B, Northwind Components.'
+id: c1f1703f-b21e-43c0-92d8-4c3c3b26b67f
+name: Technician/PurchaseOrder/SupplierContactId
+value:

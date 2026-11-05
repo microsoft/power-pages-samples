@@ -1,0 +1,15 @@
+accountrelationship: adx_opportunity_account
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+- 3f8e01b2-0b59-4990-9f82-4051540f211b
+append: true
+appendto: true
+create: false
+delete: false
+entitylogicalname: opportunity
+entityname: Access to Collaborative Opportunities
+id: e904b505-0c0d-4ec7-afa1-5a1dea796f9b
+read: true
+scope: 756150002
+write: false

@@ -1,0 +1,118 @@
+@import 'tailwindcss';
+
+/* Layout tokens for Tailwind utilities. Components, typography and focus come from Fluent UI v9\n   (FluentProvider + contosoTheme in src/theme/fluentTheme.ts): deep navy shell, teal brand, aqua highlights. */
+@theme {
+  /* Fluent UI v9 type ramp (tokens.fontFamilyBase / fontFamilyMonospace). */
+  --font-sans: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+  --font-display: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+  --font-mono: Consolas, 'Courier New', Courier, monospace;
+
+  --color-navy: #142D40;
+  --color-navy-light: #1C3A52;
+  --color-teal: #006C70;
+  --color-teal-dark: #005E62;
+  --color-aqua: #8BD3D4;
+  --color-teal-dim: #E6F5F5;
+  --color-ground: #F4F7F9;
+  --color-line: #DFE7EC;
+  --color-line-soft: #EAF0F3;
+  --color-muted: #526575;
+  --color-subtle: #5D6F7E;
+  --color-fg: #243B4D;
+}
+
+:root {
+  --color-primary: #006C70;
+  --color-secondary: #142D40;
+  --color-bg: #F4F7F9;
+  --color-surface: #FFFFFF;
+  --color-text: #243B4D;
+  --color-text-muted: #526575;
+}
+
+/* Headings are deep navy. Re-pointing the token (rather than setting color) keeps headings that choose
+   their own colour, e.g. white titles on the navy hero, unchanged. */
+.fui-FluentProvider :is(h1, h2, h3, h4) {
+  --colorNeutralForeground1: #142D40;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Keeps anchor targets, error summaries and focused fields clear of the sticky app header. */
+  scroll-padding-top: 88px;
+}
+
+html, body, #root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #C8D3DB; }
+::-webkit-scrollbar-thumb:hover { background: #9DAEBA; }
+
+
+
+/* Focus indicators come from Fluent UI v9 components (tokens + createFocusOutlineStyle).
+   Plain links rendered outside Fluent keep a visible ring. */
+a:focus-visible:not([class*='fui-']),
+button:focus-visible:not([class*='fui-']),
+[tabindex]:focus-visible:not([class*='fui-']) {
+  outline: 2px solid #006C70;
+  outline-offset: 2px;
+}
+
+tbody tr { background-color: white; }
+
+/* Loading skeletons appear only after 150ms, so fast loads go straight to content without a skeleton flash.
+   Page navigation motion (M3 fade through, and the skeleton → content handoff) runs in App.tsx's RouteContent. */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.skeleton-enter { animation: fadeIn 200ms cubic-bezier(0.2, 0, 0, 1) 150ms both; }
+
+.hero-node-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  /* Static: the theme avoids decorative animation. */
+  opacity: 0.7;
+}
+
+.sr-only-focusable:not(:focus) {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .skeleton-enter, .hero-node-pulse { animation: none; }
+}
+
+/* Include direct Fluent controls, not just the app's Button wrapper. Keep desktop tables compact. */
+@media (pointer: coarse) {
+  .fui-FluentProvider :is(.fui-Button, .fui-MenuButton, .fui-ToggleButton, .fui-Tab, .fui-MenuItem) {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  .fui-FluentProvider :is(.fui-Input, .fui-Select, .fui-SearchBox, .fui-Checkbox, .fui-Radio) {
+    min-height: 48px;
+  }
+  .fui-FluentProvider :is(.fui-Input__input, .fui-Select__select, .fui-SearchBox__input) {
+    min-height: 48px;
+    font-size: 16px;
+  }
+  .fui-FluentProvider .fui-Textarea__textarea { font-size: 16px; }
+  .fui-FluentProvider :is(.fui-Checkbox__input, .fui-Radio__input) { min-height: 48px; }
+}

@@ -1,0 +1,4 @@
+description: Web API columns for opportunity (§5.3 + backend plan v4)
+id: 9e009c67-e178-4718-98cb-a4a93ef67598
+name: Webapi/opportunity/fields
+value: "opportunityid,name,customerid,parentaccountid,parentcontactid,estimatedvalue,estimatedclosedate,description,customerneed,purchasetimeframe,adx_territoryid,pricelevelid,transactioncurrencyid,isrevenuesystemcalculated,totalamount,msa_partneroppid,adx_referencecode,adx_dealregistrationrequestid,createdon,modifiedon,_customerid_value,_parentaccountid_value,_parentcontactid_value,_adx_territoryid_value,_pricelevelid_value,_transactioncurrencyid_value,_msa_partneroppid_value,_adx_dealregistrationrequestid_value,customerid_account,adx_TerritoryId,adx_internal_collaboration,adx_partner_collaboration"

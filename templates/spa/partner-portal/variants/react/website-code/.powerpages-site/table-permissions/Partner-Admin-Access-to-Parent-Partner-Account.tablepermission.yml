@@ -1,0 +1,14 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+append: true
+appendto: true
+contactrelationship: contact_customer_accounts
+create: false
+delete: false
+entitylogicalname: account
+entityname: Partner Admin Access to Parent Partner Account
+id: 304d235a-c02b-4dee-8569-5720f1777670
+read: true
+scope: 756150001
+write: true

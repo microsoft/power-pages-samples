@@ -1,0 +1,4 @@
+description: Invitation status columns only (no adx_invitationcode)
+id: 684a999b-d436-48db-9ae4-6501d9fbe261
+name: Webapi/adx_invitation/fields
+value: "adx_invitationid,statuscode,createdon,adx_invitecontact,_adx_invitecontact_value"

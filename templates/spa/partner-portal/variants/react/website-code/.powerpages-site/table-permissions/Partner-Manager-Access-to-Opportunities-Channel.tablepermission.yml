@@ -1,0 +1,14 @@
+accountrelationship: msa_partner_opportunity
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+append: true
+appendto: true
+create: true
+delete: false
+entitylogicalname: opportunity
+entityname: Partner Manager Access to Opportunities Channel
+id: c981ceca-8212-4737-a10d-cba2362c7874
+read: true
+scope: 756150002
+write: true

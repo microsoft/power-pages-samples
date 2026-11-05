@@ -1,0 +1,4 @@
+description: Enable Web API for product (REQ-API)
+id: 7de6e8c2-8710-4aeb-90d4-438353fc7fc4
+name: Webapi/product/enabled
+value: true

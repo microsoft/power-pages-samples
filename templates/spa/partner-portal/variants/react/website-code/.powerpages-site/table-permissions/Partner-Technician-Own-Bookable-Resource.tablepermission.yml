@@ -1,0 +1,13 @@
+adx_entitypermission_webrole:
+- fe1a23f5-8064-45ea-bb5f-d03a61321c55
+append: false
+appendto: false
+contactrelationship: contact_bookableresource_ContactId
+create: false
+delete: false
+entitylogicalname: bookableresource
+entityname: Partner Technician - Own Bookable Resource
+id: 6410f36e-2572-4d37-b93e-9c911b7c86d1
+read: true
+scope: 756150001
+write: false

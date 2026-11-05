@@ -1,0 +1,1 @@
+import{j as r}from"./react-vendor-jz8qcjo0.js";import{i as t,v as n,A as i,B as d}from"./index-fbip9gyt.js";function m({title:a,breadcrumbs:e,error:o,onRetry:s}){return r.jsxs(t,{children:[r.jsx(n,{title:a,breadcrumbs:e}),r.jsx(i,{tone:"error",children:o||"The data could not be loaded."}),r.jsx(d,{className:"mt-4",onClick:s,children:"Try again"})]})}export{m as L};

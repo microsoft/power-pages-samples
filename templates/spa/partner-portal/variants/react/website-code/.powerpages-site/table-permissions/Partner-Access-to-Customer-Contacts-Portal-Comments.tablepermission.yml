@@ -1,0 +1,16 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+- 3f8e01b2-0b59-4990-9f82-4051540f211b
+append: true
+appendto: true
+create: true
+delete: false
+entitylogicalname: adx_portalcomment
+entityname: Partner Access to Customer Contacts Portal Comments
+id: 04c8a04c-f9cd-48ed-b38a-cc8d1589faca
+parententitypermission: 0c84167c-fc49-4d86-8557-99549c68bc23
+parentrelationship: contact_adx_portalcomments
+read: true
+scope: 756150003
+write: false

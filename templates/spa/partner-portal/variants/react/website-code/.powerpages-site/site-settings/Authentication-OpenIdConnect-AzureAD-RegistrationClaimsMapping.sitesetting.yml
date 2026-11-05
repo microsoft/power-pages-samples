@@ -1,0 +1,4 @@
+description: Map AzureAD claims to contact fields on first sign-in (UPN as email - workforce v1.0 tokens lack the email claim)
+id: d15103d5-31d9-48a8-9a0e-cb8cffc3d4cb
+name: Authentication/OpenIdConnect/AzureAD/RegistrationClaimsMapping
+value: "firstname=given_name,lastname=family_name,emailaddress1=upn"

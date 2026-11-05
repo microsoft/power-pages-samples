@@ -1,0 +1,16 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+- 3f8e01b2-0b59-4990-9f82-4051540f211b
+append: true
+appendto: true
+create: true
+delete: true
+entitylogicalname: opportunityproduct
+entityname: Access to Assigned Opportunity Products
+id: 6a18521f-0440-4aea-8bc6-a50981040ad7
+parententitypermission: 963d6829-c941-474c-82e4-2659f560ae2f
+parentrelationship: product_opportunities
+read: true
+scope: 756150003
+write: true

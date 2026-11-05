@@ -1,0 +1,4 @@
+description: Web API columns for transactioncurrency (§5.3 + backend plan v4)
+id: 56199a5f-8856-4f4a-8722-3333a05dbd8b
+name: Webapi/transactioncurrency/fields
+value: "transactioncurrencyid,currencyname,currencysymbol,isocurrencycode"

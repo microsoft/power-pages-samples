@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- fe1a23f5-8064-45ea-bb5f-d03a61321c55
+append: true
+appendto: true
+create: false
+delete: false
+entitylogicalname: bookingstatus
+entityname: Partner Technician - Booking Statuses
+id: 015bc037-31c4-4954-93c6-d003fac8356a
+read: true
+scope: 756150000
+write: false

@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- fe1a23f5-8064-45ea-bb5f-d03a61321c55
+append: true
+appendto: true
+create: false
+delete: false
+entitylogicalname: contact
+entityname: Partner Technician - Purchase Order Supplier Contacts
+id: 622cdedb-4728-447d-9d15-2ca9bf67ed71
+read: false
+scope: 756150000
+write: false

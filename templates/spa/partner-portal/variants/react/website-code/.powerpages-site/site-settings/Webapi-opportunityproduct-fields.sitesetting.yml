@@ -1,0 +1,4 @@
+description: Web API columns for opportunityproduct (§5.3 + backend plan v4)
+id: 5fc7cdf3-b3ff-477d-a0ad-03cb19f38386
+name: Webapi/opportunityproduct/fields
+value: "opportunityproductid,opportunityid,productid,productdescription,isproductoverridden,priceperunit,ispriceoverridden,quantity,uomid,manualdiscountamount,volumediscountamount,tax,baseamount,extendedamount,opportunityproductname,producttypecode,_opportunityid_value,_productid_value,_uomid_value"

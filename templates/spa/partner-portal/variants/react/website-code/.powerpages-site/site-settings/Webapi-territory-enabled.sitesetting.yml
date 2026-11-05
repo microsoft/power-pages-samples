@@ -1,0 +1,4 @@
+description: Enable Web API for territory (REQ-API)
+id: c759ac39-1917-4950-a52f-f24065d109f0
+name: Webapi/territory/enabled
+value: true

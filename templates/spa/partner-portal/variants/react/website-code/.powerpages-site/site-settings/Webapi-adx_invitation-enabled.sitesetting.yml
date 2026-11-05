@@ -1,0 +1,4 @@
+description: "Read-only invitation status for partner-team (Parent permission, PA/PM); invitation code not exposed"
+id: a7914eb6-49e4-41ac-93bb-a9897584329c
+name: Webapi/adx_invitation/enabled
+value: true

@@ -1,0 +1,12 @@
+adx_entitypermission_webrole:
+- fe1a23f5-8064-45ea-bb5f-d03a61321c55
+append: true
+appendto: true
+create: false
+delete: false
+entitylogicalname: transactioncurrency
+entityname: Partner Technician - Purchase Order Currencies
+id: 9cfec3fa-24e8-4db3-9628-7bdf17412555
+read: false
+scope: 756150000
+write: false

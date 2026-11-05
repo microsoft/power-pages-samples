@@ -1,0 +1,15 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+- 3f8e01b2-0b59-4990-9f82-4051540f211b
+append: true
+appendto: true
+contactrelationship: adx_internal_collaboration
+create: false
+delete: false
+entitylogicalname: opportunity
+entityname: Access to Shared Opportunities
+id: 85e1fbc5-41d2-481b-bc90-804bec849830
+read: true
+scope: 756150001
+write: true

@@ -73,6 +73,37 @@
       }
     },
     {
+      "id": "partner-portal",
+      "displayName": "Partner Portal",
+      "description": "A Power Pages SPA template for partner onboarding, customer and opportunity management, access administration, and technician work orders.",
+      "kind": "spa",
+      "keywords": [
+        "partner",
+        "portal",
+        "opportunities",
+        "technician",
+        "work-orders"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "previewImages": [],
+      "requiredDataverseLanguages": [
+        1033
+      ],
+      "author": "Microsoft",
+      "solutions": [
+        {
+          "uniqueName": "SPAPartnerPortalSite",
+          "publishChanges": true
+        }
+      ],
+      "variants": {
+        "react": {}
+      }
+    },
+    {
       "id": "starter-layout-1",
       "displayName": "Starter Layout 1",
       "description": "This versatile template provides a basic, multipage navigation framework and simple building blocks for you to customize any way you want. Just click on a section or image to customize it.",

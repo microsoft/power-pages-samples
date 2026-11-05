@@ -1,0 +1,15 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+append: true
+appendto: true
+create: true
+delete: false
+entitylogicalname: contact
+entityname: Partner Manager Access to Child Customer Contacts
+id: 51ce8247-f4c1-4085-9ef8-4c6f707c0832
+parententitypermission: d21adeb2-72b2-4e50-ada2-8a043b5aa0bf
+parentrelationship: contact_customer_accounts
+read: true
+scope: 756150003
+write: true

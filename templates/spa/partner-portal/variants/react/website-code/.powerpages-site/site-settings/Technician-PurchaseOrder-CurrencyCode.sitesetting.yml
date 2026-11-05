@@ -1,0 +1,4 @@
+description: 'zava_currencycode (ISO code) on technician purchase orders, shown by the Zava Supplier portal.'
+id: cae0e22a-300c-4c19-a47b-68b4ce985276
+name: Technician/PurchaseOrder/CurrencyCode
+value:

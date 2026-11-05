@@ -1,0 +1,4 @@
+description: Enable Web API for opportunity (REQ-API)
+id: 8a92a1d1-034b-43aa-85db-7dc63c3f34a4
+name: Webapi/opportunity/enabled
+value: true

@@ -1,0 +1,16 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+- 3f8e01b2-0b59-4990-9f82-4051540f211b
+append: true
+appendto: true
+create: true
+delete: true
+entitylogicalname: opportunityproduct
+entityname: Access to Shared Opportunity Products
+id: 63194017-2b2b-4d9a-b1e9-6d180778404a
+parententitypermission: 85e1fbc5-41d2-481b-bc90-804bec849830
+parentrelationship: product_opportunities
+read: true
+scope: 756150003
+write: true

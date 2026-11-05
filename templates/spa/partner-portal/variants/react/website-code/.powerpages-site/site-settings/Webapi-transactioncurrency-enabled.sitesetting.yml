@@ -1,0 +1,4 @@
+description: Enable Web API for transactioncurrency (REQ-API)
+id: 157c2a8c-6407-45a2-b2b2-6259dec3fc46
+name: Webapi/transactioncurrency/enabled
+value: true

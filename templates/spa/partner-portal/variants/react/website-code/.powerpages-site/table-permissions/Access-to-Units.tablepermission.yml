@@ -1,0 +1,14 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+- 3f8e01b2-0b59-4990-9f82-4051540f211b
+append: true
+appendto: true
+create: false
+delete: false
+entitylogicalname: uom
+entityname: Access to Units
+id: 95f262e5-10f2-4fa3-9a57-d6d50db8a30d
+read: true
+scope: 756150000
+write: false

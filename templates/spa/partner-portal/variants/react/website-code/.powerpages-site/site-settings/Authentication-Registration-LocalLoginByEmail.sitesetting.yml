@@ -1,0 +1,4 @@
+description: Local accounts sign in with their email address
+id: 1b9b8546-8c16-4133-9920-7fc0ccca3c65
+name: Authentication/Registration/LocalLoginByEmail
+value: true

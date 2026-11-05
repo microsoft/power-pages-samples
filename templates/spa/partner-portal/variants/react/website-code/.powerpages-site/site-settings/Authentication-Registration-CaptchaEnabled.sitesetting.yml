@@ -1,0 +1,4 @@
+description: Disable server-rendered CAPTCHA - the SPA cannot render the widget
+id: 39b7005c-9313-4553-bf9c-3e62ea1ac140
+name: Authentication/Registration/CaptchaEnabled
+value: false

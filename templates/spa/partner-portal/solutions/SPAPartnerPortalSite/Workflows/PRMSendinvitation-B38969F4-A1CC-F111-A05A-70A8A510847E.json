@@ -1,0 +1,233 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedcommondataserviceforapps_b1053"
+        },
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "PowerPages",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "contactid": {
+                  "title": "contactid",
+                  "type": "string",
+                  "x-ms-dynamically-added": true,
+                  "x-ms-content-hint": "TEXT"
+                }
+              },
+              "required": [
+                "contactid"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Try": {
+          "type": "Scope",
+          "runAfter": {},
+          "actions": {
+            "Get_caller": {
+              "type": "OpenApiConnection",
+              "runAfter": {},
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "connectionName": "shared_commondataserviceforapps",
+                  "operationId": "GetItem"
+                },
+                "parameters": {
+                  "entityName": "contacts",
+                  "recordId": "@triggerBody()?['userId']",
+                  "$select": "contactid,statecode,adx_partnercontactrole,_parentcustomerid_value"
+                }
+              }
+            },
+            "Get_contact": {
+              "type": "OpenApiConnection",
+              "runAfter": {
+                "Get_caller": [
+                  "Succeeded"
+                ]
+              },
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "connectionName": "shared_commondataserviceforapps",
+                  "operationId": "GetItem"
+                },
+                "parameters": {
+                  "entityName": "contacts",
+                  "recordId": "@triggerBody()?['contactid']",
+                  "$select": "contactid,statecode,lastname,emailaddress1,_parentcustomerid_value"
+                }
+              }
+            },
+            "Denial": {
+              "type": "Compose",
+              "runAfter": {
+                "Get_contact": [
+                  "Succeeded"
+                ]
+              },
+              "inputs": "@{if(not(equals(body('Get_caller')?['statecode'],0)),'You don''t have permission to do this. Refresh the page and try again.',if(not(equals(body('Get_caller')?['adx_partnercontactrole'],756150000)),'You don''t have permission to do this. Refresh the page and try again.',if(not(equals(body('Get_caller')?['_parentcustomerid_value'],body('Get_contact')?['_parentcustomerid_value'])),'You don''t have permission to do this. Refresh the page and try again.',if(not(equals(body('Get_contact')?['statecode'],0)),'This contact is inactive. Activate the contact before sending an invitation.',if(or(empty(body('Get_contact')?['lastname']),empty(body('Get_contact')?['emailaddress1'])),'Add a last name and an email address to the contact before sending an invitation.','')))))}"
+            },
+            "If_allowed": {
+              "type": "If",
+              "runAfter": {
+                "Denial": [
+                  "Succeeded"
+                ]
+              },
+              "expression": {
+                "equals": [
+                  "@outputs('Denial')",
+                  ""
+                ]
+              },
+              "actions": {
+                "Invitation_workflow": {
+                  "type": "OpenApiConnection",
+                  "runAfter": {},
+                  "inputs": {
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                      "connectionName": "shared_commondataserviceforapps",
+                      "operationId": "PerformBoundAction"
+                    },
+                    "parameters": {
+                      "entityName": "workflows",
+                      "actionName": "Microsoft.Dynamics.CRM.ExecuteWorkflow",
+                      "recordId": "c0225729-ade6-4131-80e4-974ad0c97ccd",
+                      "item/EntityId": "@triggerBody()?['contactid']"
+                    }
+                  }
+                },
+                "Respond_sent": {
+                  "type": "Response",
+                  "kind": "PowerPages",
+                  "runAfter": {
+                    "Invitation_workflow": [
+                      "Succeeded"
+                    ]
+                  },
+                  "inputs": {
+                    "statusCode": 200,
+                    "body": {
+                      "ok": "true",
+                      "message": "The workflow has been initiated."
+                    },
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "ok": {
+                          "title": "ok",
+                          "type": "string",
+                          "x-ms-dynamically-added": true
+                        },
+                        "message": {
+                          "title": "message",
+                          "type": "string",
+                          "x-ms-dynamically-added": true
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Respond_denied": {
+                    "type": "Response",
+                    "kind": "PowerPages",
+                    "runAfter": {},
+                    "inputs": {
+                      "statusCode": 200,
+                      "body": {
+                        "ok": "false",
+                        "message": "@{outputs('Denial')}"
+                      },
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "ok": {
+                            "title": "ok",
+                            "type": "string",
+                            "x-ms-dynamically-added": true
+                          },
+                          "message": {
+                            "title": "message",
+                            "type": "string",
+                            "x-ms-dynamically-added": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Respond_failed": {
+          "type": "Response",
+          "kind": "PowerPages",
+          "runAfter": {
+            "Try": [
+              "Failed",
+              "TimedOut"
+            ]
+          },
+          "inputs": {
+            "statusCode": 200,
+            "body": {
+              "ok": "false",
+              "message": "The action could not be completed. Refresh the page and try again."
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ok": {
+                  "title": "ok",
+                  "type": "string",
+                  "x-ms-dynamically-added": true
+                },
+                "message": {
+                  "title": "message",
+                  "type": "string",
+                  "x-ms-dynamically-added": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

@@ -1,0 +1,16 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+- 3f8e01b2-0b59-4990-9f82-4051540f211b
+append: false
+appendto: false
+create: false
+delete: false
+entitylogicalname: opportunityproduct
+entityname: Access to Collaborative Opportunity Products
+id: d6695565-33af-47ca-8b7d-2a781bb48563
+parententitypermission: e904b505-0c0d-4ec7-afa1-5a1dea796f9b
+parentrelationship: product_opportunities
+read: true
+scope: 756150003
+write: false

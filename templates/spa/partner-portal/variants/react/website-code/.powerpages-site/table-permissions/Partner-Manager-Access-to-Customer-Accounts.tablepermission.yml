@@ -1,0 +1,14 @@
+accountrelationship: msa_account_managingpartner
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+append: true
+appendto: true
+create: true
+delete: false
+entitylogicalname: account
+entityname: Partner Manager Access to Customer Accounts
+id: d21adeb2-72b2-4e50-ada2-8a043b5aa0bf
+read: true
+scope: 756150002
+write: true

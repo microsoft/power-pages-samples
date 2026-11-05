@@ -1,0 +1,28 @@
+<div/>
+<script>
+  // Code Site Shell Header: sends server-rendered auth pages back to their SPA equivalents.
+  // A separate template because `pac pages upload-code-site` resets the original "Header" template.
+  (function () {
+    var path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
+    var search = window.location.search;
+    var base = window.location.origin;
+    var redirects = {
+      '/signin': '/login',
+      '/register': '/redeem-invitation',
+      '/account/login/register': '/registration',
+      '/account/login/forgotpassword': '/forgot-password',
+      '/account/login/resetpassword': '/reset-password',
+      '/account/login/redeeminvitation': '/redeem-invitation',
+      '/account/login/externallogincallback': '/external-login-confirmation',
+      '/account/login/externalauthenticationfailed': '/login'
+    };
+    // Generic external sign-in failures arrive without a message; make sure the sign-in page shows one.
+    if (path === '/account/login/externalauthenticationfailed' && !search) {
+      window.location.replace(base + '/login?message=external_auth_failed');
+      return;
+    }
+    if (Object.prototype.hasOwnProperty.call(redirects, path)) {
+      window.location.replace(base + redirects[path] + search);
+    }
+  })();
+</script>

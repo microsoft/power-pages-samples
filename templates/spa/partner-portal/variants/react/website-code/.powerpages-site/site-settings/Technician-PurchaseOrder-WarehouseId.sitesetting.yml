@@ -1,0 +1,4 @@
+description: 'Receiving warehouse (msdyn_warehouse) for technician purchase orders. Warehouse 100.'
+id: a255cf11-f0b3-4483-98ed-59c3374a9c27
+name: Technician/PurchaseOrder/WarehouseId
+value:

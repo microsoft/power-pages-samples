@@ -1,0 +1,13 @@
+accountrelationship: contact_customer_accounts
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+append: true
+appendto: true
+create: true
+delete: false
+entitylogicalname: contact
+entityname: Partner Admin Access to Partner Contacts
+id: cb083766-de45-4466-9912-6018befc7780
+read: true
+scope: 756150002
+write: true

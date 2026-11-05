@@ -1,0 +1,4 @@
+description: Web API columns for pricelevel (§5.3 + backend plan v4)
+id: 30fd240c-ea69-4811-8936-7edea7be7dbb
+name: Webapi/pricelevel/fields
+value: "pricelevelid,name,transactioncurrencyid,_transactioncurrencyid_value"
