@@ -1,14 +1,14 @@
 import type { Database, Role } from '../data/types'
 import { FAQS } from './program'
 import { visiblePages, type SitePage } from './sitePages'
-import { can, customerAccounts, customerContacts, distributedOpportunities, managedOpportunities, myBooking, partnerContacts, PARTNER_ROLES, technicianWorkOrders, type Session } from './access'
+import { can, customerAccounts, customerContacts, distributedOpportunities, managedOpportunities, partnerContacts, PARTNER_ROLES, type Session } from './access'
 import { formatCurrency, formatDate, fullName, todayIso } from './format'
 
 /**
  * Global search model shared by the mock index (this file) and the live `global-search` / `assistant`
  * server logic, which return records in this same shape. Pages and FAQs are always searched client-side.
  */
-export type SearchType = 'opp' | 'account' | 'contact' | 'partner' | 'workorder' | 'page'
+export type SearchType = 'opp' | 'account' | 'contact' | 'partner' | 'page'
 
 export interface SearchItem {
   type: SearchType
@@ -37,8 +37,6 @@ export interface SearchItem {
   account?: string
   email?: string
   partnerRole?: string
-  // Work order (Technician workspace)
-  site?: string
   // Page / FAQ
   path?: string
   description?: string
@@ -50,10 +48,9 @@ export const TYPE_LABELS: Record<SearchType, { plural: string; one: string }> = 
   account: { plural: 'Customer accounts', one: 'Customer account' },
   contact: { plural: 'Customer contacts', one: 'Customer contact' },
   partner: { plural: 'Partner contacts', one: 'Partner contact' },
-  workorder: { plural: 'Work orders', one: 'Work order' },
   page: { plural: 'Pages & help', one: 'Page' },
 }
-export const TYPE_ORDER: SearchType[] = ['workorder', 'opp', 'account', 'contact', 'partner', 'page']
+export const TYPE_ORDER: SearchType[] = ['opp', 'account', 'contact', 'partner', 'page']
 
 const enc = encodeURIComponent
 
@@ -69,8 +66,6 @@ export function itemPath(item: SearchItem): string {
       return `/customers/customer-contacts/edit-customer-contact/?id=${enc(item.id)}`
     case 'partner':
       return `/profile/manage-access/edit-partner-contact/?id=${enc(item.id)}`
-    case 'workorder':
-      return `/work-orders/work-order-details/?id=${enc(item.id)}`
     case 'page':
       return item.path ?? '/'
   }
@@ -114,8 +109,6 @@ export function itemMeta(item: SearchItem): string[] {
       return [item.jobTitle ?? '', item.account ?? '', item.email ?? '']
     case 'partner':
       return [item.partnerRole ?? '', item.email ?? '']
-    case 'workorder':
-      return [item.site ?? '', item.customer ?? '']
     case 'page':
       return [item.faq ? 'FAQ' : '', item.description ?? '']
   }
@@ -127,7 +120,6 @@ const OPEN = new Set(['In Progress', 'On Hold', 'Accepted'])
 
 /** Mock-mode record index, scoped by the same session-aware selectors the pages use. */
 export function recordIndex(db: Database, session: Session): SearchItem[] {
-  if (can(session.role, 'work-orders')) return workOrderIndex(db, session)
   if (!PARTNER_ROLES.includes(session.role)) return []
   const items: SearchItem[] = []
   const accountName = (id?: string) => db.accounts.find(a => a.id === id)?.name ?? ''
@@ -205,19 +197,6 @@ export function recordIndex(db: Database, session: Session): SearchItem[] {
     }
   }
   return items
-}
-
-/** Technician index: only work orders the session can see (no customers, contacts or opportunities). */
-function workOrderIndex(db: Database, session: Session): SearchItem[] {
-  return technicianWorkOrders(db, session).map(w => ({
-    type: 'workorder',
-    id: w.id,
-    title: `${w.number} · ${w.title}`,
-    status: myBooking(db, session, w.id)?.status ?? w.systemStatus,
-    customer: w.customerName,
-    site: w.siteName,
-    fields: { Customer: w.customerName, Site: w.siteName ?? '', Asset: w.asset?.name ?? '', Case: w.caseNumber ?? '' },
-  }))
 }
 
 function flatten(pages: SitePage[]): SitePage[] {
@@ -351,8 +330,6 @@ export function quickActions(role: Role, waitingDistributed: number): SearchActi
     })
   if (can(role, 'manage-access'))
     a.push({ id: 'invite', label: 'Invite partner contact', path: '/profile/manage-access/', icon: 'mail', keywords: 'add user colleague access' })
-  if (can(role, 'work-orders'))
-    a.push({ id: 'work-orders', label: 'Open my work orders', path: '/work-orders/', icon: 'inbox', keywords: 'visits jobs bookings schedule today' })
   return a
 }
 

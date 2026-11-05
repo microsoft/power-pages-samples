@@ -45,9 +45,7 @@ export function mergePatch(db: Database, patch: CachePatch): Database {
     dealRegistrations: upsert(db.dealRegistrations, patch.dealRegistrations, r.dealRegistrations),
     comments: upsert(db.comments, patch.comments, r.comments),
     invitations: upsert(db.invitations, patch.invitations, r.invitations),
-    workOrders: upsert(db.workOrders, patch.workOrders, r.workOrders, { timeline: [] }),
-    bookings: upsert(db.bookings, patch.bookings, r.bookings),
   }
 }
 
-export const EMPTY_DB: Database = { accounts: [], contacts: [], opportunities: [], dealRegistrations: [], comments: [], invitations: [], workOrders: [], bookings: [] }
+export const EMPTY_DB: Database = { accounts: [], contacts: [], opportunities: [], dealRegistrations: [], comments: [], invitations: [] }

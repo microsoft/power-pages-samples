@@ -1,6 +1,0 @@
-adx_serverlogic_adx_webrole:
-  - fe1a23f5-8064-45ea-bb5f-d03a61321c55
-description: 'Work orders and bookings visible to the signed-in Partner Technician (own bookings + partner organization), safe columns only'
-display_name: 'Technician work orders'
-id: eff1d76c-e422-4a91-a248-f538415a2336
-name: technician-work-orders

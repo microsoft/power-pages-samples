@@ -65,12 +65,6 @@ export const SITE_PAGES: SitePage[] = [
     ],
   },
   {
-    title: 'Work orders',
-    path: '/work-orders/',
-    description: 'Field Service visits assigned to you or your organization (Technician workspace).',
-    cap: 'work-orders',
-  },
-  {
     title: 'Profile',
     path: '/profile/',
     description: 'Your profile, preferences and security settings.', group: 'Your account',

@@ -32,7 +32,6 @@ import {
   ArrowReset20Regular,
   Briefcase20Regular,
   ChevronDown16Regular,
-  ClipboardTaskListLtr20Regular,
   Dismiss24Regular,
   Home20Regular,
   Navigation24Regular,
@@ -222,8 +221,6 @@ function useNavGroups(): NavGroup[] {
       match: ['/partner-program'],
       icon: <Ribbon20Regular />,
       overviewDesc: 'Why partner with Zava',
-      // The Technician workspace keeps to work orders; program pages stay public by URL.
-      show: !can(role, 'work-orders'),
       items: [
         { label: 'Program details', to: '/partner-program/partner-program-details/', desc: 'Tiers, benefits and requirements' },
         { label: 'Become a partner', to: '/partner-program/become-a-partner/', desc: 'How to apply and what happens next' },
@@ -256,14 +253,6 @@ function useNavGroups(): NavGroup[] {
         { label: 'Customer accounts', to: '/customers/customer-accounts/', desc: 'Accounts managed by your organization' },
         { label: 'Customer contacts', to: '/customers/customer-contacts/', desc: 'People at your customer accounts' },
       ],
-    },
-    {
-      id: 'work-orders',
-      label: 'Work orders',
-      to: '/work-orders/',
-      match: ['/work-orders'],
-      icon: <ClipboardTaskListLtr20Regular />,
-      show: can(role, 'work-orders'),
     },
   ]
   return groups.filter(g => g.show !== false)

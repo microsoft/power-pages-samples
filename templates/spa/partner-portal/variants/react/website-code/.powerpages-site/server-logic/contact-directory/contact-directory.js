@@ -132,7 +132,7 @@ function get() {
     if (scope === 'customers' || scope === 'accounts') {
       var caller = one('contacts', Server.User.contactid, '$select=contactid,_parentcustomerid_value,adx_partnercontactrole');
       var partnerId = caller._parentcustomerid_value;
-      // Customer lists belong to the Account Manager (sales) workspace. Partner Technicians and non-partners have no
+      // Customer lists belong to the Account Manager (sales) workspace. Non-partners have no
       // partner contact role, so they never get customer data here even if a table permission were misconfigured.
       if ([756150000, 756150001, 756150002].indexOf(caller.adx_partnercontactrole) < 0) {
         return JSON.stringify({ status: 'error', message: "You don't have permission to view customers." });

@@ -24,7 +24,6 @@ import {
   Clock20Regular,
   Delete20Regular,
   Dismiss20Regular,
-  ClipboardTaskListLtr20Regular,
   Document20Regular,
   History20Regular,
   Mail20Regular,
@@ -35,7 +34,7 @@ import {
   Search20Regular,
 } from '@fluentui/react-icons'
 import { useApp } from '../../store/AppStore'
-import { can, distributedOpportunities, PARTNER_ROLES } from '../../lib/access'
+import { distributedOpportunities, PARTNER_ROLES } from '../../lib/access'
 import { nextTurnId, startersFor } from '../../lib/assistant'
 import {
   contextualActions,
@@ -302,7 +301,6 @@ function ItemLead({ item }: { item: SearchItem }) {
     account: <Building20Regular />,
     contact: null,
     partner: null,
-    workorder: <ClipboardTaskListLtr20Regular />,
     page: <Document20Regular />,
   }
   return <>{icons[item.type]}</>
@@ -316,7 +314,7 @@ function ItemBadges({ item }: { item: SearchItem }) {
       {urgency && <StatusBadge status={urgency} tone="amber" />}
       <span className={mergeClasses(s.side, s.sideSecondary)}>
         {item.collaboration && <StatusBadge status="Read-only" tone="slate" />}
-        {(item.type === 'opp' || item.type === 'workorder') && item.status && <StatusBadge status={item.status} />}
+        {item.type === 'opp' && item.status && <StatusBadge status={item.status} />}
         {item.active === false && <StatusBadge status="Inactive" />}
       </span>
     </>
@@ -359,9 +357,6 @@ export function GlobalSearch({ active, onActiveChange }: { active: boolean; onAc
   const [geometry, setGeometry] = useState({ top: 56, start: 0, wide: true })
   const role = session.role
   const partner = PARTNER_ROLES.includes(role)
-  // The Partner assistant answers over sales records; the Technician workspace doesn't offer it.
-  const technician = can(role, 'work-orders')
-  const assistant = !technician
   const q = query.trim()
   const sessionKey = `${role}:${session.contact?.id ?? ''}`
   const currentResult = result?.q === q && result.sessionKey === sessionKey && result.attempt === attempt ? result.outcome : undefined
@@ -648,12 +643,11 @@ export function GlobalSearch({ active, onActiveChange }: { active: boolean; onAc
     chips = !loading && chipBar(scope)
     body = loading ? null : (
       <>
-        {assistant &&
-          group(
-            'assistant',
-            null,
-            askOption(`Summarize the results for "${q}"`, 'Ask Partner assistant about these results', 'A summary with links to each record'),
-          )}
+        {group(
+          'assistant',
+          null,
+          askOption(`Summarize the results for "${q}"`, 'Ask Partner assistant about these results', 'A summary with links to each record'),
+        )}
         {types
           .filter(t => scope === 'all' || scope === t)
           .map(t =>
@@ -691,14 +685,13 @@ export function GlobalSearch({ active, onActiveChange }: { active: boolean; onAc
     )
     body = (
       <>
-        {assistant &&
-          group(
-            'prompts',
-            'Partner assistant',
-            startersFor(role)
-              .slice(0, 3)
-              .map(st => askOption(st.q, st.q, st.hint)),
-          )}
+        {group(
+          'prompts',
+          'Partner assistant',
+          startersFor(role)
+            .slice(0, 3)
+            .map(st => askOption(st.q, st.q, st.hint)),
+        )}
         {recent.length > 0
           ? group('recent', 'Recent', [
               ...recentRows,
@@ -716,9 +709,7 @@ export function GlobalSearch({ active, onActiveChange }: { active: boolean; onAc
           : group(
               'popular',
               'Popular pages',
-              (technician
-                ? [{ path: '/work-orders/', title: 'Work orders', description: 'Visits assigned to you or your organization.' }]
-                : [
+              [
                 {
                   path: '/partner-program/partner-program-details/',
                   title: 'Program details',
@@ -730,7 +721,7 @@ export function GlobalSearch({ active, onActiveChange }: { active: boolean; onAc
                   title: 'Frequently asked questions',
                   description: 'Deal registration, distributed opportunities and partner roles.',
                 },
-              ]).map(p =>
+              ].map(p =>
                 resultOption({ item: { type: 'page', id: `page:${p.path}`, title: p.title, path: p.path, description: p.description, fields: {} }, score: 0 }),
               ),
             )}
@@ -752,20 +743,19 @@ export function GlobalSearch({ active, onActiveChange }: { active: boolean; onAc
           : `No results for ${q}`
     body = (
       <>
-        {assistant &&
-          group(
-            'assistant',
-            null,
-            askOption(
-              q,
-              <>Ask Partner assistant: “{q}”</>,
-              question
-                ? 'Looks like a question — press Enter to ask'
-                : partner
-                  ? 'Opens a full-screen chat · answers cite records you can access'
-                  : 'Answers about the partner program',
-            ),
-          )}
+        {group(
+          'assistant',
+          null,
+          askOption(
+            q,
+            <>Ask Partner assistant: “{q}”</>,
+            question
+              ? 'Looks like a question — press Enter to ask'
+              : partner
+                ? 'Opens a full-screen chat · answers cite records you can access'
+                : 'Answers about the partner program',
+          ),
+        )}
         {loading ? (
           <div aria-hidden="true">
             <Caption1 className={s.note}>Searching records you can access…</Caption1>
@@ -831,11 +821,9 @@ export function GlobalSearch({ active, onActiveChange }: { active: boolean; onAc
             {!incomplete && !hits.length && !acts.length && !currentResult?.message && (
               <Text className={s.empty}>
                 <strong>No records or pages match “{q}”.</strong>{' '}
-                {technician
-                  ? 'Try a work order number, customer, site or asset.'
-                  : partner
-                    ? 'Try a customer, opportunity, contact or email — or ask the assistant.'
-                    : 'Customer and opportunity records are available to partners. Try asking the assistant.'}
+                {partner
+                  ? 'Try a customer, opportunity, contact or email — or ask the assistant.'
+                  : 'Customer and opportunity records are available to partners. Try asking the assistant.'}
               </Text>
             )}
           </>
@@ -882,7 +870,7 @@ export function GlobalSearch({ active, onActiveChange }: { active: boolean; onAc
       e.preventDefault()
       if (activeIndex >= 0 && !e.ctrlKey && !e.metaKey) return options[activeIndex]?.run()
       if (!q) return
-      if (assistant && looksLikeQuestion(q) && !e.ctrlKey && !e.metaKey) openChat(q)
+      if (looksLikeQuestion(q) && !e.ctrlKey && !e.metaKey) openChat(q)
       else showResults()
     } else if (e.key === 'Escape') {
       e.preventDefault()
@@ -935,12 +923,12 @@ export function GlobalSearch({ active, onActiveChange }: { active: boolean; onAc
           aria-haspopup="listbox"
           aria-activedescendant={active ? activeId : undefined}
           aria-keyshortcuts="Control+K /"
-          aria-label={technician ? 'Search work orders and pages' : partner ? 'Search records, actions and pages' : 'Search the partner program'}
+          aria-label={partner ? 'Search records, actions and pages' : 'Search the partner program'}
           autoComplete="off"
           spellCheck={false}
           enterKeyHint="search"
           className={mergeClasses(s.input, active && s.inputActive)}
-          placeholder={technician ? 'Search work orders' : partner ? 'Search records and actions' : 'Search the partner program'}
+          placeholder={partner ? 'Search records and actions' : 'Search the partner program'}
           value={query}
           onFocus={() => {
             if (quietFocus.current) {
@@ -977,7 +965,7 @@ export function GlobalSearch({ active, onActiveChange }: { active: boolean; onAc
             Ctrl K
           </kbd>
         )}
-        {assistant && (
+        {
           <Tooltip content="Ask Partner assistant" relationship="label">
             <Button
               appearance="subtle"
@@ -986,7 +974,7 @@ export function GlobalSearch({ active, onActiveChange }: { active: boolean; onAc
               onClick={() => openChat(q || undefined)}
             />
           </Tooltip>
-        )}
+        }
       </div>
 
       {active && (
@@ -1013,7 +1001,7 @@ export function GlobalSearch({ active, onActiveChange }: { active: boolean; onAc
             <p className={s.keys} aria-hidden="true">
               <span>
                 <kbd className={s.keyHint}>Enter</kbd>
-                {q ? (assistant && looksLikeQuestion(q) ? 'ask the assistant' : 'see all results') : 'open'}
+                {q ? (looksLikeQuestion(q) ? 'ask the assistant' : 'see all results') : 'open'}
               </span>
               <span>
                 <kbd className={s.keyHint}>↑</kbd>
@@ -1031,22 +1019,22 @@ export function GlobalSearch({ active, onActiveChange }: { active: boolean; onAc
         </section>
       )}
 
-      {assistant && (
-      <AssistantChat
-        key={sessionKey}
-        mode={chatMode}
-        onModeChange={setChatMode}
-        turns={turns}
-        setTurns={setTurns}
-        onBack={() => {
-          setChatMode('closed')
-          open()
-          quietFocus.current = true
-          requestAnimationFrame(() => inputRef.current?.focus())
-        }}
-        onOpenItem={openItemFromChat}
-      />
-      )}
+      {
+        <AssistantChat
+          key={sessionKey}
+          mode={chatMode}
+          onModeChange={setChatMode}
+          turns={turns}
+          setTurns={setTurns}
+          onBack={() => {
+            setChatMode('closed')
+            open()
+            quietFocus.current = true
+            requestAnimationFrame(() => inputRef.current?.focus())
+          }}
+          onOpenItem={openItemFromChat}
+        />
+      }
     </div>
   )
 }

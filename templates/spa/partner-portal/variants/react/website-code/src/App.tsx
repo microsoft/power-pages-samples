@@ -3,7 +3,7 @@ import { createRoutesFromElements, Navigate, Outlet, Route, useLocation } from '
 import Layout, { Container } from './components/Layout'
 import { AccessDeniedContent, RequireAccess } from './components/RequireAccess'
 import { PageSkeleton, skeletonVariantForPath } from './components/skeletons'
-import { can, isPartnerOrgRole, type Capability } from './lib/access'
+import { isPartnerOrgRole, type Capability } from './lib/access'
 import { AppProvider, useApp } from './store/AppStore'
 import { UnsavedChangesProvider } from './components/UnsavedChanges'
 import { RootError, RouteError } from './components/RouteError'
@@ -14,7 +14,7 @@ import {
   ExternalLoginConfirmation, ManageSecurity, ProgramHome, ProgramDetails, BecomePartner, ProgramFAQs,
   Sitemap, CustomersHome, CustomerAccounts, CustomerAccountForm, CustomerContacts, CustomerContactForm,
   OpportunitiesHome, DistributedOpportunities, OpportunitySummary, ManagedOpportunities, CreateOpportunity,
-  OpportunityDetails, Profile, ManageAccess, EditPartnerContact, ParentAccount, RegisterToBePartner, WorkOrders, WorkOrderDetails,
+  OpportunityDetails, Profile, ManageAccess, EditPartnerContact, ParentAccount, RegisterToBePartner,
 } from './lib/routeModules'
 
 const gate = (cap: Capability, el: ReactNode) => <RequireAccess cap={cap}>{el}</RequireAccess>
@@ -43,7 +43,7 @@ function RouteSkeleton() {
   }, [pathname])
   return (
     <div ref={ref} className="skeleton-enter">
-      <PageSkeleton variant={skeletonVariantForPath(pathname, isPartnerOrgRole(session.role), can(session.role, 'work-orders'))} />
+      <PageSkeleton variant={skeletonVariantForPath(pathname, isPartnerOrgRole(session.role))} />
     </div>
   )
 }
@@ -146,9 +146,6 @@ export const appRoutes = createRoutesFromElements(
           <Route path={ParentAccount.paths[0]} element={gate('parent-account', <ParentAccount />)} />
           <Route path={RegisterToBePartner.paths[0]} element={gate('register-partner', <RegisterToBePartner />)} />
 
-          {/* Technician workspace (Partner Technician web role only). */}
-          <Route path={WorkOrders.paths[0]} element={gate('work-orders', <WorkOrders />)} />
-          <Route path={WorkOrderDetails.paths[0]} element={gate('work-orders', <WorkOrderDetails />)} />
 
           <Route
             path="/access-denied"

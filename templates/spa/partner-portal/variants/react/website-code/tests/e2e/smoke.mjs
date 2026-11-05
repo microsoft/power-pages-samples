@@ -14,20 +14,17 @@ const HOME_H1 = {
   'partner-admin': 'Welcome back, Avery',
   'partner-manager': 'Welcome back, Jordan',
   'partner-seller': 'Welcome back, Sam',
-  'partner-technician': 'Welcome back, Test',
 }
 
-// Columns:            anonymous  non-partner  admin  manager  seller  technician
-// "PARTNER" routes are the Account Manager (sales) workspace: the Partner Technician is denied all of them.
-const PUBLIC = [OK, OK, OK, OK, OK, OK]
-const SIGNED_IN = [SIGNIN, OK, OK, OK, OK, OK]
-const PARTNER = [SIGNIN, DENIED, OK, OK, OK, DENIED]
-const ADMIN_MANAGER = [SIGNIN, DENIED, OK, OK, DENIED, DENIED]
-const ADMIN_ONLY = [SIGNIN, DENIED, OK, DENIED, DENIED, DENIED]
-const NON_PARTNER_ONLY = [SIGNIN, OK, DENIED, DENIED, DENIED, DENIED]
-const TECHNICIAN_ONLY = [SIGNIN, DENIED, DENIED, DENIED, DENIED, OK]
-const NOT_FOUND = [NF, NF, NF, NF, NF, NF]
-const DENIED_ALL = [DENIED, DENIED, DENIED, DENIED, DENIED, DENIED]
+// Columns:            anonymous  non-partner  admin  manager  seller
+const PUBLIC = [OK, OK, OK, OK, OK]
+const SIGNED_IN = [SIGNIN, OK, OK, OK, OK]
+const PARTNER = [SIGNIN, DENIED, OK, OK, OK]
+const ADMIN_MANAGER = [SIGNIN, DENIED, OK, OK, DENIED]
+const ADMIN_ONLY = [SIGNIN, DENIED, OK, DENIED, DENIED]
+const NON_PARTNER_ONLY = [SIGNIN, OK, DENIED, DENIED, DENIED]
+const NOT_FOUND = [NF, NF, NF, NF, NF]
+const DENIED_ALL = [DENIED, DENIED, DENIED, DENIED, DENIED]
 
 export const MATRIX = [
   // Public
@@ -71,9 +68,9 @@ export const MATRIX = [
   { path: '/profile/manage-access/edit-partner-contact/?id=c-sam', h1: 'Sam Rivera', access: ADMIN_ONLY },
   { path: '/profile/parent-account/', h1: 'Parent account', access: PARTNER },
   { path: '/profile/register-to-be-a-partner/', h1: 'Register to be a partner', access: NON_PARTNER_ONLY },
-  // Technician workspace (Partner Technician web role only)
-  { path: '/work-orders/', h1: 'Work orders', access: TECHNICIAN_ONLY },
-  { path: '/work-orders/work-order-details/?id=wo-204', h1: 'WO-00123 · High-temperature alarm on CU-204', access: TECHNICIAN_ONLY },
+  // Retired workspace routes are not registered, even for signed-in partners.
+  { path: '/work-orders/', access: NOT_FOUND },
+  { path: '/work-orders/work-order-details/?id=wo-204', access: NOT_FOUND },
   // Utility pages
   { path: '/access-denied/', h1: 'Access denied', access: DENIED_ALL },
   { path: '/this-page-does-not-exist/', access: NOT_FOUND },

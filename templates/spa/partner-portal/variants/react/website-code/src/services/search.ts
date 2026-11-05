@@ -1,5 +1,5 @@
 import type { Database } from '../data/types'
-import { can, PARTNER_ROLES, type Session } from '../lib/access'
+import { PARTNER_ROLES, type Session } from '../lib/access'
 import { faqAnswer, mockAnswer, type AssistantAnswer } from '../lib/assistant'
 import { pageIndex, rankItems, recordIndex, TYPE_ORDER, type SearchHit, type SearchItem } from '../lib/search'
 import { isLive } from './config'
@@ -84,9 +84,6 @@ export async function searchAll(query: string, ctx: SearchContext, signal?: Abor
   const q = query.trim()
   signal?.throwIfAborted()
   const pages = rankItems(pageIndex(ctx.session.role), q)
-  // Technicians search only the work orders already loaded for them; the sales global-search logic isn't theirs.
-  if (q && can(ctx.session.role, 'work-orders'))
-    return { status: 'ready', hits: [...rankItems(recordIndex(ctx.db, ctx.session), q), ...pages].sort((a, b) => b.score - a.score || a.item.title.localeCompare(b.item.title)) }
   if (!q || !PARTNER_ROLES.includes(ctx.session.role)) return { status: 'ready', hits: pages }
   if (q.length < 2) return { status: 'ready', hits: pages, message: 'Enter at least 2 characters to search records.' }
   try {
@@ -150,7 +147,13 @@ export function loadRecent(session: Session): RecentEntry[] {
   if (session.role === 'anonymous') return []
   try {
     const raw = localStorage.getItem(recentKey(session))
-    return raw ? (JSON.parse(raw) as RecentEntry[]) : []
+    if (!raw) return []
+    const stored = JSON.parse(raw) as RecentEntry[]
+    const entries = stored.filter(
+      e => e.kind === 'query' || (isSearchItem(e.item) && (e.item.type !== 'page' || pageIndex(session.role).some(p => p.path === e.item.path))),
+    )
+    if (entries.length !== stored.length) saveRecent(session, entries)
+    return entries
   } catch {
     return []
   }

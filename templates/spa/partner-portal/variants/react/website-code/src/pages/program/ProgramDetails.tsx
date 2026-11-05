@@ -20,7 +20,7 @@ import { Container } from '../../components/Layout'
 import { ButtonLink, PageHeader } from '../../components/ui'
 import { CRITERIA, TIER_BENEFITS, TIERS, type TierCell, type TierRow } from '../../lib/program'
 import { useApp } from '../../store/AppStore'
-import { can, isPartnerOrgRole } from '../../lib/access'
+import { isPartnerOrgRole } from '../../lib/access'
 import { ON_NAVY_FG, SHELL_NAVY, withAlpha } from '../../theme/fluentTheme'
 import { ON_NAVY_VARS, PROGRAM_CRUMB, SectionTitle } from './ProgramHero'
 
@@ -118,7 +118,6 @@ export default function ProgramDetails() {
   const { session } = useApp()
   const styles = useStyles()
   const isPartner = isPartnerOrgRole(session.role)
-  const technician = can(session.role, 'work-orders')
   return (
     <Container>
       <PageHeader
@@ -188,15 +187,13 @@ export default function ProgramDetails() {
           </Subtitle1>
           <Body1 as="p" className={styles.ctaBody}>
             {isPartner
-              ? technician
-                ? 'Your organization is already a Zava partner. Go to your workspace to see your work orders.'
-                : 'Your organization is already a Zava partner. Go to your dashboard to work your opportunities.'
+              ? 'Your organization is already a Zava partner. Go to your dashboard to work your opportunities.'
               : 'Zava reviews every application. Once approved, your first contact is assigned the Partner Admin role.'}
           </Body1>
           <div className="mt-5">
             {isPartner ? (
               <ButtonLink to="/" variant="primary">
-                {technician ? 'Go to your workspace' : 'Go to dashboard'}
+                Go to dashboard
               </ButtonLink>
             ) : (
               <ButtonLink to="/partner-program/become-a-partner/" variant="primary">

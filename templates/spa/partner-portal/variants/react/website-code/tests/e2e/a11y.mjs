@@ -43,7 +43,6 @@ const PLAN = {
     { path: '/customers/customer-accounts/edit-customer-account/?id=acc-adventure', h1: 'Adventure Works Cycles' },
     { path: '/profile/manage-access/', h1: 'Access denied' },
   ],
-  'partner-technician': routesFor('partner-technician', a => a === 'ok').filter(r => !r.path.startsWith('/partner-program') && !AUTH_PAGES.some(a => r.path.startsWith(a))),
   'non-partner': [
     { path: '/', h1: 'Apply to become a Zava partner' },
     { path: '/profile/', h1: 'Profile' },

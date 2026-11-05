@@ -323,161 +323,100 @@ export const tests = [
     },
   },
   {
-    name: 'retired technician is absent from seed personas and is removed from saved mock sessions',
+    name: 'retired workspace storage is discarded without resetting sales edits or granting partner UX',
     role: 'anonymous',
     async run({ page, goto }) {
       await goto('/')
-      const snapshot = await page.evaluate(keys => {
-        const db = JSON.parse(localStorage.getItem(keys.db))
-        return {
-          contacts: db.contacts.map(c => c.id),
-          bookings: db.bookings.map(b => b.resourceContactId),
-          options: [...document.querySelectorAll('select option')].map(o => o.value),
-          workOrders: db.workOrders.length,
-        }
-      }, STORAGE_KEYS)
-      assert.ok(!snapshot.contacts.includes('c-marco'))
-      assert.ok(!snapshot.bookings.includes('c-marco'))
-      assert.ok(snapshot.contacts.includes('c-kenji') && snapshot.contacts.includes('c-dmitri'))
-      assert.ok(!snapshot.options.includes('partner-technician'))
-      await goto('/login')
-      assert.equal(await page.getByRole('radio', { name: /Partner Technician/ }).count(), 0)
       await page.evaluate(keys => {
         const db = JSON.parse(localStorage.getItem(keys.db))
-        db.contacts.push({ id: 'c-marco', firstName: 'Retired', lastName: 'User', active: true, fieldTechnician: true, parentAccountId: 'acc-fabrikam' })
-        db.bookings.push({ id: 'retired-booking', workOrderId: 'wo-204', resourceContactId: 'c-marco', resourceName: 'Retired User' })
-        db.invitations.push({ id: 'retired-invitation', contactId: 'c-marco' })
-        db.accounts[0].description = 'Preserve this edit'
-        db.workOrders[0].timeline.push({ id: 'retired-event', text: 'Assigned to Retired User', by: 'Retired User' })
+        db.accounts[0].description = 'Preserve this account edit'
+        db.opportunities[0].description = 'Preserve this opportunity edit'
+        db.contacts.push({ id: 'c-marco', firstName: 'Retired', lastName: 'User', active: true, fieldTechnician: true })
+        db.contacts.push({ id: 'c-custom-retired', firstName: 'Old', lastName: 'Contact', active: true, fieldTechnician: true })
+        db.contacts.find(c => c.id === 'c-sam').fieldTechnician = true
+        db.workOrders = [{ id: 'wo-old' }]
+        db.bookings = [{ id: 'bk-old', resourceContactId: 'c-marco' }]
+        db.invitations.push({ id: 'old-invitation', contactId: 'c-marco' })
+        db.comments.push({ id: 'old-comment', regardingType: 'contact', regardingId: 'c-custom-retired' })
         localStorage.setItem(keys.db, JSON.stringify(db))
         localStorage.setItem(keys.role, JSON.stringify('partner-technician'))
         localStorage.setItem(keys.contact, JSON.stringify({ contactId: 'c-marco', role: 'partner-technician' }))
+        localStorage.setItem('contoso-partner-portal:search-recent:v1:c-taylor', JSON.stringify([
+          { kind: 'query', text: 'Keep this search' },
+          { kind: 'item', item: { type: 'workorder', id: 'wo-old', title: 'Old visit', fields: {} } },
+          { kind: 'item', item: { type: 'page', id: 'old-page', title: 'Old workspace', path: '/work-orders/', fields: {} } },
+        ]))
       }, STORAGE_KEYS)
       await goto('/')
-      await expectH1(page, 'Grow together with the Zava partner network')
+      await expectH1(page, 'Apply to become a Zava partner')
       const migrated = await page.evaluate(keys => ({
         db: JSON.parse(localStorage.getItem(keys.db)),
         contact: localStorage.getItem(keys.contact),
+        role: JSON.parse(localStorage.getItem(keys.role)),
       }), STORAGE_KEYS)
-      assert.ok(!migrated.db.contacts.some(c => c.id === 'c-marco'))
-      assert.ok(!migrated.db.bookings.some(b => b.resourceContactId === 'c-marco'))
-      assert.ok(!migrated.db.invitations.some(i => i.contactId === 'c-marco'))
-      assert.equal(migrated.db.accounts[0].description, 'Preserve this edit')
-      assert.equal(migrated.db.workOrders.length, snapshot.workOrders)
-      assert.equal(migrated.db.workOrders[0].timeline.at(-1).by, 'Former technician')
+      assert.equal(migrated.role, 'non-partner')
       assert.equal(migrated.contact, null)
+      assert.ok(!('workOrders' in migrated.db) && !('bookings' in migrated.db))
+      assert.ok(!migrated.db.contacts.some(c => ['c-marco', 'c-kenji', 'c-dmitri', 'c-custom-retired'].includes(c.id)))
+      assert.ok(migrated.db.contacts.every(c => !('fieldTechnician' in c)))
+      assert.ok(migrated.db.contacts.some(c => c.id === 'c-sam' && c.partnerRole === 'Partner Seller'))
+      assert.ok(!migrated.db.invitations.some(i => i.id === 'old-invitation'))
+      assert.ok(!migrated.db.comments.some(c => c.id === 'old-comment'))
+      assert.equal(migrated.db.accounts[0].description, 'Preserve this account edit')
+      assert.equal(migrated.db.opportunities[0].description, 'Preserve this opportunity edit')
+      const recent = await page.evaluate(async () => {
+        const { loadRecent } = await import('/src/services/search.ts')
+        const entries = loadRecent({ role: 'non-partner', contact: { id: 'c-taylor' } })
+        return { entries, stored: JSON.parse(localStorage.getItem('contoso-partner-portal:search-recent:v1:c-taylor')) }
+      })
+      assert.deepEqual(recent.entries, [{ kind: 'query', text: 'Keep this search' }])
+      assert.deepEqual(recent.stored, recent.entries)
+      const nav = page.getByRole('navigation', { name: 'Primary', exact: true })
+      assert.equal(await nav.getByText('Work orders', { exact: true }).count(), 0)
+      await goto('/work-orders/work-order-details/?id=wo-old')
+      await expectH1(page, 'Page not found')
+      await goto('/login')
+      assert.equal(await page.getByRole('radio', { name: /Partner Technician/ }).count(), 0)
     },
   },
-  // Technician workspace (Partner Technician web role) ----------------------------------------------------------
   {
-    name: 'partner-technician works the assigned CU-204 visit: travel, arrival, diagnosis, service report',
-    role: 'partner-technician',
-    async run({ page, goto }) {
+    name: 'unknown live web roles map to non-partner and never dispatch a retired workspace',
+    role: 'anonymous',
+    async run({ page, context, goto }) {
+      await context.addInitScript(() => {
+        window.Microsoft = { Dynamic365: { Portal: { User: { contactId: 'live-user', userRoles: ['Partner Technician', 'Unknown role'] } } } }
+      })
+      const requested = []
+      await page.route('**/_api/serverlogics/**', async route => {
+        requested.push(new URL(route.request().url()).pathname)
+        await route.fulfill({
+          contentType: 'application/json',
+          body: JSON.stringify({ Success: true, Data: JSON.stringify({
+            status: 'success', me: { contactid: 'live-user', firstname: 'Live', lastname: 'User' }, account: null,
+          }) }),
+        })
+      })
       await goto('/')
-      await expectH1(page, 'Welcome back, Test')
-      await page.getByRole('link', { name: 'Open work order', exact: true }).click()
-      await expectH1(page, 'WO-00123 · High-temperature alarm on CU-204')
-
-      await page.getByRole('button', { name: 'Start travel', exact: true }).click()
-      await expectInline(page, 'Status updated: traveling to site.')
-      await page.getByRole('button', { name: "I've arrived", exact: true }).click()
-      await expectInline(page, 'Arrival recorded. You can now record your diagnosis.')
-      assert.equal(await page.getByRole('button', { name: 'Submit service report', exact: true }).count(), 0, 'report waits for the diagnosis')
-
-      await page.getByRole('button', { name: 'Record diagnosis', exact: true }).click()
-      const diagnosis = page.getByRole('dialog', { name: 'Record diagnosis' })
-      await diagnosis.waitFor()
-      await diagnosis.getByRole('button', { name: 'Save diagnosis' }).click()
-      await expectText(diagnosis, "There's a problem")
-      await expectFieldMessage(diagnosis, 'dx-fault', 'Select the fault you found')
-      await expectFieldMessage(diagnosis, 'dx-findings', 'Describe what you found')
-      await diagnosis.getByLabel('Fault').selectOption('Compressor failure')
-      await diagnosis.getByLabel('What you found').fill('Compressor seized; high discharge temperature and tripped overload.')
-      await diagnosis.getByRole('checkbox', { name: 'Replacement part required' }).check()
-      await diagnosis.getByRole('button', { name: 'Save diagnosis' }).click()
-      await expectFieldMessage(diagnosis, 'dx-part', 'Select the replacement part, or clear Replacement part required')
-      await diagnosis.getByRole('combobox', { name: /^Replacement part/ }).selectOption({ label: 'Zava Replacement Cooling Compressor (datZAVA-SP-COMP-200)' })
-      await diagnosis.getByRole('button', { name: 'Save diagnosis' }).click()
-      await diagnosis.waitFor({ state: 'hidden' })
-      await expectNotice(
-        page,
-        'Diagnosis saved for WO-00123. A purchase order for Zava Replacement Cooling Compressor is raised when you submit the service report.',
-      )
-
-      await page.getByRole('button', { name: 'Submit service report', exact: true }).click()
-      const report = page.getByRole('dialog', { name: 'Submit service report' })
-      await report.waitFor()
-      await expectText(report, /Contoso Hotels will see the summary in Customer Hub, and you can't edit the report afterwards\./)
-      await expectText(report, /A purchase order for Zava Replacement Cooling Compressor is raised with Zava\./)
-      await report.getByRole('button', { name: 'Submit service report' }).click()
-      await expectFieldMessage(report, 'rp-confirm', 'Confirm the report is accurate')
-      await report.getByLabel('Work performed').fill('Isolated the unit, confirmed the compressor failure and set a temporary cooling bypass.')
-      await report.getByLabel('Outcome').selectOption('Follow-up visit needed')
-      await report.getByLabel('Summary for the customer').fill('The CU-204 compressor has failed. A replacement is on order and we will return to fit it.')
-      await report.getByRole('checkbox', { name: 'I confirm this report is accurate and complete' }).check()
-      await report.getByRole('button', { name: 'Submit service report' }).click()
-      await report.waitFor({ state: 'hidden' })
-      await expectNotice(
-        page,
-        'Service report submitted for WO-00123. Contoso Hotels can now see your summary in Customer Hub. Purchase order PO-WO-00123 was raised for Zava Replacement Cooling Compressor.',
-      )
-      const main = page.getByRole('main')
-      await expectText(main, 'The CU-204 compressor has failed. A replacement is on order and we will return to fit it.')
-      await expectText(main, /PO-WO-00123/)
-      await expectText(main, 'Purchase order PO-WO-00123 raised for the replacement part')
-      assert.equal(await main.getByRole('button', { name: /Submit service report|Edit diagnosis|Start travel/ }).count(), 0, 'a submitted report is read-only')
-
-      await goto('/work-orders/?view=completed')
-      await expectText(page.getByRole('table', { name: 'Completed work orders' }), 'WO-00123 · High-temperature alarm on CU-204')
-
-      // Zava dispatch books the follow-up visit: the earlier report must not block it.
-      await page.evaluate(key => {
-        const db = JSON.parse(localStorage.getItem(key))
-        const start = new Date(Date.now() + 86_400_000).toISOString()
-        db.bookings.push({ id: 'bk-204-follow-up', workOrderId: 'wo-204', resourceContactId: 'c-test-technician', resourceName: 'Test Technician', status: 'Scheduled', start, end: start, assignedOn: new Date().toISOString() })
-        db.workOrders.find(w => w.id === 'wo-204').systemStatus = 'Scheduled'
-        localStorage.setItem(key, JSON.stringify(db))
-      }, STORAGE_KEYS.db)
-      await goto('/work-orders/')
-      await expectText(page.getByRole('table', { name: 'Work orders assigned to me' }), 'WO-00123 · High-temperature alarm on CU-204')
-      await goto('/work-orders/work-order-details/?id=wo-204')
-      await page.getByRole('button', { name: 'Start travel', exact: true }).waitFor()
-    },
-  },
-  {
-    name: 'partner-technician sees teammate work orders read-only and never another partner’s or sales records',
-    role: 'partner-technician',
-    async run({ page, goto }) {
-      await goto('/work-orders/')
-      await expectH1(page, 'Work orders')
-      const primary = page.getByRole('navigation', { name: 'Primary', exact: true })
-      assert.deepEqual(
-        (await primary.getByRole('link').allInnerTexts()).map(t => t.trim()).filter(Boolean),
-        ['Home', 'Work orders'],
-        'technician navigation is limited to the Technician workspace',
-      )
-      await page.getByRole('tab', { name: /My organization/ }).click()
-      await expectText(page.getByRole('table', { name: 'Open work orders in my organization' }), 'WO-00131 · Quarterly maintenance – AHU-3')
-      assert.equal(await page.getByRole('main').getByText('WO-00140', { exact: false }).count(), 0, 'a rival partner’s work order is never listed')
-
-      await goto('/work-orders/work-order-details/?id=wo-311')
-      await expectH1(page, 'WO-00131 · Quarterly maintenance – AHU-3')
-      await expectText(page.getByRole('main'), 'Assigned to Kenji Tanaka')
-      assert.equal(await page.getByRole('main').getByRole('button', { name: /Start travel|Record diagnosis|Submit service report/ }).count(), 0)
-
-      await goto('/work-orders/work-order-details/?id=wo-901')
-      await expectText(page.getByRole('main'), "You can't view this work order")
-    },
-  },
-  {
-    name: 'partner-manager (Account Manager workspace) has no work orders or technician actions',
-    role: 'partner-manager',
-    async run({ page, goto }) {
-      await goto('/')
-      await expectH1(page, 'Welcome back, Jordan')
-      assert.equal(await page.getByRole('navigation', { name: 'Primary', exact: true }).getByRole('link', { name: 'Work orders' }).count(), 0)
-      await goto('/work-orders/work-order-details/?id=wo-204')
+      await expectH1(page, 'Apply to become a Zava partner')
+      const { roleFromWebRoles } = await page.evaluate(async () => {
+        const loader = await import('/src/services/loaders.ts')
+        return { roleFromWebRoles: [
+          loader.roleFromWebRoles(['Partner Technician'], true),
+          loader.roleFromWebRoles(['Unknown role'], true),
+          loader.roleFromWebRoles(['Partner Technician', 'Partner Seller'], true),
+          loader.roleFromWebRoles(['Partner Technician'], false),
+        ] }
+      })
+      assert.deepEqual(roleFromWebRoles, ['non-partner', 'non-partner', 'partner-seller', 'anonymous'])
+      assert.ok(requested.every(path => path.endsWith('/contact-directory')))
+      const nav = page.getByRole('navigation', { name: 'Primary', exact: true })
+      assert.equal(await nav.getByText('Work orders', { exact: true }).count(), 0)
+      await goto('/opportunities/')
       await expectH1(page, 'Access denied')
+      await goto('/work-orders/')
+      await expectH1(page, 'Page not found')
+      await goto('/profile/')
+      await expectH1(page, 'Profile')
     },
   },
   // Record lists show the Dataverse createdon date; sorting it descending brings the newest record to the top.
@@ -487,7 +426,6 @@ export const tests = [
     { role: 'partner-admin', path: '/customers/customer-accounts/', table: 'Customer accounts' },
     { role: 'partner-admin', path: '/customers/customer-contacts/', table: 'Customer contacts' },
     { role: 'partner-admin', path: '/profile/manage-access/', table: 'Partner contacts and their portal access' },
-    { role: 'partner-technician', path: '/work-orders/?view=team', table: 'Open work orders in my organization' },
   ].map(({ role, path, table }) => ({
     name: `${role} sorts ${path} by Created on, newest first`,
     role,

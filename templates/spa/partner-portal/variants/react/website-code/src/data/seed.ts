@@ -1,11 +1,9 @@
-import type { Account, Booking, Contact, Database, Opportunity, WorkOrder } from './types'
+import type { Account, Contact, Database, Opportunity } from './types'
 
 /** The signed-in partner organisation for every partner persona (Partner A in the audit). */
 export const PARTNER_A = 'acc-northwind'
 /** A second partner used to prove cross-partner isolation and collaboration (Partner B). */
 export const PARTNER_B = 'acc-fabrikam'
-/** A rival installer: its technicians and work orders must never be visible to Fabrikam (Partner C). */
-export const PARTNER_C = 'acc-adatum'
 
 const addr = (line1: string, city: string, state: string, postalCode: string, country = 'Canada') => ({
   line1,
@@ -90,17 +88,6 @@ const accounts: Account[] = [
     active: true,
     createdOn: '2025-12-15',
   },
-  {
-    id: PARTNER_C,
-    name: 'Adatum Mechanical',
-    accountNumber: 'PRT-1003',
-    phone: '555-0300',
-    email: 'service@adatum.example.com',
-    address: addr('88 Industrial Parkway', 'Mississauga', 'ON', 'L5T 2H6'),
-    classification: 'Partner',
-    active: true,
-    createdOn: '2026-01-20',
-  },
   customer('acc-adventure', 'Adventure Works Cycles', '555-0111', 'Toronto', 'ON', 'c-adv-1'),
   customer('acc-alpine', 'Alpine Ski House', '555-0112', 'Whistler', 'BC', 'c-alp-1'),
   customer('acc-coho', 'Coho Winery', '555-0113', 'Kelowna', 'BC', 'c-coho-1'),
@@ -127,10 +114,6 @@ const contacts: Contact[] = [
   person('c-drew', 'Drew', 'Lindqvist', 'Former Account Executive', PARTNER_A, { partnerRole: 'Partner Seller', active: false }),
   // Partner B
   person('c-morgan', 'Morgan', 'Dubois', 'Partner Lead', PARTNER_B, { partnerRole: 'Partner Admin', managingPartnerId: PARTNER_B }),
-  // Partner B field technicians (Partner Technician web role: work orders only)
-  person('c-kenji', 'Kenji', 'Tanaka', 'Senior HVAC Technician', PARTNER_B, { fieldTechnician: true, managingPartnerId: PARTNER_B, phone: '555-0232' }),
-  // Rival installer technician (Partner C)
-  person('c-dmitri', 'Dmitri', 'Volkov', 'Service Technician', PARTNER_C, { fieldTechnician: true, managingPartnerId: PARTNER_C, phone: '555-0331' }),
   // Prospective partner (Non-Partner Portal User)
   person('c-taylor', 'Taylor', 'Brooks', 'Founder', undefined, { managingPartnerId: undefined }),
   // Customer contacts managed by Partner A
@@ -247,89 +230,8 @@ const opportunities: Opportunity[] = [
   }),
 ]
 
-/** Local time `days` from today at hh:mm, so the technician's "today" always has visits. */
-function at(days: number, hours: number, minutes = 0) {
-  const d = new Date()
-  d.setDate(d.getDate() + days)
-  d.setHours(hours, minutes, 0, 0)
-  return d.toISOString()
-}
-
-const wo = (w: Partial<WorkOrder> & Pick<WorkOrder, 'id' | 'number' | 'title' | 'customerName' | 'servicePartnerId'>): WorkOrder => ({
-  address: {},
-  priority: 'Normal',
-  type: 'Zava Customer Visit',
-  incidentType: 'Zava equipment assessment',
-  systemStatus: 'Scheduled',
-  timeline: [],
-  createdOn: at(-2, 9),
-  ...w,
-})
-
-function fieldService(): Pick<Database, 'workOrders' | 'bookings'> {
-  const workOrders: WorkOrder[] = [
-    wo({
-      id: 'wo-204', number: 'WO-00123', title: 'High-temperature alarm on CU-204', customerName: 'Contoso Hotels',
-      siteName: 'Contoso Hotels Flagship', address: addr('1 Harbourfront Way', 'Toronto', 'ON', 'M5J 2N1'),
-      siteContact: { name: 'Priya B (Facilities Manager)', phone: '555-0410' },
-      priority: '4-hour priority', incidentType: 'High-temperature alarm', caseNumber: 'CAS-01000', caseTitle: 'High-temperature alarm on CU-204',
-      asset: { name: 'CU-204 – Flagship Cooling Unit', model: 'Zava HX-450 chiller', serialNumber: 'HX450-20419', location: 'Rooftop plant room' },
-      instructions: 'Guest floors 12–18 are affected. Check in at the loading dock; the chief engineer has roof access.',
-      servicePartnerId: PARTNER_B, createdOn: at(0, 7, 40),
-      timeline: [
-        { id: 'ev-204-1', at: at(0, 7, 40), text: 'Work order created from case CAS-01000', by: 'Zava Customer Service' },
-        { id: 'ev-204-2', at: at(0, 8, 15), text: 'Visit moved forward after a same-day cancellation', by: 'Zava dispatch' },
-      ],
-    }),
-    wo({
-      id: 'wo-311', number: 'WO-00131', title: 'Quarterly maintenance – AHU-3', customerName: 'Alpine Ski House',
-      siteName: 'Alpine Ski House Lodge', address: addr('12 Summit Road', 'Whistler', 'BC', 'V8E 0A1'),
-      siteContact: { name: 'Sofia Marchetti', phone: '555-0420' }, type: 'Planned maintenance',
-      asset: { name: 'AHU-3 – Lodge Air Handler', model: 'Zava AH-90', serialNumber: 'AH90-3301', location: 'Basement plant' },
-      servicePartnerId: PARTNER_B,
-      timeline: [{ id: 'ev-311-1', at: at(-2, 9), text: 'Assigned to Kenji Tanaka', by: 'Zava dispatch' }],
-    }),
-    wo({
-      id: 'wo-288', number: 'WO-00128', title: 'Battery storage inspection – BSU-12', customerName: 'Woodgrove Bank',
-      siteName: 'Woodgrove Data Centre', address: addr('400 Front Street West', 'Toronto', 'ON', 'M5V 3J1'),
-      siteContact: { name: 'Isabella Santos', phone: '555-0430' }, type: 'Planned maintenance',
-      asset: { name: 'BSU-12 – Battery Storage Unit', model: 'Zava PowerStack 500', serialNumber: 'PS500-1207', location: 'Level B2' },
-      servicePartnerId: PARTNER_B,
-      timeline: [],
-    }),
-    wo({
-      id: 'wo-240', number: 'WO-00119', title: 'Heat pump noise – HP-07', customerName: 'Contoso Hotels',
-      siteName: 'Contoso Hotels Airport', address: addr('6 Airport Road', 'Mississauga', 'ON', 'L4V 1E8'),
-      incidentType: 'Unusual noise', systemStatus: 'Completed', servicePartnerId: PARTNER_B, createdOn: at(-3, 10),
-      asset: { name: 'HP-07 – Lobby Heat Pump', model: 'Zava HP-30', serialNumber: 'HP30-0007', location: 'Lobby mezzanine' },
-      diagnosis: { fault: 'Fan motor failure', findings: 'Worn fan bearing causing vibration noise.', partRequired: false, recordedOn: at(-1, 11), recordedBy: 'Former technician' },
-      report: {
-        workPerformed: 'Replaced fan bearing from van stock, balanced the fan and ran a 30-minute test.', outcome: 'Resolved',
-        customerSummary: 'Noise resolved. A worn fan bearing was replaced and the unit tested normally.', submittedOn: at(-1, 12), submittedBy: 'Former technician',
-      },
-      timeline: [
-        { id: 'ev-240-2', at: at(-1, 11), text: 'Diagnosis recorded: Fan motor failure', by: 'Former technician' },
-        { id: 'ev-240-3', at: at(-1, 12), text: 'Service report submitted', by: 'Former technician' },
-      ],
-    }),
-    wo({
-      id: 'wo-901', number: 'WO-00140', title: 'Chiller restart – CU-11', customerName: 'Contoso Hotels',
-      siteName: 'Contoso Hotels Downtown', address: addr('77 King Street West', 'Toronto', 'ON', 'M5K 1A1'),
-      asset: { name: 'CU-11 – Downtown Cooling Unit', model: 'Zava HX-300 chiller', serialNumber: 'HX300-1101' },
-      servicePartnerId: PARTNER_C,
-      timeline: [{ id: 'ev-901-1', at: at(-1, 9), text: 'Assigned to Dmitri Volkov', by: 'Zava dispatch' }],
-    }),
-  ]
-  const bookings: Booking[] = [
-    { id: 'bk-311', workOrderId: 'wo-311', resourceContactId: 'c-kenji', resourceName: 'Kenji Tanaka', status: 'Scheduled', start: at(0, 13), end: at(0, 15), assignedOn: at(-2, 9) },
-    { id: 'bk-901', workOrderId: 'wo-901', resourceContactId: 'c-dmitri', resourceName: 'Dmitri Volkov', status: 'Scheduled', start: at(0, 11), end: at(0, 13), assignedOn: at(-1, 9) },
-  ]
-  return { workOrders, bookings }
-}
-
 export function createSeed(): Database {
   return {
-    ...fieldService(),
     accounts,
     contacts,
     opportunities,

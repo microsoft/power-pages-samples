@@ -4,7 +4,7 @@ import { APPLICATION_REVIEW_TIME } from '../../lib/program'
 import { Container } from '../../components/Layout'
 import { Alert, AppLink, ButtonLink, PageHeader, Panel, StatusBadge } from '../../components/ui'
 import { useApp } from '../../store/AppStore'
-import { can, isPartnerOrgRole, ROLE_LABELS } from '../../lib/access'
+import { isPartnerOrgRole, ROLE_LABELS } from '../../lib/access'
 import { formatDate } from '../../lib/format'
 import { PROGRAM_CRUMB, SectionTitle } from './ProgramHero'
 
@@ -81,15 +81,14 @@ function ApplyCta() {
   const { role, contact } = session
 
   if (isPartnerOrgRole(role)) {
-    const technician = can(role, 'work-orders')
     return (
       <Alert tone="success" title="You’re already a partner">
         <p>
           You’re signed in as a {ROLE_LABELS[role]}. Visit your{' '}
           <AppLink to="/" inline>
-            {technician ? 'technician workspace' : 'partner dashboard'}
+            partner dashboard
           </AppLink>{' '}
-          {technician ? 'to see your work orders.' : 'to manage opportunities and customers.'}
+          to manage opportunities and customers.
         </p>
       </Alert>
     )

@@ -609,13 +609,6 @@ const STATUS_TONE: Record<string, BadgeTone> = {
   'Partner Admin': 'indigo',
   'Partner Manager': 'sky',
   'Partner Seller': 'slate',
-  // Field Service booking / work order statuses (Technician workspace).
-  Scheduled: 'sky',
-  Traveling: 'amber',
-  'On Break': 'amber',
-  Completed: 'green',
-  Unscheduled: 'slate',
-  Posted: 'slate',
 }
 
 const useBadgeStyles = makeStyles({

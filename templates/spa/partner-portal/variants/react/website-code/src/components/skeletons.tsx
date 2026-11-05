@@ -1014,16 +1014,15 @@ const AUTH_PATHS = new Set([
  * Picks the skeleton that matches the page about to render for a given path.
  * `/` is the dashboard for partners but the landing page for everyone else.
  */
-export function skeletonVariantForPath(pathname: string, isPartner = true, isTechnician = false): PageSkeletonVariant {
+export function skeletonVariantForPath(pathname: string, isPartner = true): PageSkeletonVariant {
   const p = pathname.toLowerCase().replace(/\/+$/, '') || '/'
-  // The Technician workspace home is a header, figures and two work panels: the hub layout.
-  if (p === '/') return isTechnician ? 'hub' : isPartner ? 'dashboard' : 'landing'
+  if (p === '/') return isPartner ? 'dashboard' : 'landing'
   if (p === '/profile' || p.startsWith('/account/manage/')) return 'settings'
   if (AUTH_PATHS.has(p) || p.startsWith('/account/')) return 'auth'
-  if (/opportunity-details|work-order-details/.test(p)) return 'detail'
+  if (/opportunity-details/.test(p)) return 'detail'
   if (/opportunity-summary/.test(p)) return 'summary'
   if (/create-|edit-|register-to-be-a-partner|parent-account/.test(p)) return 'form'
-  if (/managed-opportunities$|distributed-opportunities$|customer-accounts$|customer-contacts$|manage-access$|^\/work-orders$/.test(p)) return 'list'
+  if (/managed-opportunities$|distributed-opportunities$|customer-accounts$|customer-contacts$|manage-access$/.test(p)) return 'list'
   if (p === '/opportunities' || p === '/customers') return 'hub'
   if (p === '/partner-program') return 'program'
   return 'article'

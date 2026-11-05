@@ -113,7 +113,6 @@ export default function ProgramHome() {
   const styles = useStyles()
   const onNavy = useOnNavyButtonStyles()
   const isPartner = PARTNER_ROLES.includes(session.role)
-  // Technicians belong to a partner organization too: no application journey, but no sales pipeline band either.
   const member = isPartnerOrgRole(session.role)
   const nonPartner = session.role === 'non-partner'
   const application = nonPartner ? session.contact?.application : undefined

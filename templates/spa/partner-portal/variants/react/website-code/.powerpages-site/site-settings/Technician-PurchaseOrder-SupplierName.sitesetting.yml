@@ -1,4 +1,0 @@
-description: 'zava_suppliername on technician purchase orders; must match the supplier''s other orders in the Zava Supplier portal.'
-id: dd27f887-cf7c-48da-8199-b2a4572eeb40
-name: Technician/PurchaseOrder/SupplierName
-value:

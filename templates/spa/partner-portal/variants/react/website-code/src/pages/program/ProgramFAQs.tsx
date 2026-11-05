@@ -14,7 +14,7 @@ import {
   type AccordionToggleEventHandler,
 } from '@fluentui/react-components'
 import { ArrowMaximizeVertical20Regular, ArrowMinimizeVertical20Regular, DocumentText20Regular, Home20Regular, PersonAdd20Regular } from '@fluentui/react-icons'
-import { can, isPartnerOrgRole } from '../../lib/access'
+import { isPartnerOrgRole } from '../../lib/access'
 import { useApp } from '../../store/AppStore'
 import { Container } from '../../components/Layout'
 import { Button, ButtonLink, PageHeader } from '../../components/ui'
@@ -106,7 +106,7 @@ export default function ProgramFAQs() {
         <div className="mt-4 flex flex-wrap gap-2">
           {isPartner ? (
             <ButtonLink to="/" variant="primary" icon={<Home20Regular />}>
-              {can(session.role, 'work-orders') ? 'Go to your workspace' : 'Go to dashboard'}
+              Go to dashboard
             </ButtonLink>
           ) : (
             <ButtonLink to="/partner-program/become-a-partner/" variant="primary" icon={<PersonAdd20Regular />}>

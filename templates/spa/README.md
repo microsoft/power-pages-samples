@@ -9,7 +9,7 @@ Use this index to choose the template that best matches the scenario you want to
 | --- | --- | --- | --- | --- |
 | <img src="311-portal/previews/home.png" alt="311 Portal home page" width="220" /> | [311 Portal](311-portal/) | React + Vite | Citizen service requests and 311 support | Supporting unmanaged solution, downloadable website code, Dataverse seed data, service request map, knowledge base, contact flow, and preview images. |
 | <img src="supplier-invoice-portal/previews/home.png" alt="Supplier Invoice Portal home page" width="220" /> | [Supplier Invoice Portal](supplier-invoice-portal/) | React + Vite | Supplier invoices and purchase orders | Supporting unmanaged solution, downloadable website code, Dataverse seed data, file-column seed files, invoice workflows, reviewer queue, and preview images. |
-| — | [Partner Portal (Enhanced)](partner-portal/) | React + Vite | Partner management and technician service work orders | Supporting unmanaged solution, downloadable website code, server logic, partner/opportunity workflows, and technician workspace. |
+| — | [Partner Portal (Enhanced)](partner-portal/) | React + Vite | Partner and opportunity management | Supporting unmanaged solution, downloadable website code, server logic, partner/opportunity workflows, and access administration. |
 
 ## Common workflow
 

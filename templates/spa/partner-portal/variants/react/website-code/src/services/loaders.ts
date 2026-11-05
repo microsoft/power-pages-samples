@@ -1,6 +1,6 @@
 // Live-mode screen loaders: one Server Logic (or single Web API) call per screen, mapped into cache patches
 // that AppStore merges into its normalized `db`. Components keep rendering from `db` exactly as in mock mode.
-import type { Account, Booking, Comment, Contact, Database, Invitation, Opportunity, Role, WorkOrder } from '../data/types'
+import type { Account, Comment, Contact, Database, Invitation, Opportunity, Role } from '../data/types'
 import { serverLogic } from './http'
 import { portalUser } from './config'
 import { toAccount, toAccountRef, toComment, toContact, toInvitation, toOpportunity, toProduct, toRegistration, type Row } from './mappers'
@@ -13,8 +13,6 @@ export interface CachePatch {
   dealRegistrations?: Database['dealRegistrations']
   comments?: Comment[]
   invitations?: Invitation[]
-  workOrders?: WorkOrder[]
-  bookings?: Booking[]
   /** Lookup expansions: inserted only when the full record isn't cached yet. */
   accountRefs?: Account[]
   contactRefs?: Contact[]
@@ -24,8 +22,6 @@ export interface CachePatch {
     invitations?: (i: Invitation) => boolean
     contacts?: (c: Contact) => boolean
     opportunities?: (o: Opportunity) => boolean
-    workOrders?: (w: WorkOrder) => boolean
-    bookings?: (b: Booking) => boolean
   }
 }
 
@@ -56,8 +52,6 @@ const ROLE_ORDER: [string, Role][] = [
   ['Partner Admin', 'partner-admin'],
   ['Partner Manager', 'partner-manager'],
   ['Partner Seller', 'partner-seller'],
-  // One workspace per contact: an Account Manager (sales) role wins over Partner Technician.
-  ['Partner Technician', 'partner-technician'],
 ]
 
 export function roleFromWebRoles(roles: string[] | undefined, signedIn: boolean): Role {

@@ -1,4 +1,4 @@
-import { lazy, useState, type ReactElement } from 'react'
+import { useState, type ReactElement } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Body1,
@@ -53,12 +53,9 @@ export default function Home() {
   usePageTitle()
   const { session, mode, sessionReady } = useApp()
   if (mode === 'live' && !sessionReady) return <PageSkeleton variant="dashboard" />
-  if (can(session.role, 'work-orders')) return <TechnicianHome />
   return PARTNER_ROLES.includes(session.role) ? <Dashboard /> : <Landing />
 }
 
-// Technicians never load the sales dashboard code (and vice versa).
-const TechnicianHome = lazy(() => import('./work-orders/TechnicianHome'))
 
 const MIDDOT = '\u00B7'
 const EM_DASH = '\u2014'

@@ -1,4 +1,0 @@
-description: 'zava_dataareaid (legal entity) on technician purchase orders; must match the supplier''s other orders in the Zava Supplier portal.'
-id: 23fc9a8e-4600-441b-b413-85dc18e6ecad
-name: Technician/PurchaseOrder/DataAreaId
-value:

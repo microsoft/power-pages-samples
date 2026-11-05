@@ -11,7 +11,6 @@ export const WEB_ROLES = {
   partnerAdmin: 'Partner Admin',
   partnerManager: 'Partner Manager',
   partnerSeller: 'Partner Seller',
-  partnerTechnician: 'Partner Technician',
   nonPartner: 'Non-Partner Portal User',
 } as const
 

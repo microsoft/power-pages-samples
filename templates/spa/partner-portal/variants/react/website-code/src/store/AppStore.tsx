@@ -91,35 +91,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [db, setDb] = useState<Database>(() => {
     if (live) return EMPTY_DB
     const stored = load<Database>(DB_KEY, createSeed)
-    const removedContact = stored.contacts.find(c => c.id === 'c-marco')
-    const redact = (text: string) => removedContact ? text.split(`${removedContact.firstName} ${removedContact.lastName}`).join('Former technician') : text
-    // Databases saved before the Technician workspace existed have no work orders yet.
-    const seed = stored.workOrders && stored.bookings ? undefined : createSeed()
+    // Reconstruct only supported collections, preserving sales edits from older mock databases.
+    const retiredIds = new Set(['c-marco', 'c-kenji', 'c-dmitri'])
+    const obsolete = new Set([
+      ...retiredIds,
+      ...stored.contacts.filter(c => retiredIds.has(c.id) || ('fieldTechnician' in c && c.fieldTechnician === true && !c.partnerRole)).map(c => c.id),
+    ])
     return {
-      accounts: stored.accounts,
-      contacts: (seed ? [...stored.contacts, ...seed.contacts.filter(c => !stored.contacts.some(s => s.id === c.id))] : stored.contacts).filter(c => c.id !== 'c-marco'),
+      accounts: stored.accounts.filter(a => a.id !== 'acc-adatum'),
+      contacts: stored.contacts
+        .filter(c => !obsolete.has(c.id))
+        .map(c => {
+          if (!('fieldTechnician' in c)) return c
+          const { fieldTechnician, ...contact } = c
+          void fieldTechnician
+          return contact
+        }),
       opportunities: stored.opportunities,
       dealRegistrations: stored.dealRegistrations,
-      comments: stored.comments
-        .filter(c => (c.regardingType === 'opportunity' || c.regardingType === 'contact') && c.regardingId !== 'c-marco')
-        .map(c => ({ ...c, authorName: redact(c.authorName) })),
-      invitations: stored.invitations.filter(i => i.contactId !== 'c-marco'),
-      workOrders: (stored.workOrders ?? seed!.workOrders).map(w => ({
-        ...w,
-        diagnosis: w.diagnosis ? { ...w.diagnosis, recordedBy: redact(w.diagnosis.recordedBy) } : undefined,
-        report: w.report ? { ...w.report, submittedBy: redact(w.report.submittedBy) } : undefined,
-        timeline: w.timeline.map(e => ({ ...e, text: redact(e.text), by: e.by ? redact(e.by) : e.by })),
-      })),
-      bookings: (stored.bookings ?? seed!.bookings).filter(b => b.resourceContactId !== 'c-marco'),
+      comments: stored.comments.filter(c => (c.regardingType === 'opportunity' || c.regardingType === 'contact') && !obsolete.has(c.regardingId)),
+      invitations: stored.invitations.filter(i => !obsolete.has(i.contactId)),
     }
   })
-  const [role, setRoleState] = useState<Role>(() => (live ? 'anonymous' : load<Role>(ROLE_KEY, () => 'partner-admin')))
+  const [role, setRoleState] = useState<Role>(() => {
+    if (live) return 'anonymous'
+    const stored = load<Role>(ROLE_KEY, () => 'partner-admin')
+    return ['anonymous', 'non-partner', 'partner-admin', 'partner-manager', 'partner-seller'].includes(stored) ? stored : 'non-partner'
+  })
   // The stored contact is only honoured while the role key still matches it, so setting just the role key
   // (as tests do) always falls back to the seed persona.
   const [contactId, setContactId] = useState<string | null>(() => {
     if (live) return null
     const stored = load<StoredContact | null>(CONTACT_KEY, () => null)
-    return stored && stored.role === role ? stored.contactId : null
+    return stored && stored.role === role && db.contacts.some(c => c.id === stored.contactId && c.active) ? stored.contactId : null
   })
   const [sessionReady, setSessionReady] = useState(!live)
   const [notice, setNotice] = useState<Notice | null>(null)

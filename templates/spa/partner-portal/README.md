@@ -1,6 +1,6 @@
 # Partner Portal (Enhanced) template
 
-The Partner Portal (Enhanced) is a React + Vite Power Pages SPA for partner onboarding, customer and opportunity management, access administration, and a technician work-order workspace. The local development app uses browser-backed mock data; deploying the website code enables live behavior through Power Pages, Dataverse, and server logic.
+The Partner Portal (Enhanced) is a React + Vite Power Pages SPA for partner onboarding, customer and opportunity management, and access administration. The local development app uses browser-backed mock data; deploying the website code enables live behavior through Power Pages, Dataverse, and server logic.
 
 ## Included
 
@@ -8,9 +8,9 @@ The Partner Portal (Enhanced) is a React + Vite Power Pages SPA for partner onbo
 - The supporting unmanaged Dataverse solution `SPAPartnerPortalSite` in [`solutions/`](solutions/).
 - English (LCID 1033) site content.
 
-The source environment's environment URL, generated environment manifests, cloud-flow bindings, and record-specific technician purchase-order settings are not included. Configure these for the target environment before enabling live features. The app's local mock data is in `src/data/seed.ts`; it is not Dataverse seed data.
+The source environment's environment URL, generated environment manifests, and cloud-flow bindings are not included. Configure these for the target environment before enabling live features. The app's local mock data is in `src/data/seed.ts`; it is not Dataverse seed data.
 
-The default Partner Technician demo user has been removed from the seed data and persona selectors. Technician roles, other technician contacts, and work-order functionality remain available for users configured in the target environment. Existing local mock databases drop the retired contact and its bookings without resetting unrelated records.
+The supported partner roles are Partner Admin, Partner Manager, and Partner Seller. Public onboarding, authentication, and profile pages remain available to visitors and non-partner users. Existing local mock databases discard retired workspace collections and contact selections without resetting sales edits. Unknown live web roles receive non-partner UX.
 
 ## Install manually
 
@@ -34,7 +34,7 @@ pac solution import --path "$temp_dir/partner-portal-unmanaged.zip" --publish-ch
 
 ### Configure and upload the website
 
-1. Configure the target environment's `OnlineDomains` and `Technician/PurchaseOrder/*` site settings. The technician workspace requires valid target-environment currency, vendor, warehouse, parts-family, and supplier-contact values.
+1. Configure the target environment's `OnlineDomains` site setting.
 2. If enabling invitation flows, create or import the Power Pages cloud-flow consumer in the target environment and set `VITE_FLOW_SEND_INVITATION=<target-environment-flow-id>` in a local, untracked `.env.production`. Do not commit environment-specific `.env.production` files.
 3. Build and upload the site:
 

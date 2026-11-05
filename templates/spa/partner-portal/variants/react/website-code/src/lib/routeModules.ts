@@ -67,8 +67,6 @@ export const ManageAccess = routeModule(['/profile/manage-access'], () => import
 export const EditPartnerContact = routeModule(['/profile/manage-access/edit-partner-contact'], () => import('../pages/profile/EditPartnerContact'))
 export const ParentAccount = routeModule(['/profile/parent-account'], () => import('../pages/profile/ParentAccount'))
 export const RegisterToBePartner = routeModule(['/profile/register-to-be-a-partner'], () => import('../pages/profile/RegisterToBePartner'))
-export const WorkOrders = routeModule(['/work-orders'], () => import('../pages/work-orders/WorkOrders'))
-export const WorkOrderDetails = routeModule(['/work-orders/work-order-details'], () => import('../pages/work-orders/WorkOrderDetails'))
 
 /** Loads screen code only; redirects, external URLs and unknown routes are not speculative destinations. */
 export async function preloadRoute(to: string): Promise<void> {

@@ -49,7 +49,7 @@ const encodingTests = ['anonymous', 'partner-admin'].flatMap(role =>
 
 // (b) No horizontal overflow at 390px ---------------------------------------------------------------
 
-const reflowTests = ['partner-admin', 'partner-technician', 'anonymous'].flatMap(role =>
+const reflowTests = ['partner-admin', 'anonymous'].flatMap(role =>
   okRoutes(role).map(route => ({
     name: `reflow   ${role.padEnd(15)}  390px ${route.path} has no horizontal overflow`,
     role,

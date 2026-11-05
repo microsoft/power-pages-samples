@@ -1,4 +1,4 @@
-export type Role = 'anonymous' | 'non-partner' | 'partner-admin' | 'partner-manager' | 'partner-seller' | 'partner-technician'
+export type Role = 'anonymous' | 'non-partner' | 'partner-admin' | 'partner-manager' | 'partner-seller'
 
 export type PartnerContactRole = 'Partner Admin' | 'Partner Manager' | 'Partner Seller'
 
@@ -56,8 +56,6 @@ export interface Contact {
   managingPartnerId?: string
   address: Address
   partnerRole?: PartnerContactRole
-  /** Holds the Partner Technician web role (Field Service work orders only; no sales access). */
-  fieldTechnician?: boolean
   active: boolean
   notes?: string
   application?: PartnerApplication
@@ -184,107 +182,6 @@ export interface Invitation {
   sentOn: string
 }
 
-/** Field Service booking status (bookingstatus.msdyn_fieldservicestatus). */
-export type BookingStatus = 'Scheduled' | 'Traveling' | 'In Progress' | 'On Break' | 'Completed' | 'Canceled'
-
-/** Work order system status (msdyn_workorder.msdyn_systemstatus). */
-export type WorkOrderStatus = 'Unscheduled' | 'Scheduled' | 'In Progress' | 'Completed' | 'Posted' | 'Canceled'
-
-export const WORK_ORDER_FAULTS = ['Compressor failure', 'Refrigerant leak', 'Controller fault', 'Fan motor failure', 'Sensor fault', 'No fault found'] as const
-
-export const SERVICE_OUTCOMES = ['Resolved', 'Follow-up visit needed'] as const
-export type ServiceOutcome = (typeof SERVICE_OUTCOMES)[number]
-
-/** Technician diagnosis (msdyn_workorderincident). */
-export interface WorkOrderDiagnosis {
-  fault: string
-  findings: string
-  partRequired: boolean
-  /** Replacement part name; older diagnoses hold free text. */
-  part?: string
-  /** Product chosen from the replacement-part catalog (product.productid / productnumber). */
-  partId?: string
-  partNumber?: string
-  recordedOn: string
-  recordedBy: string
-}
-
-/** A part technicians can order: an active product in the replacement-parts family. */
-export interface ReplacementPart {
-  id: string
-  name: string
-  number?: string
-}
-
-/** Draft purchase order raised from a service report that needs a replacement part (msdyn_purchaseorder). */
-export interface WorkOrderPurchaseOrder {
-  id: string
-  number: string
-  status: string
-  part?: string
-  createdOn: string
-}
-
-/** Submitted service report (msdyn_workordersummary + a "Service report" note). */
-export interface ServiceReport {
-  workPerformed: string
-  outcome: ServiceOutcome
-  customerSummary: string
-  submittedOn: string
-  submittedBy: string
-}
-
-export interface WorkOrderEvent {
-  id: string
-  at: string
-  text: string
-  by?: string
-}
-
-/**
- * Field Service work order as seen by a partner technician (msdyn_workorder). Customer, site and asset details are
- * a read-only projection, so technicians never need account or contact table access.
- */
-export interface WorkOrder {
-  id: string
-  number: string
-  title: string
-  customerName: string
-  siteName?: string
-  address: Address
-  siteContact?: { name: string; phone?: string }
-  priority: string
-  type: string
-  incidentType: string
-  caseNumber?: string
-  caseTitle?: string
-  asset?: { name: string; model?: string; serialNumber?: string; location?: string }
-  instructions?: string
-  /** Partner organization the visit is subcontracted to (cr798_servicepartnerid). */
-  servicePartnerId?: string
-  systemStatus: WorkOrderStatus
-  diagnosis?: WorkOrderDiagnosis
-  report?: ServiceReport
-  purchaseOrder?: WorkOrderPurchaseOrder
-  timeline: WorkOrderEvent[]
-  createdOn: string
-}
-
-/** Resource booking for a work order (bookableresourcebooking). */
-export interface Booking {
-  id: string
-  workOrderId: string
-  /** Contact behind the bookable resource (bookableresource.contactid). */
-  resourceContactId?: string
-  resourceName: string
-  status: BookingStatus
-  start: string
-  end: string
-  arrivedOn?: string
-  /** When the booking was created or last moved (drives "Recently assigned"). */
-  assignedOn: string
-}
-
 export interface Database {
   accounts: Account[]
   contacts: Contact[]
@@ -292,6 +189,4 @@ export interface Database {
   dealRegistrations: DealRegistration[]
   comments: Comment[]
   invitations: Invitation[]
-  workOrders: WorkOrder[]
-  bookings: Booking[]
 }

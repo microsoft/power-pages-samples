@@ -1,14 +1,11 @@
-import type { Account, Booking, Contact, Database, Opportunity, Role, WorkOrder } from '../data/types'
+import type { Account, Contact, Database, Opportunity, Role } from '../data/types'
 import { PARTNER_A } from '../data/seed'
 
 /** Account Manager workspace (sales) roles: opportunities, deal registration, customers and partner admin. */
 export const PARTNER_ROLES: Role[] = ['partner-admin', 'partner-manager', 'partner-seller']
 
-/** Technician workspace roles: Field Service work orders only, never any sales capability. */
-export const TECHNICIAN_ROLES: Role[] = ['partner-technician']
-
-/** Roles that belong to a partner organization (sales or technician). Use `can` for feature access. */
-export const isPartnerOrgRole = (role: Role) => PARTNER_ROLES.includes(role) || TECHNICIAN_ROLES.includes(role)
+/** Roles that belong to a partner organization. Use `can` for feature access. */
+export const isPartnerOrgRole = (role: Role) => PARTNER_ROLES.includes(role)
 
 export const ROLE_LABELS: Record<Role, string> = {
   anonymous: 'Anonymous visitor',
@@ -16,7 +13,6 @@ export const ROLE_LABELS: Record<Role, string> = {
   'partner-admin': 'Partner Admin',
   'partner-manager': 'Partner Manager',
   'partner-seller': 'Partner Seller',
-  'partner-technician': 'Partner Technician',
 }
 
 /** Persona contact used for each signed-in role. */
@@ -42,7 +38,6 @@ export type Capability =
   | 'parent-account'
   | 'parent-account:edit'
   | 'register-partner'
-  | 'work-orders'
 
 /** Access matrix from CLONE-SPEC §3 (roles/access) and the SPA requirements route gating. */
 export function can(role: Role, cap: Capability): boolean {
@@ -51,8 +46,6 @@ export function can(role: Role, cap: Capability): boolean {
   switch (cap) {
     case 'signed-in':
       return role !== 'anonymous'
-    case 'work-orders':
-      return TECHNICIAN_ROLES.includes(role)
     case 'partner':
     case 'customers':
     case 'opportunities':
@@ -84,7 +77,6 @@ export function roleForContact(contact: Contact): Exclude<Role, 'anonymous'> {
   if (contact.partnerRole === 'Partner Admin') return 'partner-admin'
   if (contact.partnerRole === 'Partner Manager') return 'partner-manager'
   if (contact.partnerRole === 'Partner Seller') return 'partner-seller'
-  if (contact.fieldTechnician) return 'partner-technician'
   return 'non-partner'
 }
 
@@ -124,7 +116,8 @@ export function managedOpportunities(db: Database, s: Session): Opportunity[] {
     if (!belongsToPartner(o, s.partnerId!)) return false
     const listed = MANAGED_STATUSES.has(o.status) || (o.status === 'In Progress' && o.partnerCreated)
     if (!listed) return false
-    if (s.role === 'partner-seller') return o.partnerContactId === s.contact?.id || o.collaboration || (!!s.contact && !!o.sharedContactIds?.includes(s.contact.id))
+    if (s.role === 'partner-seller')
+      return o.partnerContactId === s.contact?.id || o.collaboration || (!!s.contact && !!o.sharedContactIds?.includes(s.contact.id))
     return true
   })
 }
@@ -152,38 +145,4 @@ export function customerContacts(db: Database, s: Session): Contact[] {
 export function partnerContacts(db: Database, s: Session): Contact[] {
   if (!s.partnerId || !can(s.role, 'partner')) return []
   return db.contacts.filter(c => c.parentAccountId === s.partnerId)
-}
-
-/* ------------------------------ Technician workspace ------------------------------ */
-
-const CLOSED_WORK_ORDER = new Set(['Completed', 'Posted', 'Canceled'])
-
-/** The session contact's own live booking for a work order (Canceled bookings never count). */
-export function myBooking(db: Database, s: Session, workOrderId: string): Booking | undefined {
-  if (!s.contact || !can(s.role, 'work-orders')) return undefined
-  return db.bookings
-    .filter(b => b.workOrderId === workOrderId && b.resourceContactId === s.contact!.id && b.status !== 'Canceled')
-    .sort((a, b) => b.start.localeCompare(a.start))[0]
-}
-
-/**
- * Work orders a technician can see: booked to them, or subcontracted to their partner organization. Mirrors the
- * Partner Technician table permissions (own bookings + account-scoped work orders); never another partner's.
- */
-export function technicianWorkOrders(db: Database, s: Session): WorkOrder[] {
-  if (!can(s.role, 'work-orders')) return []
-  const mine = new Set(
-    db.bookings.filter(b => b.resourceContactId === s.contact?.id && b.status !== 'Canceled').map(b => b.workOrderId),
-  )
-  return db.workOrders.filter(w => mine.has(w.id) || (!!s.partnerId && w.servicePartnerId === s.partnerId))
-}
-
-/**
- * Only the booked technician can change status, diagnose or report: on their own booking while it isn't completed,
- * and only while the work order is open. A report from an earlier visit doesn't block a follow-up visit.
- */
-export function canActOnWorkOrder(db: Database, s: Session, wo: WorkOrder): boolean {
-  if (CLOSED_WORK_ORDER.has(wo.systemStatus)) return false
-  const booking = myBooking(db, s, wo.id)
-  return !!booking && booking.status !== 'Completed'
 }
