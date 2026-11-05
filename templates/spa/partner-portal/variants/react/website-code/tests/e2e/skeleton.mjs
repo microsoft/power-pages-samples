@@ -106,7 +106,7 @@ const ROUTE_CASES = [
   { role: 'anonymous', path: '/partner-program/become-a-partner/', h1: 'Become a partner', variant: 'article' },
   { role: 'partner-admin', path: '/profile/', h1: 'Profile', variant: 'settings' },
   { role: 'anonymous', path: '/login', h1: 'Sign in', variant: 'auth' },
-  { role: 'partner-technician', path: '/', h1: 'Welcome back, Marco', variant: 'hub', regions: ['figures', 'work'] },
+  { role: 'partner-technician', path: '/', h1: 'Welcome back, Test', variant: 'hub', regions: ['figures', 'work'] },
   { role: 'partner-technician', path: '/work-orders/', h1: 'Work orders', variant: 'list' },
   { role: 'partner-technician', path: '/work-orders/work-order-details/?id=wo-204', h1: 'WO-00123 · High-temperature alarm on CU-204', variant: 'detail' },
 ]

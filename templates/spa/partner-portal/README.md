@@ -10,6 +10,8 @@ The Partner Portal (Enhanced) is a React + Vite Power Pages SPA for partner onbo
 
 The source environment's environment URL, generated environment manifests, cloud-flow bindings, and record-specific technician purchase-order settings are not included. Configure these for the target environment before enabling live features. The app's local mock data is in `src/data/seed.ts`; it is not Dataverse seed data.
 
+The default Partner Technician demo user has been removed from the seed data and persona selectors. Technician roles, other technician contacts, and work-order functionality remain available for users configured in the target environment. Existing local mock databases drop the retired contact and its bookings without resetting unrelated records.
+
 ## Install manually
 
 ### Prerequisites

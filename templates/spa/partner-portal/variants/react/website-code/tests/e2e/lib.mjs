@@ -1,5 +1,7 @@
 // Shared helpers for the end-to-end suites (no test framework: plain Playwright library + node:assert).
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import ts from 'typescript'
 
 export { assert }
 
@@ -52,20 +54,46 @@ export function isTransient(text) {
 
 /** Sets the role for a fresh context; seed data is reset only on the first navigation of the context. */
 export async function prepareContext(context, role) {
+  let technicianDb
+  if (role === TECHNICIAN) {
+    const source = readFileSync(new URL('../../src/data/seed.ts', import.meta.url), 'utf8')
+    const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } })
+    const { createSeed, PARTNER_B } = await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
+    technicianDb = createSeed()
+    technicianDb.contacts.push({
+      id: 'c-test-technician', firstName: 'Test', lastName: 'Technician', active: true, fieldTechnician: true,
+      parentAccountId: PARTNER_B, managingPartnerId: PARTNER_B, email: 'technician@example.com',
+    })
+    const at = (days, hour) => {
+      const date = new Date()
+      date.setDate(date.getDate() + days)
+      date.setHours(hour, 0, 0, 0)
+      return date.toISOString()
+    }
+    technicianDb.bookings.push(...[
+      { id: 'bk-204', workOrderId: 'wo-204', status: 'Scheduled', start: at(0, 10), end: at(0, 12) },
+      { id: 'bk-288', workOrderId: 'wo-288', status: 'Scheduled', start: at(1, 9), end: at(1, 11) },
+      { id: 'bk-240', workOrderId: 'wo-240', status: 'Completed', start: at(-1, 10), end: at(-1, 12) },
+    ].map(booking => ({ ...booking, resourceContactId: 'c-test-technician', resourceName: 'Test Technician', assignedOn: at(-2, 8) })))
+  }
   await context.addInitScript(
-    ({ role, keys }) => {
+    ({ role, keys, technicianDb }) => {
       try {
         if (!sessionStorage.getItem('e2e:seeded')) {
           localStorage.removeItem(keys.db)
           localStorage.removeItem(keys.contact)
           localStorage.setItem(keys.role, JSON.stringify(role))
+          if (technicianDb) {
+            localStorage.setItem(keys.db, JSON.stringify(technicianDb))
+            localStorage.setItem(keys.contact, JSON.stringify({ contactId: 'c-test-technician', role }))
+          }
           sessionStorage.setItem('e2e:seeded', '1')
         }
       } catch {
         /* opaque origins (about:blank) have no storage */
       }
     },
-    { role, keys: STORAGE_KEYS },
+    { role, keys: STORAGE_KEYS, technicianDb },
   )
 }
 

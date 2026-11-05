@@ -14,7 +14,7 @@ const HOME_H1 = {
   'partner-admin': 'Welcome back, Avery',
   'partner-manager': 'Welcome back, Jordan',
   'partner-seller': 'Welcome back, Sam',
-  'partner-technician': 'Welcome back, Marco',
+  'partner-technician': 'Welcome back, Test',
 }
 
 // Columns:            anonymous  non-partner  admin  manager  seller  technician

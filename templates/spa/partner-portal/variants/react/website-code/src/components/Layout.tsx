@@ -380,7 +380,7 @@ function RoleSwitcher({ id, size }: { id: string; size: 'small' | 'medium' }) {
             {`${customContact.firstName} ${customContact.lastName} (${ROLE_LABELS[session.role]})`}
           </option>
         )}
-        {(Object.keys(ROLE_LABELS) as Role[]).map(r => (
+        {(Object.keys(ROLE_LABELS) as Role[]).filter(r => r === 'anonymous' || ROLE_PERSONA[r]).map(r => (
           <option key={r} value={r}>
             {ROLE_LABELS[r]}
           </option>

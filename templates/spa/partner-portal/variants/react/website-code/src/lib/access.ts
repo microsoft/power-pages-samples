@@ -20,12 +20,11 @@ export const ROLE_LABELS: Record<Role, string> = {
 }
 
 /** Persona contact used for each signed-in role. */
-export const ROLE_PERSONA: Record<Exclude<Role, 'anonymous'>, string> = {
+export const ROLE_PERSONA: Partial<Record<Exclude<Role, 'anonymous'>, string>> = {
   'non-partner': 'c-taylor',
   'partner-admin': 'c-avery',
   'partner-manager': 'c-jordan',
   'partner-seller': 'c-sam',
-  'partner-technician': 'c-marco',
 }
 
 export type Capability =
@@ -98,6 +97,7 @@ export function buildSession(db: Database, role: Role, contactId?: string | null
   const effectiveRole: Role = custom ? roleForContact(custom) : role
   if (effectiveRole === 'anonymous') return { role: effectiveRole }
   const contact = custom ?? db.contacts.find(c => c.id === ROLE_PERSONA[effectiveRole])
+  if (!contact) return { role: 'anonymous' }
   const partnerId = isPartnerOrgRole(effectiveRole) ? (contact?.parentAccountId ?? PARTNER_A) : undefined
   return { role: effectiveRole, contact, partnerId }
 }

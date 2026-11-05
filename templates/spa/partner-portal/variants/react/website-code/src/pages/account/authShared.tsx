@@ -44,7 +44,6 @@ export const PERSONAS: { role: SignedInRole; label: string; name: string; contac
   { role: 'partner-admin', label: 'Partner Admin', name: 'Avery Chen', contactId: 'c-avery' },
   { role: 'partner-manager', label: 'Partner Manager', name: 'Jordan Patel', contactId: 'c-jordan' },
   { role: 'partner-seller', label: 'Partner Seller', name: 'Sam Rivera', contactId: 'c-sam' },
-  { role: 'partner-technician', label: 'Partner Technician', name: 'Marco Rivera', contactId: 'c-marco' },
   { role: 'non-partner', label: 'Non-Partner Portal User', name: 'Taylor Brooks', contactId: 'c-taylor' },
 ]
 

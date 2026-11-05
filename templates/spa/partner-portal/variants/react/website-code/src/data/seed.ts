@@ -128,7 +128,6 @@ const contacts: Contact[] = [
   // Partner B
   person('c-morgan', 'Morgan', 'Dubois', 'Partner Lead', PARTNER_B, { partnerRole: 'Partner Admin', managingPartnerId: PARTNER_B }),
   // Partner B field technicians (Partner Technician web role: work orders only)
-  person('c-marco', 'Marco', 'Rivera', 'Field Service Technician', PARTNER_B, { fieldTechnician: true, managingPartnerId: PARTNER_B, phone: '555-0231' }),
   person('c-kenji', 'Kenji', 'Tanaka', 'Senior HVAC Technician', PARTNER_B, { fieldTechnician: true, managingPartnerId: PARTNER_B, phone: '555-0232' }),
   // Rival installer technician (Partner C)
   person('c-dmitri', 'Dmitri', 'Volkov', 'Service Technician', PARTNER_C, { fieldTechnician: true, managingPartnerId: PARTNER_C, phone: '555-0331' }),
@@ -279,7 +278,7 @@ function fieldService(): Pick<Database, 'workOrders' | 'bookings'> {
       servicePartnerId: PARTNER_B, createdOn: at(0, 7, 40),
       timeline: [
         { id: 'ev-204-1', at: at(0, 7, 40), text: 'Work order created from case CAS-01000', by: 'Zava Customer Service' },
-        { id: 'ev-204-2', at: at(0, 8, 15), text: 'Visit moved forward after a same-day cancellation and assigned to Marco Rivera', by: 'Zava dispatch' },
+        { id: 'ev-204-2', at: at(0, 8, 15), text: 'Visit moved forward after a same-day cancellation', by: 'Zava dispatch' },
       ],
     }),
     wo({
@@ -296,22 +295,21 @@ function fieldService(): Pick<Database, 'workOrders' | 'bookings'> {
       siteContact: { name: 'Isabella Santos', phone: '555-0430' }, type: 'Planned maintenance',
       asset: { name: 'BSU-12 – Battery Storage Unit', model: 'Zava PowerStack 500', serialNumber: 'PS500-1207', location: 'Level B2' },
       servicePartnerId: PARTNER_B,
-      timeline: [{ id: 'ev-288-1', at: at(-1, 15), text: 'Assigned to Marco Rivera', by: 'Zava dispatch' }],
+      timeline: [],
     }),
     wo({
       id: 'wo-240', number: 'WO-00119', title: 'Heat pump noise – HP-07', customerName: 'Contoso Hotels',
       siteName: 'Contoso Hotels Airport', address: addr('6 Airport Road', 'Mississauga', 'ON', 'L4V 1E8'),
       incidentType: 'Unusual noise', systemStatus: 'Completed', servicePartnerId: PARTNER_B, createdOn: at(-3, 10),
       asset: { name: 'HP-07 – Lobby Heat Pump', model: 'Zava HP-30', serialNumber: 'HP30-0007', location: 'Lobby mezzanine' },
-      diagnosis: { fault: 'Fan motor failure', findings: 'Worn fan bearing causing vibration noise.', partRequired: false, recordedOn: at(-1, 11), recordedBy: 'Marco Rivera' },
+      diagnosis: { fault: 'Fan motor failure', findings: 'Worn fan bearing causing vibration noise.', partRequired: false, recordedOn: at(-1, 11), recordedBy: 'Former technician' },
       report: {
         workPerformed: 'Replaced fan bearing from van stock, balanced the fan and ran a 30-minute test.', outcome: 'Resolved',
-        customerSummary: 'Noise resolved. A worn fan bearing was replaced and the unit tested normally.', submittedOn: at(-1, 12), submittedBy: 'Marco Rivera',
+        customerSummary: 'Noise resolved. A worn fan bearing was replaced and the unit tested normally.', submittedOn: at(-1, 12), submittedBy: 'Former technician',
       },
       timeline: [
-        { id: 'ev-240-1', at: at(-2, 16), text: 'Assigned to Marco Rivera', by: 'Zava dispatch' },
-        { id: 'ev-240-2', at: at(-1, 11), text: 'Diagnosis recorded: Fan motor failure', by: 'Marco Rivera' },
-        { id: 'ev-240-3', at: at(-1, 12), text: 'Service report submitted', by: 'Marco Rivera' },
+        { id: 'ev-240-2', at: at(-1, 11), text: 'Diagnosis recorded: Fan motor failure', by: 'Former technician' },
+        { id: 'ev-240-3', at: at(-1, 12), text: 'Service report submitted', by: 'Former technician' },
       ],
     }),
     wo({
@@ -323,10 +321,7 @@ function fieldService(): Pick<Database, 'workOrders' | 'bookings'> {
     }),
   ]
   const bookings: Booking[] = [
-    { id: 'bk-204', workOrderId: 'wo-204', resourceContactId: 'c-marco', resourceName: 'Marco Rivera', status: 'Scheduled', start: at(0, 10, 30), end: at(0, 12, 30), assignedOn: at(0, 8, 15) },
     { id: 'bk-311', workOrderId: 'wo-311', resourceContactId: 'c-kenji', resourceName: 'Kenji Tanaka', status: 'Scheduled', start: at(0, 13), end: at(0, 15), assignedOn: at(-2, 9) },
-    { id: 'bk-288', workOrderId: 'wo-288', resourceContactId: 'c-marco', resourceName: 'Marco Rivera', status: 'Scheduled', start: at(1, 9), end: at(1, 11), assignedOn: at(-1, 15) },
-    { id: 'bk-240', workOrderId: 'wo-240', resourceContactId: 'c-marco', resourceName: 'Marco Rivera', status: 'Completed', start: at(-1, 10), end: at(-1, 12), arrivedOn: at(-1, 10, 5), assignedOn: at(-2, 16) },
     { id: 'bk-901', workOrderId: 'wo-901', resourceContactId: 'c-dmitri', resourceName: 'Dmitri Volkov', status: 'Scheduled', start: at(0, 11), end: at(0, 13), assignedOn: at(-1, 9) },
   ]
   return { workOrders, bookings }

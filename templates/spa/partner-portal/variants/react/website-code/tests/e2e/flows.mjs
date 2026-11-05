@@ -322,13 +322,59 @@ export const tests = [
       assert.equal(await page.getByRole('main').getByText(text, { exact: true }).count(), 1, 'exactly one note is written')
     },
   },
+  {
+    name: 'retired technician is absent from seed personas and is removed from saved mock sessions',
+    role: 'anonymous',
+    async run({ page, goto }) {
+      await goto('/')
+      const snapshot = await page.evaluate(keys => {
+        const db = JSON.parse(localStorage.getItem(keys.db))
+        return {
+          contacts: db.contacts.map(c => c.id),
+          bookings: db.bookings.map(b => b.resourceContactId),
+          options: [...document.querySelectorAll('select option')].map(o => o.value),
+          workOrders: db.workOrders.length,
+        }
+      }, STORAGE_KEYS)
+      assert.ok(!snapshot.contacts.includes('c-marco'))
+      assert.ok(!snapshot.bookings.includes('c-marco'))
+      assert.ok(snapshot.contacts.includes('c-kenji') && snapshot.contacts.includes('c-dmitri'))
+      assert.ok(!snapshot.options.includes('partner-technician'))
+      await goto('/login')
+      assert.equal(await page.getByRole('radio', { name: /Partner Technician/ }).count(), 0)
+      await page.evaluate(keys => {
+        const db = JSON.parse(localStorage.getItem(keys.db))
+        db.contacts.push({ id: 'c-marco', firstName: 'Retired', lastName: 'User', active: true, fieldTechnician: true, parentAccountId: 'acc-fabrikam' })
+        db.bookings.push({ id: 'retired-booking', workOrderId: 'wo-204', resourceContactId: 'c-marco', resourceName: 'Retired User' })
+        db.invitations.push({ id: 'retired-invitation', contactId: 'c-marco' })
+        db.accounts[0].description = 'Preserve this edit'
+        db.workOrders[0].timeline.push({ id: 'retired-event', text: 'Assigned to Retired User', by: 'Retired User' })
+        localStorage.setItem(keys.db, JSON.stringify(db))
+        localStorage.setItem(keys.role, JSON.stringify('partner-technician'))
+        localStorage.setItem(keys.contact, JSON.stringify({ contactId: 'c-marco', role: 'partner-technician' }))
+      }, STORAGE_KEYS)
+      await goto('/')
+      await expectH1(page, 'Grow together with the Zava partner network')
+      const migrated = await page.evaluate(keys => ({
+        db: JSON.parse(localStorage.getItem(keys.db)),
+        contact: localStorage.getItem(keys.contact),
+      }), STORAGE_KEYS)
+      assert.ok(!migrated.db.contacts.some(c => c.id === 'c-marco'))
+      assert.ok(!migrated.db.bookings.some(b => b.resourceContactId === 'c-marco'))
+      assert.ok(!migrated.db.invitations.some(i => i.contactId === 'c-marco'))
+      assert.equal(migrated.db.accounts[0].description, 'Preserve this edit')
+      assert.equal(migrated.db.workOrders.length, snapshot.workOrders)
+      assert.equal(migrated.db.workOrders[0].timeline.at(-1).by, 'Former technician')
+      assert.equal(migrated.contact, null)
+    },
+  },
   // Technician workspace (Partner Technician web role) ----------------------------------------------------------
   {
     name: 'partner-technician works the assigned CU-204 visit: travel, arrival, diagnosis, service report',
     role: 'partner-technician',
     async run({ page, goto }) {
       await goto('/')
-      await expectH1(page, 'Welcome back, Marco')
+      await expectH1(page, 'Welcome back, Test')
       await page.getByRole('link', { name: 'Open work order', exact: true }).click()
       await expectH1(page, 'WO-00123 · High-temperature alarm on CU-204')
 
@@ -388,7 +434,7 @@ export const tests = [
       await page.evaluate(key => {
         const db = JSON.parse(localStorage.getItem(key))
         const start = new Date(Date.now() + 86_400_000).toISOString()
-        db.bookings.push({ id: 'bk-204-follow-up', workOrderId: 'wo-204', resourceContactId: 'c-marco', resourceName: 'Marco Rivera', status: 'Scheduled', start, end: start, assignedOn: new Date().toISOString() })
+        db.bookings.push({ id: 'bk-204-follow-up', workOrderId: 'wo-204', resourceContactId: 'c-test-technician', resourceName: 'Test Technician', status: 'Scheduled', start, end: start, assignedOn: new Date().toISOString() })
         db.workOrders.find(w => w.id === 'wo-204').systemStatus = 'Scheduled'
         localStorage.setItem(key, JSON.stringify(db))
       }, STORAGE_KEYS.db)
