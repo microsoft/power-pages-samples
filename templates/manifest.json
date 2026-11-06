@@ -86,7 +86,13 @@
         "makers",
         "developers"
       ],
-      "previewImages": [],
+      "previewImages": [
+        "spa/partner-portal/previews/home.png",
+        "spa/partner-portal/previews/dashboard.png",
+        "spa/partner-portal/previews/opportunities.png",
+        "spa/partner-portal/previews/customers.png",
+        "spa/partner-portal/previews/manage-access.png"
+      ],
       "requiredDataverseLanguages": [
         1033
       ],

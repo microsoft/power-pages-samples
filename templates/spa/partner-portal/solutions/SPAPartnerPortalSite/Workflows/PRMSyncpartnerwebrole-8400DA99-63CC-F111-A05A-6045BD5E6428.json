@@ -37,7 +37,7 @@
                     "parameters": {
                       "associationEntityRelationship": "powerpagecomponent_mspp_webrole_contact",
                       "entityName": "contacts",
-                      "item/@odata.id": "@concat('https://org682efde5.crm3.dynamics.com/api/data/v9.1/powerpagecomponents(', item(), ')')",
+                      "item/@odata.id": "@concat(parameters('Partner Portal Dataverse URL (cr798_PartnerPortalDataverseUrl)'), '/api/data/v9.1/powerpagecomponents(', item(), ')')",
                       "recordId": "@triggerOutputs()?['body/contactid']"
                     }
                   },
@@ -56,7 +56,7 @@
                             "operationId": "DisassociateEntities"
                           },
                           "parameters": {
-                            "$id": "@concat('https://org682efde5.crm3.dynamics.com/api/data/v9.1/powerpagecomponents(', item(), ')')",
+                            "$id": "@concat(parameters('Partner Portal Dataverse URL (cr798_PartnerPortalDataverseUrl)'), '/api/data/v9.1/powerpagecomponents(', item(), ')')",
                             "associationEntityRelationship": "powerpagecomponent_mspp_webrole_contact",
                             "entityName": "contacts",
                             "recordId": "@triggerOutputs()?['body/contactid']"

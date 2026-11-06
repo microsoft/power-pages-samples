@@ -1,8 +1,9 @@
 {
   "$schema": "https://www.schemastore.org/powerpages.config.json",
-  "siteName": "Partner Portal SPA",
+  "siteName": "Partner Portal (Enhanced)",
   "compiledPath": "dist",
   "defaultLandingPage": "index.html",
+  "includeSource": true,
   "bundleFilePatterns": [
     "AccountStatusDialog-*.js",
     "actions-*.js",

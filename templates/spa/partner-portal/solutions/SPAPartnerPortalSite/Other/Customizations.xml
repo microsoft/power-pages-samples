@@ -11,6 +11,7 @@
   <optionsets />
   <CustomControls />
   <EntityDataProviders />
+  <EnvironmentVariables />
   <connectionreferences>
     <connectionreference connectionreferencelogicalname="new_sharedcommondataserviceforapps_b1053">
       <connectionreferencedisplayname>Microsoft Dataverse Crc78dc-b1053</connectionreferencedisplayname>

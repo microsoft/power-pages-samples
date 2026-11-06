@@ -13,7 +13,10 @@ npm run typecheck
 npm run lint
 npm run format:check
 npm run build
+npm test
 pac pages upload-code-site --rootPath .
 ```
 
-Run the upload command after building, from this directory. Live invitation actions require the target environment's cloud-flow consumer ID in `VITE_FLOW_SEND_INVITATION`; configure it in a local `.env.production` and keep that file untracked.
+Run `npm test` after building to check the catalog/configuration, compiled bundle patterns, and supporting-solution contract. For browser coverage, start `npm run dev` in another terminal and run `npm run test:smoke`; this includes the retained partner flows and retired-route regression checks.
+
+Run the upload command after building, from this directory. Live invitation actions require the target environment's cloud-flow consumer ID in `VITE_FLOW_SEND_INVITATION`; configure it in a local `.env.production` and keep that file untracked. Source inclusion is enabled, as in the other React SPA templates. See the [template installation instructions](../../../README.md) for managed prerequisites, solution import, flow bindings, and real-user configuration.

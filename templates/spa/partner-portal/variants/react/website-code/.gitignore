@@ -14,11 +14,11 @@ vite.config.ts.timestamp-*
 *.tsbuildinfo
 
 # Environment variables
-.env
-.env.local
-.env*.local
-.env.production
+.env*
 test-enviroment-details.md
+
+# Dataverse exports can contain customer records
+dataverse-export/
 
 # Logs
 *.log

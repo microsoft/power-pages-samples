@@ -1,0 +1,12 @@
+<environmentvariabledefinition environmentvariabledefinitionid="{65e3aa02-8f2c-4cac-9abc-98ae3deb1229}" schemaname="cr798_PartnerPortalDataverseUrl">
+  <displayname default="Partner Portal Dataverse URL">
+    <label description="Partner Portal Dataverse URL" languagecode="1033" />
+  </displayname>
+  <description default="Base Dataverse organization URL used by the partner web-role synchronization flow. Set this in each target environment.">
+    <label description="Base Dataverse organization URL used by the partner web-role synchronization flow. Set this in each target environment." languagecode="1033" />
+  </description>
+  <introducedversion>1.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>1</isrequired>
+  <type>100000000</type>
+</environmentvariabledefinition>
