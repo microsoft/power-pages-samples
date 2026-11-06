@@ -64,6 +64,11 @@ const activityDto: Decoder<CaseActivity> = value => {
   }
 }
 const createdDto = (value: unknown) => ({ id: id(record(value).id) })
+const activityCreatedDto = (value: unknown) => {
+  const r = record(value)
+  return { id: id(r.id), statusChanged: r.statusChanged === true }
+}
+export type CaseActivityCreated = ReturnType<typeof activityCreatedDto>
 
 let csrfToken: Promise<string> | undefined
 async function token(): Promise<string> {
@@ -215,10 +220,11 @@ export const supportApi = {
   products: () => catalog('products'),
   categories: () => catalog('categories'),
   createCase,
+  getCase,
   updateCase: (caseId: string, title: string, description: string) => request('northwind-cases', caseDto, 'PATCH', { id: caseId, title, description }),
   activity: (caseId: string) => request('northwind-case-activity', activityDto, 'GET', undefined, { caseId }),
-  comment: (caseId: string, body: string) => request('northwind-case-activity', createdDto, 'POST', { caseId, kind: 'comment', body }),
-  upload: async (caseId: string, file: File) => request('northwind-case-activity', createdDto, 'POST', { caseId, kind: 'document', name: file.name, type: file.type, content: await fileContent(file) }),
+  comment: (caseId: string, body: string) => request('northwind-case-activity', activityCreatedDto, 'POST', { caseId, kind: 'comment', body }),
+  upload: async (caseId: string, file: File) => request('northwind-case-activity', activityCreatedDto, 'POST', { caseId, kind: 'document', name: file.name, type: file.type, content: await fileContent(file) }),
   download: (caseId: string, documentId: string) => request('northwind-case-activity', value => {
     const r = record(value); return { name: text(r.name), type: text(r.type), content: text(r.content) }
   }, 'GET', undefined, { caseId, documentId }),

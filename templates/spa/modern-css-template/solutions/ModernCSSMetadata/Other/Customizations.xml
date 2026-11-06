@@ -10,8 +10,6 @@
   <OrganizationSettings />
   <optionsets />
   <CustomControls />
-  <SolutionPluginAssemblies />
-  <SdkMessageProcessingSteps />
   <EntityDataProviders />
   <connectionreferences>
     <connectionreference connectionreferencelogicalname="cr719_northwindportalresponseconversion">

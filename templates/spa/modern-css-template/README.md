@@ -32,11 +32,12 @@ The **ModernCSSMetadata** solution adds only the supporting components the site 
 | Component | Purpose |
 | --- | --- |
 | Cloud flow **Northwind - Case Management Agent (review required)** | Dispatches portal-created Web cases to the Case Management Agent in review-required (Semi) mode. |
-| Cloud flow **Northwind - Publish reviewed response to portal** | Publishes a representative-approved reply as a customer-visible Portal Comment. |
+| Cloud flow **Northwind - Publish reviewed response to portal** | Publishes the reply a representative sent as a customer-visible Portal Comment once Dynamics accepts the Send. |
 | Connection reference `cr719_northwindportalresponseconversion` (Content Conversion) | HTML-to-text conversion in the publish flow. |
-| Plug-in assembly `Northwind.SendApproval` and its **Send**/`email` PreValidation step | Captures the reviewed reply snapshot when a representative uses native **Send**. |
 | System view **Northwind KB Search** on `knowledgearticle` | Knowledge-only scope for AI search. |
-| Environment variables `ppst_ModernCss_PortalApplicationUserId`, `ppst_ModernCss_PortalUrl`, `ppst_ModernCss_ApprovalWriterUserId` | The site's application user ID, the site URL and the environment's SYSTEM user ID. |
+| Environment variables `ppst_ModernCss_PortalApplicationUserId`, `ppst_ModernCss_PortalUrl` | The site's application user ID and the site URL. |
+
+The solution contains no plug-ins or other custom code.
 
 See the [website code README](variants/react/website-code/README.md) for the site architecture, permissions, server logic, AI search and agent integration details.
 
@@ -94,7 +95,6 @@ After upload, update environment-specific site settings such as `Northwind/Knowl
 3. Edit `settings.json`:
    - `ppst_ModernCss_PortalApplicationUserId`: the `systemuserid` of the site's **Portals-&lt;site name&gt;** application user.
    - `ppst_ModernCss_PortalUrl`: the site URL, for example `https://contoso.powerappsportals.com`.
-   - `ppst_ModernCss_ApprovalWriterUserId`: the `systemuserid` of the environment's **SYSTEM** user.
    - The connection IDs for the Content Conversion connection reference.
 
 4. Import the solution:
@@ -113,5 +113,5 @@ The solution doesn't include environment content or settings. Configure them in 
 2. Map AI-eligible intents to your published external knowledge articles. Unknown intents hand off to a representative.
 3. Configure an approved outgoing mailbox for support replies.
 
-Representatives review the agent's draft email and use the normal **Send** button. The publish flow then posts the approved reply to the customer's case conversation, even if the email itself is rejected.
+Representatives review the agent's draft email and use the normal **Send** button. When Dynamics accepts the Send (status **Pending Send**), the publish flow posts the reply to the customer's case conversation, even if delivery later fails. A Send that Dynamics rejects, for example to a Contact marked **Do not email**, publishes nothing.
 See [Set up Case Management Agent to resolve cases](https://learn.microsoft.com/dynamics365/customer-service/administer/set-up-case-resolution-agent).

@@ -35,21 +35,20 @@
         "Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)": {
           "defaultValue": "",
           "type": "String",
-          "metadata": { "schemaName": "ppst_ModernCss_PortalApplicationUserId" }
+          "metadata": {
+            "schemaName": "ppst_ModernCss_PortalApplicationUserId"
+          }
         },
         "Modern CSS - Portal URL (ppst_ModernCss_PortalUrl)": {
           "defaultValue": "",
           "type": "String",
-          "metadata": { "schemaName": "ppst_ModernCss_PortalUrl" }
-        },
-        "Modern CSS - Approval writer (SYSTEM) user ID (ppst_ModernCss_ApprovalWriterUserId)": {
-          "defaultValue": "",
-          "type": "String",
-          "metadata": { "schemaName": "ppst_ModernCss_ApprovalWriterUserId" }
+          "metadata": {
+            "schemaName": "ppst_ModernCss_PortalUrl"
+          }
         }
       },
       "triggers": {
-        "When_reviewed_Send_is_captured": {
+        "When_case_email_Send_is_accepted": {
           "type": "OpenApiConnectionWebhook",
           "inputs": {
             "host": {
@@ -58,33 +57,55 @@
               "connectionName": "shared_commondataserviceforapps"
             },
             "parameters": {
-              "subscriptionRequest/message": 1,
-              "subscriptionRequest/entityname": "annotation",
+              "subscriptionRequest/message": 3,
+              "subscriptionRequest/entityname": "email",
               "subscriptionRequest/scope": 4,
-              "subscriptionRequest/filterexpression": "@concat('subject eq ''Northwind portal: Reviewed Send approval'' and isdocument eq false and _createdby_value eq ', parameters('Modern CSS - Approval writer (SYSTEM) user ID (ppst_ModernCss_ApprovalWriterUserId)'))"
+              "subscriptionRequest/filteringattributes": "statecode,statuscode",
+              "subscriptionRequest/filterexpression": "directioncode eq true and statecode eq 1 and statuscode eq 6 and _regardingobjectid_value ne null"
             },
             "authentication": "@parameters('$authentication')"
           }
         }
       },
       "actions": {
-        "Approval": {
-          "type": "Compose",
-          "inputs": "@json(triggerBody()?['notetext'])",
+        "Read_sent_email": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "emails",
+              "recordId": "@triggerBody()?['activityid']",
+              "$select": "activityid,description,directioncode,statecode,statuscode,versionnumber,_regardingobjectid_value",
+              "$expand": "regardingobjectid_incident_email($select=incidentid)"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
           "runAfter": {}
         },
-        "Require_trusted_approval": {
+        "Require_outgoing_case_email": {
           "type": "If",
-          "expression": "@not(and(equals(triggerBody()?['subject'], 'Northwind portal: Reviewed Send approval'), equals(triggerBody()?['isdocument'], false), equals(triggerBody()?['_createdby_value'], parameters('Modern CSS - Approval writer (SYSTEM) user ID (ppst_ModernCss_ApprovalWriterUserId)')), equals(outputs('Approval')?['schemaVersion'], 1), equals(outputs('Approval')?['approvalMethod'], 'NativeSend'), equals(outputs('Approval')?['outsideTransaction'], true), equals(triggerBody()?['_objectid_value'], outputs('Approval')?['caseId']), not(empty(outputs('Approval')?['emailId'])), not(empty(outputs('Approval')?['contactId'])), not(empty(outputs('Approval')?['approvedBy'])), not(empty(outputs('Approval')?['approvedAt'])), not(empty(outputs('Approval')?['sourceEmailVersion'])), not(equals(outputs('Approval')?['htmlBase64'], null))))",
+          "expression": "@not(and(equals(outputs('Read_sent_email')?['body/directioncode'], true), not(empty(outputs('Read_sent_email')?['body/regardingobjectid_incident_email']?['incidentid']))))",
           "actions": {
-            "Stop_untrusted_approval": {
+            "Record_not_case_email": {
+              "type": "Compose",
+              "inputs": {
+                "status": "Skipped",
+                "reason": "The accepted Send is not an outgoing case email."
+              }
+            },
+            "Stop_not_case_email": {
               "type": "Terminate",
               "inputs": {
-                "runStatus": "Failed",
-                "runError": {
-                  "code": "UntrustedSendApproval",
-                  "message": "Only a SYSTEM-authored, non-transactional Native Send approval can release a portal response. Nothing was published."
-                }
+                "runStatus": "Succeeded"
+              },
+              "runAfter": {
+                "Record_not_case_email": [
+                  "Succeeded"
+                ]
               }
             }
           },
@@ -92,7 +113,7 @@
             "actions": {}
           },
           "runAfter": {
-            "Approval": [
+            "Read_sent_email": [
               "Succeeded"
             ]
           }
@@ -107,30 +128,38 @@
             },
             "parameters": {
               "entityName": "incidents",
-              "recordId": "@outputs('Approval')?['caseId']",
+              "recordId": "@outputs('Read_sent_email')?['body/regardingobjectid_incident_email']?['incidentid']",
               "$select": "incidentid,ticketnumber,caseorigincode,_createdby_value,_customerid_value",
               "$expand": "customerid_contact($select=contactid)"
             },
             "authentication": "@parameters('$authentication')"
           },
           "runAfter": {
-            "Require_trusted_approval": [
+            "Require_outgoing_case_email": [
               "Succeeded"
             ]
           }
         },
         "Require_Northwind_personal_case": {
           "type": "If",
-          "expression": "@not(and(equals(outputs('Read_case')?['body/caseorigincode'], 3), equals(outputs('Read_case')?['body/_createdby_value'], parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')), not(empty(outputs('Read_case')?['body/customerid_contact']?['contactid'])), equals(outputs('Read_case')?['body/customerid_contact']?['contactid'], outputs('Approval')?['contactId']), equals(outputs('Read_case')?['body/_customerid_value'], outputs('Approval')?['contactId'])))",
+          "expression": "@not(and(equals(outputs('Read_case')?['body/caseorigincode'], 3), equals(outputs('Read_case')?['body/_createdby_value'], parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')), not(empty(outputs('Read_case')?['body/customerid_contact']?['contactid'])), equals(outputs('Read_case')?['body/_customerid_value'], outputs('Read_case')?['body/customerid_contact']?['contactid'])))",
           "actions": {
-            "Stop_changed_approved_case": {
+            "Record_not_portal_case": {
+              "type": "Compose",
+              "inputs": {
+                "status": "Skipped",
+                "reason": "The email concerns a case that is not a Northwind portal Web case with a Contact customer."
+              }
+            },
+            "Stop_not_portal_case": {
               "type": "Terminate",
               "inputs": {
-                "runStatus": "Failed",
-                "runError": {
-                  "code": "ApprovedCaseChanged",
-                  "message": "The approved case is no longer a Northwind Web case for the captured Contact. Nothing was published; review its ownership and the approval request."
-                }
+                "runStatus": "Succeeded"
+              },
+              "runAfter": {
+                "Record_not_portal_case": [
+                  "Succeeded"
+                ]
               }
             }
           },
@@ -139,6 +168,85 @@
           },
           "runAfter": {
             "Read_case": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Read_To_recipients": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "activityparties",
+              "$select": "activitypartyid,participationtypemask,_partyid_value",
+              "$filter": "@concat('_activityid_value eq ', outputs('Read_sent_email')?['body/activityid'], ' and participationtypemask eq 2')",
+              "$expand": "partyid_contact($select=contactid)",
+              "$top": 2
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Require_Northwind_personal_case": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Require_case_Contact_as_sole_recipient": {
+          "type": "If",
+          "expression": "@not(and(equals(length(outputs('Read_To_recipients')?['body/value']), 1), equals(first(outputs('Read_To_recipients')?['body/value'])?['partyid_contact']?['contactid'], outputs('Read_case')?['body/customerid_contact']?['contactid'])))",
+          "actions": {
+            "Record_not_portal_response": {
+              "type": "Compose",
+              "inputs": {
+                "status": "Skipped",
+                "reason": "The case Contact is not the email's only To recipient, so it is not a portal response. The email continues through normal mail processing."
+              }
+            },
+            "Stop_not_portal_response": {
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Succeeded"
+              },
+              "runAfter": {
+                "Record_not_portal_response": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "else": {
+            "actions": {}
+          },
+          "runAfter": {
+            "Read_To_recipients": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Require_locked_sent_email": {
+          "type": "If",
+          "expression": "@not(and(equals(outputs('Read_sent_email')?['body/statecode'], 1), or(equals(outputs('Read_sent_email')?['body/statuscode'], 6), equals(outputs('Read_sent_email')?['body/statuscode'], 7), equals(outputs('Read_sent_email')?['body/statuscode'], 3))))",
+          "actions": {
+            "Stop_unlocked_email": {
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "SendNotLocked",
+                  "message": "The email reopened (for example, as Failed) before its sent text was read, so the reviewed text cannot be confirmed. Nothing was published. Resolve the send failure and Send again."
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {}
+          },
+          "runAfter": {
+            "Require_case_Contact_as_sole_recipient": [
               "Succeeded"
             ]
           }
@@ -154,13 +262,13 @@
             "parameters": {
               "entityName": "annotations",
               "$select": "annotationid,subject,notetext,_objectid_value",
-              "$filter": "@concat('annotationid eq ', outputs('Approval')?['emailId'])",
+              "$filter": "@concat('annotationid eq ', outputs('Read_sent_email')?['body/activityid'])",
               "$top": 1
             },
             "authentication": "@parameters('$authentication')"
           },
           "runAfter": {
-            "Require_Northwind_personal_case": [
+            "Require_locked_sent_email": [
               "Succeeded"
             ]
           }
@@ -176,7 +284,7 @@
             },
             "Require_matching_completed_receipt": {
               "type": "If",
-              "expression": "@not(and(equals(first(outputs('Find_publication_receipt')?['body/value'])?['subject'], 'Northwind portal: Approved response publication'), equals(first(outputs('Find_publication_receipt')?['body/value'])?['_objectid_value'], outputs('Read_case')?['body/incidentid']), or(and(equals(outputs('Existing_receipt')?['schemaVersion'], 4), equals(outputs('Existing_receipt')?['publicationMethod'], 'NativeSend'), not(empty(outputs('Existing_receipt')?['approvalRequestId'])), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['approvedBy'])), not(empty(outputs('Existing_receipt')?['approvedAt']))), and(equals(outputs('Existing_receipt')?['schemaVersion'], 3), equals(outputs('Existing_receipt')?['publicationMethod'], 'SentEmail'), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['sourceSentOn']))), equals(outputs('Existing_receipt')?['schemaVersion'], 1), and(equals(outputs('Existing_receipt')?['schemaVersion'], 2), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['approvalId'])), not(empty(outputs('Existing_receipt')?['approvedBy'])))), equals(outputs('Existing_receipt')?['status'], 'Published'), equals(outputs('Existing_receipt')?['emailId'], outputs('Approval')?['emailId']), equals(outputs('Existing_receipt')?['caseId'], outputs('Read_case')?['body/incidentid']), equals(outputs('Existing_receipt')?['contactId'], outputs('Read_case')?['body/customerid_contact']?['contactid']), not(empty(outputs('Existing_receipt')?['approvedText'])), not(empty(outputs('Existing_receipt')?['commentId']))))",
+              "expression": "@not(and(equals(first(outputs('Find_publication_receipt')?['body/value'])?['subject'], 'Northwind portal: Approved response publication'), equals(first(outputs('Find_publication_receipt')?['body/value'])?['_objectid_value'], outputs('Read_case')?['body/incidentid']), or(and(equals(outputs('Existing_receipt')?['schemaVersion'], 5), equals(outputs('Existing_receipt')?['publicationMethod'], 'SendAccepted'), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['approvedBy'])), not(empty(outputs('Existing_receipt')?['approvedAt']))), and(equals(outputs('Existing_receipt')?['schemaVersion'], 4), equals(outputs('Existing_receipt')?['publicationMethod'], 'NativeSend'), not(empty(outputs('Existing_receipt')?['approvalRequestId'])), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['approvedBy'])), not(empty(outputs('Existing_receipt')?['approvedAt']))), and(equals(outputs('Existing_receipt')?['schemaVersion'], 3), equals(outputs('Existing_receipt')?['publicationMethod'], 'SentEmail'), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['sourceSentOn']))), equals(outputs('Existing_receipt')?['schemaVersion'], 1), and(equals(outputs('Existing_receipt')?['schemaVersion'], 2), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['approvalId'])), not(empty(outputs('Existing_receipt')?['approvedBy'])))), equals(outputs('Existing_receipt')?['status'], 'Published'), equals(outputs('Existing_receipt')?['emailId'], outputs('Read_sent_email')?['body/activityid']), equals(outputs('Existing_receipt')?['caseId'], outputs('Read_case')?['body/incidentid']), equals(outputs('Existing_receipt')?['contactId'], outputs('Read_case')?['body/customerid_contact']?['contactid']), not(empty(outputs('Existing_receipt')?['approvedText'])), not(empty(outputs('Existing_receipt')?['commentId']))))",
               "actions": {
                 "Stop_conflicting_or_unconfirmed_publication": {
                   "type": "Terminate",
@@ -221,7 +329,7 @@
             },
             "Verify_existing_response": {
               "type": "If",
-              "expression": "@not(and(equals(outputs('Read_existing_response')?['body/_regardingobjectid_value'], outputs('Read_case')?['body/incidentid']), equals(outputs('Read_existing_response')?['body/subject'], if(equals(outputs('Existing_receipt')?['schemaVersion'], 4), '*WEB* Reviewed support response', if(equals(outputs('Existing_receipt')?['schemaVersion'], 3), '*WEB* Support email response', '*WEB* AI-assisted support response'))), equals(outputs('Read_existing_response')?['body/adx_portalcommentdirectioncode'], 2), equals(outputs('Read_existing_response')?['body/description'], outputs('Existing_receipt')?['approvedText'])))",
+              "expression": "@not(and(equals(outputs('Read_existing_response')?['body/_regardingobjectid_value'], outputs('Read_case')?['body/incidentid']), equals(outputs('Read_existing_response')?['body/subject'], if(greaterOrEquals(outputs('Existing_receipt')?['schemaVersion'], 4), '*WEB* Reviewed support response', if(equals(outputs('Existing_receipt')?['schemaVersion'], 3), '*WEB* Support email response', '*WEB* AI-assisted support response'))), equals(outputs('Read_existing_response')?['body/adx_portalcommentdirectioncode'], 2), equals(outputs('Read_existing_response')?['body/description'], outputs('Existing_receipt')?['approvedText'])))",
               "actions": {
                 "Stop_changed_response": {
                   "type": "Terminate",
@@ -247,7 +355,7 @@
               "type": "Compose",
               "inputs": {
                 "status": "AlreadyPublished",
-                "message": "This email already has a published snapshot. Later Send attempts or draft edits do not replace it; use a new email for a follow-up.",
+                "message": "This email already has a published response. A later Send of the same email does not replace it; use a new email for a follow-up.",
                 "caseId": "@outputs('Read_case')?['body/incidentid']",
                 "commentId": "@outputs('Existing_receipt')?['commentId']",
                 "portalCaseUrl": "@concat(parameters('Modern CSS - Portal URL (ppst_ModernCss_PortalUrl)'), '/cases/', outputs('Read_case')?['body/incidentid'])"
@@ -270,7 +378,7 @@
                     "connectionName": "shared_conversionservice"
                   },
                   "parameters": {
-                    "Content": "@base64ToString(outputs('Approval')?['htmlBase64'])"
+                    "Content": "@coalesce(outputs('Read_sent_email')?['body/description'], '')"
                   }
                 },
                 "runAfter": {}
@@ -294,7 +402,7 @@
                       "runStatus": "Failed",
                       "runError": {
                         "code": "InvalidApprovedText",
-                        "message": "The reviewed snapshot must contain 1-4,000 converted characters. Nothing was truncated or published. Email delivery is independent; do not resend merely to recover a portal publication."
+                        "message": "The sent email must contain 1-4,000 converted characters. Nothing was truncated or published. Email delivery is independent; do not resend merely to recover a portal publication."
                       }
                     }
                   }
@@ -332,7 +440,7 @@
               },
               "Require_unchanged_case_audience": {
                 "type": "If",
-                "expression": "@not(and(equals(outputs('Read_case_before_publish')?['body/caseorigincode'], 3), equals(outputs('Read_case_before_publish')?['body/_createdby_value'], parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')), equals(outputs('Read_case_before_publish')?['body/customerid_contact']?['contactid'], outputs('Approval')?['contactId']), equals(outputs('Read_case_before_publish')?['body/_customerid_value'], outputs('Approval')?['contactId'])))",
+                "expression": "@not(and(equals(outputs('Read_case_before_publish')?['body/caseorigincode'], 3), equals(outputs('Read_case_before_publish')?['body/_createdby_value'], parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')), equals(outputs('Read_case_before_publish')?['body/customerid_contact']?['contactid'], outputs('Read_case')?['body/customerid_contact']?['contactid']), equals(outputs('Read_case_before_publish')?['body/_customerid_value'], outputs('Read_case')?['body/customerid_contact']?['contactid'])))",
                 "actions": {
                   "Stop_changed_case_audience": {
                     "type": "Terminate",
@@ -340,7 +448,7 @@
                       "runStatus": "Failed",
                       "runError": {
                         "code": "ApprovedCaseChanged",
-                        "message": "The approved case audience changed before publication. Nothing was published; review the approval and case ownership."
+                        "message": "The case audience changed before publication. Nothing was published; review the case ownership and the sent email."
                       }
                     }
                   }
@@ -366,19 +474,18 @@
               "Publication_receipt": {
                 "type": "Compose",
                 "inputs": {
-                  "schemaVersion": 4,
+                  "schemaVersion": 5,
                   "status": "Reserved",
-                  "emailId": "@outputs('Approval')?['emailId']",
+                  "emailId": "@outputs('Read_sent_email')?['body/activityid']",
                   "caseId": "@outputs('Read_case')?['body/incidentid']",
                   "contactId": "@outputs('Read_case')?['body/customerid_contact']?['contactid']",
                   "commentId": "@outputs('New_comment_id')",
                   "approvedText": "@outputs('Approved_text')",
-                  "sourceEmailVersion": "@outputs('Approval')?['sourceEmailVersion']",
+                  "sourceEmailVersion": "@string(outputs('Read_sent_email')?['body/versionnumber'])",
                   "flowRunId": "@workflow()?['run']?['name']",
-                  "publicationMethod": "NativeSend",
-                  "approvalRequestId": "@triggerBody()?['annotationid']",
-                  "approvedBy": "@outputs('Approval')?['approvedBy']",
-                  "approvedAt": "@outputs('Approval')?['approvedAt']"
+                  "publicationMethod": "SendAccepted",
+                  "approvedBy": "@triggerBody()?['_modifiedby_value']",
+                  "approvedAt": "@triggerBody()?['modifiedon']"
                 },
                 "runAfter": {
                   "New_comment_id": [
@@ -396,7 +503,7 @@
                   },
                   "parameters": {
                     "entityName": "annotations",
-                    "item/annotationid": "@outputs('Approval')?['emailId']",
+                    "item/annotationid": "@outputs('Read_sent_email')?['body/activityid']",
                     "item/subject": "Northwind portal: Approved response publication",
                     "item/notetext": "@string(outputs('Publication_receipt'))",
                     "item/isdocument": false,
@@ -495,7 +602,7 @@
                   },
                   "parameters": {
                     "entityName": "annotations",
-                    "recordId": "@outputs('Approval')?['emailId']",
+                    "recordId": "@outputs('Read_sent_email')?['body/activityid']",
                     "item/notetext": "@string(setProperty(setProperty(outputs('Publication_receipt'), 'status', 'Published'), 'publishedAt', utcNow()))"
                   },
                   "authentication": "@parameters('$authentication')"
@@ -510,7 +617,7 @@
                 "type": "Compose",
                 "inputs": {
                   "status": "Published",
-                  "message": "The reviewed Send snapshot was published independently of email delivery. This flow does not send or retry email.",
+                  "message": "The accepted Send was published to the portal. This flow does not send or retry email.",
                   "caseId": "@outputs('Read_case')?['body/incidentid']",
                   "commentId": "@outputs('New_comment_id')",
                   "portalCaseUrl": "@concat(parameters('Modern CSS - Portal URL (ppst_ModernCss_PortalUrl)'), '/cases/', outputs('Read_case')?['body/incidentid'])"

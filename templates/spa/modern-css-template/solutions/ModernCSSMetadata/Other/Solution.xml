@@ -6,7 +6,7 @@
       <LocalizedName description="Modern CSS Metadata" languagecode="1033" />
     </LocalizedNames>
     <Descriptions />
-    <Version>1.0.0.1</Version>
+    <Version>1.0.0.2</Version>
     <Managed>0</Managed>
     <Publisher>
       <UniqueName>PowerPages_SPA_Templates</UniqueName>
@@ -81,8 +81,6 @@
       <RootComponent type="1" schemaName="knowledgearticle" behavior="2" />
       <RootComponent type="29" id="{562c123b-d7c2-4bc5-9b7a-fcc702843f35}" behavior="0" />
       <RootComponent type="29" id="{7f4800dc-d0ab-4a3b-858c-ea6829a64fe9}" behavior="0" />
-      <RootComponent type="91" id="{040191f5-4cc7-4358-90a6-bd1c426d2648}" schemaName="Northwind.SendApproval, Version=1.0.1.0, Culture=neutral, PublicKeyToken=2d725bbbd99e9a28" behavior="0" />
-      <RootComponent type="92" id="{4c5daa98-5eef-45c6-b0f2-7ed9a8a88b8a}" behavior="0" />
     </RootComponents>
     <MissingDependencies>
       <MissingDependency>

@@ -6,7 +6,7 @@ A React + Vite Power Pages code site (SPA) for customer support, branded with th
 
 | Folder | Contents |
 | --- | --- |
-| `variants/react/website-code/` (this folder) | Site source, Power Pages metadata (`.powerpages-site`), tests, the case-management flow definitions and the Send approval plug-in source. |
+| `variants/react/website-code/` (this folder) | Site source, Power Pages metadata (`.powerpages-site`), tests and the case-management flow definitions. |
 | [`../../../solutions/ModernCSSMetadata/`](../../../solutions/ModernCSSMetadata/) | The unpacked, unmanaged **ModernCSSMetadata** solution with the Dataverse customizations the site depends on. See [Template solution](#template-solution-moderncssmetadata). |
 
 Installation steps for the whole template family are in the [template README](../../../README.md).
@@ -69,6 +69,8 @@ Rebuild without that override before deploying the connected version. A failed c
 The shell has no top bar. The sidebar holds navigation, **Notifications** with the unread count, **Sign out** (`/Account/Login/LogOff`) or **Sign in** (`/SignIn?returnUrl=…`), and an outline **Report an issue**. My cases, Account & support, notifications and the assistant appear only to signed-in customers. The initial profile check treats HTTP 401, and also HTTP 403 (returned on a private site to visitors who passed the Microsoft Entra gate without a portal sign-in), as signed out; a 403 later in a session remains an access error. Narrow screens use a slim bar with the menu and notifications. In demo mode, Sign in/Sign out simulate the portal session locally through a profile picker; nothing is collected or sent.
 
 The incident status reason (`statuscode`) drives the state shown on case cards, filters, the case header, progress steps and the next-step panel: Waiting for Details → **Action needed** (with **Respond**, which focuses the reply form); Researching → **Support is investigating**; On Hold; In Progress; Problem Solved/Information Provided → **Resolved**; Cancelled; and Merged. The timeline lists portal-comment replies from support and the customer, plus **Case submitted** (`createdon`) and closure (`modifiedon`) entries, newest first, with **Everything / Actions taken / Communications** filters.
+
+When the customer sends a reply or uploads a document on a case that is **Waiting for Details**, `northwind-case-activity` saves it and then returns the case to **In Progress** (status reason 3 → 1, re-checked immediately before the update so a status a representative changed meanwhile is left alone). Only that transition is made; other status reasons are untouched. The reply is already saved, so a failed status change is logged and the reply still reports success rather than inviting a duplicate. The case view then re-reads the case so the badge shows the confirmed status.
 
 The three sample case IDs are `CAS-01000-M8J4J8`, `CAS-01001-S9D5F3`, and `CAS-00982-R4T7X1`. Article IDs are `KA-0182`, `KA-0214`, `KA-0341`, `KA-0408`, `KA-0430`, and `KA-0362`. Those fixture IDs are available only in demo mode.
 
@@ -167,10 +169,9 @@ The schema limits case descriptions and feedback messages to 2,000 characters (n
 | `src/styles/theme.css` | Shared tokens, responsive layouts, interaction states, logical positioning, and reduced-motion behavior. |
 | `tests/*.spec.ts` | Playwright desktop/narrow scenarios: demo behavior, mocked connected workflows, AI search and realtime notifications. |
 | `tests/server-logic.test.cjs`, `tests/permissions.test.cjs`, `tests/case-management-flow.test.cjs` | Server Logic contract tests, metadata guardrails and flow-definition checks; not hosted verification. |
-| `integrations/case-management/flow.json`, `publish-response-flow.json` | Case Management Agent dispatch flow and the Send-approval publishing flow (also shipped in the template solution). |
-| `integrations/case-management/send-approval-plugin/` | Native Send PreValidation plug-in source, build/registration guidance and executable checks. |
+| `integrations/case-management/flow.json`, `publish-response-flow.json` | Case Management Agent dispatch flow and the accepted-Send publishing flow (also shipped in the template solution). |
 | `.powerpages-site/` | Server Logic, table permissions, column permissions, web roles, site settings and other site metadata for `pac pages upload-code-site`. |
-| `docs/customer-request-flow.md` | Customer request flow and key entities, including the independent email and portal paths after Send approval. |
+| `docs/customer-request-flow.md` | Customer request flow and key entities, including the email and portal paths after an accepted Send. |
 
 ## Tests
 
@@ -198,7 +199,7 @@ The flow re-reads the case, checks its scope and calls `msdyn_GetCaseManagementA
 
 Configure the agent per environment: a business line set to **Require agent confirmation**, AI-eligible guidance intents mapped to your published external knowledge articles, and case/email routing rules that select that business line for Web cases created by the site's application user. Unknown intents can hand off to a representative rather than inventing a resolution. Keep the flow's effective-mode gate: the managed request processor can apply the matched business line's mode instead of a requested `automationLevel`, so the request parameter alone doesn't guarantee review.
 
-Agent responses remain **Dynamics 365 email drafts**. A representative reviews the draft, its sender and recipient, then uses **Send**; the published response then appears on the portal. The portal doesn't expose internal drafts or retrigger the agent on portal comments. See [Case Management Agent setup](https://learn.microsoft.com/dynamics365/customer-service/administer/set-up-case-resolution-agent) and the [custom trigger API](https://learn.microsoft.com/dynamics365/customer-service/develop/use-case-processing-agent).
+Agent responses remain **Dynamics 365 email drafts**. A representative reviews the draft, its sender and recipient, then uses **Send**; once Dynamics accepts the Send, the response appears on the portal. The portal doesn't expose internal drafts or retrigger the agent on portal comments. See [Case Management Agent setup](https://learn.microsoft.com/dynamics365/customer-service/administer/set-up-case-resolution-agent) and the [custom trigger API](https://learn.microsoft.com/dynamics365/customer-service/develop/use-case-processing-agent).
 
 ### Template solution (ModernCSSMetadata)
 
@@ -207,13 +208,12 @@ The site itself is rebuilt from this folder (with the Power Pages skills or `pac
 | Component | Purpose |
 | --- | --- |
 | Cloud flow **Northwind - Case Management Agent (review required)** | Dispatches portal-created Web cases to the Case Management Agent in Semi mode. |
-| Cloud flow **Northwind - Publish reviewed response to portal** | Publishes the Send-approved reply as a customer-visible Portal Comment. |
+| Cloud flow **Northwind - Publish reviewed response to portal** | Publishes the reply a representative sent as a customer-visible Portal Comment once Dynamics accepts the Send. |
 | Connection reference `cr719_northwindportalresponseconversion` (Content Conversion) | HTML-to-text conversion in the publish flow. |
-| Plug-in assembly `Northwind.SendApproval` 1.0.1.0 and its **Send**/`email` PreValidation step | Captures the reviewed reply snapshot on native Send. |
 | System view **Northwind KB Search …** on `knowledgearticle` | Knowledge-only scope for AI search; `Search/IndexQueryName` must name it. The solution includes `knowledgearticle` only as the view's container. |
-| Environment variables `ppst_ModernCss_PortalApplicationUserId`, `ppst_ModernCss_PortalUrl`, `ppst_ModernCss_ApprovalWriterUserId` | The site's application-user ID, the site URL, and the environment's SYSTEM user ID. |
+| Environment variables `ppst_ModernCss_PortalApplicationUserId`, `ppst_ModernCss_PortalUrl` | The site's application-user ID and the site URL. |
 
-The solution ships without environment-variable values, so import asks for them. The plug-in reads the portal-user variable (current value, then default value) and falls back to optional step configuration; the step ships without configuration. Both flows also use the Dataverse connection reference provided by Case Management Intelligence (`msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps`). Import requires **PowerPages_RuntimeCore** (Portal Comment), **msdynce_Service** (Case), **msdyn_CaseManagementIntelligence** and **msdyn_KBSuggestionsAiBCore** (Knowledge Article) in the target.
+The solution ships without environment-variable values, so import asks for them. It contains no plug-in, so nothing needs building, signing or registering. Both flows also use the Dataverse connection reference provided by Case Management Intelligence (`msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps`). Import requires **PowerPages_RuntimeCore** (Portal Comment), **msdynce_Service** (Case), **msdyn_CaseManagementIntelligence** and **msdyn_KBSuggestionsAiBCore** (Knowledge Article) in the target.
 
 Not included, because they are environment content or settings: site components, the agent's business line, intents and article mappings, routing rules, knowledge articles, Dataverse search, Power Pages generative AI governance and the `.js` attachment allowance.
 
@@ -221,27 +221,31 @@ Not included, because they are environment content or settings: site components,
 
 1. Build and upload the site from this folder (see [Deploy to Power Pages](#deploy-to-power-pages)). Uploading creates the site and its **Portals-&lt;site name&gt;** application user.
 2. Update environment-specific site settings, such as `Northwind/KnowledgeLanguageLocaleId`, and publish your external knowledge articles.
-3. Pack the unpacked solution in [`../../../solutions/ModernCSSMetadata/`](../../../solutions/ModernCSSMetadata/) and import it with publishing, as described in the [template README](../../../README.md#import-the-supporting-solution) (`pac solution pack --packagetype Unmanaged`, then `pac solution import --publish-changes`), or import the packed zip in Power Apps. Enter the site's application-user ID, the site URL and the environment's SYSTEM user ID for the three environment variables, and bind the Content Conversion and Dataverse connection references.
+3. Pack the unpacked solution in [`../../../solutions/ModernCSSMetadata/`](../../../solutions/ModernCSSMetadata/) and import it with publishing, as described in the [template README](../../../README.md#import-the-supporting-solution) (`pac solution pack --packagetype Unmanaged`, then `pac solution import --publish-changes`), or import the packed zip in Power Apps. Enter the site's application-user ID and the site URL for the two environment variables, and bind the Content Conversion and Dataverse connection references.
 4. Configure the Case Management Agent business line, intents and routing rules in **Require agent confirmation** mode.
 5. Enable Dataverse search and generative AI site search if you build with `VITE_KB_AI_SEARCH_ENABLED=true`.
 6. Configure an approved outgoing mailbox for support replies.
 
 ### Publish an approved response
 
-The **Northwind - Publish reviewed response to portal** flow consumes native Send approvals. No email IDs need copying, and there is no extra approval step.
+The **Northwind - Publish reviewed response to portal** flow publishes a reply when Dynamics accepts the representative's normal **Send**. It doesn't wait for delivery. No email IDs need copying, and there is no additional approval step.
 
 1. Open the outgoing case email in Dynamics 365. Review and edit the complete body, including quoted history, signatures and any agent-generated guidance.
 2. Confirm **Regarding** is the customer's portal case and the only **To** recipient is that case's Contact. Select an approved outgoing **From** mailbox and honor the Contact's communication preferences.
-3. Use the normal **Send** button. The plug-in records the reviewed snapshot, then Dynamics continues its own email processing. Neither the plug-in nor the flow sends an additional email.
-4. The flow posts the approved snapshot independently. Even if Dynamics reports an email-send error and leaves the email in Draft, the portal response can still publish. The customer sees it as **Support** in the case conversation.
+3. Use the normal **Send** button. Dynamics validates the email and, if it accepts it, sets its status to **Pending Send**. The flow doesn't send any additional email.
+4. The flow posts the sent text to the portal. Publication doesn't depend on delivery: the response still publishes if the email later fails or stays in Pending Send. The customer refreshes their case page to see it as **Support** in the case conversation.
 
-The plug-in is a synchronous **PreValidation** step on the native **Send** message for **email** (Web API action `SendEmail`). It recognizes `IssueSend: true`; ordinary Save/AutoSave, status edits and `IssueSend: false` do not approve publication. Eligible responses concern a portal-created Web case with a Contact customer and exactly that Contact as the sole To recipient. The initiating user must be able to read the case and read/write the email.
+**If Dynamics rejects the Send, nothing is published.** For example, sending to a Contact marked **Do not email** fails before anything is saved, and the email stays a Draft. A cloud flow can only see changes that Dataverse commits, so it can't observe a rejected Send. Resolve the cause and Send again. For a Contact who has opted out of email, this flow can't publish a response; never clear their preference merely to publish to the portal.
 
-The plug-in creates a SYSTEM-authored internal `annotation` containing the base64-encoded reviewed HTML, email version, case, Contact, reviewer and timestamp. It requires execution **outside a parent transaction**, so later Send validation or delivery failure cannot undo the approval; transactional Send contexts are rejected. The flow listens for added notes with the exact approval marker and SYSTEM creator, verifies provenance, rechecks the case's portal origin and Contact, and **never reads email delivery status or the email's current body**. Content Conversion produces plain text with a **1-4,000 character** limit and no truncation. Email attachments and embedded images are not copied.
+The flow triggers when an outgoing `email` with a Regarding row is **Modified** to `statecode = 1` (Completed) and `statuscode = 6` (Pending Send). Only the native **Send** message (Web API action `SendEmail`) with `IssueSend: true` moves an email to Pending Send; server-side synchronization then sends it. Save, AutoSave and other edits leave it a Draft, and a record-only `IssueSend: false` marks it Sent directly, so none of them publish. Native Send is the release signal, not an independent audit that a human read every word. The agent remains in review-required (Semi) mode.
 
-The new `adx_portalcomment` uses subject `*WEB* Reviewed support response`, outgoing direction `2`, and the approved case. A publication receipt, an internal note keyed by email ID, ensures only one response is published per email; repeated approvals return `AlreadyPublished`. Use a **new email** for a distinct follow-up. Portal publication and email delivery have separate outcomes: don't resend email merely to retry publication, and inspect any reserved comment and prior run before recovery.
+The flow then reads the email and its case. It quietly ends with a **Skipped** result unless the email concerns a Web case created by the site's application user, the case has a Contact customer, and that Contact is the only **To** recipient. Other emails continue through normal mail processing. The case audience is checked again just before publishing.
 
-To test without delivering mail, send a synthetic reply to a test Contact with an `example.invalid` address and **Do not email** enabled: Dynamics rejects the send natively while the flow still publishes the reviewed snapshot. See [Content Conversion limitations](https://learn.microsoft.com/connectors/conversionservice/) and [plug-in transaction behavior](https://learn.microsoft.com/power-apps/developer/data-platform/scalable-customization-design/database-transactions).
+The published text comes from the email the flow reads, and the flow requires that email to still be **Completed** (Pending Send, Sending or Sent). Representatives can't edit a completed email, so the published text is what was sent. If the email has already reopened (for example as Failed) when the flow reads it, the run fails with `SendNotLocked` and publishes nothing; Send again to publish. Content Conversion produces plain text with a **1-4,000 converted-character** limit and no truncation. Email attachments and embedded images are not copied.
+
+The new `adx_portalcomment` uses subject `*WEB* Reviewed support response`, outgoing direction `2`, and the email's case. A publication receipt, an internal note keyed by email ID, records the text, the email version, the sender and time, the case and Contact, and the comment ID, so only one response is published per email; sending the same email again returns `AlreadyPublished`. Use a **new email** for a distinct follow-up. Portal publication and email delivery have separate outcomes: don't resend email merely to retry publication, and inspect any reserved comment and prior run before recovery. Portal users have no email privileges, so they can't trigger a publication.
+
+See [Dataverse flow triggers](https://learn.microsoft.com/power-automate/dataverse/create-update-delete-trigger), [server-side synchronization](https://learn.microsoft.com/power-platform/admin/server-side-synchronization) and [Content Conversion limitations](https://learn.microsoft.com/connectors/conversionservice/).
 
 ## Replace demonstration content before launch
 

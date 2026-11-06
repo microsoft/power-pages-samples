@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { articles as sampleArticles, initialCases, initialProfile, type Article, type SupportCase } from './data'
-import { SupportApiError, supportApi, type CaseActivity, type CaseDto, type CatalogItem, type KnowledgeDto, type ProfileDto } from './services/supportApi'
+import { SupportApiError, supportApi, type CaseActivity, type CaseActivityCreated, type CaseDto, type CatalogItem, type KnowledgeDto, type ProfileDto } from './services/supportApi'
 import { useCaseRealtime, type CaseSnapshot } from './useCaseRealtime'
 
 type Notification = { id: string; caseId: string; title: string; detail: string; read: boolean; kind?: 'reply' }
@@ -264,6 +264,15 @@ function useSupportState() {
   async function updateCase(id: string, title: string, description: string) {
     return writeCase(() => supportApi.updateCase(id, title, description))
   }
+  async function addCaseActivity(caseId: string, operation: () => Promise<CaseActivityCreated>) {
+    const created = await mutate(operation)
+    if (created.statusChanged && profileData) {
+      const contactId = profileData.id
+      // The reply is already saved; a failed status read must not look like a failed reply.
+      await writeCase(() => supportApi.getCase(caseId, contactId)).catch(() => undefined)
+    }
+    return created
+  }
   async function saveArticleFeedback(id: string, label: string) {
     if (!isDemo) await mutate(() => supportApi.articleFeedback(id, label === 'Yes, helpful'))
     setFeedback(current => ({ ...current, [id]: label }))
@@ -291,7 +300,7 @@ function useSupportState() {
   }
   function toggleSaved(id: string) { setSaved(items => items.includes(id) ? items.filter(item => item !== id) : [...items, id]) }
   return {
-    isDemo, phase, loadError, authRequired, refresh, articles, products, categories, profileData, saveProfile, submitCase, updateCase, saveArticleFeedback, mutate,
+    isDemo, phase, loadError, authRequired, refresh, articles, products, categories, profileData, saveProfile, submitCase, updateCase, addCaseActivity, saveArticleFeedback, mutate,
     cases, profile, setProfile, preferences, setPreferences, saved, toggleSaved, feedback, setFeedback, documents, setDocuments,
     issueOpen, setIssueOpen, assistantOpen, setAssistantOpen, assistantRequest, openAssistant,
     signedIn, signedOut, knowledgeReady, publicKnowledge, demoSignIn, setDemoSignIn, completeDemoSignIn, demoSignOut,

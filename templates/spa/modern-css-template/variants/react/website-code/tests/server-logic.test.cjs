@@ -54,7 +54,7 @@ function run(name, method, settings = {}) {
     UpdateRecord(entity, id, raw) {
       const body = JSON.parse(raw)
       calls.push({ method: 'update', entity, id, body })
-      if (settings.writeFailure) return response({}, 403)
+      if (settings.writeFailure || (settings.statusUpdateFailure && entity === 'incidents')) return response({}, 403)
       if (entity === 'contacts') identity = { ...identity, ...body }
       if (entity === 'incidents') currentCase = { ...currentCase, ...body }
       return response(null, 204)
@@ -308,6 +308,35 @@ test('comment creation binds the authorized case and marks it for portal publica
   noWrite(run('northwind-case-activity', 'post', { body: { ...body, author: foreign } }), 'VALIDATION')
   noWrite(run('northwind-case-activity', 'post', { body, caseRow: { ...caseRow, statecode: 1 } }), 'FORBIDDEN')
   noWrite(run('northwind-case-activity', 'post', { body, caseRow: { ...caseRow, customerid_contact: { contactid: foreign } } }), 'NOT_FOUND')
+})
+test('a customer reply or document returns a Waiting for Details case to In Progress, and only that status', () => {
+  const comment = { kind: 'comment', caseId, body: 'Here is the serial number.' }
+  const document = { caseId, kind: 'document', name: 'sample.pdf', type: 'application/pdf', content: pdf.toString('base64') }
+  for (const body of [comment, document]) {
+    const moved = run('northwind-case-activity', 'post', { body, caseRow: { ...caseRow, statuscode: 3 } })
+    assert.equal(moved.result.status, 'success')
+    assert.equal(moved.result.data.statusChanged, true)
+    const writes = moved.calls.filter(call => ['create', 'update'].includes(call.method))
+    assert.deepEqual(writes.map(call => call.method), ['create', 'update'])
+    assert.deepEqual(writes[1], { method: 'update', entity: 'incidents', id: caseId, body: { statuscode: 1 } })
+  }
+  for (const statuscode of [1, 2, 4]) {
+    const kept = run('northwind-case-activity', 'post', { body: comment, caseRow: { ...caseRow, statuscode } })
+    assert.equal(kept.result.data.statusChanged, false)
+    assert.equal(kept.calls.some(call => call.method === 'update'), false)
+  }
+  let reads = 0
+  const changedMeanwhile = run('northwind-case-activity', 'post', { body: comment, caseRow: { ...caseRow, statuscode: 3 }, list: (entity) => {
+    assert.equal(entity, 'incidents')
+    return response({ value: [{ ...caseRow, statuscode: reads++ === 0 ? 3 : 4 }] })
+  } })
+  assert.equal(changedMeanwhile.result.data.statusChanged, false)
+  assert.equal(changedMeanwhile.calls.some(call => call.method === 'update'), false)
+  const failed = run('northwind-case-activity', 'post', { body: comment, caseRow: { ...caseRow, statuscode: 3 }, statusUpdateFailure: true })
+  assert.equal(failed.result.status, 'success')
+  assert.equal(failed.result.data.id, fileId)
+  assert.equal(failed.result.data.statusChanged, false)
+  assert.ok(failed.logs.includes('northwind-case-activity POST status change failed'))
 })
 test('file upload accepts exactly 5 MiB of valid bytes and rejects one byte beyond it', () => {
   const bytes = Buffer.alloc(5 * 1024 * 1024)

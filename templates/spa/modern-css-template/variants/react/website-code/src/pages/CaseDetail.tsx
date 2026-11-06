@@ -14,7 +14,7 @@ export default function CaseDetail() {
 
 function ConnectedCaseDetail() {
   const { id } = useParams()
-  const { cases, updateCase, mutate, activityVersions, openAssistant, setIssueOpen } = useSupport()
+  const { cases, updateCase, addCaseActivity, mutate, activityVersions, openAssistant, setIssueOpen } = useSupport()
   const location = useLocation()
   const record = cases.find(item => item.id === id)
   usePageTitle(record?.title ?? 'Case not available')
@@ -87,8 +87,8 @@ function ConnectedCaseDetail() {
     if (!record) return
     setBusy(true); setError(''); setStatus('')
     try {
-      await mutate(() => supportApi.comment(record.id, reply.trim()))
-      setReply(''); setStatus('Your reply was saved to this case.')
+      const saved = await addCaseActivity(record.id, () => supportApi.comment(record.id, reply.trim()))
+      setReply(''); setStatus(saved.statusChanged ? 'Your reply was saved. The case is back in progress with support.' : 'Your reply was saved to this case.')
       await reloadActivity()
     } catch (error) { setError(errorMessage(error)) }
     finally { setBusy(false) }
@@ -99,8 +99,8 @@ function ConnectedCaseDetail() {
     if (!record || !file) return
     setBusy(true); setError(''); setStatus('')
     try {
-      await mutate(() => supportApi.upload(record.id, file))
-      setStatus('The document was uploaded to this case.')
+      const saved = await addCaseActivity(record.id, () => supportApi.upload(record.id, file))
+      setStatus(saved.statusChanged ? 'The document was uploaded. The case is back in progress with support.' : 'The document was uploaded to this case.')
       await reloadActivity()
     } catch (error) { setError(errorMessage(error)) }
     finally { setBusy(false) }

@@ -116,7 +116,7 @@ function post() {
         if (!body || typeof body !== "object" || Array.isArray(body) || typeof body.caseId !== "string" || !guid.test(body.caseId)) fail("VALIDATION");
         var caseId = body.caseId.toLowerCase(), contact = Server.User.contactid.toLowerCase();
         var owned = read(Server.Connector.Dataverse.RetrieveMultipleRecords("incidents",
-            "$select=incidentid,statecode&$expand=customerid_contact($select=contactid)&$filter=incidentid eq " + caseId +
+            "$select=incidentid,statecode,statuscode&$expand=customerid_contact($select=contactid)&$filter=incidentid eq " + caseId +
             " and customerid_contact/contactid eq " + contact, true));
         if (owned.length !== 1 || String(owned[0].incidentid).toLowerCase() !== caseId ||
             !owned[0].customerid_contact || String(owned[0].customerid_contact.contactid).toLowerCase() !== contact) fail("NOT_FOUND");
@@ -163,7 +163,23 @@ function post() {
             return !!created;
         });
         if (!created) fail("DATAVERSE_ERROR");
-        return JSON.stringify({ status: "success", data: { id: created } });
+        // A customer response answers "Waiting for Details" (3); return the case to "In Progress" (1).
+        // The response is already saved, so a failed status change must not invite a duplicate resubmission.
+        var statusChanged = false;
+        if (owned[0].statuscode === 3) {
+            try {
+                var latest = read(Server.Connector.Dataverse.RetrieveMultipleRecords("incidents",
+                    "$select=incidentid,statecode,statuscode&$filter=incidentid eq " + caseId, true));
+                if (latest.length === 1 && String(latest[0].incidentid).toLowerCase() === caseId &&
+                    latest[0].statecode === 0 && latest[0].statuscode === 3) {
+                    read(Server.Connector.Dataverse.UpdateRecord("incidents", caseId, JSON.stringify({ statuscode: 1 })), true);
+                    statusChanged = true;
+                }
+            } catch (_) {
+                Server.Logger.Error("northwind-case-activity POST status change failed");
+            }
+        }
+        return JSON.stringify({ status: "success", data: { id: created, statusChanged: statusChanged } });
     } catch (error) {
         Server.Logger.Error("northwind-case-activity POST failed");
         var code = error && ["UNAUTHENTICATED", "NOT_FOUND", "FORBIDDEN", "VALIDATION"].includes(error.code) ? error.code : "DATAVERSE_ERROR";

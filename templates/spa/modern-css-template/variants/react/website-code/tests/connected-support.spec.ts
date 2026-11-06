@@ -123,7 +123,9 @@ async function mockSupport(page: Page, options: MockOptions = {}) {
           fileContent = String(body.content)
           documents.push({ id: fileId, name: String(body.name), size: Buffer.from(fileContent, 'base64').length, type: String(body.type) })
         }
-        return success({ id: fileId })
+        const waiting = cases.find(item => item.id === body.caseId && item.state === 0 && item.status === 3)
+        if (waiting) cases = cases.map(item => item === waiting ? { ...item, status: 1, updated: '2026-10-15T10:05:00Z' } : item)
+        return success({ id: fileId, statusChanged: Boolean(waiting) })
       }
       if (url.searchParams.has('documentId')) return success({ name: 'sample.pdf', type: 'application/pdf', content: fileContent })
       return success({ comments, documents })
@@ -395,6 +397,19 @@ test('comments, actual file bytes, downloads and case edits use guarded endpoint
   await page.getByRole('button', { name: 'Save case details' }).click()
   await expect(page.locator('h1')).toHaveText('Updated customer title')
   expect(calls.find(call => call.method === 'PATCH')?.body).toEqual({ id: caseId, title: 'Updated customer title', description: firstCase.description })
+})
+
+test('a reply to a Waiting for Details case shows the confirmed In progress status', async ({ page }) => {
+  const calls = await mockSupport(page, { firstStatus: 3, publishedResponse: 'Please send the gateway serial number.' })
+  await page.goto(`/cases/${caseId}?data=dataverse`)
+  await expect(page.locator('.case-hero .badge')).toHaveText('Action needed')
+  await page.getByLabel('Reply to support').fill('The serial number is NW-4471.')
+  await page.getByRole('button', { name: 'Send reply', exact: true }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Your reply was saved. The case is back in progress with support.' })).toBeVisible()
+  await expect(page.locator('.case-hero .badge')).toHaveText('In progress')
+  await expect(page.locator('.timeline')).toContainText('The serial number is NW-4471.')
+  expect(calls.some(call => call.method === 'GET' && call.path === `/_api/incidents(${caseId})`)).toBe(true)
+  expect(calls.some(call => call.method !== 'GET' && call.path.startsWith('/_api/incidents'))).toBe(false)
 })
 
 test('incident status reasons drive the case state, next step and timeline filters', async ({ page }) => {
