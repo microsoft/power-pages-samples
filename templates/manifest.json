@@ -73,6 +73,43 @@
       }
     },
     {
+      "id": "modern-css-template",
+      "displayName": "Modern CSS Template",
+      "description": "A Power Pages SPA template for customer support with personal cases, case conversations and documents, published knowledge articles with optional generative AI search, and Dynamics 365 Case Management Agent responses reviewed by representatives.",
+      "kind": "spa",
+      "keywords": [
+        "customer-support",
+        "cases",
+        "knowledge-base",
+        "case-management-agent",
+        "dynamics-365-customer-service"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "previewImages": [
+        "spa/modern-css-template/previews/home.png",
+        "spa/modern-css-template/previews/cases.png",
+        "spa/modern-css-template/previews/case-detail.png",
+        "spa/modern-css-template/previews/knowledge.png",
+        "spa/modern-css-template/previews/account.png"
+      ],
+      "requiredDataverseLanguages": [
+        1033
+      ],
+      "author": "Microsoft",
+      "solutions": [
+        {
+          "uniqueName": "ModernCSSMetadata",
+          "publishChanges": true
+        }
+      ],
+      "variants": {
+        "react": {}
+      }
+    },
+    {
       "id": "starter-layout-1",
       "displayName": "Starter Layout 1",
       "description": "This versatile template provides a basic, multipage navigation framework and simple building blocks for you to customize any way you want. Just click on a section or image to customize it.",

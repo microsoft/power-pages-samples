@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Workflow WorkflowId="{7f4800dc-d0ab-4a3b-858c-ea6829a64fe9}" Name="Northwind - Case Management Agent (review required)" Description="Only active Web-origin cases created by the Northwind portal application user. Invokes Case Management Agent in Semi mode, with internal duplicate-dispatch protection and no automatic action retry." xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <JsonFileName>/Workflows/Northwind-CaseManagementAgentreviewrequired-7F4800DC-D0AB-4A3B-858C-EA6829A64FE9.json</JsonFileName>
+  <Type>1</Type>
+  <Subprocess>0</Subprocess>
+  <Category>5</Category>
+  <Mode>0</Mode>
+  <Scope>4</Scope>
+  <OnDemand>0</OnDemand>
+  <TriggerOnCreate>0</TriggerOnCreate>
+  <TriggerOnDelete>0</TriggerOnDelete>
+  <AsyncAutodelete>0</AsyncAutodelete>
+  <SyncWorkflowLogOnFailure>0</SyncWorkflowLogOnFailure>
+  <StateCode>1</StateCode>
+  <StatusCode>2</StatusCode>
+  <RunAs>1</RunAs>
+  <IsTransacted>1</IsTransacted>
+  <IntroducedVersion>1.0.0.0</IntroducedVersion>
+  <IsCustomizable>1</IsCustomizable>
+  <BusinessProcessType>0</BusinessProcessType>
+  <IsCustomProcessingStepAllowedForOtherPublishers>1</IsCustomProcessingStepAllowedForOtherPublishers>
+  <ModernFlowType>0</ModernFlowType>
+  <PrimaryEntity>none</PrimaryEntity>
+  <LocalizedNames>
+    <LocalizedName languagecode="1033" description="Northwind - Case Management Agent (review required)" />
+  </LocalizedNames>
+  <Descriptions>
+    <Description languagecode="1033" description="Only active Web-origin cases created by the Northwind portal application user. Invokes Case Management Agent in Semi mode, with internal duplicate-dispatch protection and no automatic action retry." />
+  </Descriptions>
+</Workflow>

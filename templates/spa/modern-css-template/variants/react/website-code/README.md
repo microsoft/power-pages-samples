@@ -2,12 +2,14 @@
 
 A React + Vite Power Pages code site (SPA) for customer support, branded with the fictional **Northwind Field Services** sample identity. Signed-in customers track their personal cases, reply to support and share files; everyone can browse published knowledge, with an optional AI-generated answer grounded only in knowledge articles. Case and reply updates arrive as in-app notifications, and new portal cases can be handed to the Dynamics 365 **Case Management Agent**, whose staff-approved replies are published back to the case conversation.
 
-![Northwind customer support home](screenshot.png)
+![Northwind customer support home](../../../previews/home.png)
 
 | Folder | Contents |
 | --- | --- |
-| `react/` (this folder) | Site source, Power Pages metadata (`.powerpages-site`), tests, the case-management flow definitions and the Send approval plug-in source. |
-| [`../solution/`](../solution/) | The unpacked, unmanaged **ModernCSSMetadata** solution with the Dataverse customizations the site depends on. See [Template solution](#template-solution-moderncssmetadata). |
+| `variants/react/website-code/` (this folder) | Site source, Power Pages metadata (`.powerpages-site`), tests, the case-management flow definitions and the Send approval plug-in source. |
+| [`../../../solutions/ModernCSSMetadata/`](../../../solutions/ModernCSSMetadata/) | The unpacked, unmanaged **ModernCSSMetadata** solution with the Dataverse customizations the site depends on. See [Template solution](#template-solution-moderncssmetadata). |
+
+Installation steps for the whole template family are in the [template README](../../../README.md).
 
 ## Prerequisites
 
@@ -200,7 +202,7 @@ Agent responses remain **Dynamics 365 email drafts**. A representative reviews t
 
 ### Template solution (ModernCSSMetadata)
 
-The site itself is rebuilt from this folder (with the Power Pages skills or `pac pages upload-code-site`), and target environments already have the Dynamics 365 Customer Service solutions. The unmanaged **ModernCSSMetadata** solution in [`../solution/`](../solution/) (publisher **Power Pages SPA Templates**, prefix `ppst`) carries only the Dataverse customizations the site depends on that neither provides:
+The site itself is rebuilt from this folder (with the Power Pages skills or `pac pages upload-code-site`), and target environments already have the Dynamics 365 Customer Service solutions. The unmanaged **ModernCSSMetadata** solution in [`../../../solutions/ModernCSSMetadata/`](../../../solutions/ModernCSSMetadata/) (publisher **Power Pages SPA Templates**, prefix `ppst`) carries only the Dataverse customizations the site depends on that neither provides:
 
 | Component | Purpose |
 | --- | --- |
@@ -219,7 +221,7 @@ Not included, because they are environment content or settings: site components,
 
 1. Build and upload the site from this folder (see [Deploy to Power Pages](#deploy-to-power-pages)). Uploading creates the site and its **Portals-&lt;site name&gt;** application user.
 2. Update environment-specific site settings, such as `Northwind/KnowledgeLanguageLocaleId`, and publish your external knowledge articles.
-3. Zip the contents of [`../solution/`](../solution/) so `solution.xml`, `customizations.xml` and `[Content_Types].xml` are at the root of the archive (for example `Compress-Archive -Path ..\solution\* -DestinationPath ModernCSSMetadata.zip`), then import it with `pac solution import --path ModernCSSMetadata.zip` or in Power Apps. Enter the site's application-user ID, the site URL and the environment's SYSTEM user ID for the three environment variables, and bind the Content Conversion and Dataverse connection references.
+3. Pack the unpacked solution in [`../../../solutions/ModernCSSMetadata/`](../../../solutions/ModernCSSMetadata/) and import it with publishing, as described in the [template README](../../../README.md#import-the-supporting-solution) (`pac solution pack --packagetype Unmanaged`, then `pac solution import --publish-changes`), or import the packed zip in Power Apps. Enter the site's application-user ID, the site URL and the environment's SYSTEM user ID for the three environment variables, and bind the Content Conversion and Dataverse connection references.
 4. Configure the Case Management Agent business line, intents and routing rules in **Require agent confirmation** mode.
 5. Enable Dataverse search and generative AI site search if you build with `VITE_KB_AI_SEARCH_ENABLED=true`.
 6. Configure an approved outgoing mailbox for support replies.

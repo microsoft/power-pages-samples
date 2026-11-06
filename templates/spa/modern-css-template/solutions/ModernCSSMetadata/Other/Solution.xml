@@ -1,3 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ImportExportXml version="9.2.26094.166" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26094.166" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26094.00166">
   <SolutionManifest>
     <UniqueName>ModernCSSMetadata</UniqueName>
@@ -103,6 +104,10 @@
         <Dependent type="29" displayName="Northwind - Case Management Agent (review required)" id="{7f4800dc-d0ab-4a3b-858c-ea6829a64fe9}" />
       </MissingDependency>
       <MissingDependency>
+        <Required type="1" schemaName="knowledgearticle" displayName="KnowledgeArticle" parentSchemaName="" solution="msdyn_KBSuggestionsAiBCore (1.1.22101.4)" />
+        <Dependent type="1" schemaName="knowledgearticle" displayName="KnowledgeArticle" />
+      </MissingDependency>
+      <MissingDependency>
         <Required type="connectionreference" displayName="msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps" solution="msdyn_CaseManagementIntelligence (9.2.26094.1066)" id.connectionreferencelogicalname="msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps">
           <package appName="Service Intelligence Package" version="9.2.26094.1066">msdyn_ServiceIntelligenceAnchor (9.2.26094.1066)</package>
         </Required>
@@ -113,10 +118,6 @@
           <package appName="Service Intelligence Package" version="9.2.26094.1066">msdyn_ServiceIntelligenceAnchor (9.2.26094.1066)</package>
         </Required>
         <Dependent type="29" displayName="Northwind - Case Management Agent (review required)" id="{7f4800dc-d0ab-4a3b-858c-ea6829a64fe9}" />
-      </MissingDependency>
-      <MissingDependency>
-        <Required type="1" schemaName="knowledgearticle" displayName="KnowledgeArticle" parentSchemaName="" solution="msdyn_KBSuggestionsAiBCore (1.1.22101.4)" />
-        <Dependent type="1" schemaName="knowledgearticle" displayName="KnowledgeArticle" />
       </MissingDependency>
     </MissingDependencies>
   </SolutionManifest>

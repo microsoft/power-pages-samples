@@ -9,6 +9,7 @@ Use this index to choose the template that best matches the scenario you want to
 | --- | --- | --- | --- | --- |
 | <img src="311-portal/previews/home.png" alt="311 Portal home page" width="220" /> | [311 Portal](311-portal/) | React + Vite | Citizen service requests and 311 support | Supporting unmanaged solution, downloadable website code, Dataverse seed data, service request map, knowledge base, contact flow, and preview images. |
 | <img src="supplier-invoice-portal/previews/home.png" alt="Supplier Invoice Portal home page" width="220" /> | [Supplier Invoice Portal](supplier-invoice-portal/) | React + Vite | Supplier invoices and purchase orders | Supporting unmanaged solution, downloadable website code, Dataverse seed data, file-column seed files, invoice workflows, reviewer queue, and preview images. |
+| <img src="modern-css-template/previews/home.png" alt="Modern CSS Template home page" width="220" /> | [Modern CSS Template](modern-css-template/) | React + Vite | Customer support cases and knowledge with Dynamics 365 Case Management Agent | Supporting unmanaged solution, downloadable website code, case conversations and documents, knowledge articles with optional AI search, agent dispatch and reviewed-response flows, and preview images. |
 
 ## Common workflow
 
