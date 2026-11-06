@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-06T00:00:00Z",
+  "notes": [
+    "Records use stable GUIDs so an importer can safely upsert them. Process tables in the order stored here; parents precede the rows that reference them.",
+    "All people, companies, cases and articles are fictional demonstration content from the site's demo mode. Do not import this data into a production environment.",
+    "Knowledge article statecode 3 and statuscode 7 describe the desired published state. Create new articles as Draft without these state fields, then publish them in a separate update. The site lists only published, external articles in the language named by the Northwind/KnowledgeLanguageLocaleId site setting; bind languagelocaleid to English (LCID 1033) if it is not the environment's default article language.",
+    "Categories are the knowledge library topics shown on the site; each article names its topic in the first line of its content.",
+    "Case statecode and statuscode describe the desired status. Create every case Active (In Progress), then set Waiting for Details (3) or Researching (4) with an update. Close the resolved case with the CloseIncident action (status Problem Solved, 5) instead of writing its state directly.",
+    "The cases are created by the importing user, not the site's application user, so they never start the Case Management Agent dispatch flow. Their customer is the sample Contact; to see them on the portal, sign in with a portal identity linked to that Contact, or change each case's Customer to your own Contact.",
+    "Case conversations are not seeded because Portal Comment is a Power Pages table outside this template's solution. Replies appear when a customer responds on the portal or a representative sends a reply. The case document must keep the *WEB* note prefix; the site shows only notes with that marker."
+  ],
+  "tables": {
+    "accounts": {
+      "logicalName": "account",
+      "entitySet": "accounts",
+      "idColumn": "accountid",
+      "records": [
+        {
+          "accountid": "4d435300-0001-4000-8000-000000000001",
+          "name": "Fourth Coffee",
+          "telephone1": "+1 206 555 0100",
+          "address1_city": "Seattle",
+          "address1_stateorprovince": "WA",
+          "address1_country": "United States"
+        }
+      ]
+    },
+    "contacts": {
+      "logicalName": "contact",
+      "entitySet": "contacts",
+      "idColumn": "contactid",
+      "records": [
+        {
+          "contactid": "4d435300-0002-4000-8000-000000000001",
+          "firstname": "Mona",
+          "lastname": "Kane",
+          "emailaddress1": "mona.kane@example.com",
+          "telephone1": "+1 206 555 0184",
+          "address1_line1": "1250 Westlake Avenue",
+          "address1_city": "Seattle",
+          "address1_stateorprovince": "WA",
+          "address1_postalcode": "98109",
+          "address1_country": "United States",
+          "parentcustomerid_account@odata.bind": "/accounts(4d435300-0001-4000-8000-000000000001)"
+        }
+      ]
+    },
+    "categories": {
+      "logicalName": "category",
+      "entitySet": "categories",
+      "idColumn": "categoryid",
+      "records": [
+        {
+          "categoryid": "4d435300-0003-4000-8000-000000000001",
+          "title": "Equipment",
+          "description": "Gateways, sensors and device troubleshooting."
+        },
+        {
+          "categoryid": "4d435300-0003-4000-8000-000000000002",
+          "title": "Events & bookings",
+          "description": "Event tickets, bookings and attendee changes."
+        },
+        {
+          "categoryid": "4d435300-0003-4000-8000-000000000003",
+          "title": "Account & billing",
+          "description": "Coverage, invoices and billing questions."
+        }
+      ]
+    },
+    "knowledgeArticles": {
+      "logicalName": "knowledgearticle",
+      "entitySet": "knowledgearticles",
+      "idColumn": "knowledgearticleid",
+      "records": [
+        {
+          "knowledgearticleid": "4d435300-0004-4000-8000-000000000001",
+          "articlepublicnumber": "KA-0182",
+          "title": "Understand Edge Gateway status lights",
+          "description": "Interpret steady, blinking, amber, red and unlit gateway states before contacting support.",
+          "keywords": "gateway device status lights led color colour amber red teal connection troubleshooting",
+          "content": "<p>Topic: Equipment</p><h2>Applies to</h2><ul><li>Edge Gateway 500</li><li>Hardware revisions B-D</li></ul><h2>When to use this guidance</h2><ul><li>Steady teal: connected and reporting normally.</li><li>Blinking teal: queued data is synchronizing.</li><li>Amber: network or maintenance attention may be needed.</li><li>Red or unlit: power or hardware review may be needed.</li></ul><h2>Recommended steps</h2><ol><li>Record the light color and whether it is steady or blinking.</li><li>Compare the observation with approved documentation for your exact model.</li><li>Check maintenance notices and contact support if the status is unexpected.</li></ol><h2>Before you continue</h2><ul><li>Demonstration guidance only; indicator meanings vary by product.</li><li>Do not reset, disassemble or repeatedly power-cycle equipment based on this sample.</li></ul><h2>When to contact support</h2><p>Contact the equipment team for an unexpected persistent status or signs of damage.</p>",
+          "isinternal": false,
+          "statecode": 3,
+          "statuscode": 7
+        },
+        {
+          "knowledgearticleid": "4d435300-0004-4000-8000-000000000002",
+          "articlepublicnumber": "KA-0214",
+          "title": "Restore sensor reporting after an update",
+          "description": "Review connectivity and post-update synchronization before requesting diagnostics.",
+          "keywords": "sensor readings reporting firmware update sync connection gateway offline",
+          "content": "<p>Topic: Equipment</p><h2>Applies to</h2><ul><li>Edge Gateway 500</li><li>Climate Sensor Array</li></ul><h2>When to use this guidance</h2><ul><li>Gateway appears online but readings are stale.</li><li>Reporting stopped after an update.</li></ul><h2>Recommended steps</h2><ol><li>Review the update and maintenance notices for your device.</li><li>Record the last successful reading and affected sensor identifiers.</li><li>Check whether a related case already exists.</li><li>Share your observations with support through an approved channel.</li></ol><h2>Before you continue</h2><ul><li>Do not remove, re-pair or factory-reset sensors based on this demonstration.</li><li>Follow approved product procedures for operational troubleshooting.</li></ul><h2>When to contact support</h2><p>Contact support when reporting does not resume within your documented reporting interval.</p>",
+          "isinternal": false,
+          "statecode": 3,
+          "statuscode": 7
+        },
+        {
+          "knowledgearticleid": "4d435300-0004-4000-8000-000000000003",
+          "articlepublicnumber": "KA-0341",
+          "title": "Change the name on an event ticket",
+          "description": "Prepare the booking details required for an attendee-name update.",
+          "keywords": "name change ticket booking identity passport event summit attendee seattle",
+          "content": "<p>Topic: Events &amp; bookings</p><h2>Applies to</h2><ul><li>Northwind event tickets</li><li>Partner Summit bookings</li></ul><h2>When to use this guidance</h2><ul><li>Your ticket name no longer matches your booking details.</li><li>An existing case requests more information.</li></ul><h2>Recommended steps</h2><ol><li>Locate your booking reference and event date.</li><li>Check My cases for an existing request.</li><li>Review the specific evidence requested by the support team.</li><li>Provide evidence only through an approved secure channel.</li><li>Wait for written confirmation before assuming the change is complete.</li></ol><h2>Before you continue</h2><ul><li>Do not create a duplicate case.</li><li>Never enter real identity evidence into this demonstration.</li></ul><h2>When to contact support</h2><p>Contact support if your event is approaching or you cannot supply the requested evidence.</p>",
+          "isinternal": false,
+          "statecode": 3,
+          "statuscode": 7
+        },
+        {
+          "knowledgearticleid": "4d435300-0004-4000-8000-000000000004",
+          "articlepublicnumber": "KA-0408",
+          "title": "What Business Care includes",
+          "description": "Understand coverage, response targets, escalation and proactive monitoring.",
+          "keywords": "business care coverage warranty response target entitlement escalation support plan",
+          "content": "<p>Topic: Account &amp; billing</p><h2>Applies to</h2><ul><li>Business Care customers</li></ul><h2>When to use this guidance</h2><ul><li>You want to understand coverage or response expectations.</li></ul><h2>Recommended steps</h2><ol><li>Open Account &amp; support and review coverage.</li><li>Check the stated response target and remaining case allowance.</li><li>Review equipment warranties.</li><li>Contact support when the displayed coverage differs from your agreement.</li></ol><h2>Before you continue</h2><ul><li>A response target is not a guaranteed resolution time.</li><li>The plan and allowance in this sample are not contractual entitlements.</li></ul><h2>When to contact support</h2><p>Contact support for a coverage discrepancy or overdue response.</p>",
+          "isinternal": false,
+          "statecode": 3,
+          "statuscode": 7
+        },
+        {
+          "knowledgearticleid": "4d435300-0004-4000-8000-000000000005",
+          "articlepublicnumber": "KA-0430",
+          "title": "Resolve an invoice or duplicate-charge question",
+          "description": "Gather invoice and payment references so support can review a billing question.",
+          "keywords": "invoice billing duplicate charge charged payment refund receipt",
+          "content": "<p>Topic: Account &amp; billing</p><h2>Applies to</h2><ul><li>Northwind invoices</li><li>Account billing</li></ul><h2>When to use this guidance</h2><ul><li>A charge appears twice.</li><li>An invoice differs from your service confirmation.</li></ul><h2>Recommended steps</h2><ol><li>Locate the invoice number and payment date.</li><li>Compare the amount with the order confirmation.</li><li>Check for an existing billing case.</li><li>Prepare a message with the reference and discrepancy.</li></ol><h2>Before you continue</h2><ul><li>Never share a full payment-card number or security code.</li><li>This demonstration does not process payments or refunds.</li></ul><h2>When to contact support</h2><p>Contact a billing specialist if you cannot reconcile the charge.</p>",
+          "isinternal": false,
+          "statecode": 3,
+          "statuscode": 7
+        },
+        {
+          "knowledgearticleid": "4d435300-0004-4000-8000-000000000006",
+          "articlepublicnumber": "KA-0362",
+          "title": "Manage a Partner Summit booking",
+          "description": "Review confirmation, transfer and attendee-support options.",
+          "keywords": "partner summit booking confirmation transfer event attendee",
+          "content": "<p>Topic: Events &amp; bookings</p><h2>Applies to</h2><ul><li>Partner Summit bookings</li></ul><h2>When to use this guidance</h2><ul><li>You need a booking confirmation.</li><li>An attendee or event detail needs review.</li></ul><h2>Recommended steps</h2><ol><li>Find the booking reference.</li><li>Review event dates and attendee information.</li><li>Read the booking terms before requesting a change.</li><li>Check for an existing request or prepare a support message.</li></ol><h2>Before you continue</h2><ul><li>Transfers depend on the booking terms.</li><li>A requested change is not approved until confirmation arrives.</li></ul><h2>When to contact support</h2><p>Contact support if confirmation is missing or you need help before the event.</p>",
+          "isinternal": false,
+          "statecode": 3,
+          "statuscode": 7
+        }
+      ]
+    },
+    "cases": {
+      "logicalName": "incident",
+      "entitySet": "incidents",
+      "idColumn": "incidentid",
+      "records": [
+        {
+          "incidentid": "4d435300-0005-4000-8000-000000000001",
+          "title": "Name change for Seattle event ticket",
+          "description": "I recently changed my legal name from Mona Lopez to Mona Kane. Please update my Partner Summit ticket for the Seattle event.\n\nBusiness impact: I have a question",
+          "caseorigincode": 3,
+          "statecode": 0,
+          "statuscode": 3,
+          "overriddencreatedon": "2026-10-10T23:20:00Z",
+          "customerid_contact@odata.bind": "/contacts(4d435300-0002-4000-8000-000000000001)"
+        },
+        {
+          "incidentid": "4d435300-0005-4000-8000-000000000002",
+          "title": "Edge Gateway 500 offline after firmware update",
+          "description": "My Edge Gateway 500 stopped reporting after a firmware update. The sensors are registered but readings are not arriving.\n\nBusiness impact: Work is blocked",
+          "caseorigincode": 3,
+          "statecode": 0,
+          "statuscode": 4,
+          "overriddencreatedon": "2026-10-09T16:00:00Z",
+          "customerid_contact@odata.bind": "/contacts(4d435300-0002-4000-8000-000000000001)"
+        },
+        {
+          "incidentid": "4d435300-0005-4000-8000-000000000003",
+          "title": "Replacement sensor delivery",
+          "description": "Please arrange a replacement for the registered Climate Sensor Array.\n\nBusiness impact: Service is impaired",
+          "caseorigincode": 3,
+          "statecode": 1,
+          "statuscode": 5,
+          "overriddencreatedon": "2026-09-28T18:00:00Z",
+          "customerid_contact@odata.bind": "/contacts(4d435300-0002-4000-8000-000000000001)"
+        }
+      ]
+    },
+    "caseDocuments": {
+      "logicalName": "annotation",
+      "entitySet": "annotations",
+      "idColumn": "annotationid",
+      "records": [
+        {
+          "annotationid": "4d435300-0007-4000-8000-000000000001",
+          "subject": "Northwind customer document",
+          "notetext": "*WEB* Customer-uploaded document",
+          "filename": "gateway-status-report.pdf",
+          "mimetype": "application/pdf",
+          "isdocument": true,
+          "documentbody": "JVBERi0xLjQKMSAwIG9iaiA8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4gZW5kb2JqCjIgMCBvYmogPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4gZW5kb2JqCjMgMCBvYmogPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA2MTIgNzkyXSAvQ29udGVudHMgNCAwIFIgL1Jlc291cmNlcyA8PCAvRm9udCA8PCAvRjEgNSAwIFIgPj4gPj4gPj4gZW5kb2JqCjQgMCBvYmogPDwgL0xlbmd0aCA5NiA+PiBzdHJlYW0KQlQgL0YxIDE0IFRmIDcyIDcyMCBUZCAoU2FtcGxlIGdhdGV3YXkgc3RhdHVzIHJlcG9ydCAtIEVkZ2UgR2F0ZXdheSA1MDApIFRqIDAgLTI0IFRkIChEZW1vbnN0cmF0aW9uIGZpbGUgb25seS4pIFRqIEVUCmVuZHN0cmVhbSBlbmRvYmoKNSAwIG9iaiA8PCAvVHlwZSAvRm9udCAvU3VidHlwZSAvVHlwZTEgL0Jhc2VGb250IC9IZWx2ZXRpY2EgPj4gZW5kb2JqCnRyYWlsZXIgPDwgL1Jvb3QgMSAwIFIgPj4KJSVFT0Y=",
+          "overriddencreatedon": "2026-10-09T16:05:00Z",
+          "objectid_incident@odata.bind": "/incidents(4d435300-0005-4000-8000-000000000002)"
+        }
+      ]
+    }
+  }
+}

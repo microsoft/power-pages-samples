@@ -95,6 +95,7 @@
         "spa/modern-css-template/previews/knowledge.png",
         "spa/modern-css-template/previews/account.png"
       ],
+      "seedDataPath": "spa/modern-css-template/seed-data/data.json",
       "requiredDataverseLanguages": [
         1033
       ],

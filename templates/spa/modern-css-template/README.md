@@ -22,10 +22,10 @@ The site uses standard Dynamics 365 Customer Service and Power Pages tables, wit
 - `incident` stores the customer's cases (Web origin, Contact as customer).
 - `adx_portalcomment` stores the customer-visible case conversation.
 - `annotation` stores customer documents and internal automation records.
-- `knowledgearticle` provides published external knowledge.
-- `contact` is the signed-in portal identity.
+- `knowledgearticle` provides published external knowledge, grouped by `category`.
+- `contact` is the signed-in portal identity, optionally linked to a customer `account`.
 
-There is no seed data. The site works with your environment's cases and published knowledge articles. Run the website code locally with `npm run dev` to see the built-in demonstration content.
+Sample data in [`seed-data/data.json`](seed-data/data.json) provides a fictional customer, six published knowledge articles in three library topics, and three cases with a customer document. Case conversations aren't seeded, because Portal Comment is a Power Pages table outside this template's solution. Run the website code locally with `npm run dev` to see the same content, including sample conversations, in demo mode without an environment.
 
 The **ModernCSSMetadata** solution adds only the supporting components the site depends on:
 
@@ -104,6 +104,22 @@ After upload, update environment-specific site settings such as `Northwind/Knowl
    ```
 
 5. Confirm that both cloud flows are turned on, and that they use the Dataverse connection reference provided by Case Management Intelligence.
+
+### Import the sample data
+
+The solution import does not import [`seed-data/data.json`](seed-data/data.json).
+The seed file contains ordered `tables`: one Account and Contact for the fictional customer, knowledge library topics (categories), six knowledge articles, three cases, and one customer-uploaded case document.
+Use an installer or a Dataverse import script that understands this format.
+
+If you write your own importer:
+- Process tables in the order stored in `data.json` and preserve every record ID, because later records use those IDs in lookup bindings.
+- Create knowledge articles as Draft, then publish them in a separate update (`statecode` 3, `statuscode` 7). Bind `languagelocaleid` to English (LCID 1033) if it is not the environment's default article language, and make sure the `Northwind/KnowledgeLanguageLocaleId` site setting names the same language.
+- Create cases Active, then set **Waiting for Details** (3) or **Researching** (4) with an update. Close the resolved case with the `CloseIncident` action (status **Problem Solved**, 5).
+- Keep the `*WEB*` prefix on the case document's note text; the site shows only notes with that marker.
+
+The sample cases are created by the importing user, so they don't start the Case Management Agent dispatch flow.
+To see them on the portal, sign in with a portal identity linked to the sample Contact, or change each case's **Customer** to your own Contact.
+Do not import the sample data into a production environment.
 
 ### Configure the Case Management Agent
 
