@@ -1,7 +1,7 @@
 adx_entitypermission_webrole:
 - ba9c8c1a-db48-46e3-b1b9-325702839728
 append: true
-appendto: false
+appendto: true
 create: true
 delete: false
 entitylogicalname: adx_portalcomment
