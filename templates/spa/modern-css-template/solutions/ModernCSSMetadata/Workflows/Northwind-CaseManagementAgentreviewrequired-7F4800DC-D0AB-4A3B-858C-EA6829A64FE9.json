@@ -173,6 +173,7 @@
                 "parameters": {
                   "actionName": "msdyn_invokeCaseProcessingAgent",
                   "item/msdyn_incidentId": "@outputs('Read_case')?['body/incidentid']",
+                  "item/msdyn_extraParams": "{\n        \"triggerReason\": \"customAgentCallback\",\n        \"additionalInformation\": [\n            {\n                \"key\": \"attachmentContent\",\n                \"value\": \"This is my attachment content\",\n                \"keyDescription\": \"File attachment content in natural language\"\n            },\n            {\n                \"key\": \"adx_portalcomment\",\n                \"value\": \"comment from website\",\n                \"keyDescription\": \"comments from website\"\n            }\n        ]\n    }",
                   "item/msdyn_actions": "[{\"action\":\"resolve\",\"automationLevel\":\"Semi\"}]"
                 },
                 "authentication": "@parameters('$authentication')",
