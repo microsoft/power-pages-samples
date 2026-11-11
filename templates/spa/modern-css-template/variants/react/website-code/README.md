@@ -74,7 +74,25 @@ When the customer sends a reply or uploads a document on a case that is **Waitin
 
 The three sample case IDs are `CAS-01000-M8J4J8`, `CAS-01001-S9D5F3`, and `CAS-00982-R4T7X1`. Article IDs are `KA-0182`, `KA-0214`, `KA-0341`, `KA-0408`, `KA-0430`, and `KA-0362`. Those fixture IDs are available only in demo mode.
 
-The **Northwind Assistant** is a floating widget (minimized to an **Assistant** button by default on narrow screens) that expands into a non-modal panel that stays open across navigation. It performs rule-based matching against the current mode's case/article records, lists cases and articles as resource cards, offers **Did this resolve the issue?** after the demo gateway guide, and turns an unresolved concern into an inline ticket review that uses the same case-creation flow as **Report an issue**. **Contact support** transfers entered context to the support-contact form. It does not call an AI service. Uploads accept PDF, PNG or JPEG up to 5 MiB (5,242,880 bytes); demo file selection records metadata only.
+The **Northwind Assistant** is a floating widget (minimized to an **Assistant** button by default on narrow screens) that expands into a non-modal panel that stays open across navigation. Demo mode retains scripted case/article matching, the gateway guide and inline ticket drafts without bot requests. Connected mode uses a configured Copilot Studio bot through Direct Line. **Raise a ticket** retains the same case-creation flow as **Report an issue**; **Contact support** opens the support-contact form. Connected chat transcripts are not automatically copied into cases or contact requests. Uploads accept PDF, PNG or JPEG up to 5 MiB (5,242,880 bytes); demo file selection records metadata only.
+
+### Support assistant bot
+
+Connected deployments require two non-secret build settings: `VITE_BOT_ENVIRONMENT_ID` (the bot's Power Platform environment GUID) and `VITE_BOT_SCHEMA_NAME` (the bot's schema name). There is no default bot or environment. Missing or invalid settings show an explicit configuration error when the assistant opens, without loading the chat SDK or requesting a bot token. Demo mode does not require these settings.
+
+```powershell
+$env:VITE_BOT_ENVIRONMENT_ID = "<bot-environment-guid>"
+$env:VITE_BOT_SCHEMA_NAME = "<bot-schema-name>"
+npm run build
+```
+
+Rebuild after changing either setting. The environment host mapping supports commercial production environments only. Publish the agent, enable its web channel and configure its Power Pages authentication in the target environment before use; the template does not deploy a Copilot Studio agent.
+
+The client resolves `/powervirtualagents/regionalchannelsettings?api-version=2022-03-01-preview` and `/powervirtualagents/botsbyschema/<schema>/directline/token?api-version=2022-03-01-preview` on the environment API host. Direct Line uses the returned regional domain and refreshes its token automatically. On connect, the client sends `startConversation`; outgoing activities carry `cci_webchat_client: msportals`. OAuth cards trigger a same-origin, CSRF-protected POST to `/_services/auth/portalusertoken`, followed by POST `{ token }` to the card's validated Microsoft token endpoint.
+
+Web Chat 4.18.0 loads lazily from `/webchat-4.18.0.js` with SHA-384 integrity verification inside the same-origin `bot-chat.html` iframe, isolating its bundled React runtime from React 19. The verified official SDK and its upstream license notices are in `public` and are copied into `dist` during the build; no CDN access or additional allowed script source is needed at runtime. The build includes both HTML entry points. Site network rules must allow the environment API, the returned Direct Line HTTP/WebSocket host, the OAuth token endpoint and a same-origin frame. Existing allowed-script protections are unchanged.
+
+Tokens remain in memory. Closing the conversation or changing the signed-in contact discards the chat session; minimizing preserves it. Only questions explicitly submitted through assistant actions are sent; loaded case/article contents are not automatically shared. Unpublished agents, blocked SDKs and authentication failures show explicit errors with a restart action, never scripted fallback responses. No Direct Line secret, PAC credential or bearer token belongs in frontend configuration. Verify a successful authenticated conversation after deployment; mocked browser tests cannot establish the target bot's availability.
 
 Bookmarks and preferences remain tab-local. Saving a contact request creates feedback, not email, chat, a staff notification or a callback booking. Product/category catalogs do not prove equipment ownership, service coverage or order history.
 

@@ -39,6 +39,76 @@ type MockOptions = {
   knowledgeStatus?: number
 }
 
+test('connected assistant loads lazily, reports SDK failures, preserves tickets and closes its bot session', async ({ page }) => {
+  const calls = await mockSupport(page)
+  const sdkRequests: string[] = []
+  await page.route('**/webchat-4.18.0.js', route => {
+    sdkRequests.push(route.request().url())
+    return route.abort('blockedbyclient')
+  })
+  await page.goto('/?data=dataverse')
+  await expect(page.getByRole('heading', { name: 'Hi Ada! How can we help you?' })).toBeVisible()
+  expect(sdkRequests).toEqual([])
+  await page.locator('.hero-actions').getByRole('button', { name: /Ask assistant/ }).click()
+  const dialog = page.getByRole('dialog', { name: 'Northwind Assistant', exact: true })
+  const bot = page.frameLocator('.assistant-bot-frame')
+  await expect(bot.getByRole('alert')).toContainText('could not load from this site')
+  await expect(dialog.getByRole('button', { name: 'Start a new conversation' })).toBeVisible()
+  await dialog.getByRole('button', { name: 'Raise a ticket', exact: true }).click()
+  await dialog.getByLabel('Review your issue before submitting').fill('Support needed while the assistant is unavailable')
+  await dialog.getByLabel('How is this affecting you?').selectOption('I have a question')
+  await dialog.getByRole('button', { name: 'Submit ticket', exact: true }).click()
+  await expect(dialog.getByRole('status')).toContainText('Ticket submitted')
+  expect(calls.filter(call => call.path === '/_api/incidents' && call.method === 'POST')).toHaveLength(1)
+  await bot.getByRole('alert').press('Escape')
+  await expect(dialog).not.toBeVisible()
+  await page.locator('.hero-actions').getByRole('button', { name: /Ask assistant/ }).click()
+  await expect(bot.getByRole('alert')).toContainText('could not load from this site')
+  expect(sdkRequests).toHaveLength(1)
+  await dialog.getByRole('button', { name: 'Start a new conversation' }).click()
+  await expect.poll(() => sdkRequests.length).toBe(2)
+  await expect(bot.getByRole('alert')).toContainText('could not load from this site')
+  await dialog.getByRole('button', { name: 'Close assistant' }).click()
+  await expect(page.locator('.assistant-bot-frame')).toHaveCount(0)
+})
+
+test('connected assistant queues search questions until ready and preserves its conversation across navigation', async ({ page }) => {
+  await mockSupport(page)
+  let sessions = 0
+  await page.route('**/bot-chat.html', route => {
+    sessions++
+    return route.fulfill({ contentType: 'text/html', body: `<!doctype html><html lang="en"><body>
+      <button id="ready">Connect</button><pre id="received"></pre>
+      <script>
+        document.getElementById('ready').onclick = () => parent.postMessage({ source: 'northwind-bot', type: 'ready' }, location.origin);
+        addEventListener('message', event => {
+          if (event.origin === location.origin && event.source === parent && event.data.source === 'northwind-assistant')
+            document.getElementById('received').textContent += JSON.stringify(event.data) + '\\n';
+        });
+      </script></body></html>` })
+  })
+  await page.goto('/?data=dataverse')
+  await expect(page.getByRole('heading', { name: 'Hi Ada! How can we help you?' })).toBeVisible()
+  await page.getByLabel('Search cases and articles').fill('Help with a gateway')
+  await page.getByRole('button', { name: /Ask Northwind about/ }).click()
+  const dialog = page.getByRole('dialog', { name: 'Northwind Assistant', exact: true })
+  const bot = page.frameLocator('.assistant-bot-frame')
+  await expect(bot.locator('#received')).toBeEmpty()
+  await page.evaluate(() => window.postMessage({ source: 'northwind-bot', type: 'ready' }, location.origin))
+  await expect(bot.locator('#received')).toBeEmpty()
+  await bot.getByRole('button', { name: 'Connect', exact: true }).click()
+  await expect(bot.locator('#received')).toContainText('"question":"Help with a gateway","send":true')
+  await dialog.getByRole('button', { name: 'Minimize assistant', exact: true }).click()
+  await expect(dialog).not.toBeVisible()
+  await page.locator('.hero-actions').getByRole('button', { name: /Ask assistant/ }).click()
+  await expect(bot.locator('#received')).toContainText('Help with a gateway')
+  expect(sessions).toBe(1)
+  await dialog.getByRole('button', { name: 'Contact support', exact: true }).click()
+  await expect(page).toHaveURL(/\/account#contact-support$/)
+  await expect(page.locator('.assistant-bot-frame')).toHaveCount(1)
+  expect(sessions).toBe(1)
+})
+
 async function mockSupport(page: Page, options: MockOptions = {}) {
   const calls: Call[] = []
   let identity = { ...profile }, cases = [{ ...firstCase, status: options.firstStatus ?? firstCase.status }, { ...secondCase }]

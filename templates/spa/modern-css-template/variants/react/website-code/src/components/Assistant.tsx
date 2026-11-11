@@ -4,6 +4,7 @@ import { errorMessage, useSupport } from '../SupportContext'
 import { searchSupport, statusLabels, type SupportCase } from '../data'
 import Icon from './Icon'
 import { useUiDirection } from './Field'
+import BotAssistant from './BotAssistant'
 
 type Resource = { id: string; label: string; title: string; detail: string; path: string }
 type Entry = { id: number } & (
@@ -64,7 +65,7 @@ function TicketForm({ entry, onSubmitted, onViewCases }: { entry: Extract<Entry,
 }
 
 export default function Assistant() {
-  const { cases, articles, isDemo, profile, assistantOpen, setAssistantOpen, assistantRequest } = useSupport()
+  const { cases, articles, isDemo, profile, profileData, assistantOpen, setAssistantOpen, assistantRequest } = useSupport()
   const [widgetOpen, setWidgetOpen] = useState(() => !isNarrow())
   const [expanded, setExpanded] = useState(false)
   const [question, setQuestion] = useState('')
@@ -161,14 +162,15 @@ export default function Assistant() {
   function followResource() { if (isNarrow()) { restoreFocus.current = null; setExpanded(false); setAssistantOpen(false) } }
 
   useEffect(() => {
-    if (!assistantOpen || assistantRequest.sequence === handled.current) return
+    if (!isDemo || !assistantOpen || assistantRequest.sequence === handled.current) return
     handled.current = assistantRequest.sequence
     if (assistantRequest.send) send(assistantRequest.question)
     else setQuestion(assistantRequest.question)
     const frame = requestAnimationFrame(() => composer.current?.focus({ preventScroll: true }))
     return () => cancelAnimationFrame(frame)
-  }, [assistantOpen, assistantRequest])
+  }, [isDemo, assistantOpen, assistantRequest])
   useEffect(() => {
+    if (!isDemo) return
     if (assistantOpen) {
       const frame = requestAnimationFrame(() => { if (!document.querySelector('.chat-ticket-form textarea:focus')) composer.current?.focus({ preventScroll: true }) })
       return () => cancelAnimationFrame(frame)
@@ -176,7 +178,7 @@ export default function Assistant() {
     const target = restoreFocus.current === 'widget' ? widgetExpand.current : restoreFocus.current === 'launcher' ? launcher.current : null
     restoreFocus.current = null
     target?.focus()
-  }, [assistantOpen])
+  }, [isDemo, assistantOpen])
   useLayoutEffect(() => {
     const container = transcript.current
     if (scrollTarget === null || !container) return
@@ -190,6 +192,9 @@ export default function Assistant() {
     { label: 'Track my open cases', run: () => openPanel('Track my open cases', true) },
     { label: 'Get help with a gateway issue', run: () => openPanel('My Edge Gateway is offline', true) },
   ]
+
+  if (!isDemo) return <BotAssistant key={profileData?.id ?? 'signed-out'} renderTicket={(ticket, onSubmitted) =>
+    <TicketForm entry={ticket} onSubmitted={onSubmitted} onViewCases={() => { setAssistantOpen(false); navigate('/cases') }} />} />
 
   if (!assistantOpen) return widgetOpen
     ? <section className="assistant-widget" aria-labelledby="assistant-widget-title" data-bidi-id="assistant-widget">

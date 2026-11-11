@@ -1,0 +1,86 @@
+/*!
+	Copyright (c) 2018 Jed Watson.
+	Licensed under the MIT License (MIT), see
+	http://jedwatson.github.io/classnames
+*/
+
+/*!
+  Copyright (c) 2018 Jed Watson.
+  Licensed under the MIT License (MIT), see
+  http://jedwatson.github.io/classnames
+*/
+
+/*!
+ * The buffer module from node.js, for the browser.
+ *
+ * @author   Feross Aboukhadijeh <https://feross.org>
+ * @license  MIT
+ */
+
+/*!
+ * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
+ *
+ * Copyright (c) 2014-2017, Jon Schlinkert.
+ * Released under the MIT License.
+ */
+
+/*! For license information please see botframework-directlinespeech-sdk.mjs.LEGAL.txt */
+
+/*! For license information please see botframework-webchat-api.decorator.mjs.LEGAL.txt */
+
+/*! For license information please see botframework-webchat-api.internal.mjs.LEGAL.txt */
+
+/*! For license information please see botframework-webchat-api.mjs.LEGAL.txt */
+
+/*! For license information please see botframework-webchat-component.mjs.LEGAL.txt */
+
+/*! For license information please see botframework-webchat-core.mjs.LEGAL.txt */
+
+/*! For license information please see chunk-2S76JUVM.mjs.LEGAL.txt */
+
+/*! For license information please see chunk-J6D5YEY6.mjs.LEGAL.txt */
+
+/*! For license information please see chunk-X37JABN5.mjs.LEGAL.txt */
+
+/*! For license information please see chunk-ZAMHKQQC.mjs.LEGAL.txt */
+
+/*! For license information please see react.js.LICENSE.txt */
+
+/*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
+
+/*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */
+
+/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
+
+/**
+ *
+ *
+ * @author Jerry Bendy <jerry@icewingcc.com>
+ * @licence MIT
+ *
+ */
+
+/**
+ * Fast UUID generator, RFC4122 version 4 compliant.
+ * @author Jeff Ward (jcward.com).
+ * @license MIT license
+ * @link http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript/21963136#21963136
+ **/
+
+/** @license React v16.13.1
+ * react-is.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/** @license React v17.0.2
+ * react-is.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */

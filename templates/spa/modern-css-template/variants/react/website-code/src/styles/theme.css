@@ -392,6 +392,11 @@ details[open] > summary { margin-block-end: 1.25rem; }
 .assistant-shortcuts .icon, .chat-resource > .icon { inline-size: 14px; block-size: 14px; color: var(--color-text-muted); }
 .assistant-panel { position: fixed; z-index: 45; inset-block: auto 1rem; inset-inline: auto 1rem; display: flex; flex-direction: column; margin: 0; padding: 0; inline-size: min(440px, calc(100% - 2rem)); block-size: min(820px, calc(100dvh - 2rem)); overflow: hidden; color: var(--color-text); border: 1px solid rgb(83 75 154 / .2); border-radius: 18px; background: var(--color-surface); box-shadow: 0 22px 70px rgb(30 24 94 / .24); }
 .assistant-panel.is-expanded { inset: .75rem; inline-size: auto; block-size: auto; }
+.assistant-panel[hidden] { display: none; }
+.assistant-bot-frame { flex: 1 1 auto; min-block-size: 0; inline-size: 100%; border: 0; }
+.assistant-bot-actions { display: flex; flex-wrap: wrap; gap: .75rem; padding-inline: .95rem; }
+.assistant-panel-footer .assistant-bot-actions { padding: 0; }
+.assistant-bot-ticket { flex: 0 1 auto; max-block-size: 55%; overflow-y: auto; padding: 1rem; }
 .assistant-panel-header { flex: 0 0 auto; min-block-size: 70px; }
 .assistant-transcript { flex: 1 1 auto; min-block-size: 0; display: grid; align-content: start; gap: .75rem; padding: 1.25rem 1.25rem .9rem; overflow-y: auto; }
 .assistant-welcome { padding: .3rem 0 .6rem; text-align: center; }

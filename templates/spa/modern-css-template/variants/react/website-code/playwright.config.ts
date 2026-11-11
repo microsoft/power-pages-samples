@@ -21,6 +21,10 @@ export default defineConfig({
     { name: 'narrow', use: { viewport: { width: 390, height: 844 } } },
   ],
   webServer: {
+    env: {
+      VITE_BOT_ENVIRONMENT_ID: '11111111-1111-4111-8111-111111111111',
+      VITE_BOT_SCHEMA_NAME: 'test_support_bot',
+    },
     command: `npm run dev -- --host=127.0.0.1 --port=${port} --strictPort`,
     url: baseURL,
     reuseExistingServer: !process.env.CI && !process.env.PLAYWRIGHT_PORT,

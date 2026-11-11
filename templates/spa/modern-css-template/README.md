@@ -72,6 +72,7 @@ pac pages upload-code-site --rootPath .
 ```
 
 Set `VITE_KB_AI_SEARCH_ENABLED=true` before `npm run build` to turn on AI search.
+For the connected support assistant, set `VITE_BOT_ENVIRONMENT_ID` and `VITE_BOT_SCHEMA_NAME` before building. Publish the target Copilot Studio agent, enable its web channel and configure Power Pages authentication. No bot or environment is selected by default; missing settings show a configuration error while ticket creation remains available. See the [website code README](variants/react/website-code/README.md#support-assistant-bot) for setup and network requirements.
 Uploading creates the site and its **Portals-&lt;site name&gt;** application user.
 After upload, update environment-specific site settings such as `Northwind/KnowledgeLanguageLocaleId`, as described in the website code README.
 

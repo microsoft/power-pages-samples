@@ -1,0 +1,5 @@
+html, body { margin: 0; height: 100%; background: #ffffff; color: #181936; font: 14px/1.5 Inter, sans-serif; }
+body { display: flex; flex-direction: column; }
+#bot-status { flex: 0 0 auto; margin: 0; padding: 1rem; }
+#bot-status[role="alert"] { color: #a72d32; background: #f1f0ff; }
+#webchat { flex: 1 1 auto; min-height: 0; }
