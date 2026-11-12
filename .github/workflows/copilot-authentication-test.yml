@@ -1,0 +1,34 @@
+name: Copilot authentication test
+
+# Merge into the default branch before dispatching from the Actions tab.
+# Requires the organization's "Allow use of Copilot CLI billed to the organization" policy:
+# https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli-in-actions
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  copilot-requests: write
+
+jobs:
+  authenticate:
+    name: Test Copilot with GITHUB_TOKEN
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Install current Copilot CLI
+        run: |
+          npm install --global @github/copilot@latest --registry=https://packagefeedproxy.microsoft.io/npm/ --no-audit --no-fund
+          copilot --version
+
+      - name: Test authentication
+        working-directory: ${{ runner.temp }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: copilot --prompt "Reply with exactly COPILOT_AUTH_OK. Do not use any tools." --silent --deny-tool 'shell,write,read' --disable-builtin-mcps
