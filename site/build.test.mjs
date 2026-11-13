@@ -25,7 +25,20 @@ test("catalog distinguishes repository non-SPA templates from platform and SPA t
     keywords: ["library"],
     audience: ["makers"],
     author: "Northwind",
-    previewImages: ["non-spa/community-library/previews/desktop-home.png", "non-spa/community-library/previews/mobile-home.png"],
+    responsivePreviews: [
+      {
+        id: "home",
+        displayName: "Home",
+        desktop: "non-spa/community-library/previews/desktop-home.png",
+        mobile: "non-spa/community-library/previews/mobile-home.png"
+      },
+      {
+        id: "about",
+        displayName: "About",
+        desktop: "non-spa/community-library/previews/desktop-about.png",
+        mobile: "non-spa/community-library/previews/mobile-about.png"
+      }
+    ],
     requiredDataverseLanguages: [1033],
     variants: { none: {} }
   };
@@ -40,8 +53,10 @@ test("catalog distinguishes repository non-SPA templates from platform and SPA t
       cpSync(path.join(repo, "templates", image), target);
     }
   }
-  for (const image of community.previewImages) {
-    cpSync(path.join(repo, "templates/spa/311-portal/previews/home.png"), path.join(root, "templates", image));
+  for (const preview of community.responsivePreviews) {
+    for (const image of [preview.desktop, preview.mobile]) {
+      cpSync(path.join(repo, "templates/spa/311-portal/previews/home.png"), path.join(root, "templates", image));
+    }
   }
   const index = readFileSync(path.join(root, "site/index.html"), "utf8");
   for (const [, image] of index.matchAll(/\bsrc="(templates\/[^"]+)"/g)) {
@@ -64,8 +79,11 @@ test("catalog distinguishes repository non-SPA templates from platform and SPA t
   const actual = find(community.id);
   assert.equal(actual.publisher, "Northwind");
   assert.equal(actual.images.length, 2);
-  assert.equal(actual.images[0].src, `templates/${community.previewImages[0]}`);
-  assert.equal(actual.images[1].src, `templates/${community.previewImages[1]}`);
+  assert.equal(actual.images[0].label, "Home");
+  assert.equal(actual.images[0].src, `templates/${community.responsivePreviews[0].desktop}`);
+  assert.equal(actual.images[0].mobile, `templates/${community.responsivePreviews[0].mobile}`);
+  assert.equal(actual.images[1].label, "About");
+  assert.equal(actual.devices, true);
   assert.equal(actual.prompt, undefined);
   assert.match(actual.howTo, /README/i);
   assert.doesNotMatch(actual.howTo, /Create Website API|design studio/i);

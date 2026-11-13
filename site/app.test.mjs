@@ -56,3 +56,32 @@ test("detail panels show escaped publisher names for every template kind", () =>
   }
   assert.doesNotMatch(renderDetail(base, "spa"), /Published by/);
 });
+
+test("responsive non-SPA entries expose page and device controls", () => {
+  const html = renderDetail({
+    id: "community-template",
+    name: "Community template",
+    desc: "",
+    path: "templates/non-spa/community-template/",
+    tags: [],
+    devices: true,
+    images: [
+      {
+        label: "Home",
+        src: "templates/non-spa/community-template/previews/desktop-home.png",
+        mobile: "templates/non-spa/community-template/previews/mobile-home.png"
+      },
+      {
+        label: "About",
+        src: "templates/non-spa/community-template/previews/desktop-about.png",
+        mobile: "templates/non-spa/community-template/previews/mobile-about.png"
+      }
+    ]
+  }, "non-spa");
+
+  assert.match(html, /aria-label="Pages"/);
+  assert.match(html, /data-page="home"/);
+  assert.match(html, /data-page="about"/);
+  assert.match(html, />Desktop</);
+  assert.match(html, />Mobile</);
+});

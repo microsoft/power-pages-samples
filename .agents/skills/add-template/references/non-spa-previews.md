@@ -17,7 +17,8 @@ The [Power Pages create-site non-SPA workflow](https://github.com/microsoft/powe
    Creating a website from a platform template already provisions it; starting a stopped website is a different operation and does not activate a new record.
    Poll the accepted operation and verify the resulting URL before proceeding.
 4. Inspect the live site at desktop and mobile viewport sizes and capture representative real PNGs in `templates/non-spa/<id>/previews/`.
-   Add them to the repository-artifact entry's `previewImages`, and confirm the badge and content render correctly.
+   For each page, save `desktop-<page-id>.png` and `mobile-<page-id>.png`, then declare the pair in `responsivePreviews` with its page ID and display name.
+   Confirm the badge and content render correctly.
    Use only safe, non-sensitive preview data.
 
 If access, approval, environment selection, upload, activation, browser access, or screenshots are blocked, report the failing step and retain local artifacts.

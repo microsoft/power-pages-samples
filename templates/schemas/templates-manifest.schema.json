@@ -70,7 +70,7 @@
             }
           },
           "previewImages": {
-            "description": "Flat preview list for repository-artifact templates. Create Website API templates use responsivePreviews instead.",
+            "description": "Flat preview list for SPA repository-artifact templates.",
             "type": "array",
             "uniqueItems": true,
             "items": {
@@ -121,7 +121,7 @@
             "minLength": 1
           },
           "responsivePreviews": {
-            "description": "Labeled desktop/mobile preview pairs for Create Website API templates.",
+            "description": "Labeled desktop/mobile preview pairs for non-SPA templates.",
             "type": "array",
             "items": {
               "$ref": "#/$defs/responsivePreview"
@@ -201,18 +201,46 @@
       }
     },
     "repositoryArtifactTemplate": {
-      "description": "Template whose website code, previews, and supporting solutions are stored in this repository. Property types are defined on the template item; this shape only constrains presence.",
+      "description": "Template whose website code, previews, and supporting solutions are stored in this repository. SPAs use flat previewImages; non-SPA templates use responsivePreviews.",
       "type": "object",
       "required": [
-        "previewImages",
         "requiredDataverseLanguages",
         "variants"
       ],
       "properties": {
-        "previewImages": true,
         "requiredDataverseLanguages": true,
         "variants": true
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "spa"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "previewImages"
+            ],
+            "properties": {
+              "responsivePreviews": false
+            }
+          },
+          "else": {
+            "required": [
+              "responsivePreviews"
+            ],
+            "properties": {
+              "previewImages": false
+            }
+          }
+        }
+      ]
     },
     "provisioning": {
       "type": "object",

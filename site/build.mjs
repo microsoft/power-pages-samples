@@ -81,7 +81,7 @@ function baseTemplateItem(template, override) {
     publisher: template.author
   };
 
-  if (template.kind === "spa" || !template.provisioning) {
+  if (template.kind === "spa") {
     // previewImages paths are relative to templates/, e.g. "spa/311-portal/previews/map.png".
     const images = (template.previewImages || []).map((src) => ({
       label: humanize(path.posix.basename(src, path.posix.extname(src))),
@@ -89,18 +89,15 @@ function baseTemplateItem(template, override) {
     }));
     return {
       ...base,
-      tags: template.kind === "spa" ? Object.keys(template.variants || {}).map((key) => FRAMEWORKS[key] || capitalize(key)) : [],
+      tags: Object.keys(template.variants || {}).map((key) => FRAMEWORKS[key] || capitalize(key)),
       features: (template.keywords || []).map(humanize),
       featuresTitle: "Topics",
       images,
-      ...(template.kind === "non-spa" ? {
-        howTo: "Follow the template README to import its solutions and sample data, then deploy the website content."
-      } : {}),
       ...override
     };
   }
 
-  // Non-SPA previews come in desktop and mobile pairs, already in device frames.
+  // Non-SPA previews use desktop and mobile pairs, already in device frames.
   const images = (template.responsivePreviews || []).map((preview) => ({
     label: preview.displayName,
     src: `templates/${preview.desktop}`,
@@ -109,7 +106,11 @@ function baseTemplateItem(template, override) {
   return {
     ...base,
     tags: [],
-    features: template.capabilities || [],
+    features: template.capabilities || (template.keywords || []).map(humanize),
+    ...(template.provisioning ? {} : {
+      featuresTitle: "Topics",
+      howTo: "Follow the template README to import its solutions and sample data, then deploy the website content."
+    }),
     devices: true,
     images,
     ...override

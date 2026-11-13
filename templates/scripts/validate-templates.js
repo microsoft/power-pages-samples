@@ -309,6 +309,40 @@ function validateCreateWebsiteApiMetadata(template, label, result) {
     }
   }
 
+  validateResponsivePreviewIds(template, label, result);
+}
+
+function validateRepositoryArtifactMetadata(template, label, result) {
+  if (isCreateWebsiteApiTemplate(template)) {
+    return;
+  }
+
+  const requiredProperties = [
+    template.kind === "spa" ? "previewImages" : "responsivePreviews",
+    "requiredDataverseLanguages",
+    "variants"
+  ];
+  for (const propertyName of requiredProperties) {
+    if (!Object.hasOwn(template, propertyName)) {
+      result.errors.push(
+        `Template "${label}" repository-artifact metadata requires ${propertyName}.`
+      );
+    }
+  }
+
+  const forbiddenPreviewProperty = template.kind === "spa" ? "responsivePreviews" : "previewImages";
+  if (Object.hasOwn(template, forbiddenPreviewProperty)) {
+    result.errors.push(
+      `Template "${label}" repository-artifact metadata must not define ${forbiddenPreviewProperty}.`
+    );
+  }
+
+  if (template.kind !== "spa") {
+    validateResponsivePreviewIds(template, label, result);
+  }
+}
+
+function validateResponsivePreviewIds(template, label, result) {
   const seenPreviewIds = new Set();
   for (const preview of template.responsivePreviews ?? []) {
     if (!preview || typeof preview !== "object" || Array.isArray(preview) || typeof preview.id !== "string") {
@@ -318,20 +352,6 @@ function validateCreateWebsiteApiMetadata(template, label, result) {
       result.errors.push(`Template "${label}" responsivePreviews contains duplicate id "${preview.id}".`);
     }
     seenPreviewIds.add(preview.id);
-  }
-}
-
-function validateRepositoryArtifactMetadata(template, label, result) {
-  if (isCreateWebsiteApiTemplate(template)) {
-    return;
-  }
-
-  for (const propertyName of ["previewImages", "requiredDataverseLanguages", "variants"]) {
-    if (!Object.hasOwn(template, propertyName)) {
-      result.errors.push(
-        `Template "${label}" repository-artifact metadata requires ${propertyName}.`
-      );
-    }
   }
 }
 
@@ -395,7 +415,11 @@ function validateReferencedPaths(template, label, root, result) {
     return;
   }
 
-  validatePreviewImages(template.previewImages, label, root, `${familyBase}/previews`, "previewImages", result);
+  const previewPaths = template.kind === "spa"
+    ? template.previewImages
+    : (template.responsivePreviews ?? []).flatMap((preview) => [preview?.desktop, preview?.mobile]);
+  const previewLocation = template.kind === "spa" ? "previewImages" : "responsivePreviews";
+  validatePreviewImages(previewPaths, label, root, `${familyBase}/previews`, previewLocation, result);
   const solutionMetadata = validateSolutionsDirectory(
     label,
     root,
