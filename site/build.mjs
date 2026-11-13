@@ -67,6 +67,7 @@ function createSitePrompt(template, item) {
 
 function templateItem(template, override) {
   const item = baseTemplateItem(template, override);
+  if (template.kind === "non-spa" && !template.provisioning) return item;
   return { ...item, prompt: createSitePrompt(template, item) };
 }
 
@@ -80,7 +81,7 @@ function baseTemplateItem(template, override) {
     publisher: template.author
   };
 
-  if (template.kind === "spa") {
+  if (template.kind === "spa" || !template.provisioning) {
     // previewImages paths are relative to templates/, e.g. "spa/311-portal/previews/map.png".
     const images = (template.previewImages || []).map((src) => ({
       label: humanize(path.posix.basename(src, path.posix.extname(src))),
@@ -88,10 +89,13 @@ function baseTemplateItem(template, override) {
     }));
     return {
       ...base,
-      tags: Object.keys(template.variants || {}).map((key) => FRAMEWORKS[key] || capitalize(key)),
+      tags: template.kind === "spa" ? Object.keys(template.variants || {}).map((key) => FRAMEWORKS[key] || capitalize(key)) : [],
       features: (template.keywords || []).map(humanize),
       featuresTitle: "Topics",
       images,
+      ...(template.kind === "non-spa" ? {
+        howTo: "Follow the template README to import its solutions and sample data, then deploy the website content."
+      } : {}),
       ...override
     };
   }
@@ -104,7 +108,6 @@ function baseTemplateItem(template, override) {
   }));
   return {
     ...base,
-    // Every non-SPA template is built in the design studio, so a tag would say nothing.
     tags: [],
     features: template.capabilities || [],
     devices: true,

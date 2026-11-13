@@ -44,6 +44,7 @@ Templates live under `templates/`.
 They are installable starting points, not learning examples.
 Use `samples/` when the contribution teaches a technique, pattern, or API.
 Use `templates/` when the contribution is meant to be imported as a reusable Power Pages site.
+Agents that support repository skills can use [add-template](.agents/skills/add-template/SKILL.md) to guide a template contribution.
 
 The template catalog is `templates/manifest.json`.
 Each entry must match `templates/schemas/templates-manifest.schema.json`.

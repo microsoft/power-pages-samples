@@ -39,7 +39,7 @@ window.CATALOG = (() => {
             short: "Non-SPA template",
             tag: "Non-SPA",
             mat: "nonspa",
-            blurb: "Ready-to-use sites built with Liquid and web templates. Pick one when you create a site in the design studio and customize it there.",
+            blurb: "Sites built with Liquid and web templates, available through platform provisioning or repository artifacts.",
             howTo: "Choose this template when you create a site in Power Pages design studio, or provision it with the Create Website API.",
             // Filled from templates/manifest.json by build.mjs.
             items: []
