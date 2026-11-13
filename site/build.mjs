@@ -67,6 +67,7 @@ function createSitePrompt(template, item) {
 
 function templateItem(template, override) {
   const item = baseTemplateItem(template, override);
+  if (template.kind === "non-spa" && !template.provisioning) return item;
   return { ...item, prompt: createSitePrompt(template, item) };
 }
 
@@ -80,33 +81,33 @@ function baseTemplateItem(template, override) {
     publisher: template.author
   };
 
+  const images = (template.responsivePreviews || []).map((preview) => ({
+    label: preview.displayName,
+    src: `templates/${preview.desktop}`,
+    mobile: `templates/${preview.mobile}`
+  }));
   if (template.kind === "spa") {
-    // previewImages paths are relative to templates/, e.g. "spa/311-portal/previews/map.png".
-    const images = (template.previewImages || []).map((src) => ({
-      label: humanize(path.posix.basename(src, path.posix.extname(src))),
-      src: `templates/${src}`
-    }));
     return {
       ...base,
       tags: Object.keys(template.variants || {}).map((key) => FRAMEWORKS[key] || capitalize(key)),
       features: (template.keywords || []).map(humanize),
       featuresTitle: "Topics",
       images,
+      devices: true,
       ...override
     };
   }
 
-  // Non-SPA previews come in desktop and mobile pairs, already in device frames.
-  const images = (template.responsivePreviews || []).map((preview) => ({
-    label: preview.displayName,
-    src: `templates/${preview.desktop}`,
-    mobile: preview.mobile ? `templates/${preview.mobile}` : undefined
-  }));
+  // Non-SPA preview images already ship inside device frames; SPA screenshots do not.
   return {
     ...base,
-    // Every non-SPA template is built in the design studio, so a tag would say nothing.
     tags: [],
-    features: template.capabilities || [],
+    features: template.capabilities || (template.keywords || []).map(humanize),
+    ...(template.provisioning ? {} : {
+      featuresTitle: "Topics",
+      howTo: "Follow the template README to import its solutions and sample data, then deploy the website content."
+    }),
+    deviceFrames: true,
     devices: true,
     images,
     ...override

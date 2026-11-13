@@ -13,15 +13,15 @@ The React Power Pages website project is stored separately under `variants/react
 
 | Home | Service request map |
 | --- | --- |
-| ![311 Portal home page](previews/home.png) | ![311 Portal service request map](previews/map.png) |
+| ![311 Portal home page](previews/desktop-home.png) | ![311 Portal service request map](previews/desktop-map.png) |
 
 | Knowledge base | Contact |
 | --- | --- |
-| ![311 Portal knowledge base](previews/knowledge.png) | ![311 Portal contact page](previews/contact.png) |
+| ![311 Portal knowledge base](previews/desktop-knowledge.png) | ![311 Portal contact page](previews/desktop-contact.png) |
 
 | Admin access |
 | --- |
-| ![311 Portal admin access page](previews/admin.png) |
+| ![311 Portal admin access page](previews/desktop-admin.png) |
 
 ## Use this template manually
 

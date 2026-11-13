@@ -40,10 +40,11 @@ Links from the first release that used `#item=<id>` still open the right templat
 
 ## Create-site prompts
 
-Each template's detail panel has a **Copy prompt** button with a one-line `/create-site` prompt for the Power Pages plugin from [Power Platform Skills](https://aka.ms/ppskills).
+SPA and platform-provisioned non-SPA detail panels have a **Copy prompt** button with a one-line `/create-site` prompt for the Power Pages plugin from [Power Platform Skills](https://aka.ms/ppskills).
 The build writes the prompt from the manifest entry: the template ID, SPA framework or non-SPA Create Website template name, a site name, purpose, and audience.
 With those details in the request, the plugin's `create-site` skill skips its discovery questions and template browsing, so people only answer its consent questions, such as confirming the target environment.
 The prompt stays on one line because a newline pasted into a terminal agent would send it early.
+Repository-artifact non-SPA templates instead link to their README for installation; they do not have a plugin prompt.
 
 ## Design
 
@@ -54,7 +55,7 @@ To review a change, build and serve the site, then run the plugin's design revie
 ## Add or update a template
 
 The site is generated from [`templates/manifest.json`](../templates/manifest.json).
-The build turns each template into a catalog entry: its name, description, SPA or non-SPA type, publisher, frameworks, capabilities or keywords, and preview images.
+The build turns each template into a catalog entry with its name, description, publisher, and page-based desktop/mobile previews.
 A new template appears on the site once its manifest entry merges, with no change in this folder.
 To give a template different catalog copy than its manifest description, add it to `templateOverrides` in [`data.js`](data.js).
 

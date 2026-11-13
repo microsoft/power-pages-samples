@@ -159,6 +159,36 @@ test("accepts a non-SPA website export without SPA project files", () => {
   assert.deepEqual(result.warnings, []);
 });
 
+test("requires responsive previews for repository non-SPA templates", () => {
+  const root = createTemplateRoot({
+    kind: "non-spa",
+    framework: "none",
+    familyExtras: {
+      previewImages: [],
+      responsivePreviews: [
+        {
+          id: "home",
+          displayName: "Home",
+          desktop: "non-spa/test-template/previews/desktop-home.png",
+          mobile: "non-spa/test-template/previews/mobile-home.png"
+        },
+        {
+          id: "home",
+          displayName: "Duplicate home",
+          desktop: "non-spa/test-template/previews/desktop-home.png",
+          mobile: "non-spa/test-template/previews/mobile-home.png"
+        }
+      ]
+    }
+  });
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) =>
+    error.includes("repository-artifact metadata must not define previewImages")
+  ));
+  assert(result.errors.some((error) => error.includes('responsivePreviews contains duplicate id "home"')));
+});
+
 test("accepts a Create Website API template with metadata and previews but no repository artifacts", () => {
   const root = createTemplateRoot({
     kind: "non-spa",
@@ -289,9 +319,22 @@ test("published schema encodes mutually exclusive Create Website API and reposit
   const shapeViolations = (entry) => {
     const shape = Object.hasOwn(entry, "provisioning") ? apiShape : artifactShape;
     const rules = Object.entries(shape.properties ?? {});
+    const conditionalShape = shape.allOf?.find((rule) => rule.if?.properties?.kind);
+    const conditionalBranch = conditionalShape
+      ? entry.kind === conditionalShape.if.properties.kind.const
+        ? conditionalShape.then
+        : conditionalShape.else
+      : {};
+    const conditionalRules = Object.entries(conditionalBranch?.properties ?? {});
     return [
       ...(shape.required ?? []).filter((name) => !Object.hasOwn(entry, name)).map((name) => `missing ${name}`),
+      ...(conditionalBranch?.required ?? [])
+        .filter((name) => !Object.hasOwn(entry, name))
+        .map((name) => `missing ${name}`),
       ...rules
+        .filter(([name, rule]) => rule === false && Object.hasOwn(entry, name))
+        .map(([name]) => `forbidden ${name}`),
+      ...conditionalRules
         .filter(([name, rule]) => rule === false && Object.hasOwn(entry, name))
         .map(([name]) => `forbidden ${name}`),
       ...rules
@@ -314,10 +357,26 @@ test("published schema encodes mutually exclusive Create Website API and reposit
     author: "Test"
   };
   assert.deepEqual(shapeViolations({ ...common, kind: "spa" }), [
-    "missing previewImages",
+    "missing responsivePreviews",
     "missing requiredDataverseLanguages",
     "missing variants"
   ]);
+  assert.deepEqual(shapeViolations({ ...common, kind: "non-spa" }), [
+    "missing responsivePreviews",
+    "missing requiredDataverseLanguages",
+    "missing variants"
+  ]);
+  assert.deepEqual(
+    shapeViolations({
+      ...common,
+      kind: "spa",
+      responsivePreviews: [],
+      previewImages: [],
+      requiredDataverseLanguages: [1033],
+      variants: { react: {} }
+    }),
+    []
+  );
   assert.deepEqual(
     shapeViolations({
       ...common,
@@ -1450,7 +1509,17 @@ function createTemplateRoot(options = {}) {
     kind,
     keywords: ["test"],
     audience: ["developers"],
-    previewImages: options.previewImages ?? [],
+    responsivePreviews: options.responsivePreviews ?? [
+      {
+        id: "home",
+        displayName: "Home",
+        desktop: `${kind}/${folderId}/previews/desktop-home.png`,
+        mobile: `${kind}/${folderId}/previews/mobile-home.png`
+      }
+    ],
+    ...(kind === "spa" || Object.hasOwn(options, "previewImages")
+      ? { previewImages: options.previewImages ?? [] }
+      : {}),
     requiredDataverseLanguages: options.requiredDataverseLanguages ?? [1033],
     author: "Test",
     variants: {
@@ -1469,6 +1538,15 @@ function createTemplateRoot(options = {}) {
 
   if (Object.hasOwn(options, "requiredDataverseLanguages") && options.requiredDataverseLanguages === undefined) {
     delete template.requiredDataverseLanguages;
+  }
+
+  for (const previewPath of [
+    ...(template.previewImages ?? []),
+    ...(template.responsivePreviews ?? []).flatMap((preview) => [preview.desktop, preview.mobile])
+  ]) {
+    const fullPath = path.join(root, previewPath);
+    fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+    fs.writeFileSync(fullPath, "png");
   }
 
   if (options.seedDataPath) {
