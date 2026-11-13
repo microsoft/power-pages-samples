@@ -317,12 +317,7 @@ function validateRepositoryArtifactMetadata(template, label, result) {
     return;
   }
 
-  const requiredProperties = [
-    template.kind === "spa" ? "previewImages" : "responsivePreviews",
-    "requiredDataverseLanguages",
-    "variants"
-  ];
-  for (const propertyName of requiredProperties) {
+  for (const propertyName of ["responsivePreviews", "requiredDataverseLanguages", "variants"]) {
     if (!Object.hasOwn(template, propertyName)) {
       result.errors.push(
         `Template "${label}" repository-artifact metadata requires ${propertyName}.`
@@ -330,16 +325,13 @@ function validateRepositoryArtifactMetadata(template, label, result) {
     }
   }
 
-  const forbiddenPreviewProperty = template.kind === "spa" ? "responsivePreviews" : "previewImages";
-  if (Object.hasOwn(template, forbiddenPreviewProperty)) {
+  if (template.kind !== "spa" && Object.hasOwn(template, "previewImages")) {
     result.errors.push(
-      `Template "${label}" repository-artifact metadata must not define ${forbiddenPreviewProperty}.`
+      `Template "${label}" repository-artifact metadata must not define previewImages.`
     );
   }
 
-  if (template.kind !== "spa") {
-    validateResponsivePreviewIds(template, label, result);
-  }
+  validateResponsivePreviewIds(template, label, result);
 }
 
 function validateResponsivePreviewIds(template, label, result) {
@@ -415,11 +407,27 @@ function validateReferencedPaths(template, label, root, result) {
     return;
   }
 
-  const previewPaths = template.kind === "spa"
-    ? template.previewImages
-    : (template.responsivePreviews ?? []).flatMap((preview) => [preview?.desktop, preview?.mobile]);
-  const previewLocation = template.kind === "spa" ? "previewImages" : "responsivePreviews";
-  validatePreviewImages(previewPaths, label, root, `${familyBase}/previews`, previewLocation, result);
+  const responsivePreviewPaths = (template.responsivePreviews ?? []).flatMap(
+    (preview) => [preview?.desktop, preview?.mobile]
+  );
+  validatePreviewImages(
+    responsivePreviewPaths,
+    label,
+    root,
+    `${familyBase}/previews`,
+    "responsivePreviews",
+    result
+  );
+  if (template.kind === "spa" && Array.isArray(template.previewImages)) {
+    validatePreviewImages(
+      template.previewImages,
+      label,
+      root,
+      `${familyBase}/previews`,
+      "previewImages",
+      result
+    );
+  }
   const solutionMetadata = validateSolutionsDirectory(
     label,
     root,

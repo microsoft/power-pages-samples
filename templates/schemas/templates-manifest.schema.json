@@ -70,7 +70,7 @@
             }
           },
           "previewImages": {
-            "description": "Flat preview list for SPA repository-artifact templates.",
+            "description": "Deprecated flat SPA preview fallback for released consumers. New entries use responsivePreviews.",
             "type": "array",
             "uniqueItems": true,
             "items": {
@@ -121,7 +121,7 @@
             "minLength": 1
           },
           "responsivePreviews": {
-            "description": "Labeled desktop/mobile preview pairs for non-SPA templates.",
+            "description": "Labeled desktop/mobile preview pairs for each page in any template.",
             "type": "array",
             "items": {
               "$ref": "#/$defs/responsivePreview"
@@ -201,9 +201,10 @@
       }
     },
     "repositoryArtifactTemplate": {
-      "description": "Template whose website code, previews, and supporting solutions are stored in this repository. SPAs use flat previewImages; non-SPA templates use responsivePreviews.",
+      "description": "Template whose website code, previews, and supporting solutions are stored in this repository. Every template uses responsivePreviews; SPA previewImages is retained as a deprecated fallback for released consumers.",
       "type": "object",
       "required": [
+        "responsivePreviews",
         "requiredDataverseLanguages",
         "variants"
       ],
@@ -216,7 +217,7 @@
           "if": {
             "properties": {
               "kind": {
-                "const": "spa"
+                "const": "non-spa"
               }
             },
             "required": [
@@ -224,17 +225,6 @@
             ]
           },
           "then": {
-            "required": [
-              "previewImages"
-            ],
-            "properties": {
-              "responsivePreviews": false
-            }
-          },
-          "else": {
-            "required": [
-              "responsivePreviews"
-            ],
             "properties": {
               "previewImages": false
             }

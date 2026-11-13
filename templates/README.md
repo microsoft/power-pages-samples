@@ -7,9 +7,8 @@ They are different from `samples/`: templates are meant to be imported into an e
 The central catalog is [`manifest.json`](manifest.json).
 Each entry is a template family. Repository-artifact entries define one or more downloadable
 variants, shared metadata, preview images, required Dataverse languages, and optional seed data.
-SPA entries list flat image paths in `previewImages`; repository-artifact non-SPA entries use
-`responsivePreviews` with a desktop/mobile pair for each page, matching platform-provisioned
-non-SPA entries.
+Every template uses `responsivePreviews` with a desktop/mobile pair for each page.
+Existing SPA entries retain `previewImages` as a deprecated fallback for released consumers.
 The optional family-level `solutions` array defines publication behavior for unpacked solutions.
 Each item names an exact, case-sensitive `solutions/<uniqueName>/` folder and sets `publishChanges` to `true` or `false`.
 For `publishChanges: true`, consumers import that solution with `pac solution import --publish-changes`.

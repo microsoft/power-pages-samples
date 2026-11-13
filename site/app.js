@@ -158,8 +158,8 @@
   // Rendering
   // ---------------------------------------------------------------------------
 
-  // Platform-provisioned previews already ship inside device frames.
-  const imgClass = (entry) => (entry.item.devices ? "" : "screen");
+  // Repository SPA previews need a screen frame; non-SPA preview images include their own.
+  const imgClass = (entry) => (entry.item.deviceFrames ? "" : "screen");
 
   // The manifest allows a template without preview images while screenshots are pending.
   const noPreview = () =>

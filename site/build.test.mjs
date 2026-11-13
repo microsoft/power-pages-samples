@@ -46,7 +46,10 @@ test("catalog distinguishes repository non-SPA templates from platform and SPA t
   mkdirSync(path.join(root, "templates/non-spa/community-library/previews"), { recursive: true });
   for (const entry of [spa, platform]) {
     mkdirSync(path.join(root, "templates", entry.kind, entry.id), { recursive: true });
-    const images = entry.previewImages || entry.responsivePreviews.flatMap((preview) => [preview.desktop, preview.mobile]);
+    const images = [
+      ...(entry.previewImages || []),
+      ...(entry.responsivePreviews || []).flatMap((preview) => [preview.desktop, preview.mobile])
+    ];
     for (const image of images) {
       const target = path.join(root, "templates", image);
       mkdirSync(path.dirname(target), { recursive: true });
@@ -55,7 +58,7 @@ test("catalog distinguishes repository non-SPA templates from platform and SPA t
   }
   for (const preview of community.responsivePreviews) {
     for (const image of [preview.desktop, preview.mobile]) {
-      cpSync(path.join(repo, "templates/spa/311-portal/previews/home.png"), path.join(root, "templates", image));
+      cpSync(path.join(repo, "templates/spa/311-portal/previews/desktop-home.png"), path.join(root, "templates", image));
     }
   }
   const index = readFileSync(path.join(root, "site/index.html"), "utf8");
@@ -90,7 +93,10 @@ test("catalog distinguishes repository non-SPA templates from platform and SPA t
   assert.ok(readFileSync(path.join(root, "out", actual.images[0].src)).length > 0);
 
   assert.match(find(spa.id).prompt, /\/create-site/);
-  assert.equal(find(spa.id).images[0].src, `templates/${spa.previewImages[0]}`);
+  assert.equal(find(spa.id).images[0].label, spa.responsivePreviews[0].displayName);
+  assert.equal(find(spa.id).images[0].src, `templates/${spa.responsivePreviews[0].desktop}`);
+  assert.equal(find(spa.id).images[0].mobile, `templates/${spa.responsivePreviews[0].mobile}`);
+  assert.equal(find(spa.id).devices, true);
   assert.match(find(platform.id).prompt, /Create Website template name StarterLayout1/);
   assert.equal(find(platform.id).images[0].mobile, `templates/${platform.responsivePreviews[0].mobile}`);
   assert.equal(find(platform.id).devices, true);

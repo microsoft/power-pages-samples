@@ -325,10 +325,10 @@ test("published schema encodes mutually exclusive Create Website API and reposit
         ? conditionalShape.then
         : conditionalShape.else
       : {};
-    const conditionalRules = Object.entries(conditionalBranch.properties ?? {});
+    const conditionalRules = Object.entries(conditionalBranch?.properties ?? {});
     return [
       ...(shape.required ?? []).filter((name) => !Object.hasOwn(entry, name)).map((name) => `missing ${name}`),
-      ...(conditionalBranch.required ?? [])
+      ...(conditionalBranch?.required ?? [])
         .filter((name) => !Object.hasOwn(entry, name))
         .map((name) => `missing ${name}`),
       ...rules
@@ -357,15 +357,26 @@ test("published schema encodes mutually exclusive Create Website API and reposit
     author: "Test"
   };
   assert.deepEqual(shapeViolations({ ...common, kind: "spa" }), [
+    "missing responsivePreviews",
     "missing requiredDataverseLanguages",
-    "missing variants",
-    "missing previewImages"
+    "missing variants"
   ]);
   assert.deepEqual(shapeViolations({ ...common, kind: "non-spa" }), [
+    "missing responsivePreviews",
     "missing requiredDataverseLanguages",
-    "missing variants",
-    "missing responsivePreviews"
+    "missing variants"
   ]);
+  assert.deepEqual(
+    shapeViolations({
+      ...common,
+      kind: "spa",
+      responsivePreviews: [],
+      previewImages: [],
+      requiredDataverseLanguages: [1033],
+      variants: { react: {} }
+    }),
+    []
+  );
   assert.deepEqual(
     shapeViolations({
       ...common,
@@ -1498,19 +1509,17 @@ function createTemplateRoot(options = {}) {
     kind,
     keywords: ["test"],
     audience: ["developers"],
-    ...(kind === "spa"
+    responsivePreviews: options.responsivePreviews ?? [
+      {
+        id: "home",
+        displayName: "Home",
+        desktop: `${kind}/${folderId}/previews/desktop-home.png`,
+        mobile: `${kind}/${folderId}/previews/mobile-home.png`
+      }
+    ],
+    ...(kind === "spa" || Object.hasOwn(options, "previewImages")
       ? { previewImages: options.previewImages ?? [] }
-      : {
-          responsivePreviews: options.responsivePreviews ?? [
-            {
-              id: "home",
-              displayName: "Home",
-              desktop: `${kind}/${folderId}/previews/desktop-home.png`,
-              mobile: `${kind}/${folderId}/previews/mobile-home.png`
-            }
-          ],
-          ...(Object.hasOwn(options, "previewImages") ? { previewImages: options.previewImages } : {})
-        }),
+      : {}),
     requiredDataverseLanguages: options.requiredDataverseLanguages ?? [1033],
     author: "Test",
     variants: {

@@ -18,11 +18,43 @@
         "developers"
       ],
       "previewImages": [
-        "spa/311-portal/previews/home.png",
-        "spa/311-portal/previews/map.png",
-        "spa/311-portal/previews/knowledge.png",
-        "spa/311-portal/previews/contact.png",
-        "spa/311-portal/previews/admin.png"
+        "spa/311-portal/previews/desktop-home.png",
+        "spa/311-portal/previews/desktop-map.png",
+        "spa/311-portal/previews/desktop-knowledge.png",
+        "spa/311-portal/previews/desktop-contact.png",
+        "spa/311-portal/previews/desktop-admin.png"
+      ],
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Home",
+          "desktop": "spa/311-portal/previews/desktop-home.png",
+          "mobile": "spa/311-portal/previews/mobile-home.png"
+        },
+        {
+          "id": "map",
+          "displayName": "Service request map",
+          "desktop": "spa/311-portal/previews/desktop-map.png",
+          "mobile": "spa/311-portal/previews/mobile-map.png"
+        },
+        {
+          "id": "knowledge",
+          "displayName": "Knowledge base",
+          "desktop": "spa/311-portal/previews/desktop-knowledge.png",
+          "mobile": "spa/311-portal/previews/mobile-knowledge.png"
+        },
+        {
+          "id": "contact",
+          "displayName": "Contact",
+          "desktop": "spa/311-portal/previews/desktop-contact.png",
+          "mobile": "spa/311-portal/previews/mobile-contact.png"
+        },
+        {
+          "id": "admin",
+          "displayName": "Admin access",
+          "desktop": "spa/311-portal/previews/desktop-admin.png",
+          "mobile": "spa/311-portal/previews/mobile-admin.png"
+        }
       ],
       "seedDataPath": "spa/311-portal/seed-data/data.json",
       "requiredDataverseLanguages": [
@@ -50,12 +82,50 @@
         "developers"
       ],
       "previewImages": [
-        "spa/supplier-invoice-portal/previews/home.png",
-        "spa/supplier-invoice-portal/previews/dashboard.png",
-        "spa/supplier-invoice-portal/previews/list.png",
-        "spa/supplier-invoice-portal/previews/form.png",
-        "spa/supplier-invoice-portal/previews/purchase-orders.png",
-        "spa/supplier-invoice-portal/previews/review.png"
+        "spa/supplier-invoice-portal/previews/desktop-home.png",
+        "spa/supplier-invoice-portal/previews/desktop-dashboard.png",
+        "spa/supplier-invoice-portal/previews/desktop-list.png",
+        "spa/supplier-invoice-portal/previews/desktop-form.png",
+        "spa/supplier-invoice-portal/previews/desktop-purchase-orders.png",
+        "spa/supplier-invoice-portal/previews/desktop-review.png"
+      ],
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Home",
+          "desktop": "spa/supplier-invoice-portal/previews/desktop-home.png",
+          "mobile": "spa/supplier-invoice-portal/previews/mobile-home.png"
+        },
+        {
+          "id": "dashboard",
+          "displayName": "Dashboard",
+          "desktop": "spa/supplier-invoice-portal/previews/desktop-dashboard.png",
+          "mobile": "spa/supplier-invoice-portal/previews/mobile-dashboard.png"
+        },
+        {
+          "id": "list",
+          "displayName": "Invoice list",
+          "desktop": "spa/supplier-invoice-portal/previews/desktop-list.png",
+          "mobile": "spa/supplier-invoice-portal/previews/mobile-list.png"
+        },
+        {
+          "id": "form",
+          "displayName": "Submit invoice",
+          "desktop": "spa/supplier-invoice-portal/previews/desktop-form.png",
+          "mobile": "spa/supplier-invoice-portal/previews/mobile-form.png"
+        },
+        {
+          "id": "purchase-orders",
+          "displayName": "Purchase orders",
+          "desktop": "spa/supplier-invoice-portal/previews/desktop-purchase-orders.png",
+          "mobile": "spa/supplier-invoice-portal/previews/mobile-purchase-orders.png"
+        },
+        {
+          "id": "review",
+          "displayName": "Review queue",
+          "desktop": "spa/supplier-invoice-portal/previews/desktop-review.png",
+          "mobile": "spa/supplier-invoice-portal/previews/mobile-review.png"
+        }
       ],
       "seedDataPath": "spa/supplier-invoice-portal/seed-data/data.json",
       "requiredDataverseLanguages": [

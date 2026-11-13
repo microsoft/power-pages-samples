@@ -55,8 +55,7 @@ To review a change, build and serve the site, then run the plugin's design revie
 ## Add or update a template
 
 The site is generated from [`templates/manifest.json`](../templates/manifest.json).
-The build turns each template into a catalog entry with its name, description, publisher, and previews.
-SPA entries use flat images; non-SPA entries use page-based desktop/mobile pairs.
+The build turns each template into a catalog entry with its name, description, publisher, and page-based desktop/mobile previews.
 A new template appears on the site once its manifest entry merges, with no change in this folder.
 To give a template different catalog copy than its manifest description, add it to `templateOverrides` in [`data.js`](data.js).
 

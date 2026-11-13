@@ -40,7 +40,8 @@ Follow `CONTRIBUTING.md` for general contribution and CLA requirements.
 ## Catalog and checks
 
 - Add a repository-artifact entry to `templates/manifest.json`, including actual author, languages, variants, previews, and seed path.
-  SPA entries use flat PNG paths in `previewImages`; non-SPA entries use per-page desktop/mobile pairs in `responsivePreviews`.
+  Every template uses per-page desktop/mobile pairs in `responsivePreviews`.
+  Keep `previewImages` on the existing SPA entries as a deprecated fallback for released consumers; new entries use only `responsivePreviews`.
   Add solution publication metadata when needed.
   Do not use `provisioning.type: create-website-api` for a repository-owned site.
 - Update the relevant template index and any directly affected contribution documentation.

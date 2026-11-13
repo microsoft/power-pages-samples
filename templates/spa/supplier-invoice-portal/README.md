@@ -6,15 +6,15 @@ The Supplier Invoice Portal is an installable Power Pages SPA for supplier purch
 
 | Home | Dashboard |
 | --- | --- |
-| ![Supplier Invoice Portal home page](previews/home.png) | ![Supplier Invoice Portal dashboard](previews/dashboard.png) |
+| ![Supplier Invoice Portal home page](previews/desktop-home.png) | ![Supplier Invoice Portal dashboard](previews/desktop-dashboard.png) |
 
 | Invoice list | Submit invoice |
 | --- | --- |
-| ![Supplier Invoice Portal invoice list](previews/list.png) | ![Supplier Invoice Portal submit invoice form](previews/form.png) |
+| ![Supplier Invoice Portal invoice list](previews/desktop-list.png) | ![Supplier Invoice Portal submit invoice form](previews/desktop-form.png) |
 
 | Purchase orders | Review queue |
 | --- | --- |
-| ![Supplier Invoice Portal purchase orders](previews/purchase-orders.png) | ![Supplier Invoice Portal review queue](previews/review.png) |
+| ![Supplier Invoice Portal purchase orders](previews/desktop-purchase-orders.png) | ![Supplier Invoice Portal review queue](previews/desktop-review.png) |
 
 ## Data model
 
