@@ -50,6 +50,9 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Test catalog
+        run: node --test site/*.test.mjs
+
       - name: Build catalog
         run: node site/build.mjs --out _site
 

@@ -158,9 +158,8 @@
   // Rendering
   // ---------------------------------------------------------------------------
 
-  // Non-SPA template previews already ship inside device frames, so only raw
-  // screenshots get the thin screen outline.
-  const imgClass = (entry) => (entry.item.devices ? "" : "screen");
+  // Repository SPA previews need a screen frame; non-SPA preview images include their own.
+  const imgClass = (entry) => (entry.item.deviceFrames ? "" : "screen");
 
   // The manifest allows a template without preview images while screenshots are pending.
   const noPreview = () =>
@@ -326,6 +325,7 @@
         <div class="detail-body">
           <h2 id="detail-title" tabindex="-1">${esc(item.name)}</h2>
           <p class="detail-lede">${esc(item.desc)}</p>
+          ${item.publisher ? `<p>Published by ${esc(item.publisher)}</p>` : ""}
           <div class="stage mat-${category.mat}">
             <div class="stage-frame" data-stage>${stageHtml()}</div>
             ${item.images.length ? `<div class="stage-controls" data-controls>${thumbsHtml()}${devicesHtml()}</div>` : ""}
@@ -347,7 +347,7 @@
             ${features}
             <div>
               <h3>Set it up yourself</h3>
-              <p>${esc(category.howTo)}</p>
+              <p>${esc(item.howTo || category.howTo)}</p>
             </div>
           </div>
           <div class="detail-actions">

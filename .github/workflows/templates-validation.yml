@@ -37,7 +37,7 @@ jobs:
 
   supplier-app:
     name: Build and test Supplier app
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: templates/spa/supplier-invoice-portal/variants/react/website-code

@@ -233,7 +233,7 @@ test('real role-mode switching preserves saved Contact, company and additive gra
     const switcher = page.getByRole('menuitem', { name: /^Switch to (Supplier|Reviewer)$/ })
     const nextMode = (await switcher.innerText()).includes('Reviewer') ? 'reviewer' : 'supplier'
     await Promise.all([page.waitForEvent('load'), switcher.click()])
-    await page.getByLabel('Email Address').waitFor()
+    await waitForProfileLoaded(page)
     assert.equal(await page.getByLabel('Email Address').inputValue(), 'updated@example.com')
     assert.equal(await page.getByText('Fixture Supplier', { exact: true }).count(), 1)
     const identity = await page.evaluate(async () => {

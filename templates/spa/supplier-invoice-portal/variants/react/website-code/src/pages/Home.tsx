@@ -261,10 +261,10 @@ export default function Home() {
             <FileText size={ 18 } color="var(--color-primary)" aria-hidden="true" />
           </div>
           <span
+            className="landing-brand-title"
             style={ {
               fontFamily: 'var(--font-heading)',
               fontWeight: 600,
-              fontSize: '1rem',
               color: '#fff',
             } }
           >

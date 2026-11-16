@@ -883,6 +883,10 @@ table {
   padding: 16px 40px;
 }
 
+.landing-brand-title {
+  font-size: 1rem;
+}
+
 .landing-hero {
   padding: 100px 40px 48px;
 }
@@ -918,6 +922,10 @@ table {
 @media (max-width: 767px) {
   .landing-header {
     padding: 12px 16px;
+  }
+
+  .landing-brand-title {
+    font-size: 0.8rem;
   }
 
   .landing-hero {
@@ -1003,6 +1011,19 @@ table {
 
   .preview-panel {
     width: 100vw !important;
+  }
+}
+
+@media (max-width: 385px) {
+  .landing-brand-title {
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .dev-role-switcher button {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
   }
 }
 

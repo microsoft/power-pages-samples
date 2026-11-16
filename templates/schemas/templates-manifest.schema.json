@@ -70,7 +70,7 @@
             }
           },
           "previewImages": {
-            "description": "Flat preview list for repository-artifact templates. Create Website API templates use responsivePreviews instead.",
+            "description": "Deprecated flat SPA preview fallback for released consumers. New entries use responsivePreviews.",
             "type": "array",
             "uniqueItems": true,
             "items": {
@@ -121,7 +121,7 @@
             "minLength": 1
           },
           "responsivePreviews": {
-            "description": "Labeled desktop/mobile preview pairs for Create Website API templates.",
+            "description": "Labeled desktop/mobile preview pairs for each page in any template.",
             "type": "array",
             "items": {
               "$ref": "#/$defs/responsivePreview"
@@ -201,18 +201,36 @@
       }
     },
     "repositoryArtifactTemplate": {
-      "description": "Template whose website code, previews, and supporting solutions are stored in this repository. Property types are defined on the template item; this shape only constrains presence.",
+      "description": "Template whose website code, previews, and supporting solutions are stored in this repository. Every template uses responsivePreviews; SPA previewImages is retained as a deprecated fallback for released consumers.",
       "type": "object",
       "required": [
-        "previewImages",
+        "responsivePreviews",
         "requiredDataverseLanguages",
         "variants"
       ],
       "properties": {
-        "previewImages": true,
         "requiredDataverseLanguages": true,
         "variants": true
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "non-spa"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "previewImages": false
+            }
+          }
+        }
+      ]
     },
     "provisioning": {
       "type": "object",
