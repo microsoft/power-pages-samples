@@ -106,6 +106,8 @@ export const TERRITORIES = ['Canada East', 'Canada West', 'US Northeast', 'US We
 export interface OpportunityProduct {
   id: string
   product: string
+  productId?: string
+  unitId?: string
   writeIn: boolean
   unit: string
   quantity: number

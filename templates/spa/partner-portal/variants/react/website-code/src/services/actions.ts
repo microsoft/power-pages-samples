@@ -6,6 +6,7 @@ import { FLOW_IDS } from './config'
 import { cloudFlow, serverLogicPost, webApi } from './http'
 import { accountPayload, contactPayload, GEO_FLAGS, PARTNER_ROLE_VALUE, timeframeValue } from './mappers'
 import { territoryIdByName } from './loaders'
+import { prepareCatalogAdd, productPayload, type CatalogSelection } from './productCatalog'
 
 const bind = (set: string, id?: string) => (id ? `/${set}(${id})` : undefined)
 const clean = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined))
@@ -65,16 +66,20 @@ export const unshareOpportunity = (id: string, contactId: string) => webApi.disa
 export const linkCustomerContact = (id: string, contactId: string) => webApi.associate('opportunities', id, 'adx_partner_collaboration', 'contacts', contactId)
 export const unlinkCustomerContact = (id: string, contactId: string) => webApi.disassociate('opportunities', id, 'adx_partner_collaboration', contactId)
 
-/** L-019 write-in product (the environment has no price lists; existing products are write-in too). */
-export function addProduct(opportunityId: string, p: Omit<OpportunityProduct, 'id'>): Promise<string> {
-  return webApi.create('opportunityproducts', {
-    'opportunityid@odata.bind': `/opportunities(${opportunityId})`,
-    isproductoverridden: true,
-    productdescription: p.product,
-    quantity: p.quantity,
-    ispriceoverridden: true,
-    priceperunit: p.pricePerUnit,
-  })
+/** L-019: catalog references or the unchanged write-in/manual-price path. */
+export async function addProduct(opportunityId: string, p: Omit<OpportunityProduct, 'id'>, selection?: CatalogSelection): Promise<string> {
+  const payload = productPayload(opportunityId, p)
+  let assigned = false
+  if (!p.writeIn) {
+    if (!selection) throw new Error('Select a matching-currency price list before adding a catalog product.')
+    assigned = await prepareCatalogAdd(opportunityId, p, selection)
+  }
+  try {
+    return await webApi.create('opportunityproducts', payload)
+  } catch (error) {
+    if (!assigned) throw error
+    throw new Error(`The price list was assigned, but the product could not be added. ${error instanceof Error ? error.message : 'Try again.'}`)
+  }
 }
 export const removeProduct = (productLineId: string) => webApi.remove('opportunityproducts', productLineId)
 

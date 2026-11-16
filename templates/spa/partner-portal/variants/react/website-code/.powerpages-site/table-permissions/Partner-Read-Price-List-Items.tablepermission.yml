@@ -1,0 +1,14 @@
+adx_entitypermission_webrole:
+- a83de8fe-a694-496e-a654-e49c34e2ebf6
+- d1bc4702-d965-4d5c-8f6a-ad5e6cbd39f4
+- 3f8e01b2-0b59-4990-9f82-4051540f211b
+append: false
+appendto: false
+create: false
+delete: false
+entitylogicalname: productpricelevel
+entityname: Partner Read Price List Items
+id: 15fc2bd2-c6a9-4921-a7e2-ca84b5ad0664
+read: true
+scope: 756150000
+write: false

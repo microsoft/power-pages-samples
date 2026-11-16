@@ -1,0 +1,4 @@
+description: Enable read-only partner catalog pricing queries
+id: fa361b66-e321-4ca9-a8a9-ff718309c2b8
+name: Webapi/productpricelevel/enabled
+value: true

@@ -200,6 +200,8 @@ export function toProduct(row: Row): OpportunityProduct {
   const uom = nested(row, 'uomid')
   return {
     id: String(row.opportunityproductid),
+    productId: lookup(row, 'productid') ?? (product && str(product.productid)),
+    unitId: lookup(row, 'uomid') ?? (uom && str(uom.uomid)),
     product: str(row.productdescription) ?? (product ? (str(product.name) ?? '') : ''),
     writeIn: row.isproductoverridden === true,
     unit: (uom && str(uom.name)) ?? 'Each',

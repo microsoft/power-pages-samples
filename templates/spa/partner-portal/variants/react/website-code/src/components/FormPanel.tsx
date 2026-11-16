@@ -15,6 +15,7 @@ interface FormPanelProps {
   destructive?: boolean
   /** Short "-ing" label on the submit button while the submission runs, e.g. "Saving…". */
   submitPendingLabel?: string
+  submitDisabled?: boolean
   /**
    * Call allowNavigation after validation when a successful submission navigates away. Return the save
    * promise: while it runs the submit button shows its pending state and the panel can't be closed.
@@ -30,7 +31,7 @@ export function FormPanel(props: FormPanelProps) {
   return props.open ? <PanelView {...props} /> : <PanelView {...lastOpen} open={false} dirty={false} />
 }
 
-function PanelView({ open, title, children, dirty, onClose, onSubmit, submitLabel, submitIcon, destructive, submitPendingLabel }: FormPanelProps) {
+function PanelView({ open, title, children, dirty, onClose, onSubmit, submitLabel, submitIcon, destructive, submitPendingLabel, submitDisabled }: FormPanelProps) {
   const formId = useId()
   const [confirming, setConfirming] = useState(false)
   const [wasOpen, setWasOpen] = useState(open)
@@ -75,13 +76,14 @@ function PanelView({ open, title, children, dirty, onClose, onSubmit, submitLabe
       ) : (
         <>
           <Button disabledFocusable={busy} onClick={requestClose}>Cancel</Button>
-          <Button type="submit" form={formId} variant={destructive ? 'dangerPrimary' : 'primary'} icon={submitIcon} pending={pending} pendingLabel={submitPendingLabel}>{submitLabel}</Button>
+          <Button type="submit" form={formId} disabled={submitDisabled} variant={destructive ? 'dangerPrimary' : 'primary'} icon={submitIcon} pending={pending} pendingLabel={submitPendingLabel}>{submitLabel}</Button>
         </>
       )}>
       <form id={formId} noValidate inert={confirming || !open} aria-busy={pending || undefined} onSubmit={event => {
         event.preventDefault()
         // Panels can be launched inside a page form; portal events must not submit that parent.
         event.stopPropagation()
+        if (submitDisabled) return
         void run(() => onSubmit(guard.allowNavigation))
       }}>
         {children}

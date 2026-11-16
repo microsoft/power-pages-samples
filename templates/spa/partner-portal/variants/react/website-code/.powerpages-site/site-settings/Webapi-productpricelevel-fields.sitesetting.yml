@@ -1,0 +1,4 @@
+description: Catalog pricing fields for the opportunity product picker
+id: 6788f54e-18cf-40ec-9015-9da06441549e
+name: Webapi/productpricelevel/fields
+value: "_pricelevelid_value,_productid_value,_uomid_value,amount,pricingmethodcode,productpricelevelid"

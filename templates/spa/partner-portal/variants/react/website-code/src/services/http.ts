@@ -14,7 +14,7 @@ export const PERMISSION_MESSAGE = "You don't have the appropriate permissions."
 
 let tokenPromise: Promise<string> | null = null
 
-/** Anti-forgery token for POST/PATCH/DELETE (`/_layout/tokenhtml`), cached per page load. */
+/** Anti-forgery token for Web API reads and writes (`/_layout/tokenhtml`), cached per page load. */
 export function getToken(): Promise<string> {
   tokenPromise ??= fetch('/_layout/tokenhtml', { credentials: 'same-origin' })
     .then(r => r.text())
@@ -76,18 +76,27 @@ const FORMATTED = 'odata.include-annotations="OData.Community.Display.V1.Formatt
 
 /** Power Pages Web API (`/_api/<entityset>`); table permissions and Webapi/<table>/fields apply. */
 export const webApi = {
-  async list<T = Record<string, unknown>>(path: string): Promise<T[]> {
+  async list<T = Record<string, unknown>>(path: string, signal?: AbortSignal): Promise<T[]> {
     const rows: T[] = []
+    const csrfToken = await getToken()
     let next: string | undefined = `/_api/${path}`
+    let pages = 0
     while (next) {
-      const { data }: { data: { value?: T[]; '@odata.nextLink'?: string } } = await request('GET', next, { headers: { Prefer: FORMATTED } })
+      if (++pages > 100) throw new ApiError('Too many results. Ask your administrator to narrow the query.', 0)
+      const url: URL = new URL(next, location.origin)
+      if (url.origin !== location.origin || !url.pathname.startsWith('/_api/')) throw new ApiError('Invalid API page link.', 0)
+      const { data }: { data: { value?: T[]; '@odata.nextLink'?: string } } = await request<{ value?: T[]; '@odata.nextLink'?: string }>(
+        'GET',
+        url.pathname + url.search,
+        { headers: { Prefer: `${FORMATTED},odata.maxpagesize=200`, __RequestVerificationToken: csrfToken }, signal },
+      )
       rows.push(...(data?.value ?? []))
       next = data?.['@odata.nextLink']
     }
     return rows
   },
-  async get<T = Record<string, unknown>>(path: string): Promise<T> {
-    return (await request<T>('GET', `/_api/${path}`, { headers: { Prefer: FORMATTED } })).data
+  async get<T = Record<string, unknown>>(path: string, signal?: AbortSignal): Promise<T> {
+    return (await request<T>('GET', `/_api/${path}`, { headers: { Prefer: FORMATTED, __RequestVerificationToken: await getToken() }, signal })).data
   },
   /** Creates a record and returns its id (from the `entityid` / `OData-EntityId` response header). */
   async create(entitySet: string, body: Record<string, unknown>): Promise<string> {

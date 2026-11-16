@@ -98,6 +98,8 @@ import {
 import { PERMISSION_MESSAGE, webApi } from '../../services/http'
 import { loadOpportunityWorkspace, type WorkspaceLookups } from '../../services/loaders'
 import { useLiveLoad } from '../../services/useLiveLoad'
+import { useProductCatalog } from '../../services/useProductCatalog'
+import { catalogPrice, eligibleUnits } from '../../services/productCatalog'
 import { OpportunityLoadError } from '../../services/opportunitiesView'
 import { NoAccess, Numeric } from './OppParts'
 import { ACTIVE_REG_STATUSES, CLOSED_OPP_STATUSES, LIVE_ACTION_MESSAGES, OPEN_OPP_STATUSES, OPP_ROUTES, accountName, contactName, daysUntil, registrationsFor } from './oppUtils'
@@ -140,6 +142,7 @@ const useStyles = makeStyles({
   dividerBottom: { borderBottom: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}` },
   totalBar: {
     display: 'flex',
+    flexWrap: 'wrap',
     justifyContent: 'flex-end',
     gap: tokens.spacingHorizontalXXL,
     ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalXL),
@@ -1051,6 +1054,10 @@ function ProductsPanel({
   const status = useInlineFeedback()
   const removal = usePendingAction()
 
+  // Workspace money values are not converted to the portal's default currency.
+  const productAmount = (value: number) =>
+    mode === 'live' ? value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : formatCurrency(value, { cents: true })
+
   const remove = (p: OpportunityProduct) => removal.run(async () => {
     const index = opp.products.findIndex(x => x.id === p.id)
     const ok = await onChange(
@@ -1088,14 +1095,14 @@ function ProductsPanel({
       sortValue: p => p.product,
       render: p => (
         <span className="inline-flex flex-wrap items-center gap-2">
-          <span>{p.product}</span>
+          <span dir="auto">{p.product}</span>
           {p.writeIn && <StatusBadge status="Write-in" tone="slate" />}
         </span>
       ),
     },
-    { key: 'price', header: 'Price per unit', render: p => <Numeric>{formatCurrency(p.pricePerUnit, { cents: true })}</Numeric>, className: 'text-right' },
+    { key: 'price', header: 'Price per unit', render: p => <Numeric>{productAmount(p.pricePerUnit)}</Numeric>, className: 'text-right' },
     { key: 'qty', header: 'Quantity', render: p => <Numeric>{quantityLabel(p.quantity, p.unit)}</Numeric>, className: 'text-right' },
-    { key: 'ext', header: 'Extended amount', render: p => <Numeric strong>{formatCurrency(p.quantity * p.pricePerUnit, { cents: true })}</Numeric>, className: 'text-right' },
+    { key: 'ext', header: 'Extended amount', render: p => <Numeric strong>{productAmount(p.quantity * p.pricePerUnit)}</Numeric>, className: 'text-right' },
   ]
 
   return (
@@ -1130,11 +1137,12 @@ function ProductsPanel({
         }
       />
       <div className={styles.totalBar}>
-        <Body1 className={styles.muted}>Total amount</Body1>
-        <Body1Strong className={styles.amount}>{formatCurrency(productsTotal(opp), { cents: true })}</Body1Strong>
+        <Body1 className={styles.muted}>{mode === 'live' ? 'Total amount (opportunity currency)' : 'Total amount'}</Body1>
+        <Body1Strong className={styles.amount}>{productAmount(productsTotal(opp))}</Body1Strong>
       </div>
       {!readOnly && (
         <AddProductModal
+          key={opp.id}
           opportunityId={opp.id}
           open={addOpen}
           onClose={() => setAddOpen(false)}
@@ -1160,32 +1168,54 @@ function AddProductModal({
   onAdded: (productName: string) => void
 }) {
   const styles = useStyles()
+  const { mode } = useApp()
+  const live = mode === 'live'
   const empty = { kind: 'existing' as 'existing' | 'writein', existing: '', writeIn: '', unit: '', quantity: '1', price: '' }
   const [draft, setDraft] = useState(empty)
+  const [chosenListId, setChosenListId] = useState('')
+  const liveCatalog = live && draft.kind === 'existing'
+  const catalogLoad = useProductCatalog(opportunityId, open && liveCatalog, chosenListId)
+  const { catalog, context, priceListId } = catalogLoad
+  const selectedProduct = catalog?.products.find(p => p.productid === draft.existing)
+  const units = catalog && selectedProduct ? eligibleUnits(catalog, selectedProduct.productid) : []
+  const selectedUnit = units.find(u => u.uomid === draft.unit)
+  const selectionScope = `${mode}:${open}:${draft.kind}:${context?.currencyId ?? ''}:${priceListId}`
+  const [previousScope, setPreviousScope] = useState(selectionScope)
+  if (previousScope !== selectionScope) {
+    setPreviousScope(selectionScope)
+    // Preserve write-in and mock fields; live catalog selections cannot cross dependency scopes.
+    if (liveCatalog) setDraft(d => ({ ...d, existing: '', unit: '', price: '' }))
+  }
   const [errors, setErrors] = useState<FormError[]>([])
   const close = () => {
     setDraft(empty)
+    setChosenListId('')
     setErrors([])
     onClose()
   }
 
   const save = async () => {
+    if (liveCatalog && (!catalogLoad.ready || !selectedProduct || !selectedUnit)) {
+      setErrors(['Wait for the catalog to load and select an eligible product and unit.'])
+      return
+    }
     const qty = draft.quantity.trim()
     const price = draft.price.trim()
     const errs = fieldErrors({
       'prod-existing': draft.kind === 'existing' && !draft.existing && 'Select a product',
       'prod-writein': draft.kind === 'writein' && !draft.writeIn.trim() && 'Enter a product name',
       'prod-unit': !draft.unit && 'Select a unit',
-      'prod-qty': qty === '' ? 'Enter a quantity' : !(Number(qty) > 0) && 'Enter a quantity of 1 or more',
-      'prod-price': price === '' ? 'Enter a price per unit' : (Number.isNaN(Number(price)) || Number(price) < 0) && 'Enter a price of 0 or more',
+      'prod-qty': qty === '' ? 'Enter a quantity' : (!Number.isFinite(Number(qty)) || !(Number(qty) > 0)) && 'Enter a quantity of 1 or more',
+      'prod-price': price === '' ? 'Enter a price per unit' : (!Number.isFinite(Number(price)) || Number(price) < 0) && 'Enter a price of 0 or more',
     })
     setErrors(errs)
     if (errs.length) return
     const product: OpportunityProduct = {
       id: newId('op'),
-      product: draft.kind === 'existing' ? draft.existing : draft.writeIn.trim(),
+      product: draft.kind === 'existing' ? (liveCatalog ? selectedProduct?.name || selectedProduct?.productid || '' : draft.existing) : draft.writeIn.trim(),
+      ...(liveCatalog ? { productId: selectedProduct?.productid, unitId: selectedUnit?.uomid } : {}),
       writeIn: draft.kind === 'writein',
-      unit: draft.unit,
+      unit: liveCatalog ? selectedUnit?.name || selectedUnit?.uomid || '' : draft.unit,
       quantity: Number(qty),
       pricePerUnit: Number(price),
     }
@@ -1193,7 +1223,7 @@ function AddProductModal({
       o => {
         o.products.push(product)
       },
-      () => addProduct(opportunityId, { product: product.product, writeIn: product.writeIn, unit: product.unit, quantity: product.quantity, pricePerUnit: product.pricePerUnit }),
+      () => addProduct(opportunityId, product, liveCatalog && context ? { priceListId, currencyId: context.currencyId } : undefined),
     )
     if (!ok) return
     onAdded(product.product)
@@ -1206,29 +1236,111 @@ function AddProductModal({
     <FormPanel
       open={open}
       title="Add product"
-      dirty={JSON.stringify(draft) !== JSON.stringify(empty)}
+      dirty={JSON.stringify(draft) !== JSON.stringify(empty) || !!chosenListId}
       onClose={close}
       submitLabel="Add product"
       submitIcon={<Add20Regular />}
       submitPendingLabel="Adding…"
+      submitDisabled={liveCatalog && (!catalogLoad.ready || !selectedProduct || !selectedUnit)}
       onSubmit={save}
     >
       <ValidationSummary errors={errors} />
       <Field label="Product type" className="mb-4">
-        <RadioGroup layout="horizontal" value={draft.kind} onChange={(_, data) => setDraft(d => ({ ...d, kind: data.value as 'existing' | 'writein' }))}>
+        <RadioGroup
+          layout="horizontal"
+          value={draft.kind}
+          onChange={(_, data) =>
+            setDraft(d => ({
+              ...d,
+              kind: data.value as 'existing' | 'writein',
+              ...(liveCatalog && data.value === 'writein' ? { unit: selectedUnit?.name && UNITS.includes(selectedUnit.name) ? selectedUnit.name : '' } : {}),
+            }))
+          }
+        >
           <Radio value="existing" label="From catalog" />
           <Radio value="writein" label="Write-in product" />
         </RadioGroup>
       </Field>
+      {liveCatalog && (
+        <div className="mb-4 space-y-3">
+          {catalogLoad.loading && (
+            <Alert tone="info" title="Loading catalog">
+              Loading opportunity currency, price lists, products, and units…
+            </Alert>
+          )}
+          {catalogLoad.error && (
+            <Alert tone="error" title="Catalog unavailable">
+              {catalogLoad.error}
+            </Alert>
+          )}
+          {catalogLoad.error && <Button onClick={() => void catalogLoad.retry()}>Retry catalog</Button>}
+          {context &&
+            (context.opportunity._pricelevelid_value ? (
+              <Text as="p">
+                Price list: <span dir="auto">{context.lists.find(l => l.pricelevelid === priceListId)?.name || priceListId}</span>. The opportunity’s existing
+                price list will be used.
+              </Text>
+            ) : context.lists.length ? (
+              <FormField
+                id="prod-pricelist"
+                label="Price list"
+                required
+                hint="Choose a list matching the opportunity currency. It is assigned only when you add a catalog product; the currency will not change."
+              >
+                <Select
+                  id="prod-pricelist"
+                  dir="auto"
+                  value={chosenListId}
+                  placeholder="Select a price list"
+                  options={context.lists.map(l => ({ value: l.pricelevelid, label: l.name || l.pricelevelid }))}
+                  onChange={e => setChosenListId(e.target.value)}
+                />
+              </FormField>
+            ) : (
+              <Alert tone="warning" title="No matching price list">
+                No active price list is available for the opportunity currency. Ask your administrator to configure one, or use a write-in product.
+              </Alert>
+            ))}
+          {catalogLoad.ready && !catalog?.products.length && (
+            <Alert tone="warning" title="No eligible products">
+              This price list has no readable active products or bundles with matching price-list items and units. Ask your administrator to check catalog setup
+              and access.
+            </Alert>
+          )}
+          {catalogLoad.ready && <Button onClick={() => void catalogLoad.retry()}>Reload catalog</Button>}
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {draft.kind === 'existing' ? (
           <FormField id="prod-existing" label="Product" required error={err('prod-existing')} className="sm:col-span-2">
             <Select
               id="prod-existing"
               value={draft.existing}
+              dir={liveCatalog ? 'auto' : undefined}
+              disabled={liveCatalog && !catalogLoad.ready}
               placeholder="Select a product"
-              options={PRODUCT_CATALOG.map(p => p.name)}
+              options={
+                liveCatalog
+                  ? (catalog?.products ?? []).map(p => ({
+                      value: p.productid,
+                      label: `${p.name || p.productid}${p.productnumber ? ` (${p.productnumber})` : ''}`,
+                    }))
+                  : PRODUCT_CATALOG.map(p => p.name)
+              }
               onChange={e => {
+                if (liveCatalog) {
+                  const productId = e.target.value
+                  const p = catalog?.products.find(x => x.productid === productId)
+                  const eligible = catalog ? eligibleUnits(catalog, productId) : []
+                  const unit = eligible.find(u => u.uomid === p?._defaultuomid_value) ?? eligible[0]
+                  setDraft(d => ({
+                    ...d,
+                    existing: productId,
+                    unit: unit?.uomid ?? '',
+                    price: catalog && unit ? catalogPrice(catalog, productId, unit.uomid) : '',
+                  }))
+                  return
+                }
                 const p = PRODUCT_CATALOG.find(x => x.name === e.target.value)
                 setDraft(d => ({ ...d, existing: e.target.value, unit: p?.unit ?? d.unit, price: p ? String(p.price) : d.price }))
               }}
@@ -1240,12 +1352,35 @@ function AddProductModal({
           </FormField>
         )}
         <FormField id="prod-unit" label="Unit" required error={err('prod-unit')}>
-          <Select id="prod-unit" value={draft.unit} placeholder="Select a unit" options={UNITS} onChange={e => setDraft(d => ({ ...d, unit: e.target.value }))} />
+          <Select
+            id="prod-unit"
+            dir={liveCatalog ? 'auto' : undefined}
+            disabled={liveCatalog && (!catalogLoad.ready || !selectedProduct)}
+            value={draft.unit}
+            placeholder="Select a unit"
+            options={liveCatalog ? units.map(u => ({ value: u.uomid, label: u.name || u.uomid })) : UNITS}
+            onChange={e => {
+              const unit = e.target.value
+              setDraft(d => ({ ...d, unit, ...(liveCatalog ? { price: catalog ? catalogPrice(catalog, d.existing, unit) : '' } : {}) }))
+            }}
+          />
         </FormField>
         <FormField id="prod-qty" label="Quantity" required error={err('prod-qty')}>
           <TextInput id="prod-qty" type="number" min={1} step="1" value={draft.quantity} onChange={e => setDraft(d => ({ ...d, quantity: e.target.value }))} />
         </FormField>
-        <FormField id="prod-price" label="Price per unit" required hint={CURRENCY.hint} error={err('prod-price')}>
+        <FormField
+          id="prod-price"
+          label="Price per unit"
+          required
+          hint={
+            liveCatalog
+              ? `In opportunity currency${context?.currencyCode ? ` (${context.currencyCode})` : ''}. Manual price override.${catalog && selectedUnit && catalogPrice(catalog, draft.existing, draft.unit) === '' ? ' No unambiguous Amount price is available; enter the unit price explicitly. Calculated pricing methods are not calculated here.' : ''}`
+              : live
+                ? 'Manual price override, in opportunity currency.'
+                : CURRENCY.hint
+          }
+          error={err('prod-price')}
+        >
           <TextInput id="prod-price" type="number" min={0} step="0.01" value={draft.price} onChange={e => setDraft(d => ({ ...d, price: e.target.value }))} />
         </FormField>
         <div className="self-start">
@@ -1253,7 +1388,11 @@ function AddProductModal({
             Extended amount
           </Text>
           <Body1Strong as="p" className={styles.amount} aria-live="polite">
-            {formatCurrency((Number(draft.quantity) || 0) * (Number(draft.price) || 0), { cents: true })}
+            {live
+              ? draft.price.trim() && Number.isFinite(Number(draft.price))
+                ? `${((Number(draft.quantity) || 0) * Number(draft.price)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${liveCatalog && context?.currencyCode ? ` ${context.currencyCode}` : ''}`
+                : '—'
+              : formatCurrency((Number(draft.quantity) || 0) * (Number(draft.price) || 0), { cents: true })}
           </Body1Strong>
         </div>
       </div>

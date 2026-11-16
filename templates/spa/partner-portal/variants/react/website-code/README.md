@@ -4,6 +4,10 @@ This React + Vite project is the downloadable website-code variant of the [Partn
 
 The partner workspace supports Partner Admin, Partner Manager, and Partner Seller: customers, opportunities, deal registrations, and access administration. Public partner-program, authentication, and profile pages are retained. Unrecognized live web roles use non-partner pages and receive no partner capabilities.
 
+Live opportunity products use the permission-scoped Dataverse catalog: active products or bundles with eligible units and price-list items. The picker keeps an existing active price list matching the opportunity currency; if none is assigned, a matching list is assigned only when adding a catalog product, using the opportunity version to guard concurrent updates. The currency is never changed. Unambiguous Amount prices prefill the manual unit-price override; calculated or unavailable prices must be entered explicitly. Write-in products and the local mock catalog remain available.
+
+The included Web API settings expose the required product, unit, price-list, and price-list-item fields. Price-list items are read-only for the three partner roles. Target deployments need a readable opportunity currency and active, matching-currency price lists with configured products, unit schedules, and price-list items. Missing setup or permissions is reported without falling back to mock products. Catalog reads support cancellation, pagination, and retry.
+
 Older browser databases are migrated without resetting sales edits: retired workspace collections, exclusive contacts, obsolete contact selections, and unsupported recent-search destinations are discarded. Retired work-order URLs now render **Page not found**. Legacy bundle patterns in `powerpages.config.json` are deletion patterns only, retained so the next upload cleans stale deployed chunks.
 
 ```bash
