@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "generator": "accessibility-insights-report",
+  "generatorVersion": "7.7.0",
+  "engine": "axe-core",
+  "engineVersion": "4.11.4",
+  "score": 100,
+  "totalViolations": 0,
+  "scans": [
+    {
+      "routeId": "article",
+      "viewport": "desktop",
+      "violations": 0,
+      "passes": 30,
+      "incomplete": 1,
+      "incompleteRules": [
+        "aria-prohibited-attr"
+      ],
+      "report": "automated-article-desktop.html",
+      "sha256": "5e2f4efbcdf62a48b998b265b9d8a03ca8b3e66bd1076b5e64cebebbe82ba7c8"
+    },
+    {
+      "routeId": "article",
+      "viewport": "mobile",
+      "violations": 0,
+      "passes": 30,
+      "incomplete": 1,
+      "incompleteRules": [
+        "aria-prohibited-attr"
+      ],
+      "report": "automated-article-mobile.html",
+      "sha256": "9530937135c38c02a4233376038fb9f8af726ec1ccbcca81df172bb730198874"
+    },
+    {
+      "routeId": "articles",
+      "viewport": "desktop",
+      "violations": 0,
+      "passes": 34,
+      "incomplete": 1,
+      "incompleteRules": [
+        "aria-prohibited-attr"
+      ],
+      "report": "automated-articles-desktop.html",
+      "sha256": "8b466be7ec020e1c3c7dca87c149c0bc9fa83e925f45a4e129ce513bbdf494e9"
+    },
+    {
+      "routeId": "articles",
+      "viewport": "mobile",
+      "violations": 0,
+      "passes": 34,
+      "incomplete": 1,
+      "incompleteRules": [
+        "aria-prohibited-attr"
+      ],
+      "report": "automated-articles-mobile.html",
+      "sha256": "2b60c0c41421a7d69c767e2b43305c73c8b1607b21799e700cfea75be8256d1b"
+    },
+    {
+      "routeId": "author",
+      "viewport": "desktop",
+      "violations": 0,
+      "passes": 29,
+      "incomplete": 1,
+      "incompleteRules": [
+        "aria-prohibited-attr"
+      ],
+      "report": "automated-author-desktop.html",
+      "sha256": "005e31f100c948d2ea191d768d87e5cf2f7028b9be86069c5765bedc48bf6782"
+    },
+    {
+      "routeId": "author",
+      "viewport": "mobile",
+      "violations": 0,
+      "passes": 29,
+      "incomplete": 1,
+      "incompleteRules": [
+        "aria-prohibited-attr"
+      ],
+      "report": "automated-author-mobile.html",
+      "sha256": "f5b356950e690e3c7320764ffc48d2a6a755a337dceda570af946acd0028a595"
+    },
+    {
+      "routeId": "authors",
+      "viewport": "desktop",
+      "violations": 0,
+      "passes": 29,
+      "incomplete": 1,
+      "incompleteRules": [
+        "aria-prohibited-attr"
+      ],
+      "report": "automated-authors-desktop.html",
+      "sha256": "bd935b2378227ebbc181fc2c9c703b7cd7d1541a7d8872a88d850ee2f230f6b5"
+    },
+    {
+      "routeId": "authors",
+      "viewport": "mobile",
+      "violations": 0,
+      "passes": 29,
+      "incomplete": 1,
+      "incompleteRules": [
+        "aria-prohibited-attr"
+      ],
+      "report": "automated-authors-mobile.html",
+      "sha256": "0e5d6cfa57331dad1d0a1609fdf74d8bbf1b028c6f82edf06f657ccb7a83efbd"
+    },
+    {
+      "routeId": "home",
+      "viewport": "desktop",
+      "violations": 0,
+      "passes": 29,
+      "incomplete": 1,
+      "incompleteRules": [
+        "aria-prohibited-attr"
+      ],
+      "report": "automated-home-desktop.html",
+      "sha256": "b35ddc6e2f94ed6070e64bf88bae83347129e22731380c47001aaadd6982f9ac"
+    },
+    {
+      "routeId": "home",
+      "viewport": "mobile",
+      "violations": 0,
+      "passes": 29,
+      "incomplete": 1,
+      "incompleteRules": [
+        "aria-prohibited-attr"
+      ],
+      "report": "automated-home-mobile.html",
+      "sha256": "11b0275154330748426d66c6572525eae7c29e888900c096d01ffa3b06d332fd"
+    }
+  ]
+}

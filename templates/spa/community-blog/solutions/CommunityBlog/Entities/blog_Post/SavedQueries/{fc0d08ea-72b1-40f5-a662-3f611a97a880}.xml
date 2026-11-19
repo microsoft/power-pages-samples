@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>0</isdefault>
+    <savedqueryid>{fc0d08ea-72b1-40f5-a662-3f611a97a880}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="blog_title" select="1" icon="1" preview="1">
+        <row name="result" id="blog_postid">
+          <cell name="blog_title" width="300" />
+          <cell name="createdon" width="125" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>0</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="blog_post">
+          <attribute name="blog_postid" />
+          <attribute name="blog_title" />
+          <attribute name="createdon" />
+          <order attribute="blog_title" descending="false" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="1" />
+          </filter>
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Inactive Posts" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EntityRelationships xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <EntityRelationship Name="blog_AuthorPosts" />
+  <EntityRelationship Name="blog_CategoryPosts" />
+  <EntityRelationship Name="lk_blog_author_createdby" />
+  <EntityRelationship Name="lk_blog_author_modifiedby" />
+  <EntityRelationship Name="lk_blog_category_createdby" />
+  <EntityRelationship Name="lk_blog_category_modifiedby" />
+  <EntityRelationship Name="lk_blog_post_createdby" />
+  <EntityRelationship Name="lk_blog_post_modifiedby" />
+  <EntityRelationship Name="organization_blog_author" />
+  <EntityRelationship Name="organization_blog_category" />
+  <EntityRelationship Name="organization_blog_post" />
+</EntityRelationships>

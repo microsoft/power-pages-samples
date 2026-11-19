@@ -1,0 +1,6 @@
+entityname: adx_webpage
+id: 58cf1abd-26f1-4880-a289-df882babe3ac
+isdefault: false
+name: Profile
+rewriteurl: ~/Pages/Profile.aspx
+usewebsiteheaderandfooter: true

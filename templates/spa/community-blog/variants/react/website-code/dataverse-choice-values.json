@@ -1,0 +1,10 @@
+{
+  "tables": {
+    "blog_post": {
+      "blog_featured": {
+        "Featured": 1,
+        "Standard": 0
+      }
+    }
+  }
+}
