@@ -46,6 +46,14 @@
               "non-spa"
             ]
           },
+          "dataModel": {
+            "description": "Whether the repository template uses only the Power Pages platform SDM/EDM tables or adds template-owned custom Dataverse tables through a supporting solution.",
+            "type": "string",
+            "enum": [
+              "platform-only",
+              "custom"
+            ]
+          },
           "keywords": {
             "type": "array",
             "minItems": 1,
@@ -96,6 +104,13 @@
           "author": {
             "type": "string",
             "minLength": 1
+          },
+          "qualityStandard": {
+            "description": "Versioned quality evidence contract for newly generated repository-artifact templates.",
+            "type": "integer",
+            "enum": [
+              1
+            ]
           },
           "provisioning": {
             "$ref": "#/$defs/provisioning"
@@ -193,7 +208,9 @@
         "capabilities": true,
         "requirements": true,
         "responsivePreviews": true,
+        "dataModel": false,
         "previewImages": false,
+        "qualityStandard": false,
         "requiredDataverseLanguages": false,
         "seedDataPath": false,
         "solutions": false,
@@ -204,6 +221,7 @@
       "description": "Template whose website code, previews, and supporting solutions are stored in this repository. Every template uses responsivePreviews; SPA previewImages is retained as a deprecated fallback for released consumers.",
       "type": "object",
       "required": [
+        "dataModel",
         "responsivePreviews",
         "requiredDataverseLanguages",
         "variants"

@@ -51,19 +51,21 @@ Each entry must match `templates/schemas/templates-manifest.schema.json`.
 SPA template families use this folder path: `templates/spa/<family>/`.
 The folder name must match the manifest `id`, and the `id` must be stable kebab-case.
 Each family can have one variant per framework: `react`, `vue`, `angular`, or `astro`.
-Each template family owns one shared set of unpacked supporting solutions.
+Each repository template declares `dataModel` as `platform-only` or `custom`.
+Every Power Pages site uses platform SDM/EDM website tables in Dataverse.
+A platform-only template adds no custom business solution; a custom template owns one shared set of unpacked supporting solutions.
 Framework variants contain only their website code.
 Non-SPA template families use this folder path: `templates/non-spa/<family>/`.
 
 To contribute a template:
 
 1. Build the SPA site.
-2. Export the Power Pages site and any unmanaged supporting solutions.
+2. Export the Power Pages site and, for `custom`, its unmanaged supporting solutions.
 3. Capture real PNG preview images.
-4. Optionally author seed-data JSON files using this shape: `{ "entitySetName": "<plural entity set>", "records": [...] }`.
+4. For `custom`, author representative seed-data JSON files using this shape: `{ "entitySetName": "<plural entity set>", "records": [...] }`.
 5. Create `templates/spa/<family>/` with shared `previews/` and optional `seed-data/` folders.
 6. Put the site export under `templates/spa/<family>/variants/<framework>/website-code/`.
-7. Unpack each supporting solution under `templates/spa/<family>/solutions/<solution-unique-name>/`. The folder name must match `Other/Solution.xml`.
+7. For `custom`, unpack each supporting solution under `templates/spa/<family>/solutions/<solution-unique-name>/`. The folder name must match `Other/Solution.xml`. For `platform-only`, omit `solutions/` and `seed-data/`.
 8. Append or update the template family entry in `templates/manifest.json`.
 9. Add the variant under `variants.<framework>`.
 10. Run `node templates/scripts/validate-templates.js`.

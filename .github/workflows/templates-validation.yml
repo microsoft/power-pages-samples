@@ -30,7 +30,7 @@ jobs:
           node-version: "20"
 
       - name: Run template tests
-        run: node --test templates/scripts/validate-templates.test.js templates/scripts/supplier-invoice-postbuild.test.js templates/scripts/supplier-account.test.js
+        run: node --test templates/scripts/code-site.test.js templates/scripts/create-template.test.js templates/scripts/dataverse-solution.test.js templates/scripts/list-quality-variants.test.js templates/scripts/seed-data.test.js templates/scripts/validate-templates.test.js templates/scripts/write-design-review.test.js templates/scripts/write-quality-manifest.test.js templates/scripts/supplier-invoice-postbuild.test.js templates/scripts/supplier-account.test.js
 
       - name: Validate templates manifest
         run: node templates/scripts/validate-templates.js
@@ -58,3 +58,76 @@ jobs:
         run: npm test
       - name: Typecheck and build
         run: npm run build
+
+  discover-quality-templates:
+    name: Discover quality-standard templates
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build quality matrix
+        id: matrix
+        shell: bash
+        run: echo "matrix=$(node templates/scripts/list-quality-variants.js)" >> "$GITHUB_OUTPUT"
+
+  quality-templates:
+    name: Quality checks (${{ matrix.id }}/${{ matrix.framework }})
+    needs: discover-quality-templates
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover-quality-templates.outputs.matrix) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.path }}
+    steps:
+      - name: Checkout repository
+        if: ${{ !matrix.skip }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Node.js
+        if: ${{ !matrix.skip }}
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "20"
+      - name: Restore dependencies
+        if: ${{ !matrix.skip }}
+        shell: bash
+        run: |
+          if [[ -f pnpm-lock.yaml ]]; then
+            corepack enable
+            pnpm install --frozen-lockfile
+          else
+            npm ci --registry=https://packagefeedproxy.microsoft.io/npm/ --no-audit --no-fund
+          fi
+      - name: Install Playwright Chromium
+        if: ${{ !matrix.skip }}
+        shell: bash
+        run: |
+          if [[ -f pnpm-lock.yaml ]]; then
+            pnpm exec playwright install --with-deps chromium
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Run quality checks
+        if: ${{ !matrix.skip }}
+        shell: bash
+        run: |
+          if [[ -f pnpm-lock.yaml ]]; then
+            pnpm run quality
+          else
+            npm run quality
+          fi
+      - name: Refresh quality manifest
+        if: ${{ !matrix.skip }}
+        shell: bash
+        run: |
+          node "$GITHUB_WORKSPACE/templates/scripts/write-quality-manifest.js" \
+            --website-code "$PWD" \
+            --seed-data "$GITHUB_WORKSPACE/templates/${{ matrix.seedDataPath }}"
+      - name: Validate regenerated quality evidence
+        if: ${{ !matrix.skip }}
+        shell: bash
+        working-directory: ${{ github.workspace }}
+        run: node templates/scripts/validate-templates.js

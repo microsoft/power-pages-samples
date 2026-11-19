@@ -14,12 +14,21 @@ If the consumer requires a remote revision, ask for approval before any commit o
 If the plugin cannot consume the unmerged template, record the incompatibility and follow the template README installation path exactly, using the applicable import or deployment skills where supported.
 This fallback is diagnostic: a successful README install does not resolve the consumer-skill incompatibility.
 Any unresolved gap blocks completion and PR approval.
-Check the documented solution import order and publish flag, seed import, website upload, and activation.
+For `custom`, check the documented solution import order and publish flag plus seed import.
+For `platform-only`, confirm no custom solution or Dataverse seed package is offered; this does not remove the SDM/EDM Power Pages tables created by the platform.
+For both modes, check website upload and activation.
 Record which path was used.
+During the run, maintain the exact resource journal required by [optional verification cleanup](verification-cleanup.md).
+Do not clean up a successful verification environment before its pull request is created; it can be needed for review
+or failure diagnosis.
 
-Follow the consumer workflow through solution import, seed import, website deployment and activation as applicable.
+Follow the consumer workflow through custom solution and seed import only when `dataModel` is `custom`, then website deployment and activation for both modes.
 Inspect the resulting site at desktop and mobile sizes and exercise the approved user flows, permissions, and seeded data.
 Record every gap, including documentation errors, missing components or permissions, seed failures, badge or rendering defects, catalog or prompt mismatches, and plugin incompatibilities.
 Fix each gap in the repository within the approved scope and rerun the consumer path against the corrected revision from a clean state, using a fresh site and solution or explicitly approved cleanup.
 Repeat until a complete pass finds no gaps.
 If a prerequisite, environment selection, access, approval, or consumer capability blocks any step, report the exact blocker and partial state; do not mark the contribution finished or proceed to PR approval.
+
+After the complete pass and pull-request creation, offer the optional cleanup workflow. Keeping the verification
+resources is the recommended default. Cleanup requires a new destructive plan and approval and never reuses installation
+or pull-request consent.
