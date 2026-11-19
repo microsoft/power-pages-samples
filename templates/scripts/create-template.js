@@ -152,6 +152,11 @@ function scaffoldTemplate({ spec, outputDirectory }) {
     );
   }
   writeFile(target, "variants/react/website-code/.gitignore", gitignore());
+  writeFile(
+    target,
+    "variants/react/website-code/.npmrc",
+    "omit-lockfile-registry-resolved=true\n"
+  );
   writeFile(target, "variants/react/website-code/package.json", json(packageManifest(spec)));
   writeFile(target, "variants/react/website-code/index.html", renderIndex(spec));
   writeFile(target, "variants/react/website-code/tsconfig.json", json(tsconfig()));
@@ -297,18 +302,18 @@ function packageManifest(spec) {
       quality: "npm test && npm run build && npm run test:e2e && npm run test:a11y"
     },
     dependencies: {
-      react: "^19.0.0",
-      "react-dom": "^19.0.0",
+      react: "^18.3.1",
+      "react-dom": "^18.3.1",
       "react-router-dom": "^7.18.2"
     },
     devDependencies: {
-      "@axe-core/playwright": "^4.14.0",
+      "@axe-core/playwright": "4.11.0",
       "@playwright/test": "^1.65.0",
       "@types/node": "^22.0.0",
-      "@types/react": "^19.0.0",
-      "@types/react-dom": "^19.0.0",
+      "@types/react": "^18.3.20",
+      "@types/react-dom": "^18.3.7",
       "@vitejs/plugin-react": "^4.3.0",
-      "accessibility-insights-report": "^7.7.0",
+      "accessibility-insights-report": "7.7.0",
       typescript: "~5.7.0",
       vite: "^6.4.4",
       vitest: "^3.2.4"
@@ -555,10 +560,10 @@ import "./PowerPagesBadge.css";
 
 export default function PowerPagesBadge() {
   return (
-    <aside className="powered-badge" aria-label="Platform attribution">
+    <div className="powered-badge" aria-label="Platform attribution">
       <img src={powerPagesLogo} width="14" height="14" alt="" aria-hidden="true" />
       Built with <span>Microsoft Power Pages</span>
-    </aside>
+    </div>
   );
 }
 `;

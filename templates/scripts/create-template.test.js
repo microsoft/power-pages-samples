@@ -58,6 +58,7 @@ test("creates a canonical React template draft without fabricated platform artif
     "README.md",
     "seed-data/data.json",
     "solutions/README.md",
+    "variants/react/website-code/.npmrc",
     "variants/react/website-code/package.json",
     "variants/react/website-code/playwright.config.ts",
     "variants/react/website-code/powerpages.config.json",
@@ -92,6 +93,27 @@ test("creates a canonical React template draft without fabricated platform artif
   assert.equal(quality.templateId, "community-shop");
   assert.deepEqual(quality.viewports, ["desktop", "mobile"]);
   assert.deepEqual(quality.routes.map((route) => route.id), ["home", "catalog"]);
+
+  const packageJson = JSON.parse(fs.readFileSync(
+    path.join(target, "variants/react/website-code/package.json"),
+    "utf8"
+  ));
+  assert.equal(packageJson.dependencies.react, "^18.3.1");
+  assert.equal(packageJson.dependencies["react-dom"], "^18.3.1");
+  assert.equal(packageJson.devDependencies["@axe-core/playwright"], "4.11.0");
+  assert.equal(packageJson.devDependencies["accessibility-insights-report"], "7.7.0");
+  assert.match(packageJson.scripts.quality, /^npm test/);
+  assert.equal(
+    fs.readFileSync(path.join(target, "variants/react/website-code/.npmrc"), "utf8"),
+    "omit-lockfile-registry-resolved=true\n"
+  );
+
+  const badgeSource = fs.readFileSync(
+    path.join(target, "variants/react/website-code/src/components/PowerPagesBadge.tsx"),
+    "utf8"
+  );
+  assert.match(badgeSource, /<div className="powered-badge"/);
+  assert.doesNotMatch(badgeSource, /<aside/);
 });
 
 test("rejects unsafe, incomplete, and duplicate scaffold input", () => {
