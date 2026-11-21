@@ -7,7 +7,7 @@ const path = require("node:path");
 const test = require("node:test");
 const { spawnSync } = require("node:child_process");
 
-const { validateTemplates } = require("./validate-templates");
+const { computeQualitySourceDigest, sha256File, validateTemplates } = require("./validate-templates");
 
 test("accepts a valid unmanaged template family fixture", () => {
   const root = createTemplateRoot({
@@ -357,11 +357,13 @@ test("published schema encodes mutually exclusive Create Website API and reposit
     author: "Test"
   };
   assert.deepEqual(shapeViolations({ ...common, kind: "spa" }), [
+    "missing dataModel",
     "missing responsivePreviews",
     "missing requiredDataverseLanguages",
     "missing variants"
   ]);
   assert.deepEqual(shapeViolations({ ...common, kind: "non-spa" }), [
+    "missing dataModel",
     "missing responsivePreviews",
     "missing requiredDataverseLanguages",
     "missing variants"
@@ -370,6 +372,7 @@ test("published schema encodes mutually exclusive Create Website API and reposit
     shapeViolations({
       ...common,
       kind: "spa",
+      dataModel: "custom",
       responsivePreviews: [],
       previewImages: [],
       requiredDataverseLanguages: [1033],
@@ -413,6 +416,40 @@ test("requires SPA project files and website export metadata", () => {
   assert(result.errors.some((error) =>
     error.includes("website-code must contain .powerpages-site/website.yml")
   ));
+});
+
+test("accepts a quality-standard platform-only SPA without custom solutions or seed data", () => {
+  const root = createTemplateRoot({
+    dataModel: "platform-only",
+    createSolution: false,
+    familyExtras: { qualityStandard: 1 }
+  });
+  fs.rmSync(path.join(root, "spa/test-template/solutions"), { recursive: true });
+  fs.rmSync(path.join(root, "spa/test-template/seed-data"), { recursive: true });
+  writeQualityEvidence(root);
+
+  const result = validateTemplates({ root });
+  assert.deepEqual(result.errors, []);
+});
+
+test("rejects custom solution and seed artifacts for a platform-only template", () => {
+  const root = createTemplateRoot({
+    dataModel: "platform-only",
+    seedDataPath: "spa/test-template/seed-data/data.json",
+    seedData: {
+      entitySetName: "accounts",
+      records: [{ name: "Should not ship" }]
+    },
+    familyExtras: {
+      solutions: [{ uniqueName: "TestSolution", publishChanges: false }]
+    }
+  });
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("must not define seedDataPath")));
+  assert(result.errors.some((error) => error.includes("must not define solutions")));
+  assert(result.errors.some((error) => error.includes("must not contain seed-data/")));
+  assert(result.errors.some((error) => error.includes("must not contain solutions/")));
 });
 
 test("rejects variant-specific family metadata", () => {
@@ -773,6 +810,66 @@ test("validates website and seed choice values against solution metadata", () =>
   ));
   assert(invalidContractResult.errors.some((error) =>
     error.includes('is missing solution option "Closed"')
+  ));
+});
+
+test("requires JSON booleans for Dataverse Two Options seed values", () => {
+  const root = createTemplateRoot({
+    solutionTables: [{
+      schemaName: "sample_Feature",
+      entitySetName: "sample_features",
+      primaryKey: "sample_featureid",
+      attributes: [
+        { physicalName: "sample_FeatureId", logicalName: "sample_featureid", type: "primarykey" },
+        {
+          physicalName: "sample_Enabled",
+          logicalName: "sample_enabled",
+          type: "bit",
+          choiceOptions: [
+            { label: "Disabled", value: 0 },
+            { label: "Enabled", value: 1 }
+          ]
+        }
+      ]
+    }],
+    seedDataPath: "spa/test-template/seed-data/data.json",
+    seedData: {
+      schemaVersion: 1,
+      tables: {
+        features: {
+          logicalName: "sample_feature",
+          entitySet: "sample_features",
+          idColumn: "sample_featureid",
+          records: [{
+            sample_featureid: "10000000-0000-4000-8000-000000000001",
+            sample_enabled: true
+          }]
+        }
+      }
+    }
+  });
+  const websiteCodePath = path.join(root, "spa/test-template/variants/react/website-code");
+  fs.writeFileSync(path.join(websiteCodePath, "dataverse-choice-values.json"), JSON.stringify({
+    tables: {
+      sample_feature: {
+        sample_enabled: {
+          Disabled: 0,
+          Enabled: 1
+        }
+      }
+    }
+  }, null, 2));
+
+  assert.deepEqual(validateTemplates({ root }).errors, []);
+
+  const seedPath = path.join(root, "spa/test-template/seed-data/data.json");
+  const seedData = JSON.parse(fs.readFileSync(seedPath, "utf8"));
+  seedData.tables.features.records[0].sample_enabled = 1;
+  fs.writeFileSync(seedPath, JSON.stringify(seedData, null, 2));
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) =>
+    error.includes('property "sample_enabled" must be a JSON boolean')
   ));
 });
 
@@ -1377,6 +1474,99 @@ test("allows SARIF reports in the website-code CodeQL reports directory", () => 
   assert.deepEqual(result.errors, []);
 });
 
+test("accepts complete quality standard 1 evidence", () => {
+  const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/data.json",
+    seedData: {
+      entitySetName: "accounts",
+      records: [{ name: "Sample account" }]
+    },
+    familyExtras: { qualityStandard: 1 }
+  });
+  writeQualityEvidence(root);
+
+  const result = validateTemplates({ root });
+  assert.deepEqual(result.errors, []);
+});
+
+test("requires complete and current quality standard 1 evidence", () => {
+  const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/data.json",
+    seedData: {
+      entitySetName: "accounts",
+      records: [{ name: "Sample account" }]
+    },
+    familyExtras: { qualityStandard: 1 }
+  });
+
+  const missingResult = validateTemplates({ root });
+  assert(missingResult.errors.some((error) => error.includes("template-quality.json")));
+  assert(missingResult.errors.some((error) => error.includes("accessibility-summary.json")));
+  assert(missingResult.errors.some((error) => error.includes("codeql-results.sarif")));
+  assert(missingResult.errors.some((error) => error.includes("design-review.json")));
+
+  writeQualityEvidence(root);
+  const websiteCodePath = path.join(root, "spa/test-template/variants/react/website-code");
+  fs.writeFileSync(path.join(websiteCodePath, "src-change.ts"), "export const changed = true;\n");
+  const staleResult = validateTemplates({ root });
+  assert(staleResult.errors.some((error) => error.includes("quality reports are stale")));
+});
+
+test("rejects failed accessibility and CodeQL quality evidence", () => {
+  const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/data.json",
+    seedData: {
+      entitySetName: "accounts",
+      records: [{ name: "Sample account" }]
+    },
+    familyExtras: { qualityStandard: 1 }
+  });
+  writeQualityEvidence(root);
+  const websiteCodePath = path.join(root, "spa/test-template/variants/react/website-code");
+  const accessibilityPath = path.join(websiteCodePath, "docs/a11y-reports/accessibility-summary.json");
+  const accessibility = JSON.parse(fs.readFileSync(accessibilityPath, "utf8"));
+  accessibility.score = 99;
+  accessibility.totalViolations = 1;
+  accessibility.scans[0].violations = 1;
+  fs.writeFileSync(accessibilityPath, JSON.stringify(accessibility, null, 2));
+
+  const codeQlPath = path.join(websiteCodePath, "docs/codeql-reports/codeql-results.sarif");
+  const sarif = JSON.parse(fs.readFileSync(codeQlPath, "utf8"));
+  sarif.runs[0].results = [{ ruleId: "js/example" }];
+  fs.writeFileSync(codeQlPath, JSON.stringify(sarif, null, 2));
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("automated accessibility score must be 100")));
+  assert(result.errors.some((error) => error.includes("automated accessibility violations must be 0")));
+  assert(result.errors.some((error) => error.includes("CodeQL report must contain zero findings")));
+});
+
+test("rejects weak or failing exceptional design evidence", () => {
+  const root = createTemplateRoot({
+    seedDataPath: "spa/test-template/seed-data/data.json",
+    seedData: {
+      entitySetName: "accounts",
+      records: [{ name: "Sample account" }]
+    },
+    familyExtras: { qualityStandard: 1 }
+  });
+  writeQualityEvidence(root);
+  const reviewPath = path.join(
+    root,
+    "spa/test-template/variants/react/website-code/docs/design-review/design-review.json"
+  );
+  const review = JSON.parse(fs.readFileSync(reviewPath, "utf8"));
+  review.categories[0].score = 2;
+  review.totalScore = 29;
+  review.criticalGates[0].status = "fail";
+  fs.writeFileSync(reviewPath, JSON.stringify(review, null, 2));
+
+  const result = validateTemplates({ root });
+  assert(result.errors.some((error) => error.includes("design category 1 must score at least 3")));
+  assert(result.errors.some((error) => error.includes("design review total")));
+  assert(result.errors.some((error) => error.includes("failing or unevidenced critical gate")));
+});
+
 test("rejects SARIF reports elsewhere in website-code", () => {
   const root = createTemplateRoot();
   const websiteCodePath = path.join(root, "spa/test-template/variants/react/website-code");
@@ -1507,6 +1697,7 @@ function createTemplateRoot(options = {}) {
     displayName: "Test Template",
     description: "Fixture template for validator tests.",
     kind,
+    dataModel: options.dataModel ?? "custom",
     keywords: ["test"],
     audience: ["developers"],
     responsivePreviews: options.responsivePreviews ?? [
@@ -1529,6 +1720,10 @@ function createTemplateRoot(options = {}) {
     },
     ...(options.familyExtras ?? {})
   };
+
+  if (template.provisioning) {
+    delete template.dataModel;
+  }
 
   if (options.omitArtifactFields) {
     delete template.previewImages;
@@ -1588,6 +1783,119 @@ function createTemplateRoot(options = {}) {
     );
   }
   return root;
+}
+
+function writeQualityEvidence(root) {
+  const websiteCodePath = path.join(root, "spa/test-template/variants/react/website-code");
+  const accessibilityDirectory = path.join(websiteCodePath, "docs/a11y-reports");
+  const codeQlDirectory = path.join(websiteCodePath, "docs/codeql-reports");
+  fs.mkdirSync(accessibilityDirectory, { recursive: true });
+  fs.mkdirSync(codeQlDirectory, { recursive: true });
+  fs.writeFileSync(path.join(websiteCodePath, "package.json"), JSON.stringify({
+    scripts: {
+      build: "echo build",
+      test: "echo test",
+      "test:a11y": "echo a11y",
+      quality: "echo quality"
+    }
+  }, null, 2));
+
+  fs.writeFileSync(path.join(websiteCodePath, "template-quality.json"), JSON.stringify({
+    schemaVersion: 1,
+    templateId: "test-template",
+    framework: "react",
+    routes: [{ id: "home", path: "/", displayName: "Home" }],
+    viewports: ["desktop", "mobile"]
+  }, null, 2));
+
+  const desktopReportName = "automated-home-desktop.html";
+  const mobileReportName = "automated-home-mobile.html";
+  const reportContents = "<!DOCTYPE html><html><body>Accessibility Insights automated report</body></html>";
+  fs.writeFileSync(path.join(accessibilityDirectory, desktopReportName), reportContents);
+  fs.writeFileSync(path.join(accessibilityDirectory, mobileReportName), reportContents);
+  fs.writeFileSync(
+    path.join(accessibilityDirectory, "accessibility-summary.json"),
+    JSON.stringify({
+      schemaVersion: 1,
+      generator: "accessibility-insights-report",
+      generatorVersion: "test",
+      engine: "axe-core",
+      engineVersion: "test",
+      score: 100,
+      totalViolations: 0,
+      scans: [
+        {
+          routeId: "home",
+          viewport: "desktop",
+          violations: 0,
+          passes: 10,
+          incomplete: 1,
+          report: desktopReportName,
+          sha256: sha256File(path.join(accessibilityDirectory, desktopReportName))
+        },
+        {
+          routeId: "home",
+          viewport: "mobile",
+          violations: 0,
+          passes: 10,
+          incomplete: 1,
+          report: mobileReportName,
+          sha256: sha256File(path.join(accessibilityDirectory, mobileReportName))
+        }
+      ]
+    }, null, 2)
+  );
+
+  fs.writeFileSync(
+    path.join(codeQlDirectory, "codeql-results.sarif"),
+    JSON.stringify({
+      version: "2.1.0",
+      runs: [{
+        tool: { driver: { name: "CodeQL", semanticVersion: "test" } },
+        results: []
+      }]
+    }, null, 2)
+  );
+  fs.writeFileSync(
+    path.join(websiteCodePath, "docs/quality-manifest.json"),
+    JSON.stringify({
+      schemaVersion: 1,
+      sourceDigest: computeQualitySourceDigest(
+        websiteCodePath,
+        path.join(root, "spa/test-template/seed-data/data.json")
+      )
+    }, null, 2)
+  );
+  const sourceDigest = computeQualitySourceDigest(
+    websiteCodePath,
+    path.join(root, "spa/test-template/seed-data/data.json")
+  );
+  const designReviewDirectory = path.join(websiteCodePath, "docs/design-review");
+  fs.mkdirSync(designReviewDirectory, { recursive: true });
+  fs.writeFileSync(
+    path.join(designReviewDirectory, "design-review.json"),
+    JSON.stringify({
+      schemaVersion: 1,
+      skill: "exceptional-web-design",
+      mode: "rendered",
+      sourceDigest,
+      rounds: 1,
+      verdict: "crafted",
+      totalScore: 30,
+      categories: Array.from({ length: 10 }, (_, index) => ({
+        number: index + 1,
+        name: `Category ${index + 1}`,
+        score: 3,
+        evidence: "Home page desktop and mobile preview."
+      })),
+      criticalGates: Array.from({ length: 7 }, (_, index) => ({
+        name: `Critical gate ${index + 1}`,
+        status: "pass",
+        evidence: "Rendered and source evidence."
+      })),
+      routes: [{ id: "home", viewports: ["desktop", "mobile"] }]
+    }, null, 2)
+  );
 }
 
 function defaultSolutionXml(uniqueName = "TestSolution", managed = 0, requiredSolutionUniqueName = null) {

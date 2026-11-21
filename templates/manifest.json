@@ -6,6 +6,7 @@
       "displayName": "311 Portal",
       "description": "A Power Pages SPA template for citizen service requests, request tracking, city service maps, knowledge articles, and 311 contact flows.",
       "kind": "spa",
+      "dataModel": "custom",
       "keywords": [
         "311",
         "citizen-services",
@@ -70,6 +71,7 @@
       "displayName": "Supplier Invoice Portal",
       "description": "A Power Pages SPA template for supplier onboarding, purchase orders, invoice submission, invoice review, and invoice tracking.",
       "kind": "spa",
+      "dataModel": "custom",
       "keywords": [
         "supplier",
         "invoice",

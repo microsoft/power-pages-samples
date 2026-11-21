@@ -4,6 +4,7 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
+const crypto = require("node:crypto");
 
 const VALID_KINDS = new Set(["spa", "non-spa"]);
 const VALID_FRAMEWORKS = new Set(["angular", "astro", "none", "react", "vue"]);
@@ -11,6 +12,11 @@ const VALID_AUDIENCES = new Set(["admins", "developers", "makers", "partners"]);
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DATAVERSE_CHOICE_VALUES_FILE = "dataverse-choice-values.json";
 const DATAVERSE_SOLUTION_CONTRACT_FILE = "dataverse-solution-contract.json";
+const TEMPLATE_QUALITY_FILE = "template-quality.json";
+const ACCESSIBILITY_SUMMARY_FILE = "docs/a11y-reports/accessibility-summary.json";
+const CODEQL_REPORT_FILE = "docs/codeql-reports/codeql-results.sarif";
+const DESIGN_REVIEW_FILE = "docs/design-review/design-review.json";
+const QUALITY_MANIFEST_FILE = "docs/quality-manifest.json";
 // Segmented standard tables omit unchanged columns, including the primary key.
 // Only known platform columns can fill these gaps; custom columns still require
 // solution metadata. https://learn.microsoft.com/power-platform/alm/segmented-solutions-alm
@@ -317,7 +323,7 @@ function validateRepositoryArtifactMetadata(template, label, result) {
     return;
   }
 
-  for (const propertyName of ["responsivePreviews", "requiredDataverseLanguages", "variants"]) {
+  for (const propertyName of ["dataModel", "responsivePreviews", "requiredDataverseLanguages", "variants"]) {
     if (!Object.hasOwn(template, propertyName)) {
       result.errors.push(
         `Template "${label}" repository-artifact metadata requires ${propertyName}.`
@@ -329,6 +335,18 @@ function validateRepositoryArtifactMetadata(template, label, result) {
     result.errors.push(
       `Template "${label}" repository-artifact metadata must not define previewImages.`
     );
+  }
+
+  if (template.dataModel === "custom" && template.qualityStandard === 1 && typeof template.seedDataPath !== "string") {
+    result.errors.push(`Template "${label}" custom quality standard 1 requires seedDataPath.`);
+  }
+  if (template.dataModel === "platform-only") {
+    if (Object.hasOwn(template, "seedDataPath")) {
+      result.errors.push(`Template "${label}" platform-only data model must not define seedDataPath.`);
+    }
+    if (Object.hasOwn(template, "solutions")) {
+      result.errors.push(`Template "${label}" platform-only data model must not define solutions.`);
+    }
   }
 
   validateResponsivePreviewIds(template, label, result);
@@ -428,15 +446,28 @@ function validateReferencedPaths(template, label, root, result) {
       result
     );
   }
-  const solutionMetadata = validateSolutionsDirectory(
-    label,
-    root,
-    `${familyBase}/solutions`,
-    familyBase,
-    template.kind === "non-spa",
-    template.solutions,
-    result
-  );
+  let solutionMetadata;
+  if (template.dataModel === "platform-only") {
+    solutionMetadata = createDataverseMetadata();
+    for (const directoryName of ["seed-data", "solutions"]) {
+      const directoryPath = path.resolve(root, familyBase, directoryName);
+      if (directoryExists(directoryPath)) {
+        result.errors.push(
+          `Template "${label}" platform-only directory must not contain ${directoryName}/.`
+        );
+      }
+    }
+  } else {
+    solutionMetadata = validateSolutionsDirectory(
+      label,
+      root,
+      `${familyBase}/solutions`,
+      familyBase,
+      template.kind === "non-spa",
+      template.solutions,
+      result
+    );
+  }
 
   if (!template.variants || typeof template.variants !== "object" || Array.isArray(template.variants)) {
     return;
@@ -487,6 +518,396 @@ function validateVariantPath(template, framework, label, root, solutionMetadata,
     solutionMetadata,
     result
   );
+  if (template.qualityStandard === 1) {
+    validateQualityEvidence(template, framework, label, root, variantBase, result);
+  }
+}
+
+function validateQualityEvidence(template, framework, label, root, variantBase, result) {
+  if (template.kind !== "spa" || framework !== "react") {
+    result.errors.push(
+      `Template "${label}" quality standard 1 currently supports only React SPA variants.`
+    );
+    return;
+  }
+
+  const websiteCodePath = path.resolve(root, variantBase, "website-code");
+  const requiredPaths = [
+    TEMPLATE_QUALITY_FILE,
+    ACCESSIBILITY_SUMMARY_FILE,
+    CODEQL_REPORT_FILE,
+    DESIGN_REVIEW_FILE,
+    QUALITY_MANIFEST_FILE
+  ];
+  for (const relativePath of requiredPaths) {
+    if (!fileExists(path.join(websiteCodePath, relativePath))) {
+      result.errors.push(
+        `Template "${label}" quality standard 1 requires ${variantBase}/website-code/${relativePath}.`
+      );
+    }
+  }
+
+  const qualityContract = readOptionalJson(
+    path.join(websiteCodePath, TEMPLATE_QUALITY_FILE),
+    `quality contract for template "${label}"`,
+    result
+  );
+  if (qualityContract) {
+    validateQualityContract(qualityContract, template, framework, label, result);
+  }
+
+  const packageJson = readOptionalJson(
+    path.join(websiteCodePath, "package.json"),
+    `package manifest for template "${label}"`,
+    result
+  );
+  for (const scriptName of ["build", "test", "test:a11y", "quality"]) {
+    if (typeof packageJson?.scripts?.[scriptName] !== "string") {
+      result.errors.push(
+        `Template "${label}" quality standard 1 package.json requires the "${scriptName}" script.`
+      );
+    }
+  }
+
+  const accessibilitySummary = readOptionalJson(
+    path.join(websiteCodePath, ACCESSIBILITY_SUMMARY_FILE),
+    `accessibility summary for template "${label}"`,
+    result
+  );
+  if (accessibilitySummary) {
+    validateAutomatedAccessibilityEvidence(
+      accessibilitySummary,
+      websiteCodePath,
+      qualityContract,
+      label,
+      result
+    );
+  }
+
+  validateCodeQlEvidence(path.join(websiteCodePath, CODEQL_REPORT_FILE), label, result);
+
+  const expectedDigest = computeQualitySourceDigest(
+    websiteCodePath,
+    typeof template.seedDataPath === "string" ? path.resolve(root, template.seedDataPath) : null
+  );
+  const designReview = readOptionalJson(
+    path.join(websiteCodePath, DESIGN_REVIEW_FILE),
+    `exceptional design review for template "${label}"`,
+    result
+  );
+  if (designReview) {
+    validateDesignReview(designReview, qualityContract, expectedDigest, label, result);
+  }
+
+  const qualityManifest = readOptionalJson(
+    path.join(websiteCodePath, QUALITY_MANIFEST_FILE),
+    `quality manifest for template "${label}"`,
+    result
+  );
+  if (qualityManifest) {
+    if (qualityManifest.schemaVersion !== 1) {
+      result.errors.push(`Template "${label}" quality manifest schemaVersion must be 1.`);
+    }
+    if (qualityManifest.sourceDigest !== expectedDigest) {
+      result.errors.push(
+        `Template "${label}" quality reports are stale: sourceDigest does not match current source.`
+      );
+    }
+  }
+
+  function validateDesignReview(review, contract, expectedDigest, label, result) {
+    if (review.schemaVersion !== 1 || review.skill !== "exceptional-web-design") {
+      result.errors.push(`Template "${label}" design review must use exceptional-web-design schemaVersion 1.`);
+    }
+    if (review.mode !== "rendered") {
+      result.errors.push(`Template "${label}" design review must use rendered desktop/mobile evidence.`);
+    }
+    if (review.sourceDigest !== expectedDigest) {
+      result.errors.push(`Template "${label}" design review is stale for the current source.`);
+    }
+    if (!Number.isInteger(review.rounds) || review.rounds < 1 || review.rounds > 3) {
+      result.errors.push(`Template "${label}" design review rounds must be from 1 through 3.`);
+    }
+    if (!["crafted", "exceptional"].includes(review.verdict)) {
+      result.errors.push(`Template "${label}" design review verdict must be crafted or exceptional.`);
+    }
+
+    const categories = Array.isArray(review.categories) ? review.categories : [];
+    const categoryNumbers = new Set();
+    let calculatedTotal = 0;
+    for (const category of categories) {
+      if (
+        !category ||
+        !Number.isInteger(category.number) ||
+        category.number < 1 ||
+        category.number > 10 ||
+        categoryNumbers.has(category.number)
+      ) {
+        result.errors.push(`Template "${label}" design review has invalid or duplicate categories.`);
+        continue;
+      }
+      categoryNumbers.add(category.number);
+      if (!Number.isInteger(category.score) || category.score < 3 || category.score > 4) {
+        result.errors.push(
+          `Template "${label}" design category ${category.number} must score at least 3 and at most 4.`
+        );
+      } else {
+        calculatedTotal += category.score;
+      }
+      if (typeof category.name !== "string" || typeof category.evidence !== "string" ||
+          !category.name.trim() || !category.evidence.trim()) {
+        result.errors.push(`Template "${label}" design category ${category.number} requires name and evidence.`);
+      }
+    }
+    if (categoryNumbers.size !== 10) {
+      result.errors.push(`Template "${label}" design review must score all 10 categories.`);
+    }
+    if (review.totalScore !== calculatedTotal || review.totalScore < 30 || review.totalScore > 40) {
+      result.errors.push(`Template "${label}" design review total must match categories and be from 30 through 40.`);
+    }
+
+    const gates = Array.isArray(review.criticalGates) ? review.criticalGates : [];
+    if (gates.length < 7) {
+      result.errors.push(`Template "${label}" design review must record every critical gate.`);
+    }
+    for (const gate of gates) {
+      if (gate?.status !== "pass" || typeof gate.name !== "string" ||
+          typeof gate.evidence !== "string" || !gate.name.trim() || !gate.evidence.trim()) {
+        result.errors.push(`Template "${label}" design review contains a failing or unevidenced critical gate.`);
+      }
+    }
+
+    const expectedRoutes = new Set((contract?.routes ?? []).map((route) => route.id));
+    const reviewedRoutes = new Map((review.routes ?? []).map((route) => [route.id, route]));
+    for (const routeId of expectedRoutes) {
+      const route = reviewedRoutes.get(routeId);
+      const viewports = new Set(route?.viewports ?? []);
+      if (!viewports.has("desktop") || !viewports.has("mobile")) {
+        result.errors.push(
+          `Template "${label}" design review lacks desktop/mobile evidence for route "${routeId}".`
+        );
+      }
+    }
+  }
+}
+
+function readOptionalJson(filePath, description, result) {
+  if (!fileExists(filePath)) {
+    return null;
+  }
+  try {
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  } catch (error) {
+    result.errors.push(`Could not read ${description} at ${filePath}: ${error.message}`);
+    return null;
+  }
+}
+
+function validateQualityContract(contract, template, framework, label, result) {
+  if (contract.schemaVersion !== 1) {
+    result.errors.push(`Template "${label}" quality contract schemaVersion must be 1.`);
+  }
+  if (contract.templateId !== template.id) {
+    result.errors.push(`Template "${label}" quality contract templateId must be "${template.id}".`);
+  }
+  if (contract.framework !== framework) {
+    result.errors.push(`Template "${label}" quality contract framework must be "${framework}".`);
+  }
+  if (!Array.isArray(contract.routes) || contract.routes.length === 0) {
+    result.errors.push(`Template "${label}" quality contract must declare at least one route.`);
+  } else {
+    const routeIds = new Set();
+    for (const route of contract.routes) {
+      if (!route || typeof route !== "object" || typeof route.id !== "string" || !KEBAB_CASE.test(route.id)) {
+        result.errors.push(`Template "${label}" quality contract contains an invalid route id.`);
+        continue;
+      }
+      if (routeIds.has(route.id)) {
+        result.errors.push(`Template "${label}" quality contract contains duplicate route id "${route.id}".`);
+      }
+      routeIds.add(route.id);
+      if (typeof route.path !== "string" || !route.path.startsWith("/")) {
+        result.errors.push(`Template "${label}" quality route "${route.id}" must use an absolute path.`);
+      }
+    }
+  }
+  const viewports = new Set(contract.viewports ?? []);
+  for (const requiredViewport of ["desktop", "mobile"]) {
+    if (!viewports.has(requiredViewport)) {
+      result.errors.push(
+        `Template "${label}" quality contract must include the ${requiredViewport} viewport.`
+      );
+    }
+  }
+}
+
+function validateAutomatedAccessibilityEvidence(summary, websiteCodePath, contract, label, result) {
+  if (summary.schemaVersion !== 1) {
+    result.errors.push(`Template "${label}" accessibility summary schemaVersion must be 1.`);
+  }
+  if (summary.generator !== "accessibility-insights-report") {
+    result.errors.push(
+      `Template "${label}" automated accessibility HTML must use accessibility-insights-report.`
+    );
+  }
+  if (typeof summary.generatorVersion !== "string" || summary.generatorVersion.length === 0) {
+    result.errors.push(`Template "${label}" accessibility summary requires generatorVersion.`);
+  }
+  if (summary.engine !== "axe-core" || typeof summary.engineVersion !== "string") {
+    result.errors.push(`Template "${label}" accessibility summary must identify its axe-core version.`);
+  }
+  if (summary.score !== 100) {
+    result.errors.push(`Template "${label}" automated accessibility score must be 100.`);
+  }
+  if (summary.totalViolations !== 0) {
+    result.errors.push(`Template "${label}" automated accessibility violations must be 0.`);
+  }
+  if (!Array.isArray(summary.scans) || summary.scans.length === 0) {
+    result.errors.push(`Template "${label}" accessibility summary must contain scans.`);
+    return;
+  }
+
+  const expectedScans = new Set();
+  for (const route of contract?.routes ?? []) {
+    for (const viewport of contract?.viewports ?? []) {
+      expectedScans.add(`${route.id}:${viewport}`);
+    }
+  }
+  const actualScans = new Set();
+  const reportsRoot = path.join(websiteCodePath, "docs", "a11y-reports");
+  let calculatedViolations = 0;
+  for (const scan of summary.scans) {
+    if (!scan || typeof scan !== "object") {
+      result.errors.push(`Template "${label}" accessibility summary contains an invalid scan.`);
+      continue;
+    }
+    const scanKey = `${scan.routeId}:${scan.viewport}`;
+    if (!expectedScans.has(scanKey)) {
+      result.errors.push(`Template "${label}" accessibility summary contains unexpected scan "${scanKey}".`);
+    }
+    if (actualScans.has(scanKey)) {
+      result.errors.push(`Template "${label}" accessibility summary contains duplicate scan "${scanKey}".`);
+    }
+    actualScans.add(scanKey);
+
+    if (!Number.isInteger(scan.violations) || scan.violations !== 0) {
+      result.errors.push(`Template "${label}" accessibility scan "${scanKey}" must have zero violations.`);
+    }
+    if (Number.isInteger(scan.violations)) {
+      calculatedViolations += scan.violations;
+    }
+    if (!Number.isInteger(scan.passes) || scan.passes < 1) {
+      result.errors.push(`Template "${label}" accessibility scan "${scanKey}" must contain passed checks.`);
+    }
+    if (typeof scan.report !== "string" || path.basename(scan.report) !== scan.report) {
+      result.errors.push(`Template "${label}" accessibility scan "${scanKey}" report path is invalid.`);
+      continue;
+    }
+    const reportPath = path.join(reportsRoot, scan.report);
+    if (!fileExists(reportPath)) {
+      result.errors.push(
+        `Template "${label}" accessibility scan "${scanKey}" report does not exist: ${scan.report}.`
+      );
+      continue;
+    }
+    if (sha256File(reportPath) !== scan.sha256) {
+      result.errors.push(
+        `Template "${label}" accessibility scan "${scanKey}" report hash does not match ${scan.report}.`
+      );
+    }
+    const contents = fs.readFileSync(reportPath, "utf8");
+    if (!contents.includes("<html") && !contents.includes("<!DOCTYPE html")) {
+      result.errors.push(
+        `Template "${label}" accessibility scan "${scanKey}" report is not HTML.`
+      );
+    }
+  }
+  for (const scanKey of expectedScans) {
+    if (!actualScans.has(scanKey)) {
+      result.errors.push(
+        `Template "${label}" accessibility reports do not cover "${scanKey}".`
+      );
+    }
+  }
+  if (calculatedViolations !== summary.totalViolations) {
+    result.errors.push(
+      `Template "${label}" accessibility totalViolations does not match its scans.`
+    );
+  }
+}
+
+function validateCodeQlEvidence(reportPath, label, result) {
+  const sarif = readOptionalJson(reportPath, `CodeQL report for template "${label}"`, result);
+  if (!sarif) {
+    return;
+  }
+  if (sarif.version !== "2.1.0" || !Array.isArray(sarif.runs) || sarif.runs.length === 0) {
+    result.errors.push(`Template "${label}" CodeQL report must be valid SARIF 2.1.0 with at least one run.`);
+    return;
+  }
+  for (const run of sarif.runs) {
+    if (run?.tool?.driver?.name !== "CodeQL") {
+      result.errors.push(`Template "${label}" CodeQL report must use the CodeQL driver.`);
+    }
+    if (Array.isArray(run.results) && run.results.length > 0) {
+      result.errors.push(`Template "${label}" CodeQL report must contain zero findings.`);
+    }
+    const notifications = [
+      ...(run.invocations ?? []).flatMap((invocation) => invocation.toolExecutionNotifications ?? []),
+      ...(run.tool?.driver?.notifications ?? []).filter(
+        (notification) => notification?.level === "error"
+      )
+    ];
+    if (notifications.some((notification) =>
+      notification?.level === "error" ||
+      notification?.id === "js/diagnostics/extraction-errors" && notification?.properties?.problem.severity === "error"
+    )) {
+      result.errors.push(`Template "${label}" CodeQL report contains extraction or execution errors.`);
+    }
+  }
+}
+
+function computeQualitySourceDigest(websiteCodePath, seedDataPath = null) {
+  const hash = crypto.createHash("sha256");
+  const files = [];
+  collectQualityFiles(websiteCodePath, websiteCodePath, files);
+  if (seedDataPath && fileExists(seedDataPath)) {
+    files.push({ path: "seed-data/" + path.basename(seedDataPath), fullPath: seedDataPath });
+  }
+  files.sort((left, right) => left.path.localeCompare(right.path));
+  for (const file of files) {
+    hash.update(file.path.split(path.sep).join("/"));
+    hash.update("\0");
+    hash.update(fs.readFileSync(file.fullPath));
+    hash.update("\0");
+  }
+  return hash.digest("hex");
+}
+
+function collectQualityFiles(root, currentDirectory, files) {
+  for (const entry of fs.readdirSync(currentDirectory, { withFileTypes: true })) {
+    const fullPath = path.join(currentDirectory, entry.name);
+    const relativePath = path.relative(root, fullPath);
+    if (entry.isSymbolicLink()) {
+      continue;
+    }
+    if (entry.isDirectory()) {
+      if (
+        entry.name === "docs" ||
+        entry.name === ".powerpages-site" ||
+        FORBIDDEN_WEBSITE_CODE_DIRECTORIES.has(entry.name)
+      ) {
+        continue;
+      }
+      collectQualityFiles(root, fullPath, files);
+      continue;
+    }
+    files.push({ path: relativePath, fullPath });
+  }
+}
+
+function sha256File(filePath) {
+  return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
 }
 
 function validateVariantDirectoryContents(label, root, variantBase, result) {
@@ -1968,6 +2389,16 @@ function validateDataverseSeedChoiceValue(value, attribute, location, scope, lab
     return;
   }
 
+  if (attribute.type === "bit") {
+    if (typeof value !== "boolean") {
+      result.errors.push(
+        `Template "${label}" Dataverse seed data ${location} property "${attribute.logicalName}" ` +
+        "must be a JSON boolean for a Dataverse Two Options column."
+      );
+    }
+    return;
+  }
+
   const validValues = new Set(attribute.choiceOptionsByLabel.values());
   if (!Number.isInteger(value) || !validValues.has(value)) {
     const expectedValues = [...validValues].sort((left, right) => left - right).join(", ");
@@ -2396,6 +2827,8 @@ if (require.main === module) {
 }
 
 module.exports = {
+  computeQualitySourceDigest,
   detectManagedState,
+  sha256File,
   validateTemplates
 };
