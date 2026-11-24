@@ -2,59 +2,64 @@
   "properties": {
     "connectionReferences": {
       "shared_commondataserviceforapps": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "IA.cr.IAPluginDVConnector"
+        },
         "api": {
           "name": "shared_commondataserviceforapps"
-        },
-        "connection": {
-          "connectionReferenceLogicalName": "msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps"
-        },
-        "runtimeSource": "embedded"
+        }
       },
       "shared_conversionservice": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "ppst_sharedconversionservice_862f1"
+        },
         "api": {
           "name": "shared_conversionservice"
-        },
-        "connection": {
-          "connectionReferenceLogicalName": "cr719_northwindportalresponseconversion"
-        },
-        "runtimeSource": "embedded"
+        }
       }
     },
     "definition": {
       "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
       "contentVersion": "4.0.0.0",
       "parameters": {
-        "$authentication": {
-          "defaultValue": {},
-          "type": "SecureObject"
-        },
         "$connections": {
           "defaultValue": {},
           "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
         },
         "Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)": {
           "defaultValue": "",
           "type": "String",
           "metadata": {
-            "schemaName": "ppst_ModernCss_PortalApplicationUserId"
+            "schemaName": "ppst_ModernCss_PortalApplicationUserId",
+            "description": "Systemuser ID of the Power Pages site application user (Portals-<site name>). Only Web cases created by this user start the Case Management Agent flow and the Send approval capture."
           }
         },
         "Modern CSS - Portal URL (ppst_ModernCss_PortalUrl)": {
           "defaultValue": "",
           "type": "String",
           "metadata": {
-            "schemaName": "ppst_ModernCss_PortalUrl"
+            "schemaName": "ppst_ModernCss_PortalUrl",
+            "description": "Base URL of the customer support site, used in published response metadata."
           }
         }
       },
       "triggers": {
         "When_case_email_Send_is_accepted": {
+          "metadata": {
+            "operationMetadataId": "1ee0ca80-4c78-4540-9b39-6551b366594e"
+          },
           "type": "OpenApiConnectionWebhook",
           "inputs": {
             "host": {
-              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
               "operationId": "SubscribeWebhookTrigger",
-              "connectionName": "shared_commondataserviceforapps"
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
             },
             "parameters": {
               "subscriptionRequest/message": 3,
@@ -69,12 +74,16 @@
       },
       "actions": {
         "Read_sent_email": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "3558afd6-8efb-4fd7-a5a8-77c38c4ad2e9"
+          },
           "type": "OpenApiConnection",
           "inputs": {
             "host": {
-              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
               "operationId": "GetItem",
-              "connectionName": "shared_commondataserviceforapps"
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
             },
             "parameters": {
               "entityName": "emails",
@@ -83,14 +92,15 @@
               "$expand": "regardingobjectid_incident_email($select=incidentid)"
             },
             "authentication": "@parameters('$authentication')"
-          },
-          "runAfter": {}
+          }
         },
         "Require_outgoing_case_email": {
-          "type": "If",
-          "expression": "@not(and(equals(outputs('Read_sent_email')?['body/directioncode'], true), not(empty(outputs('Read_sent_email')?['body/regardingobjectid_incident_email']?['incidentid']))))",
           "actions": {
             "Record_not_case_email": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "0e2192f5-7cd6-4a07-a193-72c14e45a728"
+              },
               "type": "Compose",
               "inputs": {
                 "status": "Skipped",
@@ -98,33 +108,46 @@
               }
             },
             "Stop_not_case_email": {
-              "type": "Terminate",
-              "inputs": {
-                "runStatus": "Succeeded"
-              },
               "runAfter": {
                 "Record_not_case_email": [
                   "Succeeded"
                 ]
+              },
+              "metadata": {
+                "operationMetadataId": "5cff78f9-7a24-42d8-868d-6a497bc9bcff"
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Succeeded"
               }
             }
-          },
-          "else": {
-            "actions": {}
           },
           "runAfter": {
             "Read_sent_email": [
               "Succeeded"
             ]
-          }
+          },
+          "expression": "@not(and(equals(outputs('Read_sent_email')?['body/directioncode'], true), not(empty(outputs('Read_sent_email')?['body/regardingobjectid_incident_email']?['incidentid']))))",
+          "metadata": {
+            "operationMetadataId": "65702277-9dc4-432c-b0ff-026fdfb563d2"
+          },
+          "type": "If"
         },
         "Read_case": {
+          "runAfter": {
+            "Require_outgoing_case_email": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "10a58066-3e14-4d91-8742-467ed3cb25e1"
+          },
           "type": "OpenApiConnection",
           "inputs": {
             "host": {
-              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
               "operationId": "GetItem",
-              "connectionName": "shared_commondataserviceforapps"
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
             },
             "parameters": {
               "entityName": "incidents",
@@ -133,18 +156,15 @@
               "$expand": "customerid_contact($select=contactid)"
             },
             "authentication": "@parameters('$authentication')"
-          },
-          "runAfter": {
-            "Require_outgoing_case_email": [
-              "Succeeded"
-            ]
           }
         },
         "Require_Northwind_personal_case": {
-          "type": "If",
-          "expression": "@not(and(equals(outputs('Read_case')?['body/caseorigincode'], 3), equals(outputs('Read_case')?['body/_createdby_value'], parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')), not(empty(outputs('Read_case')?['body/customerid_contact']?['contactid'])), equals(outputs('Read_case')?['body/_customerid_value'], outputs('Read_case')?['body/customerid_contact']?['contactid'])))",
           "actions": {
             "Record_not_portal_case": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "90844551-99cc-41d6-bc5b-0fab65dd226f"
+              },
               "type": "Compose",
               "inputs": {
                 "status": "Skipped",
@@ -152,54 +172,64 @@
               }
             },
             "Stop_not_portal_case": {
-              "type": "Terminate",
-              "inputs": {
-                "runStatus": "Succeeded"
-              },
               "runAfter": {
                 "Record_not_portal_case": [
                   "Succeeded"
                 ]
+              },
+              "metadata": {
+                "operationMetadataId": "ca7d3871-5005-476a-ac01-3cc5336817cf"
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Succeeded"
               }
             }
-          },
-          "else": {
-            "actions": {}
           },
           "runAfter": {
             "Read_case": [
               "Succeeded"
             ]
-          }
+          },
+          "expression": "@not(and(equals(outputs('Read_case')?['body/caseorigincode'], 3), equals(outputs('Read_case')?['body/_createdby_value'], parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')), not(empty(outputs('Read_case')?['body/customerid_contact']?['contactid'])), equals(outputs('Read_case')?['body/_customerid_value'], outputs('Read_case')?['body/customerid_contact']?['contactid'])))",
+          "metadata": {
+            "operationMetadataId": "3e57a3ee-f4d2-4996-8071-a6d679c55abe"
+          },
+          "type": "If"
         },
         "Read_To_recipients": {
+          "runAfter": {
+            "Require_Northwind_personal_case": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "e8e59c4f-3e33-41aa-b034-52836877d43c"
+          },
           "type": "OpenApiConnection",
           "inputs": {
             "host": {
-              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
               "operationId": "ListRecords",
-              "connectionName": "shared_commondataserviceforapps"
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
             },
             "parameters": {
               "entityName": "activityparties",
               "$select": "activitypartyid,participationtypemask,_partyid_value",
               "$filter": "@concat('_activityid_value eq ', outputs('Read_sent_email')?['body/activityid'], ' and participationtypemask eq 2')",
-              "$expand": "partyid_contact($select=contactid)",
-              "$top": 2
+              "$top": 2,
+              "$expand": "partyid_contact($select=contactid)"
             },
             "authentication": "@parameters('$authentication')"
-          },
-          "runAfter": {
-            "Require_Northwind_personal_case": [
-              "Succeeded"
-            ]
           }
         },
         "Require_case_Contact_as_sole_recipient": {
-          "type": "If",
-          "expression": "@not(and(equals(length(outputs('Read_To_recipients')?['body/value']), 1), equals(first(outputs('Read_To_recipients')?['body/value'])?['partyid_contact']?['contactid'], outputs('Read_case')?['body/customerid_contact']?['contactid'])))",
           "actions": {
             "Record_not_portal_response": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "6580554d-f25a-41ba-9cb4-d3f2f99b1547"
+              },
               "type": "Compose",
               "inputs": {
                 "status": "Skipped",
@@ -207,31 +237,38 @@
               }
             },
             "Stop_not_portal_response": {
-              "type": "Terminate",
-              "inputs": {
-                "runStatus": "Succeeded"
-              },
               "runAfter": {
                 "Record_not_portal_response": [
                   "Succeeded"
                 ]
+              },
+              "metadata": {
+                "operationMetadataId": "d4062037-7e45-4a60-a729-03ff8eac19a1"
+              },
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Succeeded"
               }
             }
-          },
-          "else": {
-            "actions": {}
           },
           "runAfter": {
             "Read_To_recipients": [
               "Succeeded"
             ]
-          }
+          },
+          "expression": "@not(and(equals(length(outputs('Read_To_recipients')?['body/value']), 1), equals(first(outputs('Read_To_recipients')?['body/value'])?['partyid_contact']?['contactid'], outputs('Read_case')?['body/customerid_contact']?['contactid'])))",
+          "metadata": {
+            "operationMetadataId": "42261d63-b90b-4dbf-8f23-9bd7352b24a0"
+          },
+          "type": "If"
         },
         "Require_locked_sent_email": {
-          "type": "If",
-          "expression": "@not(and(equals(outputs('Read_sent_email')?['body/statecode'], 1), or(equals(outputs('Read_sent_email')?['body/statuscode'], 6), equals(outputs('Read_sent_email')?['body/statuscode'], 7), equals(outputs('Read_sent_email')?['body/statuscode'], 3))))",
           "actions": {
             "Stop_unlocked_email": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "79de0971-6956-440f-9b9e-e714b4b2cda5"
+              },
               "type": "Terminate",
               "inputs": {
                 "runStatus": "Failed",
@@ -242,22 +279,32 @@
               }
             }
           },
-          "else": {
-            "actions": {}
-          },
           "runAfter": {
             "Require_case_Contact_as_sole_recipient": [
               "Succeeded"
             ]
-          }
+          },
+          "expression": "@not(and(equals(outputs('Read_sent_email')?['body/statecode'], 1), or(equals(outputs('Read_sent_email')?['body/statuscode'], 6), equals(outputs('Read_sent_email')?['body/statuscode'], 7), equals(outputs('Read_sent_email')?['body/statuscode'], 3))))",
+          "metadata": {
+            "operationMetadataId": "4fb76ed3-7e84-40ae-8923-c8c5bc5cc4b2"
+          },
+          "type": "If"
         },
         "Find_publication_receipt": {
+          "runAfter": {
+            "Require_locked_sent_email": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "45b8f2a0-d9ae-4862-918c-0e39f72ccf73"
+          },
           "type": "OpenApiConnection",
           "inputs": {
             "host": {
-              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
               "operationId": "ListRecords",
-              "connectionName": "shared_commondataserviceforapps"
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
             },
             "parameters": {
               "entityName": "annotations",
@@ -266,27 +313,25 @@
               "$top": 1
             },
             "authentication": "@parameters('$authentication')"
-          },
-          "runAfter": {
-            "Require_locked_sent_email": [
-              "Succeeded"
-            ]
           }
         },
         "Publication_exists": {
-          "type": "If",
-          "expression": "@greater(length(outputs('Find_publication_receipt')?['body/value']), 0)",
           "actions": {
             "Existing_receipt": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "e93223a0-0195-481a-ad07-5fb65ca0d711"
+              },
               "type": "Compose",
-              "inputs": "@json(first(outputs('Find_publication_receipt')?['body/value'])?['notetext'])",
-              "runAfter": {}
+              "inputs": "@json(first(outputs('Find_publication_receipt')?['body/value'])?['notetext'])"
             },
             "Require_matching_completed_receipt": {
-              "type": "If",
-              "expression": "@not(and(equals(first(outputs('Find_publication_receipt')?['body/value'])?['subject'], 'Northwind portal: Approved response publication'), equals(first(outputs('Find_publication_receipt')?['body/value'])?['_objectid_value'], outputs('Read_case')?['body/incidentid']), or(and(equals(outputs('Existing_receipt')?['schemaVersion'], 5), equals(outputs('Existing_receipt')?['publicationMethod'], 'SendAccepted'), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['approvedBy'])), not(empty(outputs('Existing_receipt')?['approvedAt']))), and(equals(outputs('Existing_receipt')?['schemaVersion'], 4), equals(outputs('Existing_receipt')?['publicationMethod'], 'NativeSend'), not(empty(outputs('Existing_receipt')?['approvalRequestId'])), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['approvedBy'])), not(empty(outputs('Existing_receipt')?['approvedAt']))), and(equals(outputs('Existing_receipt')?['schemaVersion'], 3), equals(outputs('Existing_receipt')?['publicationMethod'], 'SentEmail'), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['sourceSentOn']))), equals(outputs('Existing_receipt')?['schemaVersion'], 1), and(equals(outputs('Existing_receipt')?['schemaVersion'], 2), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['approvalId'])), not(empty(outputs('Existing_receipt')?['approvedBy'])))), equals(outputs('Existing_receipt')?['status'], 'Published'), equals(outputs('Existing_receipt')?['emailId'], outputs('Read_sent_email')?['body/activityid']), equals(outputs('Existing_receipt')?['caseId'], outputs('Read_case')?['body/incidentid']), equals(outputs('Existing_receipt')?['contactId'], outputs('Read_case')?['body/customerid_contact']?['contactid']), not(empty(outputs('Existing_receipt')?['approvedText'])), not(empty(outputs('Existing_receipt')?['commentId']))))",
               "actions": {
                 "Stop_conflicting_or_unconfirmed_publication": {
+                  "runAfter": {},
+                  "metadata": {
+                    "operationMetadataId": "6875282d-f88d-4de1-b4ee-9283f60b2ea7"
+                  },
                   "type": "Terminate",
                   "inputs": {
                     "runStatus": "Failed",
@@ -297,22 +342,32 @@
                   }
                 }
               },
-              "else": {
-                "actions": {}
-              },
               "runAfter": {
                 "Existing_receipt": [
                   "Succeeded"
                 ]
-              }
+              },
+              "expression": "@not(and(equals(first(outputs('Find_publication_receipt')?['body/value'])?['subject'], 'Northwind portal: Approved response publication'), equals(first(outputs('Find_publication_receipt')?['body/value'])?['_objectid_value'], outputs('Read_case')?['body/incidentid']), or(and(or(equals(outputs('Existing_receipt')?['schemaVersion'], 6), equals(outputs('Existing_receipt')?['schemaVersion'], 5)), equals(outputs('Existing_receipt')?['publicationMethod'], 'SendAccepted'), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['approvedBy'])), not(empty(outputs('Existing_receipt')?['approvedAt']))), and(equals(outputs('Existing_receipt')?['schemaVersion'], 4), equals(outputs('Existing_receipt')?['publicationMethod'], 'NativeSend'), not(empty(outputs('Existing_receipt')?['approvalRequestId'])), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['approvedBy'])), not(empty(outputs('Existing_receipt')?['approvedAt']))), and(equals(outputs('Existing_receipt')?['schemaVersion'], 3), equals(outputs('Existing_receipt')?['publicationMethod'], 'SentEmail'), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['sourceSentOn']))), equals(outputs('Existing_receipt')?['schemaVersion'], 1), and(equals(outputs('Existing_receipt')?['schemaVersion'], 2), not(empty(outputs('Existing_receipt')?['sourceEmailVersion'])), not(empty(outputs('Existing_receipt')?['approvalId'])), not(empty(outputs('Existing_receipt')?['approvedBy'])))), equals(outputs('Existing_receipt')?['status'], 'Published'), equals(outputs('Existing_receipt')?['emailId'], outputs('Read_sent_email')?['body/activityid']), equals(outputs('Existing_receipt')?['caseId'], outputs('Read_case')?['body/incidentid']), equals(outputs('Existing_receipt')?['contactId'], outputs('Read_case')?['body/customerid_contact']?['contactid']), not(empty(outputs('Existing_receipt')?['approvedText'])), not(empty(outputs('Existing_receipt')?['commentId']))))",
+              "metadata": {
+                "operationMetadataId": "91199bc3-b369-4152-b058-2ffb2cb49908"
+              },
+              "type": "If"
             },
             "Read_existing_response": {
+              "runAfter": {
+                "Require_matching_completed_receipt": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "d4e55950-0aea-4f06-93db-53c33225427e"
+              },
               "type": "OpenApiConnection",
               "inputs": {
                 "host": {
-                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "connectionName": "shared_commondataserviceforapps",
                   "operationId": "GetItem",
-                  "connectionName": "shared_commondataserviceforapps"
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
                 },
                 "parameters": {
                   "entityName": "adx_portalcomments",
@@ -320,18 +375,15 @@
                   "$select": "activityid,subject,description,_regardingobjectid_value,adx_portalcommentdirectioncode"
                 },
                 "authentication": "@parameters('$authentication')"
-              },
-              "runAfter": {
-                "Require_matching_completed_receipt": [
-                  "Succeeded"
-                ]
               }
             },
             "Verify_existing_response": {
-              "type": "If",
-              "expression": "@not(and(equals(outputs('Read_existing_response')?['body/_regardingobjectid_value'], outputs('Read_case')?['body/incidentid']), equals(outputs('Read_existing_response')?['body/subject'], if(greaterOrEquals(outputs('Existing_receipt')?['schemaVersion'], 4), '*WEB* Reviewed support response', if(equals(outputs('Existing_receipt')?['schemaVersion'], 3), '*WEB* Support email response', '*WEB* AI-assisted support response'))), equals(outputs('Read_existing_response')?['body/adx_portalcommentdirectioncode'], 2), equals(outputs('Read_existing_response')?['body/description'], outputs('Existing_receipt')?['approvedText'])))",
               "actions": {
                 "Stop_changed_response": {
+                  "runAfter": {},
+                  "metadata": {
+                    "operationMetadataId": "fd2b64d5-2679-4958-a38f-d17454b00ae8"
+                  },
                   "type": "Terminate",
                   "inputs": {
                     "runStatus": "Failed",
@@ -342,16 +394,26 @@
                   }
                 }
               },
-              "else": {
-                "actions": {}
-              },
               "runAfter": {
                 "Read_existing_response": [
                   "Succeeded"
                 ]
-              }
+              },
+              "expression": "@not(and(equals(outputs('Read_existing_response')?['body/_regardingobjectid_value'], outputs('Read_case')?['body/incidentid']), equals(outputs('Read_existing_response')?['body/subject'], if(equals(outputs('Existing_receipt')?['schemaVersion'], 6), 'Reviewed support response', if(greaterOrEquals(outputs('Existing_receipt')?['schemaVersion'], 4), '*WEB* Reviewed support response', if(equals(outputs('Existing_receipt')?['schemaVersion'], 3), '*WEB* Support email response', '*WEB* AI-assisted support response')))), equals(outputs('Read_existing_response')?['body/adx_portalcommentdirectioncode'], 2), equals(outputs('Read_existing_response')?['body/description'], outputs('Existing_receipt')?['approvedText'])))",
+              "metadata": {
+                "operationMetadataId": "0729f953-91a0-43e1-bba8-31957f631482"
+              },
+              "type": "If"
             },
             "Already_published": {
+              "runAfter": {
+                "Verify_existing_response": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "3a721e48-d87e-4f0b-9b7d-2ca61ef49a66"
+              },
               "type": "Compose",
               "inputs": {
                 "status": "AlreadyPublished",
@@ -359,44 +421,53 @@
                 "caseId": "@outputs('Read_case')?['body/incidentid']",
                 "commentId": "@outputs('Existing_receipt')?['commentId']",
                 "portalCaseUrl": "@concat(parameters('Modern CSS - Portal URL (ppst_ModernCss_PortalUrl)'), '/cases/', outputs('Read_case')?['body/incidentid'])"
-              },
-              "runAfter": {
-                "Verify_existing_response": [
-                  "Succeeded"
-                ]
               }
             }
+          },
+          "runAfter": {
+            "Find_publication_receipt": [
+              "Succeeded"
+            ]
           },
           "else": {
             "actions": {
               "Convert_approved_snapshot_to_text": {
+                "runAfter": {},
+                "metadata": {
+                  "operationMetadataId": "06f38a21-69da-473a-92fa-a0708584a367"
+                },
                 "type": "OpenApiConnection",
                 "inputs": {
                   "host": {
-                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_conversionservice",
+                    "connectionName": "shared_conversionservice",
                     "operationId": "HtmlToText",
-                    "connectionName": "shared_conversionservice"
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_conversionservice"
                   },
                   "parameters": {
                     "Content": "@coalesce(outputs('Read_sent_email')?['body/description'], '')"
-                  }
-                },
-                "runAfter": {}
+                  },
+                  "authentication": "@parameters('$authentication')"
+                }
               },
               "Approved_text": {
-                "type": "Compose",
-                "inputs": "@trim(body('Convert_approved_snapshot_to_text'))",
                 "runAfter": {
                   "Convert_approved_snapshot_to_text": [
                     "Succeeded"
                   ]
-                }
+                },
+                "metadata": {
+                  "operationMetadataId": "25b69ebd-e2b8-4ceb-9b59-fda959a59ba4"
+                },
+                "type": "Compose",
+                "inputs": "@trim(body('Convert_approved_snapshot_to_text'))"
               },
               "Require_publishable_text": {
-                "type": "If",
-                "expression": "@not(and(not(empty(outputs('Approved_text'))), lessOrEquals(length(outputs('Approved_text')), 4000)))",
                 "actions": {
                   "Stop_invalid_approved_text": {
+                    "runAfter": {},
+                    "metadata": {
+                      "operationMetadataId": "d6050dc9-f8cc-4e27-80c2-f2ab3e41f727"
+                    },
                     "type": "Terminate",
                     "inputs": {
                       "runStatus": "Failed",
@@ -407,22 +478,32 @@
                     }
                   }
                 },
-                "else": {
-                  "actions": {}
-                },
                 "runAfter": {
                   "Approved_text": [
                     "Succeeded"
                   ]
-                }
+                },
+                "expression": "@not(and(not(empty(outputs('Approved_text'))), lessOrEquals(length(outputs('Approved_text')), 4000)))",
+                "metadata": {
+                  "operationMetadataId": "6ead69c1-1d2f-4b2e-9c60-b41ae8eda492"
+                },
+                "type": "If"
               },
               "Read_case_before_publish": {
+                "runAfter": {
+                  "Require_publishable_text": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "e427e44d-a192-4bd9-92f6-cfbe19abf67f"
+                },
                 "type": "OpenApiConnection",
                 "inputs": {
                   "host": {
-                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "connectionName": "shared_commondataserviceforapps",
                     "operationId": "GetItem",
-                    "connectionName": "shared_commondataserviceforapps"
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
                   },
                   "parameters": {
                     "entityName": "incidents",
@@ -431,18 +512,15 @@
                     "$expand": "customerid_contact($select=contactid)"
                   },
                   "authentication": "@parameters('$authentication')"
-                },
-                "runAfter": {
-                  "Require_publishable_text": [
-                    "Succeeded"
-                  ]
                 }
               },
               "Require_unchanged_case_audience": {
-                "type": "If",
-                "expression": "@not(and(equals(outputs('Read_case_before_publish')?['body/caseorigincode'], 3), equals(outputs('Read_case_before_publish')?['body/_createdby_value'], parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')), equals(outputs('Read_case_before_publish')?['body/customerid_contact']?['contactid'], outputs('Read_case')?['body/customerid_contact']?['contactid']), equals(outputs('Read_case_before_publish')?['body/_customerid_value'], outputs('Read_case')?['body/customerid_contact']?['contactid'])))",
                 "actions": {
                   "Stop_changed_case_audience": {
+                    "runAfter": {},
+                    "metadata": {
+                      "operationMetadataId": "1ae63ed5-5be6-4e79-9eca-d518f00da9c4"
+                    },
                     "type": "Terminate",
                     "inputs": {
                       "runStatus": "Failed",
@@ -453,28 +531,41 @@
                     }
                   }
                 },
-                "else": {
-                  "actions": {}
-                },
                 "runAfter": {
                   "Read_case_before_publish": [
                     "Succeeded"
                   ]
-                }
+                },
+                "expression": "@not(and(equals(outputs('Read_case_before_publish')?['body/caseorigincode'], 3), equals(outputs('Read_case_before_publish')?['body/_createdby_value'], parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')), equals(outputs('Read_case_before_publish')?['body/customerid_contact']?['contactid'], outputs('Read_case')?['body/customerid_contact']?['contactid']), equals(outputs('Read_case_before_publish')?['body/_customerid_value'], outputs('Read_case')?['body/customerid_contact']?['contactid'])))",
+                "metadata": {
+                  "operationMetadataId": "bb143c51-e7e4-4fc3-a5d9-7ac079f96eb1"
+                },
+                "type": "If"
               },
               "New_comment_id": {
-                "type": "Compose",
-                "inputs": "@guid()",
                 "runAfter": {
                   "Require_unchanged_case_audience": [
                     "Succeeded"
                   ]
-                }
+                },
+                "metadata": {
+                  "operationMetadataId": "286333a7-0b47-4926-93f5-018d2aef929d"
+                },
+                "type": "Compose",
+                "inputs": "@guid()"
               },
               "Publication_receipt": {
+                "runAfter": {
+                  "New_comment_id": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "1bd35fd5-a617-414c-b946-26a2fb78d878"
+                },
                 "type": "Compose",
                 "inputs": {
-                  "schemaVersion": 5,
+                  "schemaVersion": 6,
                   "status": "Reserved",
                   "emailId": "@outputs('Read_sent_email')?['body/activityid']",
                   "caseId": "@outputs('Read_case')?['body/incidentid']",
@@ -486,52 +577,58 @@
                   "publicationMethod": "SendAccepted",
                   "approvedBy": "@triggerBody()?['_modifiedby_value']",
                   "approvedAt": "@triggerBody()?['modifiedon']"
-                },
-                "runAfter": {
-                  "New_comment_id": [
-                    "Succeeded"
-                  ]
                 }
               },
               "Reserve_publication": {
+                "runAfter": {
+                  "Publication_receipt": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "c1a31b56-a138-4839-88fd-f795f4e217b6"
+                },
                 "type": "OpenApiConnection",
                 "inputs": {
                   "host": {
-                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "connectionName": "shared_commondataserviceforapps",
                     "operationId": "CreateRecord",
-                    "connectionName": "shared_commondataserviceforapps"
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
                   },
                   "parameters": {
                     "entityName": "annotations",
-                    "item/annotationid": "@outputs('Read_sent_email')?['body/activityid']",
                     "item/subject": "Northwind portal: Approved response publication",
                     "item/notetext": "@string(outputs('Publication_receipt'))",
                     "item/isdocument": false,
+                    "item/annotationid": "@outputs('Read_sent_email')?['body/activityid']",
                     "item/objectid_incident@odata.bind": "@concat('incidents(', outputs('Read_case')?['body/incidentid'], ')')"
                   },
                   "authentication": "@parameters('$authentication')",
                   "retryPolicy": {
                     "type": "none"
                   }
-                },
-                "runAfter": {
-                  "Publication_receipt": [
-                    "Succeeded"
-                  ]
                 }
               },
               "Create_portal_response": {
+                "runAfter": {
+                  "Reserve_publication": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "a1882c49-6aaf-4d53-bc8e-a53fa14948aa"
+                },
                 "type": "OpenApiConnection",
                 "inputs": {
                   "host": {
-                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "connectionName": "shared_commondataserviceforapps",
                     "operationId": "CreateRecord",
-                    "connectionName": "shared_commondataserviceforapps"
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
                   },
                   "parameters": {
                     "entityName": "adx_portalcomments",
+                    "item/subject": "Reviewed support response",
                     "item/activityid": "@outputs('New_comment_id')",
-                    "item/subject": "*WEB* Reviewed support response",
                     "item/description": "@outputs('Publication_receipt')?['approvedText']",
                     "item/adx_portalcommentdirectioncode": 2,
                     "item/regardingobjectid_incident_adx_portalcomment@odata.bind": "@concat('incidents(', outputs('Read_case')?['body/incidentid'], ')')"
@@ -540,20 +637,23 @@
                   "retryPolicy": {
                     "type": "none"
                   }
-                },
-                "runAfter": {
-                  "Reserve_publication": [
-                    "Succeeded"
-                  ]
                 }
               },
               "Read_published_response": {
+                "runAfter": {
+                  "Create_portal_response": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "e8641c19-6df9-460d-9bdb-a9912a24ad38"
+                },
                 "type": "OpenApiConnection",
                 "inputs": {
                   "host": {
-                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "connectionName": "shared_commondataserviceforapps",
                     "operationId": "GetItem",
-                    "connectionName": "shared_commondataserviceforapps"
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
                   },
                   "parameters": {
                     "entityName": "adx_portalcomments",
@@ -561,18 +661,15 @@
                     "$select": "activityid,subject,description,_regardingobjectid_value,adx_portalcommentdirectioncode"
                   },
                   "authentication": "@parameters('$authentication')"
-                },
-                "runAfter": {
-                  "Create_portal_response": [
-                    "Succeeded"
-                  ]
                 }
               },
               "Verify_published_response": {
-                "type": "If",
-                "expression": "@not(and(equals(outputs('Read_published_response')?['body/activityid'], outputs('New_comment_id')), equals(outputs('Read_published_response')?['body/_regardingobjectid_value'], outputs('Read_case')?['body/incidentid']), equals(outputs('Read_published_response')?['body/subject'], '*WEB* Reviewed support response'), equals(outputs('Read_published_response')?['body/adx_portalcommentdirectioncode'], 2), equals(outputs('Read_published_response')?['body/description'], outputs('Publication_receipt')?['approvedText'])))",
                 "actions": {
                   "Stop_unconfirmed_response": {
+                    "runAfter": {},
+                    "metadata": {
+                      "operationMetadataId": "af86fc90-1176-42c1-bcf3-e8f65006aadf"
+                    },
                     "type": "Terminate",
                     "inputs": {
                       "runStatus": "Failed",
@@ -583,22 +680,32 @@
                     }
                   }
                 },
-                "else": {
-                  "actions": {}
-                },
                 "runAfter": {
                   "Read_published_response": [
                     "Succeeded"
                   ]
-                }
+                },
+                "expression": "@not(and(equals(outputs('Read_published_response')?['body/activityid'], outputs('New_comment_id')), equals(outputs('Read_published_response')?['body/_regardingobjectid_value'], outputs('Read_case')?['body/incidentid']), equals(outputs('Read_published_response')?['body/subject'], 'Reviewed support response'), equals(outputs('Read_published_response')?['body/adx_portalcommentdirectioncode'], 2), equals(outputs('Read_published_response')?['body/description'], outputs('Publication_receipt')?['approvedText'])))",
+                "metadata": {
+                  "operationMetadataId": "def50a46-7f15-4645-b9cf-bb21ce9a5855"
+                },
+                "type": "If"
               },
               "Complete_publication_receipt": {
+                "runAfter": {
+                  "Verify_published_response": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "e64cdc4e-ac3a-4fcd-a146-7c9d427759cf"
+                },
                 "type": "OpenApiConnection",
                 "inputs": {
                   "host": {
-                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "connectionName": "shared_commondataserviceforapps",
                     "operationId": "UpdateOnlyRecord",
-                    "connectionName": "shared_commondataserviceforapps"
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
                   },
                   "parameters": {
                     "entityName": "annotations",
@@ -606,14 +713,17 @@
                     "item/notetext": "@string(setProperty(setProperty(outputs('Publication_receipt'), 'status', 'Published'), 'publishedAt', utcNow()))"
                   },
                   "authentication": "@parameters('$authentication')"
-                },
-                "runAfter": {
-                  "Verify_published_response": [
-                    "Succeeded"
-                  ]
                 }
               },
               "Published": {
+                "runAfter": {
+                  "Complete_publication_receipt": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "4d3052b0-fc48-42c5-ac66-f56641df950c"
+                },
                 "type": "Compose",
                 "inputs": {
                   "status": "Published",
@@ -621,23 +731,19 @@
                   "caseId": "@outputs('Read_case')?['body/incidentid']",
                   "commentId": "@outputs('New_comment_id')",
                   "portalCaseUrl": "@concat(parameters('Modern CSS - Portal URL (ppst_ModernCss_PortalUrl)'), '/cases/', outputs('Read_case')?['body/incidentid'])"
-                },
-                "runAfter": {
-                  "Complete_publication_receipt": [
-                    "Succeeded"
-                  ]
                 }
               }
             }
           },
-          "runAfter": {
-            "Find_publication_receipt": [
-              "Succeeded"
-            ]
-          }
+          "expression": "@greater(length(outputs('Find_publication_receipt')?['body/value']), 0)",
+          "metadata": {
+            "operationMetadataId": "1d60f44b-9232-464b-83e6-3bdeffbb3e3e"
+          },
+          "type": "If"
         }
       }
-    }
+    },
+    "templateName": ""
   },
   "schemaVersion": "1.0.0.0"
 }

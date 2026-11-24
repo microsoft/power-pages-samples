@@ -1,0 +1,4 @@
+description: Allow only inherited customer-comment upload columns; the Activity API remains disabled.
+id: 9b0a04a0-6a69-43cc-9515-cda0ecaaa6f6
+name: Webapi/activitypointer/fields
+value: "activityid,description,regardingobjectid"

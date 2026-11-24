@@ -1,0 +1,6 @@
+adx_columnpermissionprofile_webrole:
+- ba9c8c1a-db48-46e3-b1b9-325702839728
+allcolumnpermissions: []
+id: 4eef83d6-31c6-4deb-a51b-7961477a40ba
+profilename: Customer Attachment Annotation API
+tablename: annotation

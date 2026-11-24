@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type Ref } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useSupport } from '../SupportContext'
 import { formatNumber } from '../data'
@@ -20,25 +20,26 @@ const signInPaths: { to: string; icon: IconName; title: string; detail: string }
   { to: '/account#contact-support', icon: 'person', title: 'Contact support', detail: 'Sign in to message the team' },
 ]
 export default function Layout({ children }: { children: ReactNode }) {
-  const { isDemo, phase, loadError, refresh, notifications, setNotifications, openAssistant, setIssueOpen, realtime, caseAnnouncement, preferences, signedIn, signedOut, knowledgeReady, publicKnowledge } = useSupport()
+  const { isDemo, phase, loadError, refresh, notifications, setNotifications, openAssistant, setIssueOpen, realtime, caseAnnouncement, preferences, profile, signedIn, signedOut, knowledgeReady, publicKnowledge } = useSupport()
   const [menuOpen, setMenuOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const sidebarBell = useRef<HTMLButtonElement>(null)
-  const mobileBell = useRef<HTMLButtonElement>(null)
+  const headerBell = useRef<HTMLButtonElement>(null)
   const notificationFocus = useRef<HTMLElement | null>(null)
   const [announcement, setAnnouncement] = useState({ sequence: 0, text: '', dialog: false })
   const unread = notifications.filter(item => !item.read).length
-  const notificationStatus = phase !== 'ready' ? `Case notifications are unavailable until your support workspace loads.${loadError ? ` ${loadError}` : ''}`
+  const notificationBaseStatus = phase !== 'ready' ? `Case notifications are unavailable until your support workspace loads.${loadError ? ` ${loadError}` : ''}`
     : realtime.error ? `Case updates could not be refreshed. ${realtime.error} Use Retry case updates to try again.`
     : realtime.state === 'waiting' ? 'Waiting for the Power Pages case update service.'
     : realtime.state === 'unavailable' ? 'Live case updates are unavailable on this page. Reload to check your current cases.'
     : preferences[0] || preferences[1] ? 'In-app updates for your personal cases are enabled for this tab. No email or device notifications are sent.'
     : 'New case and support-reply notifications are turned off in Account & support. Your case data still refreshes.'
+  const notificationStatus = notificationBaseStatus + (phase === 'ready' && realtime.state === 'polling'
+    ? ' Cases and support replies are checked every 60 seconds while this tab is visible and online, less often after a refresh failure.'
+    : '')
   const announced = useRef({ sequence: caseAnnouncement.sequence, status: notificationStatus, open: notificationsOpen })
   const location = useLocation()
   function focusBell() {
-    const bell = [sidebarBell.current, mobileBell.current].find(item => item && item.getClientRects().length > 0)
-    bell?.focus()
+    headerBell.current?.focus()
   }
   function focusNotificationHeading() { document.querySelector<HTMLElement>('#notification-dialog h2')?.focus() }
   function releaseActionFocus(action: HTMLButtonElement) {
@@ -88,12 +89,11 @@ export default function Layout({ children }: { children: ReactNode }) {
   useEffect(() => { if (!signedIn) setNotificationsOpen(false) }, [signedIn])
   const navigation = <nav className="primary-nav" aria-label="Primary navigation">{links.filter(link => signedIn || !link.personal).map(link =>
     <NavLink key={link.path} to={link.path} end={link.path === '/'} className="nav-link" onClick={() => setMenuOpen(false)}><span className="nav-icon"><Icon name={link.icon} /></span>{link.label}</NavLink>)}</nav>
-  const bell = (ref: Ref<HTMLButtonElement>, compact: boolean) => <button ref={ref} type="button" className={compact ? 'icon-button bell-button' : 'nav-link utility-link bell-button'} aria-label={`Notifications, ${formatNumber(unread)} unread`} aria-haspopup="dialog" aria-controls="notification-dialog" onClick={() => setNotificationsOpen(true)}>
-    {compact ? <Icon name="bell" /> : <span className="utility-label"><span className="nav-icon"><Icon name="bell" /></span>Notifications</span>}
+  const bell = <button ref={headerBell} type="button" className="icon-button bell-button" aria-label={`Notifications, ${formatNumber(unread)} unread`} aria-haspopup="dialog" aria-controls="notification-dialog" onClick={() => setNotificationsOpen(true)}>
+    <Icon name="bell" />
     {unread > 0 && <span className="count">{formatNumber(unread)}</span>}
   </button>
-  const utilities = (inMenu: boolean) => <div className="sidebar-utilities">
-    {signedIn && !inMenu && bell(sidebarBell, false)}
+  const utilities = () => <div className="sidebar-utilities">
     {signedIn && <SignOutLink className="nav-link utility-link" onClick={() => setMenuOpen(false)}><span className="utility-label"><span className="nav-icon"><Icon name="signOut" progression /></span>Sign out</span></SignOutLink>}
     {signedOut && <SignInLink to={location.pathname + location.search + location.hash} className="nav-link utility-link" onClick={() => setMenuOpen(false)}><span className="utility-label"><span className="nav-icon"><Icon name="signIn" progression /></span>Sign in</span></SignInLink>}
     {signedIn && <button type="button" className="button secondary sidebar-report" onClick={() => { setMenuOpen(false); setIssueOpen(true) }}>Report an issue <Icon name="arrow" progression /></button>}
@@ -108,14 +108,20 @@ export default function Layout({ children }: { children: ReactNode }) {
       <aside className="sidebar" aria-label="Northwind workspace">
         <Link className="logo" to="/" aria-label="Northwind - Ask Northwind"><span className="logo-mark">N</span><span><strong>Northwind</strong><small>Field Services</small></span></Link>
         {navigation}
-        {utilities(false)}
+        {utilities()}
       </aside>
       <div className="main-column">
-        <div className="mobile-bar">
+        <header className="workspace-bar">
           <button type="button" className="icon-button mobile-menu" aria-label="Open navigation" aria-expanded={menuOpen} aria-controls="navigation-dialog" onClick={() => setMenuOpen(true)}><Icon name="menu" /></button>
           <Link className="mobile-logo" to="/" aria-label="Northwind - Ask Northwind"><span className="logo-mark">N</span><strong>Northwind</strong></Link>
-          {signedIn && bell(mobileBell, true)}
-        </div>
+          {signedIn && <div className="workspace-account-controls">
+            <Link className="workspace-user" to="/account">
+              <span className="avatar"><Icon name="person" /></span>
+              <span className="workspace-user-copy"><small>Signed in</small><strong><bdi>{profile.name}</bdi></strong>{profile.email && <span className="workspace-user-email"><bdi>{profile.email}</bdi></span>}</span>
+            </Link>
+            {bell}
+          </div>}
+        </header>
         {isDemo && <div className="demo-banner"><strong>Demo workspace.</strong> Sample data; edits and drafts last until reload. No requests, documents or messages are sent to support.</div>}
         {!isDemo && <div id="case-updates-live" className="sr-only" aria-live={notificationsOpen ? 'off' : 'polite'} aria-atomic="true">{!notificationsOpen && !announcement.dialog && announcement.text && <span key={announcement.sequence}>{announcement.text}</span>}</div>}
         {!isDemo && phase === 'ready' && realtime.error && <div className="notice"><p className="error" role="alert">Case updates could not be refreshed. {realtime.error}</p><button data-case-updates-retry className="button secondary small" onClick={event => { releaseActionFocus(event.currentTarget); realtime.retry() }}>Retry case updates</button></div>}
@@ -140,7 +146,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         </main>
       </div>
     </div>
-    <Dialog id="navigation-dialog" title="Navigation" open={menuOpen} onClose={() => setMenuOpen(false)}><div className="mobile-nav">{navigation}{utilities(true)}</div></Dialog>
+    <Dialog id="navigation-dialog" title="Navigation" open={menuOpen} onClose={() => setMenuOpen(false)}><div className="mobile-nav">{navigation}{utilities()}</div></Dialog>
     <Dialog id="notification-dialog" title="Notifications" eyebrow="In-app updates" variant="popover" open={notificationsOpen && signedIn} onClose={() => setNotificationsOpen(false)}>
       {!isDemo && <div id="notification-updates-live" className="sr-only" aria-live={notificationsOpen ? 'polite' : 'off'} aria-atomic="true">{notificationsOpen && announcement.dialog && announcement.text && <span key={announcement.sequence}>{announcement.text}</span>}</div>}
       {unread > 0 && <button className="button secondary" onClick={event => { releaseActionFocus(event.currentTarget); setNotifications(items => items.map(item => ({ ...item, read: true }))) }}>Mark all as read</button>}

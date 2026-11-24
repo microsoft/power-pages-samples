@@ -1,0 +1,27 @@
+kind: AdaptiveDialog
+beginDialog:
+  kind: OnActivity
+  id: main
+  type: Message
+  actions:
+    - kind: InvokeFlowAction
+      id: invokeFlowAction_verifyDocument
+      input:
+        binding:
+          text: =System.Activity.Text
+
+      output:
+        binding:
+          result: Topic.Result
+
+      flowId: b0430f7b-fbdf-f111-84e8-00224809ffcc
+
+    - kind: SendActivity
+      id: sendActivity_verificationResult
+      activity: "{Topic.Result}"
+
+    - kind: CancelAllDialogs
+      id: cancelAllDialogs_done
+
+inputType: {}
+outputType: {}

@@ -1,0 +1,11 @@
+<bot schemaname="ppst_ContosoDocumentVerifier">
+  <agentlifecycle>0</agentlifecycle>
+  <authenticationmode>2</authenticationmode>
+  <authenticationtrigger>1</authenticationtrigger>
+  <iscustomizable>1</iscustomizable>
+  <language>1033</language>
+  <name>Document Verifier</name>
+  <runtimeprovider>0</runtimeprovider>
+  <template>default-2.1.0</template>
+  <timezoneruleversionnumber>4</timezoneruleversionnumber>
+</bot>

@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<ImportExportXml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26094.166" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26094.00166">
+<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26103.175" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26103.00175">
   <Entities />
   <Roles />
   <Workflows />
@@ -11,9 +11,73 @@
   <optionsets />
   <CustomControls />
   <EntityDataProviders />
+  <AIModels>
+    <AIModel>
+      <msdyn_aimodelid>{234bfc47-fadf-f111-84e8-00224809fc90}</msdyn_aimodelid>
+      <msdyn_name>Document Verification</msdyn_name>
+      <msdyn_templateid>{edfdb190-3791-45d8-9a6c-8f90a37c278a}</msdyn_templateid>
+      <statecode>1</statecode>
+      <statuscode>1</statuscode>
+      <IsCustomizable>1</IsCustomizable>
+      <msdyn_activerunconfigurationid>{98ded353-fadf-f111-84e8-00224809f672}</msdyn_activerunconfigurationid>
+      <AIConfigurations>
+        <AIConfiguration>
+          <msdyn_aiconfigurationid>{98ded353-fadf-f111-84e8-00224809f672}</msdyn_aiconfigurationid>
+          <msdyn_customconfiguration>{"version":"GptDynamicPrompt-2","prompt":[{"type":"literal","text":"You are a document verification assistant for a bank's customer support team. Review the attached customer-uploaded document and decide whether it satisfies the request.\n\nRequested document: "},{"type":"inputVariable","id":"requestedDocument"},{"type":"literal","text":"\nName on the customer's case record: "},{"type":"inputVariable","id":"expectedName"},{"type":"literal","text":"\nToday's date (UTC): "},{"type":"inputVariable","id":"today"},{"type":"literal","text":"\n\nUploaded document: "},{"type":"inputVariable","id":"document"},{"type":"literal","text":"\n\nRules:\n1. Identify the type of document shown.\n2. isRequestedType is true only if the document is the requested kind of document.\n3. Extract the full name of the person the document is issued to, exactly as printed.\n4. nameFound is true if a person's name is clearly printed on the document.\n5. nameMatches is true if the extracted name refers to the same person as the case name. Allow differences in case, middle names or initials, ordering, and minor spelling variations such as a single transposed or missing letter.\n6. legible is false if the document is blurred, cropped, or unreadable.\n7. expired is true only if a printed expiry date is earlier than today's date.\n8. valid is true only if isRequestedType, nameFound, nameMatches and legible are all true and expired is false.\n9. reasons lists short, customer-friendly explanations for every failed check. Leave it empty when valid is true.\n10. Never include document numbers, dates of birth, or addresses in your answer.\n\nRespond only with JSON that matches the output schema."}],"definitions":{"inputs":[{"id":"document","text":"document","type":"document"},{"id":"requestedDocument","text":"requestedDocument","type":"text","quickTestValue":"a valid government-issued photo ID"},{"id":"expectedName","text":"expectedName","type":"text","quickTestValue":"John Smith"},{"id":"today","text":"today","type":"text","quickTestValue":"2026-01-01"}],"formulas":[],"data":[],"output":{"formats":["json"],"jsonSchema":{"type":"object","properties":{"documentType":{"type":"string"},"extractedName":{"type":"string"},"isRequestedType":{"type":"boolean"},"nameFound":{"type":"boolean"},"nameMatches":{"type":"boolean"},"legible":{"type":"boolean"},"expired":{"type":"boolean"},"valid":{"type":"boolean"},"reasons":{"type":"array","items":{"type":"string"}}}},"jsonExamples":[{"documentType":"Driver's licence","extractedName":"John A Smith","isRequestedType":true,"nameFound":true,"nameMatches":true,"legible":true,"expired":false,"valid":true,"reasons":[]}]}},"modelParameters":{"modelType":"gpt-41-mini","gptParameters":{"temperature":0}},"settings":{"recordRetrievalLimit":30,"shouldPreserveRecordLinks":null,"runtime":null},"code":"","signature":""}</msdyn_customconfiguration>
+          <msdyn_majoriterationnumber>1</msdyn_majoriterationnumber>
+          <msdyn_minoriterationnumber>0</msdyn_minoriterationnumber>
+          <msdyn_name>234bfc47-fadf-f111-84e8-00224809fc90_Run_11-14-2026 07:09:10 AM</msdyn_name>
+          <msdyn_modelrundataspecification>H4sIAAAAAAAACp1UPU/DMBD9K+jmLEiIIVuhrcQAlZKK3YmvrVFqB/sMrSr+O47dlNLYVSBT4vfh8/ldDlC2WM+V3jJ6RW2EkpDfZvAkW0uFUjSTJGgP+QGmwrQN27+wLUIOkMGESIvKEpoO5qq2W5QUpS73bfe2qN6wJvc92rViBu/vZrJWHPmQf9o0g0VLrnjWQL5ijcHTng/eoXSmcg1f7slA47tFQ8inyZqHlPQOvXcGuHPNdKJgcun5Cx1jR4qzSJPC8hgDxrkInEclCXeRg04GlHNj0jbdSUe09NeYxKtYho0HB1gJKcymQGa6XF6q5h69OcIRuXH112Q18lBpZ/HvKPZZCwapJHo0Gg3S7Fo2zuGIXpiij2S8gEvCyWP5qcKFlkidk3T8ubIyMk4/0FX1M6N6E5oy1Pdg0qHBtaiayAl6IKl0AyTcXUYnywNJ5QdrREQXlpMq7YPlz3lkTLT2ozc2NN3/xj/fW4wJsmgFAAA=</msdyn_modelrundataspecification>
+          <msdyn_type>190690001</msdyn_type>
+          <msdyn_aimodelid>{234bfc47-fadf-f111-84e8-00224809fc90}</msdyn_aimodelid>
+          <msdyn_trainedmodelaiconfigurationpareid>{944bfc47-fadf-f111-84e8-00224809fc90}</msdyn_trainedmodelaiconfigurationpareid>
+          <statecode>2</statecode>
+          <statuscode>7</statuscode>
+          <IsCustomizable>1</IsCustomizable>
+          <msdyn_templateversion>1</msdyn_templateversion>
+        </AIConfiguration>
+        <AIConfiguration>
+          <msdyn_aiconfigurationid>{944bfc47-fadf-f111-84e8-00224809fc90}</msdyn_aiconfigurationid>
+          <msdyn_majoriterationnumber>2</msdyn_majoriterationnumber>
+          <msdyn_minoriterationnumber>0</msdyn_minoriterationnumber>
+          <msdyn_modeldata>8fc30f53-a8a9-4d97-8ab2-5571fef94888</msdyn_modeldata>
+          <msdyn_name>234bfc47-fadf-f111-84e8-00224809fc90_Training_11/14/2026 7:09:17 AM</msdyn_name>
+          <msdyn_modelrundataspecification>
+        {
+          "schemaVersion": 2,
+          "input": {},
+          "output": {}
+        }
+      </msdyn_modelrundataspecification>
+          <msdyn_type>190690000</msdyn_type>
+          <msdyn_aimodelid>{234bfc47-fadf-f111-84e8-00224809fc90}</msdyn_aimodelid>
+          <statecode>2</statecode>
+          <statuscode>6</statuscode>
+          <IsCustomizable>1</IsCustomizable>
+          <msdyn_templateversion>1</msdyn_templateversion>
+        </AIConfiguration>
+      </AIConfigurations>
+    </AIModel>
+  </AIModels>
   <connectionreferences>
     <connectionreference connectionreferencelogicalname="cr719_northwindportalresponseconversion">
-      <connectionreferencedisplayname>Northwind portal HTML conversion</connectionreferencedisplayname>
+      <connectionreferencedisplayname>Support portal HTML conversion</connectionreferencedisplayname>
+      <connectorid>/providers/Microsoft.PowerApps/apis/shared_conversionservice</connectorid>
+      <iscustomizable>1</iscustomizable>
+      <promptingbehavior>0</promptingbehavior>
+      <statecode>0</statecode>
+      <statuscode>1</statuscode>
+    </connectionreference>
+    <connectionreference connectionreferencelogicalname="ppst_ContosoCopilotStudio">
+      <connectionreferencedisplayname>Document Verification Copilot Studio</connectionreferencedisplayname>
+      <connectorid>/providers/Microsoft.PowerApps/apis/shared_microsoftcopilotstudio</connectorid>
+      <iscustomizable>1</iscustomizable>
+      <promptingbehavior>0</promptingbehavior>
+      <statecode>0</statecode>
+      <statuscode>1</statuscode>
+    </connectionreference>
+    <connectionreference connectionreferencelogicalname="ppst_sharedconversionservice_862f1">
+      <connectionreferencedisplayname>Content Conversion ModernCSSMetadata-862f1</connectionreferencedisplayname>
       <connectorid>/providers/Microsoft.PowerApps/apis/shared_conversionservice</connectorid>
       <iscustomizable>1</iscustomizable>
       <promptingbehavior>0</promptingbehavior>

@@ -1,0 +1,11 @@
+<botcomponent schemaname="ppst_ContosoDocumentVerifier.topic.VerifyDocument">
+  <componenttype>9</componenttype>
+  <description>Runs the document verification agent flow for every incoming message and returns the JSON verdict.</description>
+  <iscustomizable>1</iscustomizable>
+  <name>Verify document</name>
+  <parentbotid>
+    <schemaname>ppst_ContosoDocumentVerifier</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

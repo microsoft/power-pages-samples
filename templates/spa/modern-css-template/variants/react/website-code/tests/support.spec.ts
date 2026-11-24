@@ -25,6 +25,22 @@ async function navigateFromMenu(page: Page, name: string) {
   }
 }
 
+test('hosted favicon moves into the document head without changing the template icon', async ({ page }) => {
+  await page.addInitScript(() => {
+    const observer = new MutationObserver(() => {
+      const icon = document.querySelector('link[rel="icon"]')
+      if (document.body && icon) {
+        document.body.prepend(icon)
+        observer.disconnect()
+      }
+    })
+    observer.observe(document, { childList: true, subtree: true })
+  })
+  await page.goto('/')
+  await expect(page.locator('head link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute('href', '/favicon.svg')
+  await expect(page.locator('body link[rel="icon"]')).toHaveCount(0)
+})
+
 test('every route has distinct content, a title, and no horizontal overflow', async ({ page }) => {
   const routes = [
     '/', '/cases', firstCase, secondCase, '/cases/CAS-00982-R4T7X1',

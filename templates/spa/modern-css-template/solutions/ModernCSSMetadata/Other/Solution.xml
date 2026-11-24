@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<ImportExportXml version="9.2.26094.166" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26094.166" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26094.00166">
+<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml version="9.2.26103.175" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26103.175" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26103.00175">
   <SolutionManifest>
     <UniqueName>ModernCSSMetadata</UniqueName>
     <LocalizedNames>
@@ -81,41 +81,69 @@
       <RootComponent type="1" schemaName="knowledgearticle" behavior="2" />
       <RootComponent type="29" id="{562c123b-d7c2-4bc5-9b7a-fcc702843f35}" behavior="0" />
       <RootComponent type="29" id="{7f4800dc-d0ab-4a3b-858c-ea6829a64fe9}" behavior="0" />
+      <RootComponent type="29" id="{b0430f7b-fbdf-f111-84e8-00224809ffcc}" behavior="0" />
+      <RootComponent type="401" id="{234bfc47-fadf-f111-84e8-00224809fc90}" behavior="0" />
     </RootComponents>
     <MissingDependencies>
       <MissingDependency>
         <Required type="1" schemaName="adx_portalcomment" displayName="Portal Comment" solution="PowerPages_RuntimeCore (1.0.2609.1)">
-          <package appName="Power Pages Core Package" version="1.1.2610.280">PowerPages_Core (1.1.2610.280)</package>
+          <package appName="Power Pages Core Package" version="1.1.2605.258">PowerPages_Core (1.1.2605.258)</package>
+          <package appName="Power Pages Core" version="1.1.2610.280">PowerPages_Core (1.1.2610.280)</package>
         </Required>
-        <Dependent type="29" displayName="Northwind - Publish reviewed response to portal" id="{562c123b-d7c2-4bc5-9b7a-fcc702843f35}" />
+        <Dependent type="29" displayName="Publish reviewed response to portal" id="{562c123b-d7c2-4bc5-9b7a-fcc702843f35}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="adx_portalcomment" displayName="Portal Comment" solution="PowerPages_RuntimeCore (1.0.2609.1)">
+          <package appName="Power Pages Core Package" version="1.1.2605.258">PowerPages_Core (1.1.2605.258)</package>
+          <package appName="Power Pages Core" version="1.1.2610.280">PowerPages_Core (1.1.2610.280)</package>
+        </Required>
+        <Dependent type="29" displayName="Document Verifier - Verify document" id="{b0430f7b-fbdf-f111-84e8-00224809ffcc}" />
       </MissingDependency>
       <MissingDependency>
         <Required type="1" schemaName="incident" displayName="Case" solution="msdynce_Service (9.0.5.56)">
-          <package appName="msdynce_Service" version="9.0.26094.1010">msdynce_ServiceAnchor (9.0.26094.1010)</package>
+          <package appName="msdynce_Service" version="9.0.26102.1007">msdynce_ServiceAnchor (9.0.26102.1007)</package>
         </Required>
-        <Dependent type="29" displayName="Northwind - Publish reviewed response to portal" id="{562c123b-d7c2-4bc5-9b7a-fcc702843f35}" />
+        <Dependent type="29" displayName="Publish reviewed response to portal" id="{562c123b-d7c2-4bc5-9b7a-fcc702843f35}" />
       </MissingDependency>
       <MissingDependency>
         <Required type="1" schemaName="incident" displayName="Case" solution="msdynce_Service (9.0.5.56)">
-          <package appName="msdynce_Service" version="9.0.26094.1010">msdynce_ServiceAnchor (9.0.26094.1010)</package>
+          <package appName="msdynce_Service" version="9.0.26102.1007">msdynce_ServiceAnchor (9.0.26102.1007)</package>
         </Required>
-        <Dependent type="29" displayName="Northwind - Case Management Agent (review required)" id="{7f4800dc-d0ab-4a3b-858c-ea6829a64fe9}" />
+        <Dependent type="29" displayName="Case Management Agent (full automation)" id="{7f4800dc-d0ab-4a3b-858c-ea6829a64fe9}" />
       </MissingDependency>
       <MissingDependency>
-        <Required type="1" schemaName="knowledgearticle" displayName="KnowledgeArticle" parentSchemaName="" solution="msdyn_KBSuggestionsAiBCore (1.1.22101.4)" />
+        <Required type="1" schemaName="incident" displayName="Case" solution="msdynce_Service (9.0.5.56)">
+          <package appName="msdynce_Service" version="9.0.26102.1007">msdynce_ServiceAnchor (9.0.26102.1007)</package>
+        </Required>
+        <Dependent type="29" displayName="Document Verifier - Verify document" id="{b0430f7b-fbdf-f111-84e8-00224809ffcc}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="knowledgearticle" displayName="KnowledgeArticle" parentSchemaName="" solution="msdyn_FieldServiceExperienceComponents (8.8.150.64)" />
         <Dependent type="1" schemaName="knowledgearticle" displayName="KnowledgeArticle" />
       </MissingDependency>
       <MissingDependency>
-        <Required type="connectionreference" displayName="msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps" solution="msdyn_CaseManagementIntelligence (9.2.26094.1066)" id.connectionreferencelogicalname="msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps">
-          <package appName="Service Intelligence Package" version="9.2.26094.1066">msdyn_ServiceIntelligenceAnchor (9.2.26094.1066)</package>
+        <Required type="1" schemaName="msdyn_aimodel" displayName="AI Model" solution="msdyn_AISolution (202608.4.19.2)">
+          <package appName="PowerAI" version="202608.4.19.2">msdyn_AISolutionAnchor (202608.4.19.2)</package>
         </Required>
-        <Dependent type="29" displayName="Northwind - Publish reviewed response to portal" id="{562c123b-d7c2-4bc5-9b7a-fcc702843f35}" />
+        <Dependent type="29" displayName="Document Verifier - Verify document" id="{b0430f7b-fbdf-f111-84e8-00224809ffcc}" />
       </MissingDependency>
       <MissingDependency>
-        <Required type="connectionreference" displayName="msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps" solution="msdyn_CaseManagementIntelligence (9.2.26094.1066)" id.connectionreferencelogicalname="msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps">
-          <package appName="Service Intelligence Package" version="9.2.26094.1066">msdyn_ServiceIntelligenceAnchor (9.2.26094.1066)</package>
+        <Required type="connectionreference" displayName="IA.cr.IAPluginDVConnector" solution="msdyn_IntentAssist (9.2.26094.1067)" id.connectionreferencelogicalname="IA.cr.IAPluginDVConnector">
+          <package appName="Service Intelligence Package" version="9.2.26094.1067">msdyn_ServiceIntelligenceAnchor (9.2.26094.1067)</package>
         </Required>
-        <Dependent type="29" displayName="Northwind - Case Management Agent (review required)" id="{7f4800dc-d0ab-4a3b-858c-ea6829a64fe9}" />
+        <Dependent type="29" displayName="Publish reviewed response to portal" id="{562c123b-d7c2-4bc5-9b7a-fcc702843f35}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="connectionreference" displayName="IA.cr.IAPluginDVConnector" solution="msdyn_IntentAssist (9.2.26094.1067)" id.connectionreferencelogicalname="IA.cr.IAPluginDVConnector">
+          <package appName="Service Intelligence Package" version="9.2.26094.1067">msdyn_ServiceIntelligenceAnchor (9.2.26094.1067)</package>
+        </Required>
+        <Dependent type="29" displayName="Case Management Agent (full automation)" id="{7f4800dc-d0ab-4a3b-858c-ea6829a64fe9}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="connectionreference" displayName="IA.cr.IAPluginDVConnector" solution="msdyn_IntentAssist (9.2.26094.1067)" id.connectionreferencelogicalname="IA.cr.IAPluginDVConnector">
+          <package appName="Service Intelligence Package" version="9.2.26094.1067">msdyn_ServiceIntelligenceAnchor (9.2.26094.1067)</package>
+        </Required>
+        <Dependent type="29" displayName="Document Verifier - Verify document" id="{b0430f7b-fbdf-f111-84e8-00224809ffcc}" />
       </MissingDependency>
     </MissingDependencies>
   </SolutionManifest>

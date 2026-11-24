@@ -4,6 +4,7 @@ import { errorMessage, useSupport } from '../SupportContext'
 import { searchSupport } from '../data'
 import Dialog from './Dialog'
 import Field from './Field'
+import { caseDetailsLimit } from '../services/supportApi'
 
 export default function IssueDialog() {
   const { issueOpen, setIssueOpen, cases, articles, products, isDemo, phase, submitCase } = useSupport()
@@ -29,8 +30,8 @@ export default function IssueDialog() {
     <p className="notice">{isDemo ? 'Demo only. You can prepare a local draft, but no case is submitted to support. Do not include sensitive information.' : 'Submitting creates a case for your signed-in contact. Do not include passwords, payment-card details or sensitive identity information.'}</p>
     <form className="stack" onSubmit={submit}>
       <Field id="issue-description" label="What do you need help with?" value={description} required multiline placeholder="Describe the product, task and what happened"
-        maxLength={isDemo ? undefined : 2000 - '\n\nBusiness impact: '.length - impact.length}
-        hint={isDemo ? undefined : 'The case description and selected impact must fit within 2,000 characters.'}
+        maxLength={isDemo ? undefined : caseDetailsLimit - '\n\nBusiness impact: '.length - impact.length}
+        hint={isDemo ? undefined : 'The case description and selected impact must fit within 1,898 characters.'}
         onChange={value => { setDescription(value); setChecked(false) }} />
       <div className="field"><label htmlFor="issue-impact">How is this affecting you?</label><select id="issue-impact" required value={impact} onChange={event => { setImpact(event.target.value); setChecked(false) }}>
         <option value="">Choose an impact</option><option>Work is blocked</option><option>Service is impaired</option><option>I have a question</option>

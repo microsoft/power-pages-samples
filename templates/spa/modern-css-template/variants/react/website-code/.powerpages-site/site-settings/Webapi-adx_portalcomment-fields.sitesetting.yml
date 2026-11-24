@@ -1,0 +1,4 @@
+description: Explicit fields for owned customer attachment comments; direction is read-only.
+id: 948f87b2-fde4-4d60-8788-bd2900425c8d
+name: Webapi/adx_portalcomment/fields
+value: "activityid,adx_portalcomment_Annotations,adx_portalcommentdirectioncode,description,regardingobjectid_incident_adx_portalcomment"

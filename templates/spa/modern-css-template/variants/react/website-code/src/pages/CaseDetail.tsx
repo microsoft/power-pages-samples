@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent, type KeyboardEvent } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { errorMessage, useSupport } from '../SupportContext'
-import { supportApi, type CaseActivity } from '../services/supportApi'
+import { SupportApiError, supportApi, type CaseActivity } from '../services/supportApi'
 import { formatDate, formatNumber, statusLabels, type SupportCase } from '../data'
 import Field, { useUiDirection } from '../components/Field'
 import { usePageTitle } from '../usePageTitle'
@@ -96,13 +96,18 @@ function ConnectedCaseDetail() {
   async function upload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     event.target.value = ''
-    if (!record || !file) return
+    if (!record || !file || busy || !['progress', 'action'].includes(record.status)) return
     setBusy(true); setError(''); setStatus('')
     try {
       const saved = await addCaseActivity(record.id, () => supportApi.upload(record.id, file))
-      setStatus(saved.statusChanged ? 'The document was uploaded. The case is back in progress with support.' : 'The document was uploaded to this case.')
+      setStatus(saved.warning ?? (saved.statusChanged ? 'The document was uploaded. The case is back in progress with support.' : 'The document was uploaded to this case.'))
       await reloadActivity()
-    } catch (error) { setError(errorMessage(error)) }
+    } catch (error) {
+      if (error instanceof SupportApiError && error.code === 'UPLOAD_UNCONFIRMED') {
+        setStatus(error.message)
+        await reloadActivity()
+      } else { setError(errorMessage(error)) }
+    }
     finally { setBusy(false) }
   }
   async function download(documentId: string) {
@@ -110,9 +115,7 @@ function ConnectedCaseDetail() {
     setBusy(true); setError('')
     try {
       const file = await mutate(() => supportApi.download(record.id, documentId))
-      if (!['application/pdf', 'image/png', 'image/jpeg'].includes(file.type)) throw new Error('The server returned an unsupported document type.')
-      const bytes = Uint8Array.from(atob(file.content), character => character.charCodeAt(0))
-      const url = URL.createObjectURL(new Blob([bytes], { type: file.type }))
+      const url = URL.createObjectURL(new Blob([file.bytes], { type: file.type }))
       const link = document.createElement('a')
       link.href = url; link.download = file.name; link.click()
       setTimeout(() => URL.revokeObjectURL(url), 1000)
@@ -175,7 +178,7 @@ function ConnectedCaseDetail() {
           <div className="tab-intro"><h2 id="case-conversation" tabIndex={-1}>Customer conversation</h2><p className="muted">Replies and updates shared on this case. Internal CRM activities and email are not shown.</p></div>
           {activity && !loading && <>
             <div className="filters timeline-filters" role="group" aria-label="Filter timeline">{timelineFilters.map(([value, label]) => <button type="button" className="filter-button" key={value} aria-pressed={timelineFilter === value} onClick={() => setTimelineFilter(value)}>{label}</button>)}</div>
-            {entries.length ? <ol className="timeline">{entries.map(item => <li className={`timeline-item ${item.tone}`} key={item.id}><div className="timeline-meta"><time dateTime={item.date}>{formatDate(item.date, true)}</time><bdi>{item.author}</bdi></div><strong>{item.title}</strong><p dir="auto">{item.body}</p></li>)}</ol>
+            {entries.length ? <ol className="timeline">{entries.map(item => <li className={`timeline-item ${item.tone}`} key={item.id}><div className="timeline-card"><div className="timeline-meta"><bdi className={item.kind === 'message' ? 'timeline-sender' : undefined}>{item.author}</bdi><time dateTime={item.date}>{formatDate(item.date, true)}</time></div><strong dir="auto">{item.title}</strong><p dir="auto">{item.body}</p></div></li>)}</ol>
               : <p className="empty">{timelineFilter === 'message' ? 'No messages have been shared on this case yet.' : 'No timeline entries match this filter.'}</p>}
           </>}
           {(editable || reply.length > 0) && <form className="case-reply stack" onSubmit={addReply}><Field id="case-reply" label="Reply to support" value={reply} onChange={setReply} multiline required maxLength={4000} hint="Do not include passwords or payment-card details." /><div className="actions"><button className="button" disabled={busy || !editable || !reply.trim()} type="submit">{busy ? 'Saving...' : 'Send reply'}</button></div></form>}
@@ -183,8 +186,10 @@ function ConnectedCaseDetail() {
         </div>}
         {tab === 1 && <div className="stack">
           <div className="tab-intro"><span className="eyebrow">Documents shared on this case</span><h2>Documents</h2><p className="muted">Only portal-designated files on this case are listed. Downloads are checked against your case access.</p></div>
-          {activity && !loading && (activity.documents.length ? <ul className="document-list">{activity.documents.map(file => <li key={file.id}><span className="document-copy"><bdi>{file.name}</bdi><small>{formatNumber(file.size)} bytes</small></span><button className="button secondary small" disabled={busy} onClick={() => void download(file.id)} aria-label={`Download ${file.name}`}>Download</button></li>)}</ul> : <p className="empty">No customer-visible documents are available.</p>)}
-          {editable && <div className="field document-upload"><label htmlFor="case-document">Upload a case document</label><input id="case-document" type="file" accept=".pdf,.png,.jpg,.jpeg" aria-describedby="document-hint" disabled={busy} onChange={event => void upload(event)} /><small id="document-hint">PDF, PNG or JPEG, up to 5 MB. File content is stored in Dataverse. Do not upload identity documents unless your approved support process requires them.</small></div>}
+          {activity && !loading && (activity.documents.length ? <ul className="document-list">{activity.documents.map(file => <li key={file.id}><span className="document-copy"><bdi>{file.name}</bdi>{file.size !== undefined && <small>{formatNumber(file.size)} bytes</small>}</span><button className="button secondary small" disabled={busy} onClick={() => void download(file.id)} aria-label={`Download ${file.name}`}>Download</button></li>)}</ul> : <p className="empty">No customer-visible documents are available.</p>)}
+          {editable && <>
+            <div className="field document-upload"><label htmlFor="case-document">Attachments</label><input id="case-document" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.zip" aria-describedby="document-hint" disabled={busy} onChange={event => void upload(event)} /><small id="document-hint">PDF, Word, PNG, JPEG, GIF or ZIP, up to 3.75 MiB (3,932,160 bytes). Files are stored as Dataverse Notes on the case conversation. Do not upload identity documents unless your approved support process requires them.</small></div>
+          </>}
         </div>}
         {tab === 2 && <div className="stack"><div className="tab-intro"><span className="eyebrow">Submitted {formatDate(record.opened)}</span><h2>Original request</h2></div>{editable || dirty ? <form className="stack" onSubmit={save} aria-describedby={detailsChanged ? 'case-edit-conflict' : undefined}><Field id="case-title" label="Case title" value={title} onChange={setTitle} required maxLength={200} /><Field id="case-description" label="Case description" value={description} onChange={setDescription} multiline required maxLength={2000} hint="Up to 2,000 characters." /><div className="actions"><button className="button secondary" disabled={busy || !editable} type="submit" aria-describedby={detailsChanged ? 'case-edit-conflict' : undefined}>{busy ? 'Saving...' : 'Save case details'}</button></div>{!editable && <p>This case is closed. Your draft is kept for you to copy, but cannot be saved.</p>}</form> : <p className="case-original" dir="auto">{record.original}</p>}<p className="muted">Case state and assignment are managed by support.</p></div>}
       </div>
@@ -203,8 +208,8 @@ function caseTimeline(record: SupportCase, comments: CaseActivity['comments']): 
   const entries: TimelineView[] = [
     ...(closed ? [{ id: 'case-closed', kind: 'action', tone: 'system', title: `Case ${(record.statusLabel ?? statusLabels[record.status]).toLowerCase()}`, body: record.statusNote ?? '', date: record.updated, author: 'Northwind Support' } as const] : []),
     ...comments.map(comment => comment.author === 'Customer'
-      ? { id: comment.id, kind: 'message', tone: 'customer', title: 'Your message', body: comment.body, date: comment.created, author: 'You' } as const
-      : { id: comment.id, kind: 'message', tone: 'support', title: 'Support replied', body: comment.body, date: comment.created, author: 'Northwind Support' } as const),
+      ? { id: comment.id, kind: 'message', tone: 'customer', title: comment.subject?.trim() || 'Your message', body: comment.body, date: comment.created, author: 'You' } as const
+      : { id: comment.id, kind: 'message', tone: 'support', title: comment.subject?.trim() || 'Support reply', body: comment.body, date: comment.created, author: 'Northwind Support' } as const),
     { id: 'case-submitted', kind: 'action', tone: 'system', title: 'Case submitted', body: `Your request was recorded as ${record.number ?? record.id}.`, date: record.opened, author: 'System' },
   ]
   return entries.sort((a, b) => Date.parse(b.date) - Date.parse(a.date))

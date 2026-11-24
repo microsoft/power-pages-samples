@@ -11,4 +11,4 @@ parententitypermission: 49884962-d853-4847-9256-649811e3f133
 parentrelationship: incident_adx_portalcomments
 read: true
 scope: 756150003
-write: false
+write: true

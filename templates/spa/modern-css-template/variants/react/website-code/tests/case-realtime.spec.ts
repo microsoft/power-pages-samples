@@ -1,5 +1,5 @@
 import { test as base, expect, type Page } from '@playwright/test'
-import type { CaseDto } from '../src/services/supportApi'
+import type { CaseActivity, CaseDto } from '../src/services/supportApi'
 
 const contactId = '11111111-1111-4111-8111-111111111111'
 const caseId = '22222222-2222-4222-8222-222222222222'
@@ -69,10 +69,11 @@ async function mockSupport(page: Page, mode: SdkMode = 'ready') {
   await sdk(page, mode)
   const model = {
     contact: contactId, reads: 0, completedReads: 0, activityReads: 0, writes: 0,
+    profile: { firstName: 'Ada', lastName: 'Customer', email: 'ada@example.test', phone: '', address: '', account: null },
     activeActivityReads: 0, maxActivityReads: 0,
     records: [{ ...original }, { ...original, id: secondId, number: 'CAS-1002', title: 'Second page request' }],
-    comments: [] as { id: string; body: string; created: string; author: string }[],
-    commentsByCase: {} as Record<string, { id: string; body: string; created: string; author: string }[]>,
+    comments: [] as CaseActivity['comments'],
+    commentsByCase: {} as Record<string, CaseActivity['comments']>,
     failure: 0, activityFailure: 0, foreign: false,
     activityFailures: {} as Record<string, number>,
     activityNotFound: new Set<string>(),
@@ -94,7 +95,7 @@ async function mockSupport(page: Page, mode: SdkMode = 'ready') {
       _customerid_value: model.foreign ? secondId : model.contact,
     })
     if (url.pathname === '/_api/serverlogics/northwind-profile') return success({
-      id: model.contact, firstName: 'Ada', lastName: 'Customer', email: 'ada@example.test', phone: '', address: '', account: null,
+      id: model.contact, ...model.profile,
     })
     if (url.pathname === '/_api/serverlogics/northwind-knowledge') return success({ items: [], cursor: null })
     if (['/_api/products', '/_api/categories'].includes(url.pathname)) return route.fulfill({ json: { value: [] } })
@@ -177,6 +178,56 @@ async function bell(page: Page) {
   await page.getByRole('button', { name: /^Notifications,/ }).click()
   return page.getByRole('dialog', { name: 'Notifications', exact: true })
 }
+
+test('signed-in user is visible beside notifications and links to account details', async ({ page }) => {
+  const model = await mockSupport(page)
+  await start(page, model)
+  const identity = page.locator('.workspace-bar .workspace-user')
+  await expect(identity).toBeVisible()
+  await expect(identity).toContainText('Signed in')
+  await expect(identity).toContainText('Ada Customer')
+  await expect(identity).toContainText('ada@example.test')
+  const dialog = await bell(page)
+  await dialog.getByRole('button', { name: 'Close notifications' }).click()
+  await expect(page.getByRole('button', { name: /^Notifications,/ })).toBeFocused()
+  await identity.click()
+  await expect(page).toHaveURL(/\/account$/)
+  await expect(page.getByLabel('First name')).toHaveValue('Ada')
+  model.failure = 403
+  await page.evaluate(() => window.caseRealtimeTest.emit())
+  await expect(identity).toHaveCount(0)
+})
+
+test('signed-in identity reflows long names and email at narrow widths and enlarged text', async ({ page }) => {
+  const model = await mockSupport(page)
+  model.profile.firstName = 'CustomerABC42'.repeat(4).slice(0, 50)
+  model.profile.lastName = 'الطلب עברית'.repeat(4)
+  model.profile.email = `${'long-address'.repeat(8)}@example.test`
+  await start(page, model)
+  const identity = page.locator('.workspace-user')
+  const trigger = page.getByRole('button', { name: /^Notifications,/ })
+  for (const width of [1440, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const direction of ['ltr', 'rtl']) {
+      await page.evaluate(dir => { document.documentElement.dir = dir }, direction)
+      for (const size of ['100%', '200%']) {
+        await page.evaluate(size => { document.documentElement.style.fontSize = size }, size)
+        await expect(identity).toBeVisible()
+        await expect(identity).toContainText(model.profile.email)
+        await expect(trigger).toBeVisible()
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
+        const accountBox = await identity.boundingBox(), bellBox = await trigger.boundingBox()
+        if (!accountBox || !bellBox) throw new Error('Account and notification controls must be visible')
+        expect(direction === 'ltr' ? accountBox.x + accountBox.width <= bellBox.x : bellBox.x + bellBox.width <= accountBox.x).toBe(true)
+      }
+    }
+  }
+  model.profile.email = ''
+  await page.reload()
+  await expect(identity).toContainText('Signed in')
+  await expect(identity.locator('.workspace-user-email')).toHaveCount(0)
+})
+
 async function navigate(page: Page, name: string) {
   if (await page.getByRole('button', { name: 'Open navigation' }).isVisible()) await page.getByRole('button', { name: 'Open navigation' }).click()
   await page.locator('.primary-nav:visible').getByRole('link', { name, exact: true }).click()
@@ -1020,19 +1071,157 @@ test('a forbidden read still clears private state when a newer local write inval
   expect(await page.evaluate(() => window.caseRealtimeTest.unsubscribed)).toBe(2)
 })
 
-for (const mode of ['absent', 'off', 'throw', 'reject'] as const) {
+for (const mode of ['throw', 'reject'] as const) {
   test(`${mode} realtime remains optional and failures are not reported as success`, async ({ page }) => {
     const model = await mockSupport(page, mode)
     await page.goto('/cases?data=dataverse')
     await expect(page.locator('.case-card')).toHaveCount(2)
-    if (mode === 'throw' || mode === 'reject') {
-      await expect(page.getByRole('alert').filter({ hasText: 'Case updates could not be refreshed' })).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Retry case updates' })).toBeVisible()
-    }
+    await expect(page.getByRole('alert').filter({ hasText: 'Case updates could not be refreshed' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Retry case updates' })).toBeVisible()
     const dialog = await bell(page)
-    await expect(dialog.getByText(mode === 'throw' || mode === 'reject' ? /Case updates could not be refreshed/ : /updates are unavailable/)).toBeVisible()
+    await expect(dialog.getByText(/Case updates could not be refreshed/)).toBeVisible()
     await expect(dialog.locator('.notification-item')).toHaveCount(0)
     expect(model.reads).toBe(1)
     expect(model.activityReads).toBe(0)
   })
 }
+
+async function advancePoll(page: Page, model: Model, milliseconds = 60_000) {
+  const completed = model.completedReads
+  await page.clock.fastForward(milliseconds)
+  await page.clock.runFor(150)
+  await expect.poll(() => model.completedReads).toBe(completed + 1)
+  await expect.poll(() => model.activeActivityReads).toBe(0)
+}
+
+for (const mode of ['absent', 'off'] as const) {
+  test(`${mode} realtime falls back to polling Support replies without case changes or historical alerts`, async ({ page }) => {
+    await page.clock.install()
+    const model = await mockSupport(page, mode)
+    model.commentsByCase[caseId] = [{ id: createdId, subject: 'Historical response', body: 'Historical reply', created: initialTime, author: 'Support' }]
+    await start(page, model, `/cases/${caseId}`)
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000))
+    await expect(page.locator('#notification-dialog .dialog-body > .muted')).toContainText('every 60 seconds while this tab is visible and online')
+    const originalCases = structuredClone(model.records)
+    await page.getByLabel('Reply to support').fill('Keep my unsent reply')
+    model.commentsByCase[caseId].push({ id: secondId, subject: 'Reviewed response', body: 'New server-created reply', created: updatedTime, author: 'Support' })
+    await advancePoll(page, model)
+    await expect(page.getByRole('button', { name: 'Notifications, 1 unread' })).toBeVisible()
+    await expect(page.locator('.timeline-item.support strong').filter({ hasText: 'Reviewed response' })).toBeVisible()
+    await expect(page.getByText('New server-created reply', { exact: true })).toBeVisible()
+    await expect(page.getByLabel('Reply to support')).toHaveValue('Keep my unsent reply')
+    expect(model.records).toEqual(originalCases)
+    const dialog = await bell(page)
+    await dialog.getByRole('button', { name: 'Mark read', exact: true }).click()
+    await page.keyboard.press('Escape')
+    model.commentsByCase[caseId].push({ id: caseId, subject: 'My follow-up', body: 'Customer follow-up', created: newestTime, author: 'Customer' })
+    await advancePoll(page, model)
+    await expect(page.getByRole('button', { name: 'Notifications, 0 unread' })).toBeVisible()
+    await expect(page.getByText('Customer follow-up', { exact: true })).toBeVisible()
+    await navigate(page, 'Account & support')
+    await page.getByText('Notification preferences (local only)', { exact: true }).click()
+    await page.getByRole('checkbox', { name: /^Replies from support/ }).uncheck()
+    model.commentsByCase[caseId][1].subject = 'Changed subject only'
+    await advancePoll(page, model)
+    await expect(page.getByRole('button', { name: 'Notifications, 0 unread' })).toBeVisible()
+    await page.getByRole('checkbox', { name: /^Replies from support/ }).check()
+    await advancePoll(page, model)
+    await expect(page.getByRole('button', { name: 'Notifications, 0 unread' })).toBeVisible()
+    model.commentsByCase[caseId][1].subject = 'Latest reviewed response'
+    await advancePoll(page, model)
+    await expect(page.getByRole('button', { name: 'Notifications, 1 unread' })).toBeVisible()
+    expect(model.maxActivityReads).toBeLessThanOrEqual(3)
+    expect(await page.evaluate(() => window.caseRealtimeTest.tables)).toEqual([])
+  })
+}
+
+test('fallback pauses hidden/offline tabs, avoids overlapping scans, backs off failures and stops on auth loss', async ({ page }) => {
+  await page.clock.install()
+  const model = await mockSupport(page, 'off')
+  await start(page, model)
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000))
+  const before = model.reads
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  await page.clock.fastForward(180_000)
+  expect(model.reads).toBe(before)
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  await page.clock.runFor(150)
+  await expect.poll(() => model.completedReads).toBe(3)
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => false })
+    window.dispatchEvent(new Event('offline'))
+  })
+  await page.clock.fastForward(180_000)
+  expect(model.reads).toBe(before + 1)
+  const held = gate(); model.readGate = held
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => true })
+    window.dispatchEvent(new Event('online'))
+  })
+  await page.clock.runFor(150)
+  await expect.poll(() => model.reads).toBe(before + 2)
+  await page.clock.fastForward(180_000)
+  expect(model.reads).toBe(before + 2)
+  held.release()
+  await expect.poll(() => model.completedReads).toBe(4)
+  await expect.poll(() => model.activeActivityReads).toBe(0)
+  model.failure = 503
+  await page.clock.fastForward(60_000)
+  await page.clock.runFor(150)
+  await expect(page.getByRole('alert').filter({ hasText: 'Case updates could not be refreshed' })).toBeVisible()
+  const failedReads = model.reads
+  model.failure = 0
+  await page.clock.fastForward(60_000)
+  await page.clock.runFor(150)
+  expect(model.reads).toBe(failedReads)
+  await advancePoll(page, model)
+  await expect(page.getByRole('alert').filter({ hasText: 'Case updates could not be refreshed' })).toHaveCount(0)
+  model.failure = 401
+  await page.clock.fastForward(60_000)
+  await page.clock.runFor(150)
+  await expect(page.locator('h1')).toHaveText('Sign in to customer support')
+  const deniedReads = model.reads
+  await page.clock.fastForward(300_000)
+  expect(model.reads).toBe(deniedReads)
+  await expect(page.locator('#notification-dialog .notification-item')).toHaveCount(0)
+})
+
+test('conversation shows plain-text subjects, sender-labelled distinct cards and subject-only refreshes', async ({ page }) => {
+  const model = await mockSupport(page)
+  const subject = '<img src=x onerror=alert(1)> Response ABC-42 العربية עברית '.repeat(4)
+  model.commentsByCase[caseId] = [
+    { id: createdId, subject, body: 'Support response body', created: updatedTime, author: 'Support' },
+    { id: secondId, subject: 'My requested clarification', body: 'Customer message body', created: newestTime, author: 'Customer' },
+    { id: caseId, subject: '', body: 'Reply without a subject', created: initialTime, author: 'Support' },
+  ]
+  await start(page, model, `/cases/${caseId}`)
+  await expect(page.locator('.timeline-item.support strong').first()).toHaveText(subject.trim())
+  await expect(page.locator('.timeline-item.support strong').last()).toHaveText('Support reply')
+  await expect(page.locator('.timeline-item.customer strong')).toHaveText('My requested clarification')
+  await expect(page.locator('.timeline-item.customer .timeline-sender')).toHaveText('You')
+  await expect(page.locator('.timeline-item.support .timeline-sender').first()).toHaveText('Northwind Support')
+  await expect(page.locator('.timeline img')).toHaveCount(0)
+  for (const dir of ['ltr', 'rtl']) {
+    await page.evaluate(dir => { document.documentElement.dir = dir; document.documentElement.style.fontSize = '200%' }, dir)
+    const geometry = await page.evaluate(() => {
+      const support = document.querySelector('.timeline-item.support .timeline-card')!
+      const customer = document.querySelector('.timeline-item.customer .timeline-card')!
+      return {
+        distinct: getComputedStyle(support).backgroundColor !== getComputedStyle(customer).backgroundColor,
+        fits: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+        subjectsFit: [...document.querySelectorAll<HTMLElement>('.timeline-card strong')].every(item => item.scrollWidth <= item.clientWidth),
+      }
+    })
+    expect(geometry).toEqual({ distinct: true, fits: true, subjectsFit: true })
+  }
+  model.commentsByCase[caseId][0].subject = 'Updated subject only'
+  await invalidate(page, model, 1, 'adx_portalcomment')
+  await expect(page.locator('.timeline-item.support strong').first()).toHaveText('Updated subject only')
+  await expect(page.getByRole('button', { name: 'Notifications, 1 unread' })).toBeVisible()
+})

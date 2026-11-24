@@ -33,19 +33,23 @@ test('case agent trigger is Added-only and restricted to this portal, Web origin
   ])
 })
 
-test('agent dispatch always requests human review and never automatically retries', () => {
+test('agent dispatch requires enabled Full automation and never automatically retries', () => {
   const invoke = actions.Invoke_case_management_agent
   assert.equal(invoke.inputs.parameters.actionName, 'msdyn_invokeCaseProcessingAgent')
-  assert.deepEqual(JSON.parse(invoke.inputs.parameters['item/msdyn_actions']), [{ action: 'resolve', automationLevel: 'Semi' }])
+  assert.deepEqual(JSON.parse(invoke.inputs.parameters['item/msdyn_actions']), [{ action: 'resolve', automationLevel: 'Full' }])
   assert.equal(invoke.inputs.retryPolicy.type, 'none')
-  assert.deepEqual(invoke.runAfter, { Create_dispatch_receipt: ['Succeeded'] })
-  assert.deepEqual(actions.Create_dispatch_receipt.runAfter, { Enforce_human_review: ['Succeeded'] })
+  assert.deepEqual(invoke.runAfter, { Add_portal_case_link: ['Succeeded', 'Failed'] })
+  assert.deepEqual(actions.Create_dispatch_receipt.runAfter, { Enforce_full_automation: ['Succeeded'] })
   assert.equal(actions.Read_effective_agent_settings.inputs.parameters.actionName, 'msdyn_GetCaseManagementAgentSettings')
   assert.equal(actions.Read_effective_agent_settings.inputs.parameters['item/Actions'], '["resolve"]')
   assert.equal(actions.Read_effective_agent_settings.inputs.parameters['item/RefreshIntentFamily'], true)
-  assert.match(actions.Enforce_human_review.expression, /resolution.*automationLevel.*'Semi'/)
-  assert.equal(actions.Enforce_human_review.actions.Stop_unsafe_or_disabled_agent.inputs.runError.code, 'HumanReviewRequired')
-  assert.equal(actions.Enforce_human_review.actions.Stop_unsafe_or_disabled_agent.inputs.runStatus, 'Failed')
+  assert.equal(actions.Enforce_full_automation.expression,
+    "@not(and(equals(json(outputs('Read_effective_agent_settings')?['body/Result'])?['isEnabled'], true), equals(json(outputs('Read_effective_agent_settings')?['body/Result'])?['resolution']?['isEnabled'], true), equals(json(outputs('Read_effective_agent_settings')?['body/Result'])?['resolution']?['automationLevel'], 'Full')))")
+  assert.equal(actions.Enforce_full_automation.actions.Stop_unsafe_or_disabled_agent.inputs.runError.code, 'FullAutomationRequired')
+  assert.equal(actions.Enforce_full_automation.actions.Stop_unsafe_or_disabled_agent.inputs.runStatus, 'Failed')
+  for (const name of ['Create_dispatch_receipt', 'Mark_dispatch_accepted', 'Mark_dispatch_unconfirmed']) {
+    assert.match(actions[name].inputs.parameters['item/notetext'], /automationLevel=Full/)
+  }
   assert.equal(actions.Create_dispatch_receipt.inputs.retryPolicy.type, 'none')
   assert.equal(actions.Create_dispatch_receipt.inputs.parameters['item/annotationid'], "@outputs('Read_case')?['body/incidentid']")
   assert.match(actions.Mark_dispatch_accepted.inputs.parameters['item/notetext'], /not a resolution confirmation/)
@@ -53,7 +57,27 @@ test('agent dispatch always requests human review and never automatically retrie
   assert.equal(actions.Report_dispatch_failure.inputs.runStatus, 'Failed')
 })
 
-test('dispatch receipts are internal and the flow neither sends emails nor changes cases', () => {
+test('dispatch appends the exact portal case link to the description only when it fits', () => {
+  assertEnvironmentVariable(definition.parameters, PORTAL_URL)
+  assert.match(definition.actions.Read_case.inputs.parameters['$select'], /(^|,)description(,|$)/)
+  const compose = actions.Compose_portal_case_link
+  assert.deepEqual(compose.runAfter, { Create_dispatch_receipt: ['Succeeded'] })
+  assert.equal(compose.inputs, `@concat(decodeUriComponent('%0A%0A'), 'Portal case link: ', parameters('${PORTAL_URL}'), '/cases/', outputs('Read_case')?['body/incidentid'])`)
+  const guard = actions.Add_portal_case_link
+  assert.deepEqual(guard.runAfter, { Compose_portal_case_link: ['Succeeded'] })
+  assert.match(guard.expression, /lessOrEquals\(add\(length\(coalesce\(outputs\('Read_case'\)\?\['body\/description'\], ''\)\), length\(outputs\('Compose_portal_case_link'\)\)\), 2000\)/)
+  assert.match(guard.expression, /not\(contains\(/)
+  const update = guard.actions.Append_portal_case_link.inputs
+  assert.equal(update.host.operationId, 'UpdateOnlyRecord')
+  assert.equal(update.retryPolicy.type, 'none')
+  assert.deepEqual(Object.keys(update.parameters).sort(), ['entityName', 'item/description', 'recordId'])
+  assert.equal(update.parameters.entityName, 'incidents')
+  assert.equal(update.parameters.recordId, "@outputs('Read_case')?['body/incidentid']")
+  // Link line length: 2 newlines + label + portal URL + '/cases/' + GUID must fit the portal's reserved 102 characters.
+  assert.equal(`\n\nPortal case link: ${'https://site-90bvw.powerappsportals.com'}/cases/${'0'.repeat(36)}`.length, 2000 - 1898)
+})
+
+test('dispatch receipts are internal and the flow sends no emails and changes cases only to add the portal link', () => {
   for (const action of Object.values(actions)) {
     const input = action.inputs
     if (!input) continue
@@ -175,11 +199,11 @@ test('publication reserves by email ID but uses a separate activity ID and confi
   assert.equal(newPublication.Reserve_publication.inputs.parameters['item/annotationid'], `@${SENT_EMAIL}?['body/activityid']`)
   assert.equal(newPublication.New_comment_id.inputs, '@guid()')
   assert.equal(newPublication.Create_portal_response.inputs.parameters['item/activityid'], "@outputs('New_comment_id')")
-  assert.equal(newPublication.Create_portal_response.inputs.parameters['item/subject'], '*WEB* Reviewed support response')
+  assert.equal(newPublication.Create_portal_response.inputs.parameters['item/subject'], 'Reviewed support response')
   assert.equal(newPublication.Create_portal_response.inputs.parameters['item/adx_portalcommentdirectioncode'], 2)
   assert.equal(newPublication.Create_portal_response.inputs.parameters['item/description'], "@outputs('Publication_receipt')?['approvedText']")
   assert.deepEqual(newPublication.Publication_receipt.inputs, {
-    schemaVersion: 5,
+    schemaVersion: 6,
     status: 'Reserved',
     emailId: `@${SENT_EMAIL}?['body/activityid']`,
     caseId: "@outputs('Read_case')?['body/incidentid']",
@@ -202,12 +226,13 @@ test('publication reserves by email ID but uses a separate activity ID and confi
   assert.equal(newPublication.Published.inputs.status, 'Published')
   for (const action of [newPublication.Reserve_publication, newPublication.Create_portal_response]) assert.equal(action.inputs.retryPolicy.type, 'none')
   const replay = publishActions.Publication_exists.actions
-  // Receipts written by the plug-in (v4) and earlier publishers stay valid, so a re-Send after cutover returns AlreadyPublished.
-  assert.match(replay.Require_matching_completed_receipt.expression, /schemaVersion'\], 5.*SendAccepted.*schemaVersion'\], 4.*NativeSend.*approvalRequestId.*schemaVersion'\], 3.*SentEmail.*sourceSentOn.*schemaVersion'\], 1.*schemaVersion'\], 2.*approvalId.*approvedBy.*status.*Published.*emailId.*Read_sent_email.*caseId.*contactId.*approvedText.*commentId/)
+  // Earlier receipts retain their exact prefixed subjects; v6 uses an unmarked subject.
+  assert.match(replay.Require_matching_completed_receipt.expression, /or\(equals\(outputs\('Existing_receipt'\)\?\['schemaVersion'\], 6\), equals\(outputs\('Existing_receipt'\)\?\['schemaVersion'\], 5\)\).*SendAccepted.*schemaVersion'\], 4.*NativeSend.*approvalRequestId.*schemaVersion'\], 3.*SentEmail.*sourceSentOn.*schemaVersion'\], 1.*schemaVersion'\], 2.*approvalId.*approvedBy.*status.*Published.*emailId.*Read_sent_email.*caseId.*contactId.*approvedText.*commentId/)
   assert.deepEqual(replay.Already_published.runAfter, { Verify_existing_response: ['Succeeded'] })
   assert.equal(replay.Already_published.type, 'Compose')
   assert.equal(replay.Already_published.inputs.status, 'AlreadyPublished')
-  assert.match(replay.Verify_existing_response.expression, /greaterOrEquals\(outputs\('Existing_receipt'\)\?\['schemaVersion'\], 4\), '\*WEB\* Reviewed support response'.*Support email response.*AI-assisted support response/)
+  assert.match(replay.Verify_existing_response.expression, /if\(equals\(outputs\('Existing_receipt'\)\?\['schemaVersion'\], 6\), 'Reviewed support response', if\(greaterOrEquals\(outputs\('Existing_receipt'\)\?\['schemaVersion'\], 4\), '\*WEB\* Reviewed support response'.*Support email response.*AI-assisted support response/)
+  assert.match(newPublication.Verify_published_response.expression, /equals\(outputs\('Read_published_response'\)\?\['body\/subject'\], 'Reviewed support response'\)/)
 })
 
 test('changed case ownership blocks publication after the text is converted', () => {
@@ -252,11 +277,12 @@ const solutionRoot = [path.join(__dirname, '..', '..', 'solution'), path.join(__
 const unpackedSolution = !!solutionRoot && fs.existsSync(path.join(solutionRoot, 'Other', 'Solution.xml'))
 const solutionFile = name => fs.readFileSync(path.join(solutionRoot, name), 'utf8')
 
-test('template solution ships both flows exactly as checked in, with no plug-in or SYSTEM-user variable', () => {
+test('template solution ships three flows exactly as checked in, with no plug-in or SYSTEM-user variable', () => {
   assert.ok(solutionRoot, 'template solution folder not found')
   const workflows = fs.readdirSync(path.join(solutionRoot, 'Workflows')).filter(name => name.endsWith('.json'))
-  assert.equal(workflows.length, 2)
-  for (const [source, prefix] of [[flow, 'Northwind-CaseManagementAgentreviewrequired-'], [JSON.parse(fs.readFileSync(publisherPath, 'utf8')), 'Northwind-Publishreviewedresponsetoportal-']]) {
+  assert.equal(workflows.length, 3)
+  const verifier = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'integrations', 'case-management', 'document-verifier-agent-flow.json'), 'utf8'))
+  for (const [source, prefix] of [[flow, 'Case-Management-Agent-'], [JSON.parse(fs.readFileSync(publisherPath, 'utf8')), 'Publish-support-response-'], [verifier, 'Verify-document-']]) {
     const file = workflows.find(name => name.startsWith(prefix))
     assert.ok(file, `${prefix} workflow missing from the solution`)
     const packaged = JSON.parse(solutionFile(path.join('Workflows', file)))
@@ -270,16 +296,41 @@ test('template solution ships both flows exactly as checked in, with no plug-in 
     assert.ok(!customizations.includes(removed), `customizations.xml still contains ${removed}`)
     assert.ok(!manifest.includes(removed), `solution.xml still contains ${removed}`)
   }
-  assert.deepEqual([...manifest.matchAll(/<RootComponent type="(\d+)"/g)].map(match => match[1]).sort(), ['1', '29', '29'])
+  assert.deepEqual([...manifest.matchAll(/<RootComponent type="(\d+)"/g)].map(match => match[1]).sort(), ['1', '29', '29', '29', '401'])
   assert.ok(!fs.existsSync(path.join(solutionRoot, 'PluginAssemblies')))
   assert.ok(!fs.existsSync(path.join(solutionRoot, 'SdkMessageProcessingSteps')))
   if (!unpackedSolution) assert.ok(!solutionFile('[Content_Types].xml').includes('Extension="dll"'))
 
   const variables = fs.readdirSync(path.join(solutionRoot, 'environmentvariabledefinitions')).sort()
   assert.deepEqual(variables, ['ppst_ModernCss_PortalApplicationUserId', 'ppst_ModernCss_PortalUrl'])
-  for (const definitionParameters of [definition.parameters, publisher.parameters]) {
+  for (const definitionParameters of [definition.parameters, publisher.parameters, verifier.properties.definition.parameters]) {
     for (const parameter of Object.values(definitionParameters)) {
-      if (parameter.metadata?.schemaName) assert.ok(variables.includes(parameter.metadata.schemaName), `${parameter.metadata.schemaName} has no packaged definition`)
+      if (parameter.metadata?.schemaName) {
+        assert.ok(variables.includes(parameter.metadata.schemaName), `${parameter.metadata.schemaName} has no packaged definition`)
+        assert.equal(parameter.defaultValue, '', 'Source-environment bindings must not ship as defaults')
+      }
     }
   }
+})
+
+test('exported component display names are brand-neutral and knowledge search names agree', () => {
+  const metadataFiles = []
+  function collect(directory) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const file = path.join(directory, entry.name)
+      if (entry.isDirectory()) collect(file)
+      else if (file.endsWith('.xml')) metadataFiles.push(file)
+    }
+  }
+  collect(solutionRoot)
+  for (const file of metadataFiles) {
+    const content = fs.readFileSync(file, 'utf8')
+    for (const label of content.matchAll(/<(?:name|msdyn_name|connectionreferencedisplayname)>([^<]+)<|(?:\bName|\bdisplayName|\bdescription)="([^"]+)"/g)) {
+      assert.doesNotMatch(label[1] ?? label[2], /northwind|contoso/i, file)
+    }
+  }
+  const query = solutionFile(path.join('Entities', 'KnowledgeArticle', 'SavedQueries', '{7b33b976-71b1-4dd9-ad8e-3003913e8887}.xml'))
+  const setting = fs.readFileSync(path.join(__dirname, '..', '.powerpages-site', 'site-settings', 'Search-IndexQueryName.sitesetting.yml'), 'utf8')
+  assert.ok(query.includes('LocalizedName description="Support KB Search"'))
+  assert.match(setting, /^value: Support KB Search$/m)
 })

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <savedquery>
     <IsCustomizable>1</IsCustomizable>
@@ -56,10 +56,10 @@
     </fetchxml>
     <IntroducedVersion>1.0</IntroducedVersion>
     <LocalizedNames>
-      <LocalizedName description="Northwind KB Search 3840a2ee-ab5c-460d-9029-76055d2556bf" languagecode="1033" />
+      <LocalizedName description="Support KB Search" languagecode="1033" />
     </LocalizedNames>
     <Descriptions>
-      <Description description="Knowledge-only search for Northwind Customer Support. Published, external, non-root English articles with dynamic publication and expiry filters. No case, note, email, file or webpage source." languagecode="1033" />
+      <Description description="Knowledge-only search for customer support. Published, external, non-root English articles with dynamic publication and expiry filters. No case, note, email, file or webpage source." languagecode="1033" />
     </Descriptions>
   </savedquery>
 </savedqueries>

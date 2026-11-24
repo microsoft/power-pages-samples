@@ -1,0 +1,6 @@
+kind: GptComponentMetadata
+instructions:
+gptCapabilities: {}
+aISettings:
+  model:
+    modelNameHint: GPT6Chat

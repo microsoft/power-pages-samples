@@ -1,0 +1,14 @@
+adx_entitypermission_webrole:
+- ba9c8c1a-db48-46e3-b1b9-325702839728
+append: true
+appendto: false
+create: true
+delete: false
+entitylogicalname: annotation
+entityname: Customer comment attachments
+id: e3d1717e-c841-42e7-9f84-498152caa7c3
+parententitypermission: 89d816d7-33ff-4a86-a327-33d55fdbf34f
+parentrelationship: adx_portalcomment_Annotations
+read: true
+scope: 756150003
+write: true

@@ -1,0 +1,1117 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "IA.cr.IAPluginDVConnector"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_microsoftcopilotstudio": {
+        "api": {
+          "name": "shared_microsoftcopilotstudio"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "ppst_ContosoCopilotStudio"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)": {
+          "defaultValue": "",
+          "type": "String",
+          "metadata": {
+            "schemaName": "ppst_ModernCss_PortalApplicationUserId"
+          }
+        }
+      },
+      "triggers": {
+        "When_customer_document_is_confirmed": {
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "SubscribeWebhookTrigger",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "subscriptionRequest/message": 4,
+              "subscriptionRequest/entityname": "adx_portalcomment",
+              "subscriptionRequest/scope": 4,
+              "subscriptionRequest/filteringattributes": "subject",
+              "subscriptionRequest/filterexpression": "@concat('subject eq ''Customer document uploaded'' and adx_portalcommentdirectioncode eq 1 and _createdby_value eq ', parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)'))"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 1
+            }
+          }
+        }
+      },
+      "actions": {
+        "Read_customer_comment": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "adx_portalcomments",
+              "recordId": "@triggerBody()?['activityid']",
+              "$select": "activityid,subject,description,adx_portalcommentdirectioncode,_createdby_value,_regardingobjectid_value",
+              "$expand": "regardingobjectid_incident_adx_portalcomment($select=incidentid)"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {}
+        },
+        "Require_customer_document_comment": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@outputs('Read_customer_comment')?['body/activityid']",
+                  "@triggerBody()?['activityid']"
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_customer_comment')?['body/subject']",
+                  "Customer document uploaded"
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_customer_comment')?['body/adx_portalcommentdirectioncode']",
+                  1
+                ]
+              },
+              {
+                "not": {
+                  "equals": [
+                    "@parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')",
+                    ""
+                  ]
+                }
+              },
+              {
+                "equals": [
+                  "@outputs('Read_customer_comment')?['body/_createdby_value']",
+                  "@parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')"
+                ]
+              },
+              {
+                "equals": [
+                  "@length(split(coalesce(outputs('Read_customer_comment')?['body/description'], ''), 'Document reference: '))",
+                  2
+                ]
+              },
+              {
+                "equals": [
+                  "@length(toLower(trim(last(split(coalesce(outputs('Read_customer_comment')?['body/description'], ''), 'Document reference: ')))))",
+                  36
+                ]
+              },
+              {
+                "equals": [
+                  "@empty(outputs('Read_customer_comment')?['body/regardingobjectid_incident_adx_portalcomment']?['incidentid'])",
+                  false
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_customer_comment')?['body/_regardingobjectid_value']",
+                  "@outputs('Read_customer_comment')?['body/regardingobjectid_incident_adx_portalcomment']?['incidentid']"
+                ]
+              }
+            ]
+          },
+          "actions": {},
+          "else": {
+            "actions": {
+              "Skip_non_customer_comment": {
+                "type": "Terminate",
+                "inputs": {
+                  "runStatus": "Cancelled"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Read_customer_comment": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Read_uploaded_document": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "annotations",
+              "recordId": "@toLower(trim(last(split(coalesce(outputs('Read_customer_comment')?['body/description'], ''), 'Document reference: '))))",
+              "$select": "annotationid,notetext,isdocument,filesize,filename,mimetype,_createdby_value,_objectid_value"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Require_customer_document_comment": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Require_trusted_document": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@toLower(coalesce(outputs('Read_uploaded_document')?['body/annotationid'], ''))",
+                  "@toLower(trim(last(split(coalesce(outputs('Read_customer_comment')?['body/description'], ''), 'Document reference: '))))"
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_uploaded_document')?['body/_objectid_value']",
+                  "@outputs('Read_customer_comment')?['body/activityid']"
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_uploaded_document')?['body/_createdby_value']",
+                  "@parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')"
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_uploaded_document')?['body/notetext']",
+                  "*WEB* Customer-uploaded document"
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_uploaded_document')?['body/isdocument']",
+                  true
+                ]
+              },
+              {
+                "greater": [
+                  "@coalesce(outputs('Read_uploaded_document')?['body/filesize'], 0)",
+                  0
+                ]
+              },
+              {
+                "lessOrEquals": [
+                  "@coalesce(outputs('Read_uploaded_document')?['body/filesize'], 0)",
+                  5242880
+                ]
+              },
+              {
+                "or": [
+                  {
+                    "and": [
+                      {
+                        "equals": [
+                          "@outputs('Read_uploaded_document')?['body/mimetype']",
+                          "application/pdf"
+                        ]
+                      },
+                      {
+                        "equals": [
+                          "@endsWith(toLower(coalesce(outputs('Read_uploaded_document')?['body/filename'], '')), '.pdf')",
+                          true
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "and": [
+                      {
+                        "equals": [
+                          "@outputs('Read_uploaded_document')?['body/mimetype']",
+                          "image/png"
+                        ]
+                      },
+                      {
+                        "equals": [
+                          "@endsWith(toLower(coalesce(outputs('Read_uploaded_document')?['body/filename'], '')), '.png')",
+                          true
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "and": [
+                      {
+                        "equals": [
+                          "@outputs('Read_uploaded_document')?['body/mimetype']",
+                          "image/jpeg"
+                        ]
+                      },
+                      {
+                        "or": [
+                          {
+                            "equals": [
+                              "@endsWith(toLower(coalesce(outputs('Read_uploaded_document')?['body/filename'], '')), '.jpg')",
+                              true
+                            ]
+                          },
+                          {
+                            "equals": [
+                              "@endsWith(toLower(coalesce(outputs('Read_uploaded_document')?['body/filename'], '')), '.jpeg')",
+                              true
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "actions": {},
+          "else": {
+            "actions": {
+              "Skip_untrusted_attachment": {
+                "type": "Terminate",
+                "inputs": {
+                  "runStatus": "Cancelled"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Read_uploaded_document": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Read_case": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "incidents",
+              "recordId": "@outputs('Read_customer_comment')?['body/regardingobjectid_incident_adx_portalcomment']?['incidentid']",
+              "$select": "incidentid,caseorigincode,_createdby_value,statecode,_customerid_value",
+              "$expand": "customerid_contact($select=contactid)"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Require_trusted_document": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Require_active_portal_contact_case": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@outputs('Read_case')?['body/incidentid']",
+                  "@outputs('Read_customer_comment')?['body/regardingobjectid_incident_adx_portalcomment']?['incidentid']"
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_case')?['body/statecode']",
+                  0
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_case')?['body/caseorigincode']",
+                  3
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_case')?['body/_createdby_value']",
+                  "@parameters('Modern CSS - Portal application user ID (ppst_ModernCss_PortalApplicationUserId)')"
+                ]
+              },
+              {
+                "equals": [
+                  "@empty(outputs('Read_case')?['body/customerid_contact']?['contactid'])",
+                  false
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_case')?['body/_customerid_value']",
+                  "@outputs('Read_case')?['body/customerid_contact']?['contactid']"
+                ]
+              }
+            ]
+          },
+          "actions": {},
+          "else": {
+            "actions": {
+              "Skip_ineligible_case": {
+                "type": "Terminate",
+                "inputs": {
+                  "runStatus": "Cancelled"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Read_case": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Find_classified_card_name_intent": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "msdyn_intententities",
+              "$select": "msdyn_intententityid,_msdyn_objectid_value,_msdyn_intentid_value,_msdyn_intentfamilyid_value,statecode",
+              "$filter": "@concat('_msdyn_objectid_value eq ', outputs('Read_case')?['body/incidentid'], ' and statecode eq 0 and _msdyn_intentid_value eq 527277fa-b1de-f111-84e8-00224809f672 and _msdyn_intentfamilyid_value eq 14f7c663-ed81-46d4-8cec-4cb1432bce57')",
+              "$top": 1
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Require_active_portal_contact_case": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Require_existing_classification": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "greater": [
+                  "@length(coalesce(outputs('Find_classified_card_name_intent')?['body/value'], json('[]')))",
+                  0
+                ]
+              }
+            ]
+          },
+          "actions": {},
+          "else": {
+            "actions": {
+              "Skip_unclassified_or_other_intent": {
+                "type": "Terminate",
+                "inputs": {
+                  "runStatus": "Cancelled"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Find_classified_card_name_intent": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Read_card_name_intent": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "msdyn_intents",
+              "recordId": "527277fa-b1de-f111-84e8-00224809f672",
+              "$select": "msdyn_intentid,msdyn_reviewstate,msdyn_is_selfserve_enabled,statecode,_msdyn_intentfamilyid_value"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Require_existing_classification": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Require_approved_autonomous_intent": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@outputs('Read_card_name_intent')?['body/msdyn_intentid']",
+                  "527277fa-b1de-f111-84e8-00224809f672"
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_card_name_intent')?['body/msdyn_reviewstate']",
+                  192350001
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_card_name_intent')?['body/msdyn_is_selfserve_enabled']",
+                  true
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_card_name_intent')?['body/statecode']",
+                  0
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Read_card_name_intent')?['body/_msdyn_intentfamilyid_value']",
+                  "14f7c663-ed81-46d4-8cec-4cb1432bce57"
+                ]
+              }
+            ]
+          },
+          "actions": {},
+          "else": {
+            "actions": {
+              "Skip_non_autonomous_intent": {
+                "type": "Terminate",
+                "inputs": {
+                  "runStatus": "Cancelled"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Read_card_name_intent": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Read_effective_agent_settings": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "PerformUnboundAction",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "actionName": "msdyn_GetCaseManagementAgentSettings",
+              "item/Entity": "@concat('incidents(', outputs('Read_case')?['body/incidentid'], ')')",
+              "item/Actions": "[\"resolve\"]",
+              "item/RefreshIntentFamily": false
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Require_approved_autonomous_intent": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Require_enabled_full_non_shadow_agent": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@json(outputs('Read_effective_agent_settings')?['body/Result'])?['isEnabled']",
+                  true
+                ]
+              },
+              {
+                "equals": [
+                  "@json(outputs('Read_effective_agent_settings')?['body/Result'])?['resolution']?['isEnabled']",
+                  true
+                ]
+              },
+              {
+                "equals": [
+                  "@json(outputs('Read_effective_agent_settings')?['body/Result'])?['resolution']?['automationLevel']",
+                  "Full"
+                ]
+              },
+              {
+                "equals": [
+                  "@json(outputs('Read_effective_agent_settings')?['body/Result'])?['isShadowMode']",
+                  false
+                ]
+              }
+            ]
+          },
+          "actions": {},
+          "else": {
+            "actions": {
+              "Stop_disabled_or_unsafe_agent": {
+                "type": "Terminate",
+                "inputs": {
+                  "runStatus": "Failed",
+                  "runError": {
+                    "code": "FullNonShadowAutomationRequired",
+                    "message": "Card-name intake continuation blocked: effective agent settings must be enabled, resolution enabled, Full and non-shadow. No callback or case mutation was performed."
+                  }
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Read_effective_agent_settings": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_verification_decision": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "VerificationDecision",
+                "type": "string",
+                "value": "escalate"
+              }
+            ]
+          },
+          "runAfter": {
+            "Require_enabled_full_non_shadow_agent": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_verification_details": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "VerificationDetails",
+                "type": "string",
+                "value": "A specialist will review the document manually."
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_verification_decision": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Find_verification_results": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords"
+            },
+            "parameters": {
+              "entityName": "annotations",
+              "$select": "annotationid,notetext",
+              "$filter": "@concat('_objectid_value eq ', outputs('Read_case')?['body/incidentid'], ' and isdocument eq false and subject eq ''Support portal: Document verification result''')",
+              "$top": 50
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Initialize_verification_details": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Find_intake_continuation_receipt": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            },
+            "parameters": {
+              "entityName": "annotations",
+              "$select": "annotationid,notetext",
+              "$filter": "@concat('_objectid_value eq ', outputs('Read_case')?['body/incidentid'], ' and isdocument eq false and subject eq ''Support portal: Card name intake continuation''')",
+              "$top": 50
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runAfter": {
+            "Find_verification_results": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Completed_verifications": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('Find_verification_results')?['body/value']",
+            "where": "@or(startsWith(coalesce(item()?['notetext'], ''), 'Decision: verified'), startsWith(coalesce(item()?['notetext'], ''), 'Decision: escalate'))"
+          },
+          "runAfter": {
+            "Find_intake_continuation_receipt": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Failed_verifications": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('Find_verification_results')?['body/value']",
+            "where": "@startsWith(coalesce(item()?['notetext'], ''), 'Decision: reuploadRequired')"
+          },
+          "runAfter": {
+            "Completed_verifications": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Document_receipts": {
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('Find_intake_continuation_receipt')?['body/value']",
+            "where": "@contains(coalesce(item()?['notetext'], ''), concat('Document: ', outputs('Read_uploaded_document')?['body/annotationid'], '.'))"
+          },
+          "runAfter": {
+            "Failed_verifications": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Continuation_receipt_exists": {
+          "type": "If",
+          "expression": {
+            "or": [
+              {
+                "greater": [
+                  "@length(body('Completed_verifications'))",
+                  0
+                ]
+              },
+              {
+                "greater": [
+                  "@length(body('Document_receipts'))",
+                  0
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Already_reserved_or_accepted": {
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Succeeded"
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Create_continuation_receipt": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "CreateRecord",
+                    "connectionName": "shared_commondataserviceforapps"
+                  },
+                  "parameters": {
+                    "entityName": "annotations",
+                    "item/subject": "Support portal: Card name intake continuation",
+                    "item/notetext": "Continuation reserved before callback. Document: @{outputs('Read_uploaded_document')?['body/annotationid']}. Identity has not been verified yet and no bank or card record has been changed. Flow run: @{workflow()?['run']?['name']}. Keep this receipt to block duplicate callbacks for this document; do not retry without reviewing this run and managed agent results.",
+                    "item/isdocument": false,
+                    "item/objectid_incident@odata.bind": "@concat('incidents(', outputs('Read_case')?['body/incidentid'], ')')"
+                  },
+                  "authentication": "@parameters('$authentication')",
+                  "retryPolicy": {
+                    "type": "none"
+                  }
+                },
+                "runAfter": {}
+              },
+              "Invoke_card_name_intake_continuation": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "PerformUnboundAction",
+                    "connectionName": "shared_commondataserviceforapps"
+                  },
+                  "parameters": {
+                    "actionName": "msdyn_invokeCaseProcessingAgent",
+                    "item/msdyn_incidentId": "@outputs('Read_case')?['body/incidentid']",
+                    "item/msdyn_actions": "[{\"action\":\"resolve\"}]",
+                    "item/msdyn_extraParams": "{\"additionalInformation\":[{\"key\":\"portalAttachmentConfirmation\",\"value\":\"received\",\"keyDescription\":\"Set by the authorized portal attachment workflow after it confirmed a non-empty PDF, PNG, or JPEG document on a customer-originated adx_portalcomment for this same case. The upload is complete and verification is in progress: send only the Step 2 acknowledgement, ask no question, and keep the case open.\"}]}"
+                  },
+                  "authentication": "@parameters('$authentication')",
+                  "retryPolicy": {
+                    "type": "none"
+                  }
+                },
+                "runAfter": {
+                  "Create_continuation_receipt": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Callback_acknowledged": {
+                "type": "If",
+                "expression": {
+                  "and": [
+                    {
+                      "equals": [
+                        "@outputs('Invoke_card_name_intake_continuation')?['statusCode']",
+                        204
+                      ]
+                    }
+                  ]
+                },
+                "actions": {
+                  "Mark_continuation_accepted": {
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                        "operationId": "UpdateOnlyRecord",
+                        "connectionName": "shared_commondataserviceforapps"
+                      },
+                      "parameters": {
+                        "entityName": "annotations",
+                        "recordId": "@outputs('Create_continuation_receipt')?['body/annotationid']",
+                        "item/notetext": "Card-name intake continuation accepted (HTTP 204 acknowledgement only), not a resolution confirmation. Document: @{outputs('Read_uploaded_document')?['body/annotationid']}. Identity has not been verified and no bank or card record has been changed. Keep receipt to block duplicate callbacks. Verify managed agent results and customer communications in Dynamics 365. Flow run: @{workflow()?['run']?['name']}."
+                      },
+                      "authentication": "@parameters('$authentication')"
+                    },
+                    "runAfter": {}
+                  },
+                  "Report_receipt_update_failure": {
+                    "type": "Terminate",
+                    "inputs": {
+                      "runStatus": "Failed",
+                      "runError": {
+                        "code": "CardNameContinuationAuditUnconfirmed",
+                        "message": "The callback was acknowledged but recording acceptance failed. Keep the reserved continuation receipt; it is not a resolution confirmation. Review flow run: @{workflow()?['run']?['name']}."
+                      }
+                    },
+                    "runAfter": {
+                      "Mark_continuation_accepted": [
+                        "Failed",
+                        "TimedOut"
+                      ]
+                    }
+                  }
+                },
+                "else": {
+                  "actions": {
+                    "Mark_unexpected_acknowledgement": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                          "operationId": "UpdateOnlyRecord",
+                          "connectionName": "shared_commondataserviceforapps"
+                        },
+                        "parameters": {
+                          "entityName": "annotations",
+                          "recordId": "@outputs('Create_continuation_receipt')?['body/annotationid']",
+                          "item/notetext": "Card-name intake callback returned an unexpected acknowledgement and is unconfirmed. Document: @{outputs('Read_uploaded_document')?['body/annotationid']}. No automatic retry was attempted; keep this receipt to block duplicates. Review this flow run and managed agent results before a manual retry: @{workflow()?['run']?['name']}."
+                        },
+                        "authentication": "@parameters('$authentication')"
+                      },
+                      "runAfter": {}
+                    },
+                    "Report_unexpected_acknowledgement": {
+                      "type": "Terminate",
+                      "inputs": {
+                        "runStatus": "Failed",
+                        "runError": {
+                          "code": "CardNameContinuationAcknowledgementUnconfirmed",
+                          "message": "Card-name intake callback acknowledgement is unconfirmed. Keep the internal receipt and review its flow run reference before manually retrying: @{workflow()?['run']?['name']}."
+                        }
+                      },
+                      "runAfter": {
+                        "Mark_unexpected_acknowledgement": [
+                          "Succeeded",
+                          "Failed",
+                          "TimedOut"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "runAfter": {
+                  "Invoke_card_name_intake_continuation": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Mark_continuation_unconfirmed": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "UpdateOnlyRecord",
+                    "connectionName": "shared_commondataserviceforapps"
+                  },
+                  "parameters": {
+                    "entityName": "annotations",
+                    "recordId": "@outputs('Create_continuation_receipt')?['body/annotationid']",
+                    "item/notetext": "Card-name intake callback failed or is unconfirmed. Document: @{outputs('Read_uploaded_document')?['body/annotationid']}. No automatic retry was attempted; keep this receipt to block duplicates. This is not a resolution confirmation. Review this flow run and managed agent results before a manual retry: @{workflow()?['run']?['name']}."
+                  },
+                  "authentication": "@parameters('$authentication')"
+                },
+                "runAfter": {
+                  "Invoke_card_name_intake_continuation": [
+                    "Failed",
+                    "TimedOut"
+                  ]
+                }
+              },
+              "Report_continuation_failure": {
+                "type": "Terminate",
+                "inputs": {
+                  "runStatus": "Failed",
+                  "runError": {
+                    "code": "CardNameContinuationUnconfirmed",
+                    "message": "Card-name intake callback failed or is unconfirmed. Keep the case-scoped internal continuation receipt and review its flow run reference before manually retrying: @{workflow()?['run']?['name']}."
+                  }
+                },
+                "runAfter": {
+                  "Mark_continuation_unconfirmed": [
+                    "Succeeded",
+                    "Failed",
+                    "TimedOut"
+                  ]
+                }
+              },
+              "Call_document_verifier": {
+                "type": "OpenApiConnectionWebhook",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_microsoftcopilotstudio",
+                    "operationId": "ExecuteCopilotAsyncV2",
+                    "connectionName": "shared_microsoftcopilotstudio"
+                  },
+                  "parameters": {
+                    "Copilot": "ppst_ContosoDocumentVerifier",
+                    "body/message": "@concat('{\"caseId\":\"', outputs('Read_case')?['body/incidentid'], '\",\"documentId\":\"', outputs('Read_uploaded_document')?['body/annotationid'], '\"}')"
+                  }
+                },
+                "runAfter": {
+                  "Wait_for_receipt_acknowledgement": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Verifier_response_text": {
+                "type": "Compose",
+                "inputs": "@trim(coalesce(body('Call_document_verifier')?['lastResponse'], ''))",
+                "runAfter": {
+                  "Call_document_verifier": [
+                    "Succeeded",
+                    "Failed",
+                    "TimedOut"
+                  ]
+                }
+              },
+              "Verifier_returned_json": {
+                "type": "If",
+                "expression": {
+                  "and": [
+                    {
+                      "contains": [
+                        "@outputs('Verifier_response_text')",
+                        "{"
+                      ]
+                    },
+                    {
+                      "contains": [
+                        "@outputs('Verifier_response_text')",
+                        "}"
+                      ]
+                    }
+                  ]
+                },
+                "actions": {
+                  "Parse_verifier_response": {
+                    "type": "Compose",
+                    "inputs": "@json(substring(outputs('Verifier_response_text'), indexOf(outputs('Verifier_response_text'), '{'), add(sub(lastIndexOf(outputs('Verifier_response_text'), '}'), indexOf(outputs('Verifier_response_text'), '{')), 1)))",
+                    "runAfter": {}
+                  },
+                  "Set_verification_decision": {
+                    "type": "SetVariable",
+                    "inputs": {
+                      "name": "VerificationDecision",
+                      "value": "@if(and(equals(outputs('Parse_verifier_response')?['verificationAvailable'], true), equals(outputs('Parse_verifier_response')?['valid'], true)), 'verified', if(and(equals(outputs('Parse_verifier_response')?['verificationAvailable'], true), equals(length(body('Failed_verifications')), 0)), 'reuploadRequired', 'escalate'))"
+                    },
+                    "runAfter": {
+                      "Parse_verifier_response": [
+                        "Succeeded"
+                      ]
+                    }
+                  },
+                  "Set_verification_details": {
+                    "type": "SetVariable",
+                    "inputs": {
+                      "name": "VerificationDetails",
+                      "value": "Document type: @{coalesce(outputs('Parse_verifier_response')?['documentType'], 'unknown')}. Name match: @{coalesce(outputs('Parse_verifier_response')?['nameMatches'], false)}. Reasons: @{join(coalesce(outputs('Parse_verifier_response')?['reasons'], createArray()), '; ')}"
+                    },
+                    "runAfter": {
+                      "Set_verification_decision": [
+                        "Succeeded"
+                      ]
+                    }
+                  }
+                },
+                "else": {
+                  "actions": {}
+                },
+                "runAfter": {
+                  "Verifier_response_text": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Create_verification_result_note": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "connectionName": "shared_commondataserviceforapps",
+                    "operationId": "CreateRecord"
+                  },
+                  "parameters": {
+                    "entityName": "annotations",
+                    "item/subject": "Support portal: Document verification result",
+                    "item/notetext": "Decision: @{variables('VerificationDecision')}. Document: @{outputs('Read_uploaded_document')?['body/annotationid']}. @{variables('VerificationDetails')} Result from the Document Verifier agent. Flow run: @{workflow()?['run']?['name']}.",
+                    "item/isdocument": false,
+                    "item/objectid_incident@odata.bind": "@concat('incidents(', outputs('Read_case')?['body/incidentid'], ')')"
+                  },
+                  "authentication": "@parameters('$authentication')",
+                  "retryPolicy": {
+                    "type": "none"
+                  }
+                },
+                "runAfter": {
+                  "Verifier_returned_json": [
+                    "Succeeded",
+                    "Failed",
+                    "TimedOut"
+                  ]
+                }
+              },
+              "Wait_for_receipt_acknowledgement": {
+                "type": "Wait",
+                "inputs": {
+                  "interval": {
+                    "count": 2,
+                    "unit": "Minute"
+                  }
+                },
+                "runAfter": {
+                  "Callback_acknowledged": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Build_verification_callback": {
+                "type": "Compose",
+                "inputs": {
+                  "additionalInformation": [
+                    {
+                      "key": "idVerificationResult",
+                      "value": "@{variables('VerificationDecision')}",
+                      "keyDescription": "Outcome of the Document Verifier agent for the uploaded document: verified, reuploadRequired, or escalate."
+                    },
+                    {
+                      "key": "idVerificationDetails",
+                      "value": "@{variables('VerificationDetails')}",
+                      "keyDescription": "Customer-friendly verification details. Never repeat document numbers, dates of birth, or addresses."
+                    }
+                  ]
+                },
+                "runAfter": {
+                  "Create_verification_result_note": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Invoke_verification_result": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "connectionName": "shared_commondataserviceforapps",
+                    "operationId": "PerformUnboundAction"
+                  },
+                  "parameters": {
+                    "actionName": "msdyn_invokeCaseProcessingAgent",
+                    "item/msdyn_incidentId": "@outputs('Read_case')?['body/incidentid']",
+                    "item/msdyn_actions": "[{\"action\":\"resolve\"}]",
+                    "item/msdyn_extraParams": "@{string(outputs('Build_verification_callback'))}"
+                  },
+                  "authentication": "@parameters('$authentication')",
+                  "retryPolicy": {
+                    "type": "none"
+                  }
+                },
+                "runAfter": {
+                  "Build_verification_callback": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Report_verification_callback_failure": {
+                "type": "Terminate",
+                "inputs": {
+                  "runStatus": "Failed",
+                  "runError": {
+                    "code": "CardNameVerificationCallbackUnconfirmed",
+                    "message": "The verification result note was saved but the Case Management Agent callback failed. Review flow run: @{workflow()?['run']?['name']}."
+                  }
+                },
+                "runAfter": {
+                  "Invoke_verification_result": [
+                    "Failed",
+                    "TimedOut"
+                  ]
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Document_receipts": [
+              "Succeeded"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "schemaVersion": "1.0.0.0"
+}

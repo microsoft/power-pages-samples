@@ -17,7 +17,7 @@ const profile = { contactid: contact, firstname: 'Ada', lastname: 'Customer', em
 const caseRow = { incidentid: caseId, ticketnumber: 'CAS-1001', title: 'Customer request', description: 'Original description', statecode: 0, statuscode: 1, createdon: now, modifiedon: now, customerid_contact: { contactid: contact } }
 const article = { knowledgearticleid: articleId, articlepublicnumber: 'KA-1001', title: 'Published article', description: 'Guidance', content: '<p>Safe content</p>', statecode: 3, isinternal: false, isrootarticle: false, _languagelocaleid_value: language, _rootarticleid_value: rootId, publishon: null, expirationdate: null }
 const pdf = Buffer.from('%PDF-1.7\nsample')
-const note = { annotationid: fileId, _objectid_value: caseId, notetext: '*WEB* Customer-uploaded document', isdocument: true, filename: 'sample.pdf', mimetype: 'application/pdf', filesize: pdf.length, documentbody: pdf.toString('base64') }
+const note = { annotationid: fileId, _objectid_value: caseId, objectid_incident: { incidentid: caseId }, notetext: '*WEB* Customer-uploaded document', isdocument: true, filename: 'sample.pdf', mimetype: 'application/pdf', filesize: pdf.length, documentbody: pdf.toString('base64') }
 const comment = { activityid: fileId, _regardingobjectid_value: caseId, subject: '*WEB* Customer message', description: 'Customer detail', createdon: now, adx_portalcommentdirectioncode: 1 }
 const methods = { 'northwind-profile': ['get', 'patch'], 'northwind-cases': ['get', 'post', 'patch'], 'northwind-knowledge': ['get'], 'northwind-case-activity': ['get', 'post'], 'northwind-feedback': ['post'] }
 const scripts = Object.fromEntries(Object.keys(methods).map(name => [name, fs.readFileSync(path.join(__dirname, '..', '.powerpages-site', 'server-logic', name, `${name}.js`), 'utf8')]))
@@ -33,6 +33,7 @@ function run(name, method, settings = {}) {
       if (entity === 'contacts') return response(identity)
       if (entity === 'incidents') return response(currentCase)
       if (entity === 'products') return response({ productid: productId, statecode: settings.inactiveProduct ? 1 : 0 })
+      if (entity === 'annotations') return settings.noteRead ? settings.noteRead() : response(settings.note || note)
       throw new Error(`Unexpected single read: ${entity}`)
     },
     RetrieveMultipleRecords(entity, options, skipCache) {
@@ -41,7 +42,7 @@ function run(name, method, settings = {}) {
       if (entity === 'incidents') return response({ value: [currentCase] })
       if (entity === 'knowledgearticles') return response({ value: options.includes('$top=1') ? [{ knowledgearticleid: settings.latest || articleId }] : [settings.article || article] })
       if (entity === 'annotations') return response({ value: [settings.note || note] })
-      if (entity === 'adx_portalcomments') return response({ value: [settings.comment || comment] })
+      if (entity === 'adx_portalcomments') return response({ value: settings.comments || [settings.comment || comment] })
       throw new Error(`Unexpected collection read: ${entity}`)
     },
     CreateRecord(entity, raw) {
@@ -54,7 +55,8 @@ function run(name, method, settings = {}) {
     UpdateRecord(entity, id, raw) {
       const body = JSON.parse(raw)
       calls.push({ method: 'update', entity, id, body })
-      if (settings.writeFailure || (settings.statusUpdateFailure && entity === 'incidents')) return response({}, 403)
+      if (settings.writeFailure || (settings.statusUpdateFailure && entity === 'incidents') ||
+        settings.updateFailure?.(entity, body)) return response({}, 403)
       if (entity === 'contacts') identity = { ...identity, ...body }
       if (entity === 'incidents') currentCase = { ...currentCase, ...body }
       return response(null, 204)
@@ -68,7 +70,7 @@ function run(name, method, settings = {}) {
     Date: Clock,
     Server: {
       User: settings.user === undefined ? { contactid: contact } : settings.user,
-      Context: { QueryParameters: settings.query || {}, Body: typeof settings.body === 'string' ? settings.body : JSON.stringify(settings.body || {}) },
+      Context: { ActivityId: settings.activityId === undefined ? rootId : settings.activityId, QueryParameters: settings.query || {}, Body: typeof settings.body === 'string' ? settings.body : JSON.stringify(settings.body || {}) },
       SiteSetting: { Get: key => { assert.equal(key, 'Northwind/KnowledgeLanguageLocaleId'); return settings.language === undefined ? language : settings.language } },
       Connector: { Dataverse: Object.fromEntries(Object.entries(connector).map(([method, call]) => [method, (...args) => {
         const result = call(...args)
@@ -124,9 +126,8 @@ test('every handler accepts hosted serialized connector responses and equivalent
     ['northwind-cases', 'patch', { body: { id: caseId, title: 'Updated', description: 'Details' } }],
     ['northwind-knowledge', 'get', {}],
     ['northwind-case-activity', 'get', { query: { caseId } }],
-    ['northwind-case-activity', 'get', { query: { caseId, documentId: fileId } }],
     ['northwind-case-activity', 'post', { body: { caseId, kind: 'comment', body: 'Reply' } }],
-    ['northwind-case-activity', 'post', { body: { caseId, kind: 'document', name: 'sample.pdf', type: 'application/pdf', content: pdf.toString('base64') } }],
+    ['northwind-case-activity', 'post', receiptSettings()],
     ['northwind-feedback', 'post', { body: { kind: 'contact', message: 'Help' } }],
     ['northwind-feedback', 'post', { body: { kind: 'article', articleId, helpful: true } }],
   ]) {
@@ -207,12 +208,12 @@ test('case pagination accepts only an opaque token and rebuilds ownership filter
   noWrite(run('northwind-cases', 'get', { query: { cursor: encodeURIComponent(JSON.stringify({ v: 1, owner: foreign, token: 'next' })) } }), 'VALIDATION')
 })
 test('case creation sets Web origin, binds the session customer, validates product and enforces the exact field limit', () => {
-  const impact = 'I have a question', maximum = 2000 - `\n\nBusiness impact: ${impact}`.length
+  const impact = 'I have a question', maximum = 1898 - `\n\nBusiness impact: ${impact}`.length
   const accepted = run('northwind-cases', 'post', { body: { description: 'x'.repeat(maximum), impact, productId } })
   assert.equal(accepted.result.status, 'success')
   const payload = accepted.calls.find(call => call.method === 'create').body
   assert.equal(payload.caseorigincode, 3)
-  assert.equal(payload.description.length, 2000)
+  assert.equal(payload.description.length, 1898)
   assert.equal(payload['customerid_contact@odata.bind'], `/contacts(${contact})`)
   assert.equal(payload['productid@odata.bind'], `/products(${productId})`)
   assert.equal(payload.title.length, 200)
@@ -259,60 +260,80 @@ test('knowledge continuation is rebuilt with publication and language restrictio
   assert.match(next.calls[0].options, /\$skiptoken=next/)
   noWrite(run('northwind-knowledge', 'get', { query: { cursor: encodeURIComponent(JSON.stringify({ v: 1, language: foreign, token: 'next' })) } }), 'VALIDATION')
 })
-test('activity requires the personal case and explicit portal markers; internal records fail closed', () => {
-  const own = run('northwind-case-activity', 'get', { query: { caseId } })
-  assert.equal(own.result.data.comments[0].id, fileId)
-  assert.equal(own.result.data.documents[0].size, pdf.length)
-  for (const entity of ['adx_portalcomments', 'annotations']) {
-    const call = own.calls.find(call => call.entity === entity)
-    assert.match(call.options, /\*WEB\*/)
-    assert.ok(call.options.includes(caseId))
-    assert.equal(call.skipCache, true)
-  }
-  noWrite(run('northwind-case-activity', 'get', { query: { caseId }, caseRow: { ...caseRow, customerid_contact: { contactid: foreign } } }), 'NOT_FOUND')
-  noWrite(run('northwind-case-activity', 'get', { query: { caseId }, note: { ...note, notetext: 'Internal CRM note' } }), 'NOT_FOUND')
-  noWrite(run('northwind-case-activity', 'get', { query: { caseId }, comment: { ...comment, subject: 'Internal CRM conversation' } }), 'NOT_FOUND')
-  noWrite(run('northwind-case-activity', 'get', { query: { caseId, documentId: fileId }, note: { ...note, _objectid_value: foreign } }), 'NOT_FOUND')
+const reference = (name = 'sample.pdf', id = fileId) => `Attachment uploaded: ${name}\nDocument reference: ${id}`
+test('activity requires the personal case and lists only documents referenced by customer upload comments', () => {
+  const upload = { ...comment, subject: 'Customer attachment uploaded', description: reference() }
+  const own = run('northwind-case-activity', 'get', { query: { caseId }, comment: upload })
+  assert.deepEqual(own.result.data.documents, [{ id: fileId, name: 'sample.pdf', type: 'application/pdf', created: now }])
+  assert.equal(own.result.data.comments[0].body, 'Attachment uploaded: sample.pdf')
+  const read = own.calls.find(call => call.entity === 'adx_portalcomments')
+  assert.ok(read.options.includes(`_regardingobjectid_value eq ${caseId}`))
+  assert.ok(!/Annotation|documentbody/.test(read.options))
+  assert.equal(read.skipCache, true)
+  assert.equal(own.calls.some(call => call.entity === 'annotations'), false)
+  for (const hidden of [
+    { ...upload, adx_portalcommentdirectioncode: 2 }, { ...upload, subject: 'Customer message' },
+    { ...upload, description: reference('sample.svg') }, { ...upload, description: reference('a/b.pdf') },
+    { ...upload, description: reference() + '\nmore' }, { ...upload, description: 'Attachment uploaded: sample.pdf' },
+  ]) assert.deepEqual(run('northwind-case-activity', 'get', { query: { caseId }, comment: hidden }).result.data.documents, [])
+  const twice = run('northwind-case-activity', 'get', { query: { caseId }, comments: [upload, { ...upload, activityid: rootId }] })
+  assert.equal(twice.result.data.documents.length, 1)
+  noWrite(run('northwind-case-activity', 'get', { query: { caseId }, comment: upload, caseRow: { ...caseRow, customerid_contact: { contactid: foreign } } }), 'NOT_FOUND')
+  noWrite(run('northwind-case-activity', 'get', { query: { caseId, documentId: fileId } }), 'VALIDATION')
 })
-test('activity continuation retains the parent/visibility filter and rejects repeated cursors', () => {
-  let notes = 0
+test('activity accepts unmarked and legacy comments without weakening case ownership or record validation', () => {
+  for (const subject of ['Support response', '*WEB* Support response', '*Web* Support response', null, undefined]) {
+    const published = { ...comment, subject, adx_portalcommentdirectioncode: 2 }
+    const loaded = run('northwind-case-activity', 'get', { query: { caseId }, comment: published })
+    assert.equal(loaded.result.status, 'success')
+    assert.equal(loaded.result.data.comments[0].author, 'Support')
+    assert.equal(loaded.result.data.comments[0].subject, subject ?? '')
+    assert.match(loaded.calls.find(call => call.entity === 'adx_portalcomments').options, /\$select=[^&]*subject/)
+    noWrite(run('northwind-case-activity', 'get', { query: { caseId }, comment: { ...published, _regardingobjectid_value: foreign } }), 'NOT_FOUND')
+    noWrite(run('northwind-case-activity', 'get', { query: { caseId }, comment: { ...published, adx_portalcommentdirectioncode: 3 } }), 'NOT_FOUND')
+  }
+  noWrite(run('northwind-case-activity', 'get', { query: { caseId }, comment: { ...comment, subject: 123 } }), 'NOT_FOUND')
+  const bodiless = run('northwind-case-activity', 'get', { query: { caseId }, comment: { ...comment, description: null, adx_portalcommentdirectioncode: 2 } })
+  assert.equal(bodiless.result.status, 'success')
+  assert.deepEqual(bodiless.result.data.comments, [])
+  noWrite(run('northwind-case-activity', 'get', { query: { caseId }, comment: { ...comment, description: 42 } }), 'NOT_FOUND')
+})
+test('activity continuation retains the case filter and rejects repeated cursors', () => {
+  let pages = 0
   const repeated = run('northwind-case-activity', 'get', { query: { caseId }, list: (entity, options) => {
     if (entity === 'incidents') return response({ value: [caseRow] })
-    if (entity === 'adx_portalcomments') return response({ value: [] })
-    notes++
-    assert.ok(options.includes(`_objectid_value eq ${caseId}`))
-    assert.ok(options.includes("startswith(notetext,'*WEB*')"))
-    return response({ value: [], '@odata.nextLink': 'https://org.example/annotations?$skiptoken=repeat' })
+    pages++
+    assert.ok(options.includes(`_regardingobjectid_value eq ${caseId}`))
+    return response({ value: [], '@odata.nextLink': 'https://org.example/adx_portalcomments?$skiptoken=repeat' })
   } })
-  assert.equal(repeated.result.status, 'error')
-  assert.equal(notes, 2)
+  assert.equal(repeated.result.code, 'DATAVERSE_ERROR')
+  assert.equal(pages, 2)
 })
 test('published support responses retain personal-case isolation and customer replies cannot forge support authorship', () => {
-  const published = { ...comment, subject: '*WEB* AI-assisted support response', description: 'Approved response for this customer.', adx_portalcommentdirectioncode: 2 }
+  const published = { ...comment, subject: 'Reviewed support response', description: 'Approved response for this customer.', adx_portalcommentdirectioncode: 2 }
   const own = run('northwind-case-activity', 'get', { query: { caseId }, comment: published })
-  assert.deepEqual(own.result.data.comments, [{ id: fileId, body: published.description, created: now, author: 'Support' }])
+  assert.deepEqual(own.result.data.comments, [{ id: fileId, subject: published.subject, body: published.description, created: now, author: 'Support' }])
   const foreignCustomer = run('northwind-case-activity', 'get', { query: { caseId }, user: { contactid: foreign }, comment: published })
   noWrite(foreignCustomer, 'NOT_FOUND')
   assert.equal(foreignCustomer.calls.some(call => call.entity === 'adx_portalcomments'), false)
   noWrite(run('northwind-case-activity', 'get', { query: { caseId }, comment: { ...published, _regardingobjectid_value: foreign } }), 'NOT_FOUND')
   noWrite(run('northwind-case-activity', 'post', { body: { kind: 'comment', caseId, body: 'Pretend support response', adx_portalcommentdirectioncode: 2 } }), 'VALIDATION')
 })
-test('comment creation binds the authorized case and marks it for portal publication', () => {
+test('comment creation binds the authorized case without a subject marker', () => {
   const body = { kind: 'comment', caseId, body: 'Reply from customer' }
   const saved = run('northwind-case-activity', 'post', { body })
   assert.equal(saved.result.data.id, fileId)
   const payload = saved.calls.find(call => call.method === 'create').body
   assert.equal(payload['regardingobjectid_incident_adx_portalcomment@odata.bind'], `/incidents(${caseId})`)
   assert.equal(payload.adx_portalcommentdirectioncode, 1)
-  assert.match(payload.subject, /^\*WEB\*/)
+  assert.equal(payload.subject, 'Customer message')
   noWrite(run('northwind-case-activity', 'post', { body: { ...body, author: foreign } }), 'VALIDATION')
   noWrite(run('northwind-case-activity', 'post', { body, caseRow: { ...caseRow, statecode: 1 } }), 'FORBIDDEN')
   noWrite(run('northwind-case-activity', 'post', { body, caseRow: { ...caseRow, customerid_contact: { contactid: foreign } } }), 'NOT_FOUND')
 })
 test('a customer reply or document returns a Waiting for Details case to In Progress, and only that status', () => {
   const comment = { kind: 'comment', caseId, body: 'Here is the serial number.' }
-  const document = { caseId, kind: 'document', name: 'sample.pdf', type: 'application/pdf', content: pdf.toString('base64') }
-  for (const body of [comment, document]) {
+  for (const body of [comment]) {
     const moved = run('northwind-case-activity', 'post', { body, caseRow: { ...caseRow, statuscode: 3 } })
     assert.equal(moved.result.status, 'success')
     assert.equal(moved.result.data.statusChanged, true)
@@ -338,38 +359,95 @@ test('a customer reply or document returns a Waiting for Details case to In Prog
   assert.equal(failed.result.data.statusChanged, false)
   assert.ok(failed.logs.includes('northwind-case-activity POST status change failed'))
 })
-test('file upload accepts exactly 5 MiB of valid bytes and rejects one byte beyond it', () => {
-  const bytes = Buffer.alloc(5 * 1024 * 1024)
+test('legacy server-side document uploads are rejected without writes', () => {
+  for (const kind of ['document', 'photoId']) {
+    noWrite(run('northwind-case-activity', 'post', { body: { caseId, kind, name: 'sample.pdf', type: 'application/pdf', content: pdf.toString('base64') } }), 'VALIDATION')
+  }
+})
+function receiptSettings(patch = {}, parentPatch = {}, extra = {}) {
+  return { body: nativeReceipt, ...extra,
+    note: { ...note, _objectid_value: rootId, objectid_incident: undefined, _createdby_value: productId, subject: null, ...patch },
+    comment: { activityid: rootId, _regardingobjectid_value: caseId, adx_portalcommentdirectioncode: 1, subject: null,
+      _createdby_value: productId, description: reference(), createdon: now, ...parentPatch } }
+}
+const nativeReceipt = { caseId, kind: 'attachmentReceipt', commentId: rootId, documentId: fileId }
+test('native attachment confirmation publishes its protected marker last, without creating records or uploading bytes', () => {
+  const outcome = run('northwind-case-activity', 'post', receiptSettings({}, {}, { caseRow: { ...caseRow, statuscode: 3 } }))
+  assert.deepEqual(outcome.result.data, { id: fileId, statusChanged: true, processingConfirmed: true })
+  const writes = outcome.calls.filter(call => ['create', 'update'].includes(call.method))
+  assert.deepEqual(writes, [
+    { method: 'update', entity: 'incidents', id: caseId, body: { statuscode: 1 } },
+    { method: 'update', entity: 'adx_portalcomments', id: rootId, body: { subject: 'Customer document uploaded' } },
+  ])
+  const noteRead = outcome.calls.find(call => call.method === 'read' && call.entity === 'annotations')
+  assert.equal(noteRead.id, fileId)
+  assert.equal(noteRead.skipCache, true)
+  assert.ok(outcome.calls.filter(call => call.method === 'list').every(call => call.skipCache === true))
+  assert.ok(writes.every(call => !('documentbody' in call.body)))
+})
+test('native receipt reauthorizes ownership, Incoming association, document reference, exact IDs and file metadata before writes', () => {
+  for (const [patch, parentPatch] of [
+    [{ annotationid: foreign }, {}], [{ _objectid_value: foreign }, {}], [{ _createdby_value: foreign }, {}],
+    [{ notetext: 'internal' }, {}], [{ isdocument: false }, {}],
+    [{}, { activityid: foreign }], [{}, { _regardingobjectid_value: foreign }],
+    [{}, { adx_portalcommentdirectioncode: 2 }], [{}, { description: reference('sample.pdf', foreign) }],
+    [{}, { description: 'Attachment uploaded: sample.pdf' }],
+  ]) noWrite(run('northwind-case-activity', 'post', receiptSettings(patch, parentPatch)), 'NOT_FOUND')
+  noWrite(run('northwind-case-activity', 'post', receiptSettings({}, {}, { noteRead: () => response({}, 404) })), 'NOT_FOUND')
+  noWrite(run('northwind-case-activity', 'post', receiptSettings({}, {}, { comments: [] })), 'NOT_FOUND')
+  for (const patch of [
+    { documentbody: '' }, { documentbody: '%%%%' }, { documentbody: Buffer.alloc(3932161).toString('base64') },
+    { filename: '../sample.pdf' }, { filename: 'sample.svg' }, { mimetype: 'image/png' },
+  ]) noWrite(run('northwind-case-activity', 'post', receiptSettings(patch)), 'VALIDATION')
+  for (const patch of [{ purpose: 'photoId' }, { content: note.documentbody }, { subject: 'trusted' }, { commentId: 'bad' }]) {
+    noWrite(run('northwind-case-activity', 'post', { body: { ...nativeReceipt, ...patch } }), 'VALIDATION')
+  }
+  noWrite(run('northwind-case-activity', 'post', receiptSettings({}, {}, { caseRow: { ...caseRow, customerid_contact: { contactid: foreign } } })), 'NOT_FOUND')
+  noWrite(run('northwind-case-activity', 'post', receiptSettings({}, {}, { caseRow: { ...caseRow, statecode: 1 } })), 'FORBIDDEN')
+})
+test('supported ordinary attachments are confirmed and listed without becoming trusted proof receipts', () => {
+  for (const [filename, mimetype] of [
+    ['file.doc', 'application/msword'],
+    ['file.DOCX', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+    ['file.gif', 'image/gif'], ['file.zip', 'application/zip'],
+  ]) {
+    const settings = receiptSettings({ filename, mimetype }, { description: reference(filename) })
+    const outcome = run('northwind-case-activity', 'post', settings)
+    assert.equal(outcome.result.data.processingConfirmed, true)
+    assert.deepEqual(outcome.calls.at(-1), { method: 'update', entity: 'adx_portalcomments', id: rootId, body: { subject: 'Customer attachment uploaded' } })
+    const listed = run('northwind-case-activity', 'get', { query: { caseId }, comment: settings.comment })
+    assert.deepEqual(listed.result.data.documents, [{ id: fileId, name: filename, type: mimetype, created: now }])
+  }
+  const fake = Buffer.from('ordinary data, not PDF evidence')
+  const outcome = run('northwind-case-activity', 'post', receiptSettings({ documentbody: fake.toString('base64') }))
+  assert.equal(outcome.result.data.processingConfirmed, true)
+  assert.equal(outcome.calls.at(-1).body.subject, 'Customer attachment uploaded')
+})
+test('native receipt accepts the unchanged encoded-limit boundary and never widens proof byte validation', () => {
+  const bytes = Buffer.alloc(3932160)
   bytes.set(pdf)
-  const body = { caseId, kind: 'document', name: 'sample.pdf', type: 'application/pdf', content: bytes.toString('base64') }
-  const saved = run('northwind-case-activity', 'post', { body })
-  assert.equal(saved.result.status, 'success')
-  const payload = saved.calls.find(call => call.method === 'create').body
-  assert.deepEqual(Buffer.from(payload.documentbody, 'base64'), bytes)
-  assert.equal(payload['objectid_incident@odata.bind'], `/incidents(${caseId})`)
-  assert.match(payload.notetext, /^\*WEB\*/)
-  noWrite(run('northwind-case-activity', 'post', { body: { ...body, content: Buffer.concat([bytes, Buffer.from([0])]).toString('base64') } }), 'VALIDATION')
-  const downloaded = run('northwind-case-activity', 'get', { query: { caseId, documentId: fileId }, note: { ...note, filesize: bytes.length, documentbody: body.content } })
-  assert.equal(downloaded.result.data.content, body.content)
-  assert.equal(run('northwind-case-activity', 'get', { query: { caseId, documentId: fileId }, note: { ...note, filesize: bytes.length + 1, documentbody: body.content } }).result.status, 'error')
+  const outcome = run('northwind-case-activity', 'post', receiptSettings({ documentbody: bytes.toString('base64') }))
+  assert.equal(bytes.toString('base64').length, 5242880)
+  assert.equal(outcome.result.data.processingConfirmed, true)
+  assert.equal(outcome.calls.at(-1).body.subject, 'Customer document uploaded')
+  const inconsistent = run('northwind-case-activity', 'post', receiptSettings({ documentbody: 'AAAA' }))
+  assert.equal(inconsistent.calls.at(-1).body.subject, 'Customer attachment uploaded')
 })
-test('file validation rejects unsafe names, malformed base64 and mismatched signatures/types', () => {
-  const body = { caseId, kind: 'document', name: 'sample.pdf', type: 'application/pdf', content: pdf.toString('base64') }
-  for (const change of [
-    { name: '../sample.pdf' }, { name: 'sample.svg' }, { name: 'sample.pdf ' }, { name: 'x'.repeat(256) + '.pdf' },
-    { type: 'image/png' }, { content: '' }, { content: 'AAAA====' }, { content: '%%%%' }, { content: '=AAA' },
-    { content: Buffer.from('not a PDF').toString('base64') }, { content: 'JVBERi1=' }, { contactId: foreign },
-  ]) noWrite(run('northwind-case-activity', 'post', { body: { ...body, ...change } }), 'VALIDATION')
-  for (const [name, type, bytes] of [['sample.png', 'image/png', [137, 80, 78, 71, 13, 10, 26, 10]], ['sample.jpeg', 'image/jpeg', [255, 216, 255, 0]]]) {
-    assert.equal(run('northwind-case-activity', 'post', { body: { ...body, name, type, content: Buffer.from(bytes).toString('base64') } }).result.status, 'success')
-  }
-})
-test('downloads reauthorize case, note marker and actual bytes, not just metadata', () => {
-  const query = { caseId, documentId: fileId }
-  assert.equal(run('northwind-case-activity', 'get', { query }).result.data.content, pdf.toString('base64'))
-  for (const change of [{ notetext: 'internal' }, { filesize: pdf.length + 1 }, { documentbody: 'AAAA' }, { annotationid: foreign }, { _objectid_value: foreign }]) {
-    assert.equal(run('northwind-case-activity', 'get', { query, note: { ...note, ...change } }).result.status, 'error')
-  }
+test('confirmed attachment retries are idempotent and post-save processing failures report persisted IDs explicitly', () => {
+  const waiting = { caseRow: { ...caseRow, statuscode: 3 } }
+  const repeated = run('northwind-case-activity', 'post', receiptSettings({}, { subject: 'Customer document uploaded' }, waiting))
+  assert.deepEqual(repeated.result.data, { id: fileId, statusChanged: false, processingConfirmed: true })
+  assert.equal(repeated.calls.some(call => ['update', 'create'].includes(call.method)), false)
+  const failed = run('northwind-case-activity', 'post', receiptSettings({}, {}, { ...waiting, updateFailure: entity => entity === 'adx_portalcomments' }))
+  assert.deepEqual(failed.result.data, { id: fileId, statusChanged: true, processingConfirmed: false })
+  assert.ok(failed.logs.includes('northwind-case-activity POST saved attachment processing failed'))
+  const statusFailed = run('northwind-case-activity', 'post', receiptSettings({}, {}, { ...waiting, statusUpdateFailure: true }))
+  assert.deepEqual(statusFailed.result.data, { id: fileId, statusChanged: false, processingConfirmed: false })
+  assert.ok(statusFailed.logs.includes('northwind-case-activity POST status change failed'))
+  assert.equal(statusFailed.calls.some(call => call.method === 'update' && call.entity !== 'incidents'), false)
+  const ordinaryRepeated = run('northwind-case-activity', 'post', receiptSettings({}, { subject: 'Customer attachment uploaded' }, waiting))
+  assert.equal(ordinaryRepeated.result.data.processingConfirmed, true)
+  assert.equal(ordinaryRepeated.calls.some(call => call.method === 'update'), false)
 })
 test('feedback binds the session author and validates publication again before the write', () => {
   const saved = run('northwind-feedback', 'post', { body: { kind: 'article', articleId, helpful: true } })

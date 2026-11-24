@@ -80,12 +80,12 @@ function post() {
         try { body = JSON.parse(Server.Context.Body); } catch (_) { fail("VALIDATION"); }
         if (!body || typeof body !== "object" || Array.isArray(body) ||
             Object.keys(body).some((key) => !["description", "impact", "productId"].includes(key)) ||
-            typeof body.description !== "string" || !body.description.trim() || body.description.length > 2000 ||
+            typeof body.description !== "string" || !body.description.trim() || body.description.length > 1898 ||
             !["Work is blocked", "Service is impaired", "I have a question"].includes(body.impact) ||
             /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(body.description + body.impact) ||
             (body.productId !== undefined && (typeof body.productId !== "string" || !guid.test(body.productId)))) fail("VALIDATION");
         var description = body.description.trim() + "\n\nBusiness impact: " + body.impact.trim();
-        if (description.length > 2000) fail("VALIDATION");
+        if (description.length > 1898) fail("VALIDATION");
         var contact = Server.User.contactid.toLowerCase();
         var payload = { title: body.description.trim().split(/[\r\n]/)[0].slice(0, 200), description: description,
             caseorigincode: 3, // Web
@@ -121,7 +121,7 @@ function post() {
         Server.Logger.Error("northwind-cases POST failed");
         var code = error && ["UNAUTHENTICATED", "NOT_FOUND", "VALIDATION"].includes(error.code) ? error.code : "DATAVERSE_ERROR";
         return JSON.stringify({ status: "error", code: code, message: code === "UNAUTHENTICATED" ? "Sign in to continue." :
-            code === "VALIDATION" ? "Check the case details. Description and business impact together must fit within 2,000 characters." :
+            code === "VALIDATION" ? "Check the case details. Description and business impact together must fit within 1,898 characters." :
                 "Case creation could not be confirmed. Reload your cases before submitting again." });
     }
 }

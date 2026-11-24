@@ -1,0 +1,99 @@
+{
+  "version": "GptDynamicPrompt-2",
+  "prompt": [
+    {
+      "type": "literal",
+      "text": "You are a document verification assistant for a bank's customer support team. Review the attached customer-uploaded document and decide whether it satisfies the request.\n\nRequested document: "
+    },
+    { "type": "inputVariable", "id": "requestedDocument" },
+    {
+      "type": "literal",
+      "text": "\nName on the customer's case record: "
+    },
+    { "type": "inputVariable", "id": "expectedName" },
+    {
+      "type": "literal",
+      "text": "\nToday's date (UTC): "
+    },
+    { "type": "inputVariable", "id": "today" },
+    {
+      "type": "literal",
+      "text": "\n\nUploaded document: "
+    },
+    { "type": "inputVariable", "id": "document" },
+    {
+      "type": "literal",
+      "text": "\n\nRules:\n1. Identify the type of document shown.\n2. isRequestedType is true only if the document is the requested kind of document.\n3. Extract the full name of the person the document is issued to, exactly as printed.\n4. nameFound is true if a person's name is clearly printed on the document.\n5. nameMatches is true if the extracted name refers to the same person as the case name. Allow differences in case, middle names or initials, ordering, and minor spelling variations such as a single transposed or missing letter.\n6. legible is false if the document is blurred, cropped, or unreadable.\n7. expired is true only if a printed expiry date is earlier than today's date.\n8. valid is true only if isRequestedType, nameFound, nameMatches and legible are all true and expired is false.\n9. reasons lists short, customer-friendly explanations for every failed check. Leave it empty when valid is true.\n10. Never include document numbers, dates of birth, or addresses in your answer.\n\nRespond only with JSON that matches the output schema."
+    }
+  ],
+  "definitions": {
+    "inputs": [
+      {
+        "id": "document",
+        "text": "document",
+        "type": "document"
+      },
+      {
+        "id": "requestedDocument",
+        "text": "requestedDocument",
+        "type": "text",
+        "quickTestValue": "a valid government-issued photo ID"
+      },
+      {
+        "id": "expectedName",
+        "text": "expectedName",
+        "type": "text",
+        "quickTestValue": "John Smith"
+      },
+      {
+        "id": "today",
+        "text": "today",
+        "type": "text",
+        "quickTestValue": "2026-01-01"
+      }
+    ],
+    "formulas": [],
+    "data": [],
+    "output": {
+      "formats": ["json"],
+      "jsonSchema": {
+        "type": "object",
+        "properties": {
+          "documentType": { "type": "string" },
+          "extractedName": { "type": "string" },
+          "isRequestedType": { "type": "boolean" },
+          "nameFound": { "type": "boolean" },
+          "nameMatches": { "type": "boolean" },
+          "legible": { "type": "boolean" },
+          "expired": { "type": "boolean" },
+          "valid": { "type": "boolean" },
+          "reasons": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "jsonExamples": [
+        {
+          "documentType": "Driver's licence",
+          "extractedName": "John A Smith",
+          "isRequestedType": true,
+          "nameFound": true,
+          "nameMatches": true,
+          "legible": true,
+          "expired": false,
+          "valid": true,
+          "reasons": []
+        }
+      ]
+    }
+  },
+  "modelParameters": {
+    "modelType": "gpt-41-mini",
+    "gptParameters": { "temperature": 0 }
+  },
+  "settings": {
+    "recordRetrievalLimit": 30,
+    "shouldPreserveRecordLinks": null,
+    "runtime": null
+  },
+  "code": "",
+  "signature": ""
+}

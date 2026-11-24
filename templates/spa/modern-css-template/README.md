@@ -1,6 +1,6 @@
 # Modern CSS Template
 
-The Modern CSS Template is an installable Power Pages SPA for customer support. Signed-in customers create and track their personal cases, reply to support and share documents. Everyone can browse published knowledge articles, with optional generative AI search grounded only in knowledge. New portal cases can be handed to the Dynamics 365 **Case Management Agent**, and representative-approved responses are published back to the case conversation. The template contains a shared unmanaged Dataverse solution and a React SPA site under `variants/react/website-code/`, branded with the fictional **Northwind Field Services** identity.
+The Modern CSS Template is an installable Power Pages SPA for customer support. Signed-in customers create and track their personal cases, reply to support and share documents. Everyone can browse published knowledge articles, with optional generative AI search grounded only in knowledge. New portal cases can be handed to the Dynamics 365 **Case Management Agent** in Full automation mode, and accepted outgoing email responses are published back to the case conversation. The template contains a shared unmanaged Dataverse solution and a React SPA site under `variants/react/website-code/`, branded with the fictional **Northwind Field Services** identity.
 
 ## Previews
 
@@ -31,13 +31,14 @@ The **ModernCSSMetadata** solution adds only the supporting components the site 
 
 | Component | Purpose |
 | --- | --- |
-| Cloud flow **Northwind - Case Management Agent (review required)** | Dispatches portal-created Web cases to the Case Management Agent in review-required (Semi) mode. |
-| Cloud flow **Northwind - Publish reviewed response to portal** | Publishes the reply a representative sent as a customer-visible Portal Comment once Dynamics accepts the Send. |
-| Connection reference `cr719_northwindportalresponseconversion` (Content Conversion) | HTML-to-text conversion in the publish flow. |
-| System view **Northwind KB Search** on `knowledgearticle` | Knowledge-only scope for AI search. |
+| Cloud flow **Case Management Agent (full automation)** | Dispatches portal-created Web cases only when effective resolution settings allow Full automation. |
+| Cloud flow **Publish reviewed response to portal** | Publishes an outgoing case reply as a customer-visible Portal Comment once Dynamics accepts the Send. Native Send acceptance does not prove human review. |
+| Cloud flow **Document Verifier - Verify document**, **Document Verifier** Copilot Studio agent, **Document Verification** AI prompt | Optional case-attachment verification building blocks; the separate card-name continuation flow is not packaged. |
+| Content Conversion and Copilot Studio connection references | Target-specific connections must be bound on import. |
+| System view **Support KB Search** on `knowledgearticle` | Knowledge-only scope for AI search. |
 | Environment variables `ppst_ModernCss_PortalApplicationUserId`, `ppst_ModernCss_PortalUrl` | The site's application user ID and the site URL. |
 
-The solution contains no plug-ins or other custom code.
+The solution contains no plug-ins. Component display names are brand-neutral. Existing schema names, component IDs and historical receipt markers are retained to preserve solution lineage and duplicate-processing protection.
 
 See the [website code README](variants/react/website-code/README.md) for the site architecture, permissions, server logic, AI search and agent integration details.
 
@@ -55,7 +56,7 @@ Unlike templates whose solutions only add tables, this solution needs the site's
 
 - Install the [Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/introduction).
 - Install English (LCID 1033) in the target Dataverse environment.
-- Install Dynamics 365 Customer Service with Case Management Agent (Case Management Intelligence) and knowledge management. The solution depends on `PowerPages_RuntimeCore`, `msdynce_Service`, `msdyn_CaseManagementIntelligence` and `msdyn_KBSuggestionsAiBCore`.
+- Install Dynamics 365 Customer Service with Case Management Agent, Customer Intent Agent, knowledge management, Copilot Studio and AI Builder prompt support. The refreshed export declares dependencies on `PowerPages_RuntimeCore`, `msdynce_Service`, `msdyn_IntentAssist`, `msdyn_AISolution` and `msdyn_FieldServiceExperienceComponents` (the source environment's Knowledge Article layer). Resolve the declared dependencies before import; packing locally is not a target-environment import check.
 - In Power Pages Admin Center, open the environment's **Privacy + Security** settings and remove `*.js` from **Blocked Attachments**.
 - Install Node.js 20 or newer and npm for the React project.
 - For AI knowledge search, enable Dataverse search and Power Pages generative AI site search for the environment.
@@ -96,7 +97,7 @@ After upload, update environment-specific site settings such as `Northwind/Knowl
 3. Edit `settings.json`:
    - `ppst_ModernCss_PortalApplicationUserId`: the `systemuserid` of the site's **Portals-&lt;site name&gt;** application user.
    - `ppst_ModernCss_PortalUrl`: the site URL, for example `https://contoso.powerappsportals.com`.
-   - The connection IDs for the Content Conversion connection reference.
+   - Target connection IDs for Content Conversion, Copilot Studio and the managed Dataverse connection reference `IA.cr.IAPluginDVConnector`. The exported solution retains legacy schema names for compatibility; choose connections by their neutral display names and connector types.
 
 4. Import the solution:
 
@@ -104,15 +105,17 @@ After upload, update environment-specific site settings such as `Northwind/Knowl
    pac solution import --path "$temp_dir/modern-css-metadata-unmanaged.zip" --settings-file "$temp_dir/settings.json" --publish-changes
    ```
 
-5. Confirm that both cloud flows are turned on, and that they use the Dataverse connection reference provided by Case Management Intelligence.
+5. Review and enable the required cloud flows in the target environment. The export contains three flows, and their definitions are shipped in Draft state. Publish the optional document-verifier agent if using it; importing the solution does not configure or enable a complete verification process.
 
 ### Configure the Case Management Agent
 
 The solution doesn't include environment content or settings. Configure them in the target environment:
 
-1. Create a business line set to **Require agent confirmation**, with routing rules that select it for Web cases created by the site's application user.
+1. Configure a business line set to **Full**, with routing rules that select it only for Web cases created by the site's application user. Full automation can send customer email and resolve cases; review this deliberately before enabling the dispatch flow. The previous template's Semi/review-required gate has changed.
 2. Map AI-eligible intents to your published external knowledge articles. Unknown intents hand off to a representative.
 3. Configure an approved outgoing mailbox for support replies.
 
-Representatives review the agent's draft email and use the normal **Send** button. When Dynamics accepts the Send (status **Pending Send**), the publish flow posts the reply to the customer's case conversation, even if delivery later fails. A Send that Dynamics rejects, for example to a Contact marked **Do not email**, publishes nothing.
+When Dynamics accepts an outgoing case email's Send (status **Pending Send**), the publish flow posts the reply to the customer's case conversation, even if delivery later fails. This applies to qualifying autonomous emails as well as representative-sent replies. A rejected Send, for example to a Contact marked **Do not email**, publishes nothing.
 See [Set up Case Management Agent to resolve cases](https://learn.microsoft.com/dynamics365/customer-service/administer/set-up-case-resolution-agent).
+
+Intents, lines of business, mappings and some CMA configuration are solution-aware in the source environment, but are **not included** in this export. See [configuration portability](variants/react/website-code/README.md#intent-and-cma-configuration-portability) before attempting to reproduce the card-name scenario.

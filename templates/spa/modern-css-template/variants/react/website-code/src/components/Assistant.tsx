@@ -5,6 +5,7 @@ import { searchSupport, statusLabels, type SupportCase } from '../data'
 import Icon from './Icon'
 import { useUiDirection } from './Field'
 import BotAssistant from './BotAssistant'
+import { caseDetailsLimit } from '../services/supportApi'
 
 type Resource = { id: string; label: string; title: string; detail: string; path: string }
 type Entry = { id: number } & (
@@ -49,7 +50,7 @@ function TicketForm({ entry, onSubmitted, onViewCases }: { entry: Extract<Entry,
     catch (failure) { setError(errorMessage(failure)) }
     finally { setSaving(false) }
   }
-  const limit = isDemo ? undefined : 2000 - '\n\nBusiness impact: '.length - impact.length
+  const limit = isDemo ? undefined : caseDetailsLimit - '\n\nBusiness impact: '.length - impact.length
   return <form className="chat-ticket-form" onSubmit={submit} noValidate>
     <label htmlFor={`chat-ticket-${entry.id}`}>Review your issue before submitting</label>
     <textarea ref={textarea} id={`chat-ticket-${entry.id}`} name={`chat-ticket-${entry.id}`} {...{ dirname: `chat-ticket-${entry.id}.dir` }} dir={description ? 'auto' : uiDirection}

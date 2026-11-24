@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { articles as sampleArticles, initialCases, initialProfile, type Article, type SupportCase } from './data'
-import { SupportApiError, supportApi, type CaseActivity, type CaseActivityCreated, type CaseDto, type CatalogItem, type KnowledgeDto, type ProfileDto } from './services/supportApi'
+import { SupportApiError, attachmentProcessingWarning, supportApi, type CaseActivity, type CaseActivityCreated, type CaseDto, type CatalogItem, type KnowledgeDto, type ProfileDto } from './services/supportApi'
 import { useCaseRealtime, type CaseSnapshot } from './useCaseRealtime'
 
 type Notification = { id: string; caseId: string; title: string; detail: string; read: boolean; kind?: 'reply' }
@@ -18,7 +18,7 @@ function accessLost(error: unknown) {
 function caseVersion(item: CaseDto) {
   return JSON.stringify([item.updated, item.number, item.title, item.description, item.state, item.status])
 }
-function commentVersion(item: CaseActivity['comments'][number]) { return JSON.stringify([item.body, item.created, item.author]) }
+function commentVersion(item: CaseActivity['comments'][number]) { return JSON.stringify([item.subject ?? '', item.body, item.created, item.author]) }
 function activityVersion(item: CaseActivity) {
   return JSON.stringify([
     item.comments.map(comment => [comment.id, commentVersion(comment)]).sort(),
@@ -269,7 +269,12 @@ function useSupportState() {
     if (created.statusChanged && profileData) {
       const contactId = profileData.id
       // The reply is already saved; a failed status read must not look like a failed reply.
-      await writeCase(() => supportApi.getCase(caseId, contactId)).catch(() => undefined)
+      await writeCase(() => supportApi.getCase(caseId, contactId)).catch(() => {
+        if (created.processingConfirmed !== undefined) {
+          created.processingConfirmed = false
+          created.warning = attachmentProcessingWarning
+        }
+      })
     }
     return created
   }

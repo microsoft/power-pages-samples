@@ -1,4 +1,5 @@
 import { test as base, expect, type Page } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
 
 const test = base.extend<{ browserErrors: string[] }>({
   browserErrors: [async ({ page }, use) => {
@@ -37,7 +38,39 @@ type MockOptions = {
   publishedResponse?: string
   knowledgeId?: string
   knowledgeStatus?: number
+  attachmentFailure?: number | 'offline'
+  receiptFailure?: number | 'offline' | 'unconfirmed' | 'wrong-id' | 'malformed' | 'not-found'
+  statusReadFailure?: boolean
+  historicalDocument?: { name: string; type: string; content: string }
 }
+
+test('signed-in identity and notifications stay visible at the bottom of the page', async ({ page }) => {
+  await mockSupport(page)
+  await page.goto('/?data=dataverse')
+  await expect(page.getByRole('heading', { name: 'Hi Ada! How can we help you?' })).toBeVisible()
+  const header = page.getByRole('banner')
+  const account = header.getByRole('link', { name: /Signed in Ada Customer/ })
+  const bell = header.getByRole('button', { name: /Notifications,/ })
+  await expect(header.getByText('Customer support', { exact: true })).toHaveCount(0)
+  await header.locator('.workspace-user-copy strong').evaluate(element => {
+    element.textContent = 'Ada Customer with an expanded account display name'
+  })
+  await header.locator('.workspace-user-email').evaluate(element => {
+    element.textContent = 'ada.customer.with.an.expanded.address@example.test'
+  })
+  for (const direction of ['ltr', 'rtl']) {
+    await page.evaluate(dir => { document.documentElement.dir = dir }, direction)
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
+    await expect(account).toBeInViewport({ ratio: 1 })
+    await expect(bell).toBeInViewport({ ratio: 1 })
+    await bell.click()
+    const notifications = page.getByRole('dialog', { name: 'Notifications', exact: true })
+    await expect(notifications).toBeVisible()
+    await notifications.press('Escape')
+    await expect(bell).toBeFocused()
+  }
+})
 
 test('connected assistant loads lazily, reports SDK failures, preserves tickets and closes its bot session', async ({ page }) => {
   const calls = await mockSupport(page)
@@ -111,11 +144,14 @@ test('connected assistant queues search questions until ready and preserves its 
 
 async function mockSupport(page: Page, options: MockOptions = {}) {
   const calls: Call[] = []
+  await page.route(/^https:\/\/fonts\.(?:googleapis|gstatic)\.com\//, route => route.abort('blockedbyclient'))
   let identity = { ...profile }, cases = [{ ...firstCase, status: options.firstStatus ?? firstCase.status }, { ...secondCase }]
-  const comments: { id: string; body: string; created: string; author: string }[] = options.publishedResponse
+  const comments: { id: string; subject?: string; body: string; created: string; author: string }[] = options.publishedResponse
     ? [{ id: fileId, body: options.publishedResponse, created: now, author: 'Support' }] : []
-  const documents: { id: string; name: string; size: number; type: string }[] = []
-  let fileContent = ''
+  const documents: { id: string; name: string; size: number; type: string }[] = options.historicalDocument
+    ? [{ id: fileId, name: options.historicalDocument.name, type: options.historicalDocument.name.endsWith('.pdf') ? 'application/pdf' : options.historicalDocument.type, size: Buffer.from(options.historicalDocument.content, 'base64').length }] : []
+  const fileContents = new Map<string, string>(options.historicalDocument ? [[fileId, options.historicalDocument.content]] : [])
+  const savedComments = new Map<string, string>()
   await page.route('**/_layout/tokenhtml', route => route.fulfill({ contentType: 'text/html', body: options.missingToken ? '<p>No token</p>' : '<input name="__RequestVerificationToken" value="test-csrf">' }))
   await page.route('**/_api/**', async route => {
     const request = route.request(), url = new URL(request.url()), method = request.method()
@@ -128,11 +164,35 @@ async function mockSupport(page: Page, options: MockOptions = {}) {
         ? { Success: true, Data: JSON.stringify({ status: 'success', data }) }
         : { success: true, data: JSON.stringify({ status: 'success', data }) }),
     })
-    if (method !== 'GET' && options.failedWrite) return url.pathname === '/_api/incidents'
+    if (method !== 'GET' && options.failedWrite) return ['/_api/incidents', '/_api/adx_portalcomments'].includes(url.pathname)
       ? route.fulfill({ status: 403, json: { error: { message: 'You cannot create this record.' } } })
       : route.fulfill({
         contentType: 'application/json', body: JSON.stringify({ success: true, data: JSON.stringify({ status: 'error', code: 'FORBIDDEN', message: 'You cannot change this record.' }) }),
       })
+    if (url.pathname === '/_api/adx_portalcomments') {
+      expect(method).toBe('POST')
+      expect(request.headers()['content-type']).toBe('application/json')
+      const note = (body.adx_portalcomment_Annotations as Record<string, unknown>[])[0]
+      const key = String(note.annotationid), commentKey = String(body.activityid)
+      savedComments.set(commentKey, key)
+      if (options.receiptFailure !== 'not-found') {
+        fileContents.set(key, String(note.documentbody))
+        documents.push({ id: key, name: String(note.filename), size: Buffer.from(String(note.documentbody), 'base64').length, type: String(note.mimetype) })
+        comments.push({ id: commentKey, body: String(body.description), created: now, author: 'Customer' })
+      }
+      if (options.attachmentFailure === 'offline') return route.abort('internetdisconnected')
+      if (options.attachmentFailure) return route.fulfill({ status: options.attachmentFailure, json: { error: { message: 'Write outcome unavailable.' } } })
+      return route.fulfill({ status: 204 })
+    }
+    if (url.pathname.startsWith('/_api/annotations(')) {
+      expect(method).toBe('GET')
+      const document = documents.find(document => url.pathname === `/_api/annotations(${document.id})`)
+      return document ? route.fulfill({ json: {
+        annotationid: document.id, filename: document.name, mimetype: document.id === fileId ? options.historicalDocument?.type : document.type,
+        isdocument: true, notetext: '*WEB* Customer-uploaded document',
+        ...(url.searchParams.get('$select')?.includes('documentbody') ? { documentbody: fileContents.get(document.id) } : {}),
+      } }) : route.fulfill({ status: 404, json: { error: { message: 'Attachment not found.' } } })
+    }
     if (url.pathname === '/_api/products') return route.fulfill({ json: {
       value: options.empty ? [] : [{ productid: url.searchParams.has('$skiptoken') ? secondId : productId, name: 'Customer product', statecode: 0 }],
       ...(!url.searchParams.has('$skiptoken') && options.catalogNextLink ? { '@odata.nextLink': options.catalogNextLink } : {}),
@@ -167,6 +227,7 @@ async function mockSupport(page: Page, options: MockOptions = {}) {
     }
     if (url.pathname.startsWith('/_api/incidents(')) {
       expect(method).toBe('GET')
+      if (options.statusReadFailure && savedComments.size) return route.fulfill({ status: 503, json: { error: 'Status unavailable' } })
       const saved = cases.find(item => url.pathname === `/_api/incidents(${item.id})`)
       if (!saved || options.confirmation === 'forbidden') return route.fulfill({ status: 403, json: { error: { message: 'Unavailable.' } } })
       return route.fulfill({ json: {
@@ -189,15 +250,29 @@ async function mockSupport(page: Page, options: MockOptions = {}) {
     if (url.pathname.endsWith('/northwind-case-activity')) {
       if (method === 'POST') {
         if (body.kind === 'comment') comments.push({ id: fileId, body: String(body.body), created: now, author: 'Portal conversation' })
-        else {
-          fileContent = String(body.content)
-          documents.push({ id: fileId, name: String(body.name), size: Buffer.from(fileContent, 'base64').length, type: String(body.type) })
+        else if (body.kind === 'attachmentReceipt') {
+          expect(Object.keys(body).sort()).toEqual(['caseId', 'commentId', 'documentId', 'kind'])
+          expect(savedComments.get(String(body.commentId))).toBe(body.documentId)
+          if (options.receiptFailure === 'not-found') return route.fulfill({ json: {
+            success: true, data: JSON.stringify({ status: 'error', code: 'NOT_FOUND', message: 'The assigned attachment was not found.' }),
+          } })
+          if (options.receiptFailure === 'offline') return route.abort('internetdisconnected')
+          if (typeof options.receiptFailure === 'number') return route.fulfill({ status: options.receiptFailure, json: { error: 'Processing unavailable' } })
+        } else {
+          throw new Error(`Unexpected activity kind: ${String(body.kind)}`)
         }
         const waiting = cases.find(item => item.id === body.caseId && item.state === 0 && item.status === 3)
         if (waiting) cases = cases.map(item => item === waiting ? { ...item, status: 1, updated: '2026-10-15T10:05:00Z' } : item)
-        return success({ id: fileId, statusChanged: Boolean(waiting) })
+        return success({ id: body.kind === 'attachmentReceipt' && options.receiptFailure !== 'wrong-id' ? body.documentId : fileId, statusChanged: Boolean(waiting),
+          ...(body.kind === 'attachmentReceipt' ? { processingConfirmed: options.receiptFailure === 'malformed' ? null : options.receiptFailure !== 'unconfirmed' } : {}) })
       }
-      if (url.searchParams.has('documentId')) return success({ name: 'sample.pdf', type: 'application/pdf', content: fileContent })
+      if (url.searchParams.has('documentId')) {
+        expect(method).toBe('GET')
+        expect(url.searchParams.get('caseId')).toBe(caseId)
+        const document = documents.find(item => item.id === url.searchParams.get('documentId'))
+        if (!document) return route.fulfill({ status: 404, json: { error: { message: 'Document not found.' } } })
+        return success({ name: document.name, type: document.type, content: fileContents.get(document.id) })
+      }
       return success({ comments, documents })
     }
     if (url.pathname.endsWith('/northwind-feedback')) return success({ id: fileId })
@@ -399,12 +474,12 @@ test('case creation posts once through Web API with Web origin, binds the sessio
 
 test('Web API creation accepts the exact combined limit and the OData entity header without a response body', async ({ page }) => {
   const calls = await mockSupport(page, { createHeaderName: 'OData-EntityId', createHeader: `https://org.example/api/data/v9.2/incidents(${fileId})` })
-  const maximum = 2000 - '\n\nBusiness impact: I have a question'.length
+  const maximum = 1898 - '\n\nBusiness impact: I have a question'.length
   const dialog = await prepareCase(page, 'x'.repeat(maximum))
   await dialog.getByRole('button', { name: 'Submit case', exact: true }).click()
   await expect(page).toHaveURL(new RegExp(`/cases/${fileId}$`))
   const body = calls.find(call => call.method === 'POST')?.body
-  expect(body?.description).toHaveLength(2000)
+  expect(body?.description).toHaveLength(1898)
   expect(body?.title).toHaveLength(200)
   expect(body?.caseorigincode).toBe(3)
   expect(Object.keys(body!).sort()).toEqual(['caseorigincode', 'customerid_contact@odata.bind', 'description', 'title'])
@@ -412,10 +487,10 @@ test('Web API creation accepts the exact combined limit and the OData entity hea
 
 test('Web API creation rejects an over-limit draft without issuing a write', async ({ page }) => {
   const calls = await mockSupport(page)
-  const description = 'x'.repeat(2001 - '\n\nBusiness impact: I have a question'.length)
+  const description = 'x'.repeat(1899 - '\n\nBusiness impact: I have a question'.length)
   const dialog = await prepareCase(page, description)
   await expect(dialog.getByRole('button', { name: 'Submit case', exact: true })).toHaveCount(0)
-  await expect(dialog.getByText('The case description and selected impact must fit within 2,000 characters.')).toBeVisible()
+  await expect(dialog.getByText('The case description and selected impact must fit within 1,898 characters.')).toBeVisible()
   await expect(dialog.getByLabel('What do you need help with?')).toHaveValue(description)
   expect(calls.filter(call => call.method === 'POST')).toHaveLength(0)
 })
@@ -451,14 +526,30 @@ test('comments, actual file bytes, downloads and case edits use guarded endpoint
   await page.getByRole('button', { name: 'Send reply', exact: true }).click()
   await expect(page.locator('.timeline')).toContainText('Here are the requested details.')
   await page.getByRole('tab', { name: 'Documents', exact: true }).click()
-  const input = page.getByLabel('Upload a case document')
-  await input.setInputFiles({ name: 'large.pdf', mimeType: 'application/pdf', buffer: Buffer.alloc(5 * 1024 * 1024 + 1) })
-  await expect(page.getByRole('alert').filter({ hasText: 'up to 5 MB' })).toBeVisible()
+  const input = page.getByLabel('Attachments', { exact: true })
+  await expect(page.getByLabel('Document purpose')).toHaveCount(0)
+  await expect(page.locator('input[type="file"]')).toHaveCount(1)
+  await expect(input).toHaveAttribute('accept', '.pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.zip')
+  await input.setInputFiles({ name: 'large.pdf', mimeType: 'application/pdf', buffer: Buffer.alloc(3_932_161) })
+  await expect(page.getByRole('alert').filter({ hasText: 'up to 3.75 MiB' })).toBeVisible()
   const bytes = Buffer.from('%PDF-1.7\nsafe sample')
   await input.setInputFiles({ name: 'sample.pdf', mimeType: 'application/pdf', buffer: bytes })
   await expect(page.getByRole('button', { name: 'Download sample.pdf' })).toBeVisible()
-  const upload = calls.find(call => call.body.kind === 'document')
-  expect(upload?.body.content).toBe(bytes.toString('base64'))
+  const upload = calls.find(call => call.path === '/_api/adx_portalcomments')!
+  const commentId = upload.body.activityid, documentId = (upload.body.adx_portalcomment_Annotations as { annotationid: string }[])[0].annotationid
+  expect(commentId).toMatch(/^[0-9a-f-]{36}$/)
+  expect(documentId).toMatch(/^[0-9a-f-]{36}$/)
+  expect(commentId).not.toBe(documentId)
+  expect(upload.body).toEqual({
+    activityid: commentId, description: 'Attachment uploaded: sample.pdf\nDocument reference: ' + documentId,
+    'regardingobjectid_incident_adx_portalcomment@odata.bind': `/incidents(${caseId})`,
+    adx_portalcomment_Annotations: [{
+      annotationid: documentId, filename: 'sample.pdf', mimetype: 'application/pdf', isdocument: true,
+      notetext: '*WEB* Customer-uploaded document', documentbody: bytes.toString('base64'),
+    }],
+  })
+  expect(calls.find(call => call.body.kind === 'attachmentReceipt')?.body).toEqual({ caseId, kind: 'attachmentReceipt', commentId, documentId })
+  expect(calls.filter(call => call.path.includes('/serverlogics/') && call.method !== 'GET').every(call => !JSON.stringify(call.body).includes(bytes.toString('base64')))).toBe(true)
   const downloaded = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Download sample.pdf' }).click()
   expect((await downloaded).suggestedFilename()).toBe('sample.pdf')
@@ -468,6 +559,258 @@ test('comments, actual file bytes, downloads and case edits use guarded endpoint
   await expect(page.locator('h1')).toHaveText('Updated customer title')
   expect(calls.find(call => call.method === 'PATCH')?.body).toEqual({ id: caseId, title: 'Updated customer title', description: firstCase.description })
 })
+
+test('native attachment receipt refreshes confirmed case status and the expanded bidirectional chooser', async ({ page }) => {
+  const calls = await mockSupport(page, { firstStatus: 3 })
+  await page.goto(`/cases/${caseId}?data=dataverse`)
+  await page.getByRole('tab', { name: 'Documents', exact: true }).click()
+  const input = page.getByLabel('Attachments', { exact: true })
+  await expect(page.locator('input[type="file"]')).toHaveCount(1)
+  await expect(page.getByRole('combobox')).toHaveCount(0)
+  await input.setInputFiles({ name: 'empty.pdf', mimeType: 'application/pdf', buffer: Buffer.alloc(0) })
+  await expect(page.getByRole('alert').filter({ hasText: 'up to 3.75 MiB' })).toBeVisible()
+  expect(calls.some(call => call.path === '/_api/adx_portalcomments')).toBe(false)
+  const bytes = Buffer.from('%PDF-1.7\nsynthetic local test fixture only')
+  await input.setInputFiles({ name: 'demo-proof.pdf', mimeType: 'application/pdf', buffer: bytes })
+  await expect(page.getByRole('button', { name: 'Download demo-proof.pdf' })).toBeVisible()
+  await expect(page.locator('.case-hero .badge')).toHaveText('In progress')
+  await expect(page.getByRole('status').filter({ hasText: 'The document was uploaded.' })).toContainText('back in progress')
+  await page.evaluate(() => {
+    const hint = document.getElementById('document-hint')!
+    hint.textContent = `${hint.textContent} ${hint.textContent}`
+  })
+  for (const dir of ['ltr', 'rtl'] as const) {
+    await page.evaluate(direction => { document.documentElement.dir = direction }, dir)
+    await expect(input).toBeVisible()
+    expect(await input.evaluate(element => getComputedStyle(element).direction)).toBe(dir)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
+  }
+  await page.getByRole('tab', { name: 'Timeline', exact: true }).click()
+  await expect(page.locator('.timeline')).toContainText('Attachment uploaded: demo-proof.pdf')
+  expect(calls.filter(call => call.method !== 'GET').map(call => call.path)).toEqual(['/_api/adx_portalcomments', '/_api/serverlogics/northwind-case-activity'])
+})
+
+test('native attachment permission denial reports failure and allows another selection', async ({ page }) => {
+  const calls = await mockSupport(page, { failedWrite: true })
+  await page.goto(`/cases/${caseId}?data=dataverse`)
+  await page.getByRole('tab', { name: 'Documents', exact: true }).click()
+  const input = page.getByLabel('Attachments', { exact: true })
+  await input.setInputFiles({ name: 'demo-proof.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7\nlocal fixture') })
+  await expect(page.getByRole('alert').filter({ hasText: 'does not have permission' })).toBeVisible()
+  await expect(input).toBeEnabled()
+  await expect(input).toHaveValue('')
+  await expect(page.getByRole('status').filter({ hasText: 'The document was uploaded' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Download demo-proof.pdf' })).toHaveCount(0)
+  expect(calls.filter(call => call.path === '/_api/adx_portalcomments')).toHaveLength(1)
+  expect(calls.filter(call => call.body.kind === 'attachmentReceipt')).toHaveLength(0)
+})
+
+const attachmentFixtures = [
+  { name: 'report.pdf', type: 'application/pdf', bytes: Buffer.from('%PDF-1.7\nlocal browser fixture'), browserType: '' },
+  { name: 'letter.doc', type: 'application/msword', bytes: Buffer.from('d0cf11e0a1b11ae100000000', 'hex'), browserType: '' },
+  { name: 'letter.DOCX', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', bytes: Buffer.from('504b0506000000000000000000000000000000000000', 'hex'), browserType: 'application/octet-stream' },
+  { name: 'image.png', type: 'image/png', bytes: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a2ioAAAAASUVORK5CYII=', 'base64'), browserType: 'image/png' },
+  { name: 'image.jpg', type: 'image/jpeg', bytes: Buffer.from('ffd8ffe000104a46494600010100000100010000ffd9', 'hex'), browserType: 'image/jpeg' },
+  { name: 'image.jpeg', type: 'image/jpeg', bytes: Buffer.from('ffd8ffe000104a46494600010100000100010000ffd9', 'hex'), browserType: '' },
+  { name: 'image.gif', type: 'image/gif', bytes: Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64'), browserType: 'image/gif' },
+  { name: 'archive.zip', type: 'application/zip', bytes: Buffer.from('504b0506000000000000000000000000000000000000', 'hex'), browserType: 'application/x-zip-compressed' },
+]
+for (const fixture of attachmentFixtures) {
+  test(`native attachments infer canonical MIME and download ${fixture.name}`, async ({ page }) => {
+    const calls = await mockSupport(page)
+    await page.goto(`/cases/${caseId}?data=dataverse`)
+    await page.getByRole('tab', { name: 'Documents', exact: true }).click()
+    await page.getByLabel('Attachments', { exact: true }).setInputFiles({ name: fixture.name, mimeType: fixture.browserType, buffer: fixture.bytes })
+    const button = page.getByRole('button', { name: `Download ${fixture.name}`, exact: true })
+    await expect(button).toBeVisible()
+    await expect(page.getByRole('status').filter({ hasText: 'The document was uploaded to this case.' })).toBeVisible()
+    const native = calls.find(call => call.path === '/_api/adx_portalcomments')!
+    const note = (native.body.adx_portalcomment_Annotations as Record<string, unknown>[])[0]
+    expect(note.mimetype).toBe(fixture.type)
+    expect(note.documentbody).toBe(fixture.bytes.toString('base64'))
+    expect(calls.filter(call => call.body.kind === 'attachmentReceipt')).toHaveLength(1)
+    const downloaded = page.waitForEvent('download')
+    await button.click()
+    const file = await downloaded
+    expect(file.suggestedFilename()).toBe(fixture.name)
+    expect(await readFile((await file.path())!)).toEqual(fixture.bytes)
+    expect(calls.some(call => call.path.endsWith('/northwind-case-activity') && call.method === 'GET' &&
+      new URLSearchParams(call.query).has('documentId'))).toBe(false)
+    expect(calls.some(call => call.path === `/_api/annotations(${note.annotationid})` &&
+      new URLSearchParams(call.query).get('$select')?.includes('documentbody'))).toBe(true)
+    expect(calls.some(call => call.path.includes('/serverlogics/') && ('content' in call.body || 'documentbody' in call.body))).toBe(false)
+  })
+}
+
+test('native attachments enforce the exact 3.75 MiB raw and 5 MiB encoded boundary', async ({ page }) => {
+  const calls = await mockSupport(page)
+  await page.goto(`/cases/${caseId}?data=dataverse`)
+  await page.getByRole('tab', { name: 'Documents', exact: true }).click()
+  const input = page.getByLabel('Attachments', { exact: true })
+  for (const file of [
+    { name: 'empty.doc', mimeType: '', buffer: Buffer.alloc(0) },
+    { name: 'too-large.pdf', mimeType: 'application/pdf', buffer: Buffer.alloc(3_932_161) },
+    { name: 'not-allowed.txt', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7') },
+  ]) {
+    await input.setInputFiles(file)
+    await expect(page.getByRole('alert').filter({ hasText: '3,932,160 bytes' })).toBeVisible()
+  }
+  expect(calls.filter(call => call.path === '/_api/adx_portalcomments')).toHaveLength(0)
+  const bytes = Buffer.alloc(3_932_160)
+  Buffer.from('%PDF-1.7\n').copy(bytes)
+  await input.setInputFiles({ name: 'boundary.pdf', mimeType: '', buffer: bytes })
+  await expect(page.getByRole('button', { name: 'Download boundary.pdf' })).toBeVisible()
+  const note = (calls.find(call => call.path === '/_api/adx_portalcomments')!.body.adx_portalcomment_Annotations as { documentbody: string }[])[0]
+  expect(note.documentbody.length).toBe(5_242_880)
+  expect(Buffer.from(note.documentbody, 'base64').length).toBe(3_932_160)
+})
+
+for (const failure of ['offline', 500, 503, 408] as const) {
+  test(`native ambiguous attachment ${failure} is not retried and refreshes activity`, async ({ page }) => {
+    const calls = await mockSupport(page, { attachmentFailure: failure })
+    await page.goto(`/cases/${caseId}?data=dataverse`)
+    await page.getByRole('tab', { name: 'Documents', exact: true }).click()
+    await expect(page.getByText('No customer-visible documents are available.')).toBeVisible()
+    const before = calls.filter(call => call.method === 'GET' && call.path.endsWith('/northwind-case-activity')).length
+    const input = page.getByLabel('Attachments', { exact: true })
+    await input.setInputFiles({ name: 'possibly-saved.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7\nfixture') })
+    await expect(page.getByRole('status').filter({ hasText: 'The upload is unconfirmed.' })).toContainText('before retrying')
+    await expect(page.getByRole('button', { name: 'Download possibly-saved.pdf' })).toBeVisible()
+    await expect(input).toBeEnabled()
+    await expect(input).toHaveValue('')
+    await expect(page.locator('.error')).toBeEmpty()
+    expect(calls.filter(call => call.path === '/_api/adx_portalcomments')).toHaveLength(1)
+    expect(calls.filter(call => call.body.kind === 'attachmentReceipt')).toHaveLength(0)
+    expect(calls.filter(call => call.method === 'GET' && call.path.endsWith('/northwind-case-activity')).length).toBeGreaterThan(before)
+  })
+}
+
+for (const failure of ['offline', 503, 403, 'unconfirmed', 'wrong-id', 'malformed', 'status-read'] as const) {
+  test(`native saved attachment ${failure} warns without inviting duplicate upload`, async ({ page }) => {
+    const calls = await mockSupport(page, { firstStatus: 3,
+      ...(failure === 'status-read' ? { statusReadFailure: true } : { receiptFailure: failure }) })
+    await page.goto(`/cases/${caseId}?data=dataverse`)
+    await page.getByRole('tab', { name: 'Documents', exact: true }).click()
+    const input = page.getByLabel('Attachments', { exact: true })
+    await input.setInputFiles({ name: 'saved.doc', mimeType: '', buffer: attachmentFixtures[1].bytes })
+    const savedMetadataConfirmed = failure === 'unconfirmed' || failure === 'status-read'
+    const feedback = page.getByRole('status').filter({ hasText: savedMetadataConfirmed ? 'The attachment was saved' : 'The native write was accepted' })
+    await expect(feedback).toContainText(savedMetadataConfirmed ? 'processing is unconfirmed' : 'attachment persistence and protected processing remain unconfirmed')
+    await expect(feedback).toContainText('Do not upload the same file again.')
+    if (!savedMetadataConfirmed) await expect(feedback).not.toContainText(/\bsaved\b/i)
+    await expect(page.getByRole('button', { name: 'Download saved.doc' })).toBeVisible()
+    await expect(page.locator('.error')).toBeEmpty()
+    await expect(input).toBeEnabled()
+    expect(calls.filter(call => call.path === '/_api/adx_portalcomments')).toHaveLength(1)
+    expect(calls.filter(call => call.body.kind === 'attachmentReceipt')).toHaveLength(1)
+    if (failure === 'unconfirmed') {
+      // A post-save marker failure must not erase an already confirmed status transition.
+      await expect(page.locator('.case-hero .badge')).toHaveText('In progress')
+      expect(calls.some(call => call.method !== 'GET' && call.path.startsWith('/_api/incidents'))).toBe(false)
+      const warning = page.getByRole('status').filter({ hasText: 'The attachment was saved' })
+      await warning.evaluate(element => { element.textContent = `${element.textContent} ${element.textContent}` })
+      for (const direction of ['ltr', 'rtl'] as const) {
+        await page.evaluate(dir => { document.documentElement.dir = dir }, direction)
+        await expect(warning).toBeVisible()
+        expect(await warning.evaluate(element => getComputedStyle(element).direction)).toBe(direction)
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
+      }
+    }
+  })
+}
+
+test('native attachment NOT_FOUND receipt with missing document leaves persistence unconfirmed', async ({ page }) => {
+  const calls = await mockSupport(page, { receiptFailure: 'not-found' })
+  await page.goto(`/cases/${caseId}?data=dataverse`)
+  await page.getByRole('tab', { name: 'Documents', exact: true }).click()
+  await expect(page.getByText('No customer-visible documents are available.')).toBeVisible()
+  const activityReadsBefore = calls.filter(call => call.method === 'GET' && call.path.endsWith('/northwind-case-activity')).length
+  const input = page.getByLabel('Attachments', { exact: true })
+  await input.setInputFiles({ name: 'unconfirmed.pdf', mimeType: 'application/pdf', buffer: attachmentFixtures[0].bytes })
+  const feedback = page.getByRole('status').filter({ hasText: 'The native write was accepted' })
+  await expect(feedback).toContainText('attachment persistence and protected processing remain unconfirmed')
+  await expect(feedback).toContainText('Do not upload the same file again.')
+  await expect(feedback).not.toContainText(/\bsaved\b/i)
+  await expect(input).toBeEnabled()
+  await expect(page.getByText('No customer-visible documents are available.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Download unconfirmed.pdf' })).toHaveCount(0)
+  await expect(page.locator('.error')).toBeEmpty()
+  expect(calls.filter(call => call.method === 'GET' && call.path.endsWith('/northwind-case-activity')).length).toBeGreaterThan(activityReadsBefore)
+  const nativeWrites = calls.filter(call => call.method === 'POST' && call.path === '/_api/adx_portalcomments')
+  expect(nativeWrites).toHaveLength(1)
+  const note = (nativeWrites[0].body.adx_portalcomment_Annotations as { annotationid: string }[])[0]
+  const receipts = calls.filter(call => call.body.kind === 'attachmentReceipt')
+  expect(receipts).toHaveLength(1)
+  expect(receipts[0].body).toEqual({ caseId, kind: 'attachmentReceipt', commentId: nativeWrites[0].body.activityid, documentId: note.annotationid })
+})
+
+test('native historical attachment downloads retain the 5 MiB limit', async ({ page }) => {
+  const bytes = Buffer.alloc(5 * 1024 * 1024)
+  Buffer.from('%PDF-1.7\n').copy(bytes)
+  const calls = await mockSupport(page, { historicalDocument: { name: 'historical.pdf', type: 'application/pdf', content: bytes.toString('base64') } })
+  await page.goto(`/cases/${caseId}?data=dataverse`)
+  await page.getByRole('tab', { name: 'Documents', exact: true }).click()
+  const downloaded = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download historical.pdf' }).click()
+  const file = await downloaded
+  expect(file.suggestedFilename()).toBe('historical.pdf')
+  expect(await readFile((await file.path())!)).toEqual(bytes)
+  expect(calls.some(call => call.path === `/_api/annotations(${fileId})` &&
+    new URLSearchParams(call.query).get('$select')?.includes('documentbody'))).toBe(true)
+})
+
+test('attachment metadata failures stay visible and can be retried without hiding documents', async ({ page }) => {
+  await mockSupport(page, { historicalDocument: {
+    name: 'available.pdf', type: 'application/pdf', content: Buffer.from('%PDF-1.7\nfixture').toString('base64'),
+  } })
+  await page.route('**/_api/annotations(*)?*', route => route.fulfill({ status: 503, json: { error: { message: 'Temporary attachment outage.' } } }))
+  await page.goto(`/cases/${caseId}?data=dataverse`)
+  await expect(page.getByRole('button', { name: 'Reload conversation', exact: true })).toBeVisible()
+  await expect(page.getByRole('alert').filter({ hasText: 'The support service could not complete the request.' }).first()).toBeVisible()
+  await page.unroute('**/_api/annotations(*)?*')
+  await page.getByRole('button', { name: 'Reload conversation', exact: true }).click()
+  await page.getByRole('tab', { name: 'Documents', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Download available.pdf' })).toBeVisible()
+})
+
+test('native attachment methods validate case and document IDs before requesting', async ({ page }) => {
+  const calls = await mockSupport(page)
+  await page.goto(`/cases/${caseId}?data=dataverse`)
+  await expect(page.getByLabel('Reply to support')).toBeVisible()
+  const codes = await page.evaluate(async ({ caseId, fileId }) => {
+    const modulePath = '/src/services/supportApi.ts'
+    const { supportApi } = await import(modulePath)
+    const results: string[] = []
+    for (const operation of [
+      () => supportApi.download('not-a-guid', fileId),
+      () => supportApi.download(caseId, 'not-a-guid'),
+      () => supportApi.upload('not-a-guid', new File(['%PDF-1.7'], 'test.pdf')),
+    ]) {
+      try { await operation(); results.push('unexpected success') }
+      catch (error) { results.push((error as { code: string }).code) }
+    }
+    return results
+  }, { caseId, fileId })
+  expect(codes).toEqual(['INVALID_RESPONSE', 'INVALID_RESPONSE', 'INVALID_RESPONSE'])
+  expect(calls.some(call => call.path === '/_api/adx_portalcomments' || call.path.startsWith('/_api/annotations('))).toBe(false)
+})
+
+for (const document of [
+  { name: 'unsafe.pdf', type: 'text/html', content: Buffer.from('<script>unsafe</script>').toString('base64') },
+  { name: 'malformed.pdf', type: 'application/pdf', content: '%%%not-base64%%%' },
+  { name: 'oversize.pdf', type: 'application/pdf', content: Buffer.alloc(5 * 1024 * 1024 + 1).toString('base64') },
+]) {
+  test(`native attachment download rejects ${document.name}`, async ({ page }) => {
+    await mockSupport(page, { historicalDocument: document })
+    const downloads: string[] = []
+    page.on('download', download => downloads.push(download.suggestedFilename()))
+    await page.goto(`/cases/${caseId}?data=dataverse`)
+    await page.getByRole('tab', { name: 'Documents', exact: true }).click()
+    await page.getByRole('button', { name: `Download ${document.name}` }).click()
+    await expect(page.locator('.error')).not.toBeEmpty()
+    expect(downloads).toEqual([])
+  })
+}
 
 test('a reply to a Waiting for Details case shows the confirmed In progress status', async ({ page }) => {
   const calls = await mockSupport(page, { firstStatus: 3, publishedResponse: 'Please send the gateway serial number.' })
@@ -621,12 +964,15 @@ for (const [label, options] of [
 })
 
 test('closed cases have no customer write controls and arbitrary IDs are not exposed', async ({ page }) => {
-  await mockSupport(page)
+  const calls = await mockSupport(page)
   await page.goto(`/cases/${secondId}?data=dataverse`)
   await expect(page.locator('h1')).toHaveText(secondCase.title)
   await expect(page.getByLabel('Reply to support')).toHaveCount(0)
   await page.getByRole('tab', { name: 'Documents', exact: true }).click()
-  await expect(page.getByLabel('Upload a case document')).toHaveCount(0)
+  await expect(page.getByLabel('Attachments', { exact: true })).toHaveCount(0)
+  await expect(page.locator('input[type="file"]')).toHaveCount(0)
+  await expect(page.getByLabel('Document purpose', { exact: true })).toHaveCount(0)
+  expect(calls.some(call => call.method === 'POST' && (call.path === '/_api/adx_portalcomments' || call.body.kind === 'attachmentReceipt'))).toBe(false)
   await page.goto(`/cases/${productId}?data=dataverse`)
   await expect(page.locator('h1')).toHaveText('Case not available')
 })

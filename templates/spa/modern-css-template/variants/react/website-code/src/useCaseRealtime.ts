@@ -25,7 +25,7 @@ export function useCaseRealtime(
   applyActivity: (records: Map<string, CaseActivity>) => void,
   failed: (error: unknown, caseId?: string) => void,
 ) {
-  const [state, setState] = useState<'waiting' | 'unavailable' | 'subscribed'>('unavailable')
+  const [state, setState] = useState<'waiting' | 'unavailable' | 'subscribed' | 'polling'>('unavailable')
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
   const requestRefresh = useRef<() => void>(() => {})
@@ -34,26 +34,50 @@ export function useCaseRealtime(
 
   useEffect(() => {
     let cancelled = false, registered = false, running = false, pending = false, pendingReplies = false, retryReplies = false
+    let polling = false, pollDelay = 60_000
     let timer: ReturnType<typeof setTimeout> | undefined
+    let pollTimer: ReturnType<typeof setTimeout> | undefined
     const subscriptions: Subscription[] = []
     const current = () => !cancelled && snapshot.current.contactId === contactId
+    const enabled = () => polling || subscriptions.length > 0
+    const canPoll = () => document.visibilityState !== 'hidden' && navigator.onLine
     function report(error: unknown, caseId?: string) {
       if (!current()) return
+      pollDelay = Math.min(pollDelay * 2, 300_000)
       setError(error instanceof Error ? error.message : 'The case update service is unavailable.')
       failed(error, caseId)
     }
+    function schedulePoll() {
+      if (polling && current() && canPoll() && pollTimer === undefined) {
+        pollTimer = setTimeout(() => { pollTimer = undefined; queue(true) }, pollDelay)
+      }
+    }
     function queue(replies = false) {
-      if (!current() || !subscriptions.length) return
+      if (!current() || !enabled() || (polling && !canPoll())) return
+      if (pollTimer !== undefined) { clearTimeout(pollTimer); pollTimer = undefined }
       pending = true
       pendingReplies ||= replies
       if (!running && timer === undefined && snapshot.current.writes === 0) {
         timer = setTimeout(() => { timer = undefined; void read() }, 100)
       }
     }
+    function resumePolling() {
+      if (!polling) return
+      if (canPoll()) queue(true)
+      else {
+        if (pollTimer !== undefined) { clearTimeout(pollTimer); pollTimer = undefined }
+        if (timer !== undefined) { clearTimeout(timer); timer = undefined }
+      }
+    }
+    function startPolling() {
+      polling = true
+      setState('polling')
+      queue(true)
+    }
     async function read() {
-      if (!current() || !contactId || !subscriptions.length || snapshot.current.writes > 0) return
+      if (!current() || !contactId || !enabled() || snapshot.current.writes > 0 || (polling && !canPoll())) return
       pending = false
-      const readReplies = pendingReplies || retryReplies
+      const readReplies = polling || pendingReplies || retryReplies
       pendingReplies = false
       running = true
       const revision = snapshot.current.revision
@@ -100,8 +124,8 @@ export function useCaseRealtime(
         if (restored) apply(records)
         applyActivity(activities)
         retryReplies = missing.size > 0
-        if (!missing.size) setError('')
-        setState('subscribed')
+        if (!missing.size) { setError(''); pollDelay = 60_000 }
+        setState(polling ? 'polling' : 'subscribed')
       } catch (error) {
         report(error)
         retryReplies ||= readReplies
@@ -109,16 +133,21 @@ export function useCaseRealtime(
       } finally {
         running = false
         if (pending) queue()
+        else schedulePoll()
       }
     }
-    requestRefresh.current = () => { if (subscriptions.length) queue() }
+    document.addEventListener('visibilitychange', resumePolling)
+    window.addEventListener('online', resumePolling)
+    window.addEventListener('offline', resumePolling)
+    requestRefresh.current = () => { if (enabled()) queue() }
     requestRetry.current = () => {
-      if (subscriptions.length === 2) queue(true)
+      if (enabled()) queue(true)
       else setAttempt(value => value + 1)
     }
     setError('')
     const host = window.Microsoft?.PowerPages
-    if (!contactId || !host?.onPagesClientApiReady) setState('unavailable')
+    if (!contactId) setState('unavailable')
+    else if (!host?.onPagesClientApiReady) startPolling()
     else {
       setState('waiting')
       try {
@@ -126,7 +155,7 @@ export function useCaseRealtime(
           if (!current() || registered) return
           registered = true
           const subscribe = findSubscribe(pages)
-          if (!subscribe) { setState('unavailable'); return }
+          if (!subscribe) { startPolling(); return }
           try {
             subscriptions.push(subscribe(['incident'], () => queue()))
             subscriptions.push(subscribe(['adx_portalcomment'], () => queue(true)))
@@ -145,6 +174,10 @@ export function useCaseRealtime(
       requestRefresh.current = () => {}
       requestRetry.current = () => {}
       if (timer !== undefined) clearTimeout(timer)
+      if (pollTimer !== undefined) clearTimeout(pollTimer)
+      document.removeEventListener('visibilitychange', resumePolling)
+      window.removeEventListener('online', resumePolling)
+      window.removeEventListener('offline', resumePolling)
       subscriptions.forEach(subscription => subscription.unsubscribe())
     }
   }, [contactId, snapshot, apply, applyActivity, failed, attempt])

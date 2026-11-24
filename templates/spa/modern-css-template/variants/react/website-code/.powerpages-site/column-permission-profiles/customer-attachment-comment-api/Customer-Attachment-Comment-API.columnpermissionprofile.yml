@@ -1,0 +1,7 @@
+adx_columnpermissionprofile_webrole:
+- ba9c8c1a-db48-46e3-b1b9-325702839728
+allcolumnpermissions:
+- 746610001
+id: b42727ff-711e-41d8-baf6-97a1274c1888
+profilename: Customer Attachment Comment API
+tablename: adx_portalcomment

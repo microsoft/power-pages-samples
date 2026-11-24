@@ -1,0 +1,300 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "connection": {
+          "connectionReferenceLogicalName": "IA.cr.IAPluginDVConnector"
+        },
+        "runtimeSource": "embedded",
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        }
+      }
+    },
+    "definition": {
+      "actions": {
+        "Initialize_result": {
+          "type": "InitializeVariable",
+          "runAfter": {},
+          "inputs": {
+            "variables": [
+              {
+                "type": "string",
+                "name": "Result",
+                "value": "{\"valid\":false,\"verificationAvailable\":false,\"documentType\":\"\",\"isRequestedType\":false,\"nameFound\":false,\"nameMatches\":false,\"legible\":false,\"expired\":false,\"reasons\":[\"The document could not be verified automatically.\"]}"
+              }
+            ]
+          }
+        },
+        "Parse_request": {
+          "type": "ParseJson",
+          "runAfter": {
+            "Initialize_result": [
+              "Succeeded"
+            ]
+          },
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "caseId",
+                "documentId"
+              ],
+              "properties": {
+                "caseId": {
+                  "type": "string"
+                },
+                "requestedDocument": {
+                  "type": "string"
+                },
+                "documentId": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": "@triggerBody()?['text']"
+          }
+        },
+        "Verify_document": {
+          "type": "Scope",
+          "runAfter": {
+            "Parse_request": [
+              "Succeeded"
+            ]
+          },
+          "actions": {
+            "Read_document": {
+              "type": "OpenApiConnection",
+              "runAfter": {},
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "connectionName": "shared_commondataserviceforapps",
+                  "operationId": "GetItem"
+                },
+                "parameters": {
+                  "$select": "annotationid,documentbody,mimetype,_objectid_value,isdocument",
+                  "entityName": "annotations",
+                  "recordId": "@body('Parse_request')?['documentId']"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Read_case_contact": {
+              "type": "OpenApiConnection",
+              "runAfter": {
+                "Read_document": [
+                  "Succeeded"
+                ]
+              },
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "connectionName": "shared_commondataserviceforapps",
+                  "operationId": "GetItem"
+                },
+                "parameters": {
+                  "$select": "incidentid",
+                  "entityName": "incidents",
+                  "$expand": "customerid_contact($select=fullname)",
+                  "recordId": "@body('Parse_request')?['caseId']"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Find_case_comment": {
+              "type": "OpenApiConnection",
+              "runAfter": {
+                "Read_case_contact": [
+                  "Succeeded"
+                ]
+              },
+              "inputs": {
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "connectionName": "shared_commondataserviceforapps",
+                  "operationId": "ListRecords"
+                },
+                "parameters": {
+                  "entityName": "adx_portalcomments",
+                  "$select": "activityid",
+                  "$filter": "activityid eq @{outputs('Read_document')?['body/_objectid_value']} and _regardingobjectid_value eq @{outputs('Read_case_contact')?['body/incidentid']}",
+                  "$top": 1
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Document_belongs_to_case": {
+              "expression": {
+                "and": [
+                  {
+                    "or": [
+                      {
+                        "equals": [
+                          "@toLower(string(outputs('Read_document')?['body/_objectid_value']))",
+                          "@toLower(string(outputs('Read_case_contact')?['body/incidentid']))"
+                        ]
+                      },
+                      {
+                        "greater": [
+                          "@length(coalesce(outputs('Find_case_comment')?['body/value'], json('[]')))",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "not": {
+                      "equals": [
+                        "@coalesce(outputs('Read_document')?['body/documentbody'],'')",
+                        ""
+                      ]
+                    }
+                  },
+                  {
+                    "not": {
+                      "equals": [
+                        "@coalesce(outputs('Read_case_contact')?['body/customerid_contact/fullname'],'')",
+                        ""
+                      ]
+                    }
+                  }
+                ]
+              },
+              "type": "If",
+              "runAfter": {
+                "Find_case_comment": [
+                  "Succeeded"
+                ]
+              },
+              "actions": {
+                "Run_verification_prompt": {
+                  "type": "OpenApiConnection",
+                  "runAfter": {},
+                  "inputs": {
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                      "connectionName": "shared_commondataserviceforapps",
+                      "operationId": "PerformBoundAction"
+                    },
+                    "parameters": {
+                      "entityName": "msdyn_aimodels",
+                      "actionName": "Microsoft.Dynamics.CRM.Predict",
+                      "recordId": "234bfc47-fadf-f111-84e8-00224809fc90",
+                      "item/version": "2.0",
+                      "item/source": "{\"consumptionSource\":\"PowerAutomate\",\"partnerSource\":\"AIBuilder\",\"consumptionSourceVersion\":\"Flow\",\"partnerSourceVersion\":\"1.0\"}",
+                      "item/requestv2": {
+                        "@@odata.type": "#Microsoft.Dynamics.CRM.expando",
+                        "requestedDocument": "@coalesce(body('Parse_request')?['requestedDocument'],'a valid government-issued photo ID')",
+                        "today": "@formatDateTime(utcNow(),'yyyy-MM-dd')",
+                        "expectedName": "@outputs('Read_case_contact')?['body/customerid_contact/fullname']",
+                        "document": {
+                          "@@odata.type": "#Microsoft.Dynamics.CRM.expando",
+                          "base64Encoded": "@outputs('Read_document')?['body/documentbody']",
+                          "mimeType": "@outputs('Read_document')?['body/mimetype']"
+                        }
+                      }
+                    },
+                    "authentication": "@parameters('$authentication')"
+                  }
+                },
+                "Store_verification_result": {
+                  "type": "SetVariable",
+                  "runAfter": {
+                    "Run_verification_prompt": [
+                      "Succeeded"
+                    ]
+                  },
+                  "inputs": {
+                    "name": "Result",
+                    "value": "@{string(setProperty(outputs('Run_verification_prompt')?['body/responsev2/predictionOutput/structuredOutput'],'verificationAvailable',true))}"
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Store_mismatch_result": {
+                    "type": "SetVariable",
+                    "runAfter": {},
+                    "inputs": {
+                      "name": "Result",
+                      "value": "{\"valid\":false,\"verificationAvailable\":true,\"documentType\":\"\",\"isRequestedType\":false,\"nameFound\":false,\"nameMatches\":false,\"legible\":false,\"expired\":false,\"reasons\":[\"The uploaded document is not attached to this case.\"]}"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Respond_to_the_agent": {
+          "type": "Response",
+          "runAfter": {
+            "Verify_document": [
+              "Succeeded",
+              "Failed",
+              "Skipped",
+              "TimedOut"
+            ]
+          },
+          "kind": "Skills",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": {},
+              "properties": {
+                "result": {
+                  "x-ms-dynamically-added": true,
+                  "title": "result",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT"
+                }
+              }
+            },
+            "statusCode": 200,
+            "body": {
+              "result": "@variables('Result')"
+            }
+          }
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Skills",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "text"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "title": "text",
+                  "x-ms-dynamically-added": true,
+                  "description": "JSON with caseId, documentId and optional requestedDocument",
+                  "x-ms-content-hint": "TEXT"
+                }
+              }
+            }
+          }
+        }
+      },
+      "contentVersion": "1.0.0.0",
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "outputs": {},
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

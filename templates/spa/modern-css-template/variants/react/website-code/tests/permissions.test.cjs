@@ -34,9 +34,9 @@ function assertKnowledgeMarkers(markers) {
     assert.notEqual(caseInsensitive(marker.pageid), homeId, 'The reserved Knowledge Article marker must not invoke native article handling on SPA Home.')
   }
 }
-test('nine authenticated table permissions plus one anonymous read-only published-knowledge permission, with no deletes', () => {
+test('ten authenticated table permissions plus one anonymous read-only published-knowledge permission, with no deletes', () => {
   const permissions = readRecords('table-permissions')
-  assert.equal(permissions.length, 10)
+  assert.equal(permissions.length, 11)
   const roles = permission => [...permission.content.matchAll(/^\s*-\s*([0-9a-f-]{36})\s*$/gm)].map(match => match[1])
   const anonymous = permissions.filter(permission => roles(permission).includes(anonymousRole))
   assert.equal(anonymous.length, 1)
@@ -51,7 +51,18 @@ test('nine authenticated table permissions plus one anonymous read-only publishe
     assert.deepEqual(roles(permission), [role])
     assert.equal(permission.delete, 'false')
   }
-  const byTable = Object.fromEntries(authenticated.map(permission => [permission.entitylogicalname, permission]))
+  const commentAttachments = authenticated.filter(permission => permission.entitylogicalname === 'annotation' &&
+    permission.parentrelationship === 'adx_portalcomment_Annotations')
+  assert.equal(commentAttachments.length, 1)
+  const byTable = Object.fromEntries(authenticated.filter(permission => permission !== commentAttachments[0])
+    .map(permission => [permission.entitylogicalname, permission]))
+  const [attachmentPermission] = commentAttachments
+  assert.equal(attachmentPermission.scope, '756150003')
+  assert.equal(attachmentPermission.parententitypermission, byTable.adx_portalcomment.id)
+  assert.equal(byTable.adx_portalcomment.appendto, 'true')
+  for (const right of ['read', 'create', 'append']) assert.equal(attachmentPermission[right], 'true', right)
+  assert.equal(attachmentPermission.write, 'true', 'Guarded SDK receipt updates require table Write')
+  for (const right of ['delete', 'appendto']) assert.equal(attachmentPermission[right], 'false', right)
   assert.equal(byTable.contact.scope, '756150004')
   assert.equal(byTable.contact.append, 'true')
   assert.equal(byTable.contact.appendto, 'true')
@@ -69,7 +80,7 @@ test('nine authenticated table permissions plus one anonymous read-only publishe
     assert.equal(byTable[table].scope, '756150003')
     assert.equal(byTable[table].parententitypermission, byTable.incident.id)
     assert.equal(byTable[table].parentrelationship, relationship)
-    assert.equal(byTable[table].write, 'false')
+    assert.equal(byTable[table].write, table === 'adx_portalcomment' ? 'true' : 'false')
   }
   for (const table of ['knowledgearticle', 'product', 'category']) {
     assert.equal(byTable[table].read, 'true')
@@ -80,13 +91,17 @@ test('nine authenticated table permissions plus one anonymous read-only publishe
   assert.equal(byTable.feedback.write, 'false')
   assert.equal(byTable.feedback.create, 'true')
 })
-test('only personal-case and catalog Web APIs are enabled with exact field allowlists', () => {
+test('only personal-case, catalog and protected attachment Web APIs are enabled with exact field allowlists', () => {
   const settings = Object.fromEntries(readRecords('site-settings').map(setting => [setting.name, setting.value]))
-  assert.deepEqual(Object.entries(settings).filter(([name, value]) => /^Webapi\/.+\/enabled$/.test(name) && value === 'true').map(([name]) => name).sort(), ['Webapi/category/enabled', 'Webapi/incident/enabled', 'Webapi/product/enabled'])
+  assert.deepEqual(Object.entries(settings).filter(([name, value]) => /^Webapi\/.+\/enabled$/.test(name) && value === 'true').map(([name]) => name).sort(),
+    ['Webapi/adx_portalcomment/enabled', 'Webapi/annotation/enabled', 'Webapi/category/enabled', 'Webapi/incident/enabled', 'Webapi/product/enabled'])
   assert.equal(settings['Webapi/incident/fields'], '_customerid_value,caseorigincode,createdon,customerid_contact,description,incidentid,modifiedon,productid,statecode,statuscode,ticketnumber,title')
   assert.equal(settings['Webapi/product/fields'], 'productid,name,statecode')
   assert.equal(settings['Webapi/category/fields'], 'categoryid,title')
-  for (const table of ['contact', 'account', 'adx_portalcomment', 'annotation', 'knowledgearticle', 'feedback', 'email', 'activitypointer', 'incidentresolution', 'lead', 'adx_externalidentity', 'adx_setting', 'knowledgearticleincident']) {
+  assert.equal(settings['Webapi/adx_portalcomment/fields'], 'activityid,adx_portalcomment_Annotations,adx_portalcommentdirectioncode,description,regardingobjectid_incident_adx_portalcomment')
+  assert.equal(settings['Webapi/annotation/fields'], 'annotationid,documentbody,filename,isdocument,mimetype,notetext')
+  assert.equal(settings['Webapi/activitypointer/fields'], 'activityid,description,regardingobjectid')
+  for (const table of ['contact', 'account', 'knowledgearticle', 'feedback', 'email', 'activitypointer', 'incidentresolution', 'lead', 'adx_externalidentity', 'adx_setting', 'knowledgearticleincident']) {
     assert.equal(settings[`Webapi/${table}/enabled`], 'false', table)
   }
   assert.ok(!Object.entries(settings).some(([name, value]) => /^Webapi\/.+\/fields$/.test(name) && value.includes('*')))
@@ -127,7 +142,8 @@ test('case variants cannot conceal duplicate generic Search Summary markers', ()
 })
 test('case Web API column permissions allow only create/read and never status or customer updates', () => {
   const directory = path.join('column-permission-profiles', 'case-api')
-  assert.deepEqual(fs.readdirSync(path.join(root, 'column-permission-profiles')), ['case-api'])
+  assert.deepEqual(fs.readdirSync(path.join(root, 'column-permission-profiles')).sort(),
+    ['case-api', 'customer-attachment-annotation-api', 'customer-attachment-comment-api'])
   const [profile] = readRecords(directory)
   assert.equal(profile.tablename, 'incident')
   assert.match(profile.content, /adx_columnpermissionprofile_webrole:/)
@@ -139,6 +155,25 @@ test('case Web API column permissions allow only create/read and never status or
     assert.equal(column.columnpermissionprofileid, profile.id)
     assert.deepEqual([...column.content.matchAll(/^- (\d+)\s*$/gm)].map(match => Number(match[1])), [746610000, 746610001])
     assert.ok(!column.content.includes('746610002'), 'Raw Web API updates must not bypass active-case Server Logic checks')
+  }
+})
+test('native attachment profiles cannot forge Support direction or workflow subjects, or overwrite saved files', () => {
+  for (const [directory, table, expected] of [
+    ['customer-attachment-comment-api', 'adx_portalcomment', ['activityid', 'description', 'regardingobjectid_incident_adx_portalcomment', 'adx_portalcomment_Annotations']],
+    ['customer-attachment-annotation-api', 'annotation', ['annotationid', 'documentbody', 'filename', 'isdocument', 'mimetype', 'notetext']],
+  ]) {
+    const profilePath = path.join('column-permission-profiles', directory)
+    const [profile] = readRecords(profilePath)
+    assert.equal(profile.tablename, table)
+    assert.deepEqual(parse(profile.content).allcolumnpermissions, table === 'annotation' ? [] : [746610001])
+    assert.deepEqual(parse(profile.content).adx_columnpermissionprofile_webrole, [role])
+    const columns = readRecords(path.join(profilePath, 'column-permissions'))
+    assert.deepEqual(columns.map(column => column.columnname).sort(), expected.sort())
+    for (const column of columns) {
+      assert.equal(column.columnpermissionprofileid, profile.id)
+      assert.deepEqual(parse(column.content).permissions, [746610000, 746610001], 'Native deep inserts and single-record attachment downloads require Create/Read, never Update')
+      assert.ok(!['subject', 'adx_portalcommentdirectioncode', 'createdby', 'statecode', 'statuscode'].includes(column.columnname))
+    }
   }
 })
 test('all five handlers have matching metadata; only published knowledge also allows anonymous visitors', () => {

@@ -75,7 +75,7 @@
     {
       "id": "modern-css-template",
       "displayName": "Modern CSS Template",
-      "description": "A Power Pages SPA template for customer support with personal cases, case conversations and documents, published knowledge articles with optional generative AI search, and Dynamics 365 Case Management Agent responses reviewed by representatives.",
+      "description": "A Power Pages SPA template for customer support with personal cases, native conversation attachments, published knowledge articles with optional generative AI search, and Dynamics 365 Case Management Agent integration with full automation.",
       "kind": "spa",
       "keywords": [
         "customer-support",

@@ -2,13 +2,13 @@
   "properties": {
     "connectionReferences": {
       "shared_commondataserviceforapps": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "IA.cr.IAPluginDVConnector"
+        },
         "api": {
           "name": "shared_commondataserviceforapps"
-        },
-        "connection": {
-          "connectionReferenceLogicalName": "msdyn_CustomerServiceCaseClosureFollowup.shared_commondataserviceforapps.msdyn_sharedcommondataserviceforapps"
-        },
-        "runtimeSource": "embedded"
+        }
       }
     },
     "definition": {
@@ -28,6 +28,13 @@
           "type": "String",
           "metadata": {
             "schemaName": "ppst_ModernCss_PortalApplicationUserId"
+          }
+        },
+        "Modern CSS - Portal URL (ppst_ModernCss_PortalUrl)": {
+          "defaultValue": "",
+          "type": "String",
+          "metadata": {
+            "schemaName": "ppst_ModernCss_PortalUrl"
           }
         }
       },
@@ -62,7 +69,7 @@
             "parameters": {
               "entityName": "incidents",
               "recordId": "@triggerOutputs()?['body/incidentid']",
-              "$select": "incidentid,caseorigincode,_createdby_value,statecode"
+              "$select": "incidentid,caseorigincode,_createdby_value,statecode,description"
             },
             "authentication": "@parameters('$authentication')"
           },
@@ -111,17 +118,17 @@
               },
               "runAfter": {}
             },
-            "Enforce_human_review": {
+            "Enforce_full_automation": {
               "type": "If",
-              "expression": "@not(and(equals(json(outputs('Read_effective_agent_settings')?['body/Result'])?['isEnabled'], true), equals(json(outputs('Read_effective_agent_settings')?['body/Result'])?['resolution']?['isEnabled'], true), equals(json(outputs('Read_effective_agent_settings')?['body/Result'])?['resolution']?['automationLevel'], 'Semi')))",
+              "expression": "@not(and(equals(json(outputs('Read_effective_agent_settings')?['body/Result'])?['isEnabled'], true), equals(json(outputs('Read_effective_agent_settings')?['body/Result'])?['resolution']?['isEnabled'], true), equals(json(outputs('Read_effective_agent_settings')?['body/Result'])?['resolution']?['automationLevel'], 'Full')))",
               "actions": {
                 "Stop_unsafe_or_disabled_agent": {
                   "type": "Terminate",
                   "inputs": {
                     "runStatus": "Failed",
                     "runError": {
-                      "code": "HumanReviewRequired",
-                      "message": "Case remains saved. Agent dispatch blocked because its effective mode is not enabled Semi. Check Northwind business-line routing and configuration."
+                      "code": "FullAutomationRequired",
+                      "message": "Case remains saved. Agent dispatch blocked because its effective mode is not enabled Full. Check Contoso Bank business-line routing and configuration."
                     }
                   }
                 }
@@ -146,8 +153,8 @@
                 "parameters": {
                   "entityName": "annotations",
                   "item/annotationid": "@outputs('Read_case')?['body/incidentid']",
-                  "item/subject": "Northwind portal: Case Management Agent dispatch",
-                  "item/notetext": "Dispatch pending; automationLevel=Semi. Flow run: @{workflow()?['run']?['name']}. This internal receipt blocks duplicate dispatch. Review the flow run before manually retrying.",
+                  "item/subject": "Contoso Bank portal: Case Management Agent dispatch",
+                  "item/notetext": "Dispatch pending; automationLevel=Full. Flow run: @{workflow()?['run']?['name']}. This internal receipt blocks duplicate dispatch. Review the flow run before manually retrying.",
                   "item/isdocument": false,
                   "item/objectid_incident@odata.bind": "@concat('incidents(', outputs('Read_case')?['body/incidentid'], ')')"
                 },
@@ -157,7 +164,50 @@
                 }
               },
               "runAfter": {
-                "Enforce_human_review": [
+                "Enforce_full_automation": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Compose_portal_case_link": {
+              "type": "Compose",
+              "inputs": "@concat(decodeUriComponent('%0A%0A'), 'Portal case link: ', parameters('Modern CSS - Portal URL (ppst_ModernCss_PortalUrl)'), '/cases/', outputs('Read_case')?['body/incidentid'])",
+              "runAfter": {
+                "Create_dispatch_receipt": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Add_portal_case_link": {
+              "type": "If",
+              "expression": "@and(not(empty(parameters('Modern CSS - Portal URL (ppst_ModernCss_PortalUrl)'))), lessOrEquals(add(length(coalesce(outputs('Read_case')?['body/description'], '')), length(outputs('Compose_portal_case_link'))), 2000), not(contains(coalesce(outputs('Read_case')?['body/description'], ''), outputs('Compose_portal_case_link'))))",
+              "actions": {
+                "Append_portal_case_link": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                      "operationId": "UpdateOnlyRecord",
+                      "connectionName": "shared_commondataserviceforapps"
+                    },
+                    "parameters": {
+                      "entityName": "incidents",
+                      "recordId": "@outputs('Read_case')?['body/incidentid']",
+                      "item/description": "@concat(coalesce(outputs('Read_case')?['body/description'], ''), outputs('Compose_portal_case_link'))"
+                    },
+                    "authentication": "@parameters('$authentication')",
+                    "retryPolicy": {
+                      "type": "none"
+                    }
+                  },
+                  "runAfter": {}
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Compose_portal_case_link": [
                   "Succeeded"
                 ]
               }
@@ -173,8 +223,7 @@
                 "parameters": {
                   "actionName": "msdyn_invokeCaseProcessingAgent",
                   "item/msdyn_incidentId": "@outputs('Read_case')?['body/incidentid']",
-                  "item/msdyn_extraParams": "{\n        \"triggerReason\": \"customAgentCallback\",\n        \"additionalInformation\": [\n            {\n                \"key\": \"attachmentContent\",\n                \"value\": \"This is my attachment content\",\n                \"keyDescription\": \"File attachment content in natural language\"\n            },\n            {\n                \"key\": \"adx_portalcomment\",\n                \"value\": \"comment from website\",\n                \"keyDescription\": \"comments from website\"\n            }\n        ]\n    }",
-                  "item/msdyn_actions": "[{\"action\":\"resolve\",\"automationLevel\":\"Semi\"}]"
+                  "item/msdyn_actions": "[{\"action\":\"resolve\",\"automationLevel\":\"Full\"}]"
                 },
                 "authentication": "@parameters('$authentication')",
                 "retryPolicy": {
@@ -182,8 +231,9 @@
                 }
               },
               "runAfter": {
-                "Create_dispatch_receipt": [
-                  "Succeeded"
+                "Add_portal_case_link": [
+                  "Succeeded",
+                  "Failed"
                 ]
               }
             },
@@ -198,7 +248,7 @@
                 "parameters": {
                   "entityName": "annotations",
                   "recordId": "@outputs('Read_case')?['body/incidentid']",
-                  "item/notetext": "Dispatch accepted by Case Management Agent; automationLevel=Semi. This is not a resolution confirmation. Review agent results and draft emails in Dynamics 365. Flow run: @{workflow()?['run']?['name']}."
+                  "item/notetext": "Dispatch accepted by Case Management Agent; automationLevel=Full. This is not a resolution confirmation. Review agent results and customer communications in Dynamics 365. Flow run: @{workflow()?['run']?['name']}."
                 },
                 "authentication": "@parameters('$authentication')"
               },
@@ -219,7 +269,7 @@
                 "parameters": {
                   "entityName": "annotations",
                   "recordId": "@outputs('Read_case')?['body/incidentid']",
-                  "item/notetext": "Agent dispatch failed or is unconfirmed; automationLevel=Semi. No automatic retry was attempted. Review this flow run and managed agent runs before a manual retry: @{workflow()?['run']?['name']}."
+                  "item/notetext": "Agent dispatch failed or is unconfirmed; automationLevel=Full. No automatic retry was attempted. Review this flow run and managed agent runs before a manual retry: @{workflow()?['run']?['name']}."
                 },
                 "authentication": "@parameters('$authentication')"
               },
@@ -266,7 +316,7 @@
         }
       }
     },
-    "templateName": null
+    "templateName": ""
   },
   "schemaVersion": "1.0.0.0"
 }

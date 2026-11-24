@@ -1,0 +1,4 @@
+description: Explicit fields for owned customer attachments; trusted subjects are SDK-only.
+id: e6b41aa6-4ca0-41b3-b55a-0d335dd20925
+name: Webapi/annotation/fields
+value: "annotationid,documentbody,filename,isdocument,mimetype,notetext"
