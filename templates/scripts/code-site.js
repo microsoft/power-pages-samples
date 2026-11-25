@@ -87,6 +87,12 @@ function planInactiveSite({ rootPath, environmentUrl, siteName }) {
     throw new Error("siteName must be a non-empty single-line value up to 100 characters.");
   }
   const source = inspectSource(rootPath, { requireNew: true });
+  if (source.config.siteName !== siteName.trim()) {
+    throw new Error(
+      `powerpages.config.json siteName "${source.config.siteName}" must match the approved site name ` +
+      `"${siteName.trim()}".`
+    );
+  }
   const core = {
     planVersion: 1,
     operation: "create-inactive-code-site",
@@ -106,6 +112,12 @@ function planInactiveSiteUpdate({ rootPath, environmentUrl }) {
   environmentUrl = normalizeEnvironmentUrl(environmentUrl);
   const source = inspectSource(rootPath, { requireNew: false });
   const identity = parseWebsiteYaml(path.join(source.root, ".powerpages-site", "website.yml"));
+  if (source.config.siteName !== identity.siteName) {
+    throw new Error(
+      `powerpages.config.json siteName "${source.config.siteName}" must match PAC website name ` +
+      `"${identity.siteName}" before planning an update.`
+    );
+  }
   const core = {
     planVersion: 1,
     operation: "update-inactive-code-site",
@@ -263,7 +275,11 @@ function updateInactiveSite({ plan, approvedHash, pacRunner = runPac }) {
     environmentUrl: plan.environmentUrl,
     pacRunner
   });
-  if (result.websiteRecordId !== plan.websiteRecordId || result.hasPortalUrl) {
+  if (
+    result.websiteRecordId !== plan.websiteRecordId ||
+    result.siteName !== plan.siteName ||
+    result.hasPortalUrl
+  ) {
     throw new Error("Updated code site no longer matches the approved inactive source identity.");
   }
   return { ...result, sourceDigest: plan.sourceDigest };

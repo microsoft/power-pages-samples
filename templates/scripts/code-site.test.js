@@ -24,7 +24,7 @@ function sourceFixture() {
   fs.writeFileSync(path.join(root, "package.json"), "{}");
   fs.writeFileSync(path.join(root, ".npmrc"), "omit-lockfile-registry-resolved=true\n");
   fs.writeFileSync(path.join(root, "powerpages.config.json"), JSON.stringify({
-    siteName: "Fixture",
+    siteName: "Template Source",
     compiledPath: "dist",
     defaultLandingPage: "index.html"
   }));
@@ -112,6 +112,33 @@ test("rejects active sites, stale source, and duplicate initialization", () => {
     rootPath: root,
     environmentUrl: "https://example.crm.dynamics.com",
     siteName: "Template Source"
+  });
+
+  test("rejects code-site name drift before create or update", () => {
+    const root = sourceFixture();
+    const configPath = path.join(root, "powerpages.config.json");
+    fs.writeFileSync(configPath, JSON.stringify({
+      siteName: "Different Name",
+      compiledPath: "dist",
+      defaultLandingPage: "index.html"
+    }));
+    assert.throws(
+      () => planInactiveSite({
+        rootPath: root,
+        environmentUrl: "https://example.crm.dynamics.com",
+        siteName: "Template Source"
+      }),
+      /must match the approved site name/
+    );
+
+    addSiteIdentity(root);
+    assert.throws(
+      () => planInactiveSiteUpdate({
+        rootPath: root,
+        environmentUrl: "https://example.crm.dynamics.com"
+      }),
+      /must match PAC website name/
+    );
   });
   fs.writeFileSync(path.join(root, "changed.txt"), "changed");
   assert.throws(
