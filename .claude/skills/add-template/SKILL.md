@@ -1,7 +1,7 @@
 ---
 name: add-template
 description: Create and contribute an installable Power Pages template to this repository. Use when adding a community SPA or Liquid/web-template non-SPA template to the templates catalog.
-compatibility: Requires a checkout of microsoft/power-pages-samples. PAC CLI, Azure CLI, Node.js, Playwright Chromium, CodeQL CLI, and a suitable Power Platform environment are needed for complete verification.
+compatibility: Requires a checkout of microsoft/power-pages-samples. PAC CLI, Azure CLI, Node.js, Playwright Chromium, CodeQL CLI, OpenGrep, Trivy, and a suitable Power Platform environment are needed for complete verification.
 ---
 
 # Contribute a Power Pages template
@@ -46,6 +46,9 @@ compatibility: Requires a checkout of microsoft/power-pages-samples. PAC CLI, Az
    Fix and repeat until both phases pass.
 7. Complete [end-to-end verification](references/end-to-end-verification.md) against this authored revision by invoking
    `test-template` with `<template-family-root> consumer`.
+   Before selecting or cleaning a consumer environment, require `opengrep --version` and `trivy --version` to succeed.
+   The required Code & config security review runs both tools in non-interactive review mode and cannot use its
+   agent-driven fallback. Missing tools must block before solution import, seed writes, or site creation.
    `test-template` owns the clean create-site consumer path, Code & config security review, consumer permissions,
    `plan-alm` environment-variable classification, separately approved activation, live `test-site`, deployed
    accessibility, Release readiness security review, and its final test report.

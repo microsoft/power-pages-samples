@@ -163,6 +163,11 @@ Do not create a site merely to make this phase available. If platform artifacts 
 This phase can create external resources and is never implicit. Ask the contributor to select a verification environment
 and show the complete import, seed, site, activation, visibility, and cleanup effects before invoking any owning skill.
 
+Before environment selection or any external write, run the Power Pages `scan-code` prerequisite check and require both
+OpenGrep and Trivy to be available. The mandatory Code & config review runs non-interactively and cannot use the
+agent-driven fallback. If either tool is unavailable, report the consumer phase as **Blocked** and stop before cleanup,
+solution import, seed writes, or site creation.
+
 Use an immutable revision of the authored template and follow the actual create-site consumer path. A diagnostic manual
 install does not resolve a catalog-consumer incompatibility.
 
