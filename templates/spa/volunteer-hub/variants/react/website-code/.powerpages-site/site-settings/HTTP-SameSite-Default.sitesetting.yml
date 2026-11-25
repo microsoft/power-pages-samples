@@ -1,0 +1,4 @@
+description: Set the default cookie SameSite policy for this public catalog
+id: 0c786fd8-26e3-4a17-9850-9af98e06ec03
+name: HTTP/SameSite/Default
+value: Lax
