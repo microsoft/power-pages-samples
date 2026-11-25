@@ -86,6 +86,21 @@ function runCommand(packageManager, scriptName) {
   }
 }
 
+function playwrightInstallCommand(packageManager) {
+  switch (packageManager) {
+    case "npm":
+      return "npx playwright install chromium";
+    case "pnpm":
+      return "pnpm exec playwright install chromium";
+    case "yarn":
+      return "yarn playwright install chromium";
+    case "bun":
+      return "bunx playwright install chromium";
+    default:
+      return null;
+  }
+}
+
 function discoverVariantRoots(inputPath) {
   const resolvedInput = path.resolve(inputPath);
   if (!fs.existsSync(resolvedInput) || !fs.statSync(resolvedInput).isDirectory()) {
@@ -141,6 +156,11 @@ function inspectVariant({ variantKey, websiteCodePath }) {
   const framework = detectFramework(websiteCodePath, variantKey, packageJson);
   const packageManager = detectPackageManager(websiteCodePath, packageJson, errors);
   const scripts = packageJson?.scripts ?? {};
+  const dependencies = {
+    ...(packageJson?.dependencies ?? {}),
+    ...(packageJson?.devDependencies ?? {})
+  };
+  const usesPlaywright = Object.hasOwn(dependencies, "@playwright/test");
   const isSpa = framework !== "none";
 
   if (isSpa && !packageJson) {
@@ -166,13 +186,16 @@ function inspectVariant({ variantKey, websiteCodePath }) {
   const commands = packageManager
     ? {
         restore: packageManager.restore,
+        installBrowser: usesPlaywright
+          ? playwrightInstallCommand(packageManager.manager)
+          : null,
         checks: selectedScripts.map((scriptName) =>
           runCommand(packageManager.manager, scriptName)),
         previews: typeof scripts.previews === "string"
           ? runCommand(packageManager.manager, "previews")
           : null
       }
-    : { restore: null, checks: [], previews: null };
+    : { restore: null, installBrowser: null, checks: [], previews: null };
 
   return {
     variantKey,

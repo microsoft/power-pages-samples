@@ -17,6 +17,9 @@ compatibility: Requires a checkout of microsoft/power-pages-samples. PAC CLI, Az
    Confirm the template ID, data scope, and feature scope with the contributor.
 2. Plan the website experience, pages, states, data scope, permissions, dependencies, and representative fixture/seed records together without selecting or modifying an environment.
    For a React SPA, write the approved intent as a temporary JSON spec outside the repository and run `node templates/scripts/create-template.js --spec <spec.json> --output <draft-parent>`.
+   In the generated `website-code` directory, run `npm install --package-lock-only --ignore-scripts --no-audit --no-fund`
+   before invoking `test-template`. The standalone tester intentionally fails closed when an SPA has no committed
+   lockfile or has ambiguous lockfiles.
    Implement the full local website experience and include the existing Power Pages attribution badge. The scaffolder and implementation must not fabricate solution metadata or `.powerpages-site`.
 3. For a new React SPA, set `qualityStandard: 1` and create the required `docs/`, test, and report structure described by
    [template quality gates](../test-template/references/quality-gates.md).

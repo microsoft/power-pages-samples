@@ -296,7 +296,7 @@ function packageManifest(spec) {
     type: "module",
     scripts: {
       dev: "vite",
-      test: "node --test tests/*.test.mjs",
+      test: "node --test tests/routes.test.mjs",
       build: "tsc -b && vite build",
       preview: "vite preview",
       previews: "playwright test tests/previews.spec.ts",
@@ -401,7 +401,13 @@ export default defineConfig({
     trace: "retain-on-failure"
   },
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "desktop",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1440, height: 1000 }
+      }
+    },
     { name: "mobile", use: { ...devices["Pixel 7"] } }
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL
@@ -561,7 +567,7 @@ import "./PowerPagesBadge.css";
 
 export default function PowerPagesBadge() {
   return (
-    <div className="powered-badge" aria-label="Platform attribution">
+    <div className="powered-badge" role="group" aria-label="Platform attribution">
       <img src={powerPagesLogo} width="14" height="14" alt="" aria-hidden="true" />
       Built with <span>Microsoft Power Pages</span>
     </div>
@@ -619,8 +625,12 @@ test("route contract uses unique ids and paths", () => {
 }
 
 function smokeTest() {
-  return `import { expect, test } from "@playwright/test";
-import { routes } from "../src/routes";
+  return `import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+import { expect, test } from "@playwright/test";
+
+const routesPath = fileURLToPath(new URL("../src/routes.json", import.meta.url));
+const routes = JSON.parse(fs.readFileSync(routesPath, "utf8"));
 
 for (const route of routes) {
   test(\`\${route.id} renders its primary heading\`, async ({ page }) => {
@@ -638,10 +648,12 @@ import { fileURLToPath } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import AccessibilityInsightsReport from "accessibility-insights-report";
-import { routes } from "../src/routes";
 
 const { reporterFactory } = AccessibilityInsightsReport;
 const websiteCodePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const routes = JSON.parse(
+  fs.readFileSync(path.join(websiteCodePath, "src", "routes.json"), "utf8")
+);
 const reportsDirectory = path.join(websiteCodePath, "docs", "a11y-reports");
 const generatedDirectory = path.join(reportsDirectory, ".generated");
 
@@ -683,15 +695,17 @@ test("generates automated accessibility evidence", async ({ page }, testInfo) =>
 }
 
 function previewTest() {
-  return `import path from "node:path";
+  return `import fs from "node:fs";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
-import { routes } from "../src/routes";
 
-const previewsDirectory = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "../../../../previews"
+const testsDirectory = path.dirname(fileURLToPath(import.meta.url));
+const websiteCodePath = path.resolve(testsDirectory, "..");
+const routes = JSON.parse(
+  fs.readFileSync(path.join(websiteCodePath, "src", "routes.json"), "utf8")
 );
+const previewsDirectory = path.resolve(testsDirectory, "../../../../previews");
 
 for (const route of routes) {
   test(\`captures \${route.id} preview\`, async ({ page }, testInfo) => {

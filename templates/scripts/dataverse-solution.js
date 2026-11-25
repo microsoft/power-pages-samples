@@ -521,11 +521,58 @@ function relationshipPayload(relationship) {
   };
 }
 
-async function applyPlan(plan, client) {
+function isTransientMetadataError(error) {
+  const status = Number(error?.status);
+  const details = String(error?.details ?? error?.message ?? "");
+  return status === 429 ||
+    status >= 500 ||
+    /0x80040216/i.test(details) ||
+    /another \[(?:EntityCustomization|PublishAll)\] running/i.test(details);
+}
+
+async function retryMetadataOperation({
+  operation,
+  execute,
+  exists,
+  journal,
+  sleep,
+  maxAttempts = 6
+}) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await execute();
+      return;
+    } catch (error) {
+      if (exists && await exists()) {
+        journal.retries.push({
+          operation,
+          attempt,
+          outcome: "verified-after-error"
+        });
+        return;
+      }
+      if (!isTransientMetadataError(error) || attempt === maxAttempts) {
+        throw error;
+      }
+      const delayMs = attempt * 5000;
+      journal.retries.push({
+        operation,
+        attempt,
+        delayMs,
+        status: error.status ?? null
+      });
+      await sleep(delayMs);
+    }
+  }
+}
+
+async function applyPlan(plan, client, options = {}) {
   if (!plan || plan.planVersion !== 1) {
     throw new Error("Unsupported or missing Dataverse plan.");
   }
-  const journal = { completed: [], tables: {} };
+  const journal = { completed: [], tables: {}, retries: [] };
+  const sleep = options.sleep ?? ((delayMs) =>
+    new Promise((resolve) => setTimeout(resolve, delayMs)));
   try {
     const existingPublisher = await client.findPublisher(plan.publisher.uniqueName);
     let publisherId;
@@ -568,7 +615,16 @@ async function applyPlan(plan, client) {
       journal.tables[table.logicalName] = tableId;
       journal.completed.push(`table:${table.logicalName}`);
       for (const column of table.columns) {
-        await client.createColumn(table.logicalName, column, plan.solution.uniqueName);
+        await retryMetadataOperation({
+          operation: `column:${table.logicalName}.${column.logicalName}`,
+          execute: () =>
+            client.createColumn(table.logicalName, column, plan.solution.uniqueName),
+          exists: typeof client.findColumn === "function"
+            ? () => client.findColumn(table.logicalName, column.logicalName)
+            : null,
+          journal,
+          sleep
+        });
         journal.completed.push(`column:${table.logicalName}.${column.logicalName}`);
       }
     }
@@ -577,11 +633,24 @@ async function applyPlan(plan, client) {
       if (await client.findRelationship(relationship.schemaName)) {
         throw new Error(`Relationship ${relationship.schemaName} already exists; clean-environment apply is required.`);
       }
-      await client.createRelationship(relationship, plan.solution.uniqueName);
+      await retryMetadataOperation({
+        operation: `relationship:${relationship.schemaName}`,
+        execute: () =>
+          client.createRelationship(relationship, plan.solution.uniqueName),
+        exists: () => client.findRelationship(relationship.schemaName),
+        journal,
+        sleep
+      });
       journal.completed.push(`relationship:${relationship.schemaName}`);
     }
 
-    await client.publish();
+    await retryMetadataOperation({
+      operation: "publish",
+      execute: () => client.publish(),
+      exists: null,
+      journal,
+      sleep
+    });
     journal.completed.push("publish");
     return journal;
   } catch (error) {
@@ -618,7 +687,10 @@ class DataverseWebApiClient {
     }
     if (!response.ok) {
       const details = await response.text();
-      throw new Error(`${method} ${relativePath} failed with ${response.status}: ${details}`);
+      const error = new Error(`${method} ${relativePath} failed with ${response.status}: ${details}`);
+      error.status = response.status;
+      error.details = details;
+      throw error;
     }
     if (response.status === 204) {
       return {
@@ -693,6 +765,16 @@ class DataverseWebApiClient {
       `EntityDefinitions(LogicalName='${odataString(tableLogicalName)}')/Attributes`,
       { body: columnPayload(column), solutionUniqueName }
     );
+  }
+
+  async findColumn(tableLogicalName, columnLogicalName) {
+    const result = await this.request(
+      "GET",
+      `EntityDefinitions(LogicalName='${odataString(tableLogicalName)}')/Attributes?` +
+      `$select=MetadataId,LogicalName,SchemaName&` +
+      `$filter=LogicalName eq '${odataString(columnLogicalName)}'`
+    );
+    return result.value?.[0] ?? null;
   }
 
   async findRelationship(schemaNameValue) {
@@ -970,9 +1052,11 @@ module.exports = {
   executionApprovalHash,
   exportAndUnpack,
   getDataverseToken,
+  isTransientMetadataError,
   normalizeEnvironmentUrl,
   parseAccessToken,
   relationshipPayload,
+  retryMetadataOperation,
   stableStringify,
   tablePayload,
   validateSpec

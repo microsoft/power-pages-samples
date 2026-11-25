@@ -34,7 +34,8 @@ test("discovers framework-agnostic family test plans", () => {
       build: "vite build",
       test: "vitest run"
     },
-    dependencies: { react: "^18.3.1" }
+    dependencies: { react: "^18.3.1" },
+    devDependencies: { "@playwright/test": "^1.65.0" }
   }, "package-lock.json");
   writeJson(path.join(reactRoot, "template-quality.json"), {
     schemaVersion: 1,
@@ -59,10 +60,15 @@ test("discovers framework-agnostic family test plans", () => {
     ["react", "vue"]
   );
   assert.equal(result.variants[0].commands.restore, "npm ci");
+  assert.equal(
+    result.variants[0].commands.installBrowser,
+    "npx playwright install chromium"
+  );
   assert.deepEqual(result.variants[0].commands.checks, ["npm run quality"]);
   assert.equal(result.variants[0].commands.previews, "npm run previews");
   assert.equal(result.variants[0].qualityContract.routeCount, 1);
   assert.equal(result.variants[1].commands.restore, "pnpm install --frozen-lockfile");
+  assert.equal(result.variants[1].commands.installBrowser, null);
   assert.deepEqual(
     result.variants[1].commands.checks,
     ["pnpm run test", "pnpm run build"]

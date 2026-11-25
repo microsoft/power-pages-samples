@@ -106,7 +106,7 @@ test("creates a canonical React template draft without fabricated platform artif
   assert.equal(packageJson.devDependencies["@axe-core/playwright"], "4.11.0");
   assert.equal(packageJson.devDependencies["accessibility-insights-report"], "7.7.0");
   assert.equal(packageJson.devDependencies.vitest, undefined);
-  assert.equal(packageJson.scripts.test, "node --test tests/*.test.mjs");
+  assert.equal(packageJson.scripts.test, "node --test tests/routes.test.mjs");
   assert.match(packageJson.scripts.quality, /^npm test/);
   assert.equal(
     fs.readFileSync(path.join(target, "variants/react/website-code/.npmrc"), "utf8"),
@@ -117,7 +117,10 @@ test("creates a canonical React template draft without fabricated platform artif
     path.join(target, "variants/react/website-code/src/components/PowerPagesBadge.tsx"),
     "utf8"
   );
-  assert.match(badgeSource, /<div className="powered-badge"/);
+  assert.match(
+    badgeSource,
+    /<div className="powered-badge" role="group" aria-label="Platform attribution">/
+  );
   assert.doesNotMatch(badgeSource, /<aside/);
 
   const routeTest = spawnSync(
@@ -126,6 +129,25 @@ test("creates a canonical React template draft without fabricated platform artif
     { encoding: "utf8" }
   );
   assert.equal(routeTest.status, 0, routeTest.stderr || routeTest.stdout);
+
+  for (const testFile of [
+    "tests/smoke.spec.ts",
+    "tests/accessibility.spec.ts",
+    "tests/previews.spec.ts"
+  ]) {
+    const contents = fs.readFileSync(
+      path.join(target, "variants/react/website-code", testFile),
+      "utf8"
+    );
+    assert.match(contents, /routes\.json/);
+    assert.doesNotMatch(contents, /from "\.\.\/src\/routes"/);
+  }
+
+  const playwrightConfig = fs.readFileSync(
+    path.join(target, "variants/react/website-code/playwright.config.ts"),
+    "utf8"
+  );
+  assert.match(playwrightConfig, /viewport: \{ width: 1440, height: 1000 \}/);
 });
 
 test("rejects unsafe, incomplete, and duplicate scaffold input", () => {

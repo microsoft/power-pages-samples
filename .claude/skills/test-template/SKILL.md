@@ -55,6 +55,7 @@ Create one task per discovered variant plus tasks for evidence review and the fi
 
 - framework and site type;
 - exact restore command;
+- exact Playwright browser-install command when browser tests are present;
 - selected check commands;
 - preview command;
 - declared routes/viewports or the route-discovery source;
@@ -85,6 +86,8 @@ Run independently for every discovered variant.
 Use the inspector's exact restore command. Do not substitute another package manager or install without the committed
 lockfile.
 
+- When the inspector returns `commands.installBrowser`, run it after dependency restore and before any Playwright-backed
+  quality, E2E, accessibility, or preview command. A missing matching browser is a prerequisite gap, not a test failure.
 - If the package defines `quality`, run only that aggregate command unless its documented contract omits a required
   check.
 - Otherwise run available scripts in this order: `test`, `build`, `test:e2e`, `test:a11y`.

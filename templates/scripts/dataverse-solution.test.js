@@ -14,6 +14,7 @@ const {
   columnPayload,
   executionApprovalHash,
   exportAndUnpack,
+  isTransientMetadataError,
   parseAccessToken,
   relationshipPayload,
   tablePayload,
@@ -224,6 +225,63 @@ test("applies a clean plan in dependency order and journals every write", async 
     "publish"
   ]);
   assert.equal(journal.completed.at(-1), "publish");
+  assert.deepEqual(journal.retries, []);
+});
+
+test("retries transient metadata propagation failures and journals attempts", async () => {
+  const plan = buildPlan(validSpec());
+  const attempts = new Map();
+  const delays = [];
+  const client = {
+    findPublisher: async () => null,
+    createPublisher: async () => "11111111-1111-4111-8111-111111111111",
+    findSolution: async () => null,
+    createSolution: async () => {},
+    findTable: async () => null,
+    createTable: async (table) => `id-${table.logicalName}`,
+    findColumn: async () => null,
+    createColumn: async (table, column) => {
+      const key = `${table}.${column.logicalName}`;
+      const attempt = (attempts.get(key) ?? 0) + 1;
+      attempts.set(key, attempt);
+      if (attempt === 1) {
+        const error = new Error("Unexpected metadata error");
+        error.status = 400;
+        error.details = '{"error":{"code":"0x80040216"}}';
+        throw error;
+      }
+    },
+    findRelationship: async () => null,
+    createRelationship: async () => {},
+    publish: async () => {}
+  };
+
+  const journal = await applyPlan(plan, client, {
+    sleep: async (delayMs) => delays.push(delayMs)
+  });
+
+  assert.equal(journal.retries.length, 3);
+  assert.deepEqual(delays, [5000, 5000, 5000]);
+  assert(journal.retries.every((retry) => retry.attempt === 1));
+  assert.equal(attempts.get("shop_category.shop_slug"), 2);
+  assert.equal(attempts.get("shop_product.shop_price"), 2);
+  assert.equal(attempts.get("shop_product.shop_status"), 2);
+});
+
+test("recognizes only bounded transient metadata failures", () => {
+  const permanent = new Error("Bad request");
+  permanent.status = 400;
+  permanent.details = '{"error":{"code":"0x80048d19"}}';
+  assert.equal(isTransientMetadataError(permanent), false);
+
+  const propagation = new Error("Unexpected metadata error");
+  propagation.status = 400;
+  propagation.details = '{"error":{"code":"0x80040216"}}';
+  assert.equal(isTransientMetadataError(propagation), true);
+
+  const throttled = new Error("Too many requests");
+  throttled.status = 429;
+  assert.equal(isTransientMetadataError(throttled), true);
 });
 
 test("fails closed when a target table already exists", async () => {

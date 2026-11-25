@@ -48,8 +48,15 @@ node templates\scripts\dataverse-solution.js apply `
 The command uses PAC to select the approved environment, acquires an environment-scoped Dataverse token from Azure CLI
 without printing it, and calls `WhoAmI` before any write. It associates created metadata with the unmanaged solution
 through `MSCRM.SolutionUniqueName`, fails when a target table or relationship already exists, publishes the customizations,
-and writes a local journal. A failed apply can leave partial environment state; report the journal and obtain separate
-cleanup approval rather than deleting automatically.
+and writes a local journal. Column, relationship, and publish operations use bounded retries only for recognized
+transient Dataverse customization conditions (throttling, server errors, metadata propagation error `0x80040216`, or
+an already-running customization/publish operation). Before retrying a column or relationship, the script checks whether
+Dataverse created it despite the error; every retry and delay is recorded in the journal. Validation, collision,
+authorization, and other permanent failures are never retried.
+
+A failed apply can leave partial environment state; report the journal and obtain separate cleanup approval rather than
+deleting automatically. If metadata reads disagree across requests, stop and treat the environment as unstable instead
+of repeatedly deleting or recreating resources.
 
 ## Export
 
