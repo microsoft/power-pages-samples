@@ -38,6 +38,8 @@ Present one compact summary with these sections:
      site and its authoritative metadata.
    - `custom`: create the reviewed unmanaged solution, publisher, custom schema, permissions, seed records, and inactive
      Power Pages source site.
+10. **Pending platform-aware validation** — explain that permissions, security Code & config, ALM/environment-variable,
+    and live Release readiness reviews run only after authoritative platform artifacts or a clean consumer site exist.
 
 Use actual counts from the generated evidence and test output. A check with missing or stale evidence is not passing.
 

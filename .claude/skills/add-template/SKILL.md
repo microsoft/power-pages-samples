@@ -37,19 +37,29 @@ compatibility: Requires a checkout of microsoft/power-pages-samples. PAC CLI, Az
    - For **platform plus custom tables**, follow [Dataverse solution automation](references/dataverse-solution-automation.md), then [seed data automation](references/seed-data-automation.md).
    - For both modes, follow [inactive code-site automation](references/code-site-automation.md) without activating or assigning a public URL.
    Complete the applicable solution, seed data, website artifacts, documentation, manifest entry, and catalog integration using [template artifacts](references/template-artifacts.md).
-9. Complete [end-to-end verification](references/end-to-end-verification.md) against this authored revision.
+9. After authoritative platform artifacts exist, run the source permissions gate in
+   [platform-aware validation](references/platform-aware-validation.md): invoke the existing Power Pages
+   `audit-permissions` skill and fix every major issue before repository/consumer acceptance.
+10. Complete [end-to-end verification](references/end-to-end-verification.md) against this authored revision.
+   On the disposable clean consumer clone, invoke the existing Power Pages `security-review` skill with the
+   **Code & config** goal and report every failure; its consolidated review includes the consumer-clone permissions
+   audit. Also invoke the existing `plan-alm` skill to identify credential-style and environment-specific site settings.
+   Do not run `configure-env-variables` automatically and do not copy clone-specific ALM plan artifacts into the
+   authored template package.
    Fix and repeat the consumer path until a full clean pass finds no gaps.
+   After activation, invoke `security-review` again with the **Release readiness** goal and fix or explicitly disposition
+   its findings before accepting the live consumer path.
    If access, prerequisites, or consent block verification, report the blocker and leave the work incomplete.
-10. Run the extension-free workflow in [automated accessibility](references/automated-accessibility.md) against the tested local app and final deployed site.
+11. Run the extension-free workflow in [automated accessibility](references/automated-accessibility.md) against the tested local app and final deployed site.
    Fix and repeat until every declared route, state, and viewport has zero axe-core violations, then generate self-contained HTML with Microsoft's `accessibility-insights-report` package and a deterministic summary under `website-code/docs/a11y-reports/`.
    Report the result as 100% of declared automated scans passed; never describe automated scans as proof of full WCAG compliance.
-11. After verification passes, summarize the changes and validation.
+12. After verification passes, summarize the changes and validation.
    Ask for explicit approval before creating a pull request.
    If approved, create the pull request and report its URL.
    If declined, leave the work local and explain how to continue later.
-12. After a pull request is created, offer the contributor the optional [verification cleanup](references/verification-cleanup.md).
+13. After a pull request is created, offer the contributor the optional [verification cleanup](references/verification-cleanup.md).
    Preserve the verification environment by default. Delete only the exact solution, seed records, website records, and
    reversible environment-setting changes created by this verification run, and only after a separate destructive plan
    and approval hash are reviewed. Cleanup is not required for completion or PR review.
 
-Completion means the approved scope is implemented, representative sample data and all required artifacts and real previews are present, the exceptional-design review has no failed critical gate and all categories score at least 3, deterministic and quality checks pass, all declared automated accessibility scans score 100 with zero violations and match the current source, CodeQL has zero findings, the contributor reviewed the local result and approved environment work, and the actual consumer path succeeds against this revision.
+Completion means the approved scope is implemented, representative sample data and all required artifacts and real previews are present, the exceptional-design review has no failed critical gate and all categories score at least 3, deterministic and quality checks pass, all declared automated accessibility scans score 100 with zero violations and match the current source, CodeQL has zero findings, the permissions audit has no major issues, security reviews have no unresolved blocking findings or failed required checks, the ALM review completely classifies credential and environment-specific settings without committed secrets, the contributor reviewed the local result and approved environment work, and the actual consumer path succeeds against this revision.

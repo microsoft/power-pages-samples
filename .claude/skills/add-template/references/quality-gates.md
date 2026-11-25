@@ -41,6 +41,9 @@ The family must declare `seedDataPath` and ship representative non-sensitive see
 - Template validator
 - Catalog build and inspection
 - Contributor review handoff with a verified local preview or responsive-image fallback, executive summary, and explicit proceed/revise/stop decision
+- Complete permissions audit with a Safe to go verdict and zero major issues after authoritative platform artifacts exist
+- Power Pages security review: Code & config before consumer acceptance, then Release readiness after activation
+- Complete `plan-alm` environment-variable classification on the disposable consumer clone, with no committed credentials
 - Clean consumer installation and live workflow verification
 
 The committed exceptional-design scorecard, automated accessibility HTML, and CodeQL SARIF are evidence, not substitutes for rerunning checks.

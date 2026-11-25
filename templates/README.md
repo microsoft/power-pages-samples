@@ -36,6 +36,13 @@ The current create-site consumer clones repository templates, so every repositor
 PAC-generated `.powerpages-site`. Use `templates/scripts/code-site.js` to create an inactive source record and verify its
 identity. This packaging step does not activate the site or create a public URL.
 
+After authoritative site and Dataverse artifacts exist, the `add-template` workflow also runs the existing Power Pages
+permission, security, and ALM reviews. A complete contribution requires a permissions audit with no major issues, a
+Code & config security review with no unresolved blocking findings, and a complete `plan-alm` classification of
+credential-style and environment-specific settings on the disposable consumer clone. After activation, the Release
+readiness security review adds live-site, header, and firewall evidence. Review reports and environment-specific ALM
+plans produced in a disposable clone remain verification artifacts; do not copy them into the template package.
+
 Custom repository-artifact templates use a fixed layout, so the manifest does not repeat derivable paths:
 
 ```text

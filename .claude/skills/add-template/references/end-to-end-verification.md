@@ -23,7 +23,21 @@ Do not clean up a successful verification environment before its pull request is
 or failure diagnosis.
 
 Follow the consumer workflow through custom solution and seed import only when `dataModel` is `custom`, then website deployment and activation for both modes.
+After the clean consumer clone and inactive website exist, run the three pre-activation checks in
+[platform-aware validation](platform-aware-validation.md):
+
+- `audit-permissions` against the clone and installed Dataverse metadata;
+- `security-review` with the Code & config goal;
+- `plan-alm` on the disposable clone to classify credential and environment-specific site settings.
+
+Do not copy the clone's permissions/security/ALM reports into the authored template. Record their paths, counts,
+dispositions, environment, site ID, and immutable revision in the verification journal. Do not activate while a required
+review is partial, degraded, skipped, or has a blocking finding.
+
 Inspect the resulting site at desktop and mobile sizes and exercise the approved user flows, permissions, and seeded data.
+After activation, run `security-review` with the Release readiness goal. Treat skipped live checks, unresolved critical
+or high-severity tool findings, and undispositioned warnings as verification gaps. Report every failure, fix it at the
+owning layer, and rerun the affected review.
 Record every gap, including documentation errors, missing components or permissions, seed failures, badge or rendering defects, catalog or prompt mismatches, and plugin incompatibilities.
 Fix each gap in the repository within the approved scope and rerun the consumer path against the corrected revision from a clean state, using a fresh site and solution or explicitly approved cleanup.
 Repeat until a complete pass finds no gaps.
