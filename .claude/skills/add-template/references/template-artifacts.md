@@ -53,7 +53,9 @@ Follow `CONTRIBUTING.md` for general contribution and CLA requirements.
 
 - Add a repository-artifact entry to `templates/manifest.json`, including actual author, languages, variants, previews, and seed path.
   Always include the approved `dataModel`; include solution and seed metadata only for `custom`.
-  New React SPA templates generated through this workflow set `qualityStandard: 1` and follow [template quality gates](quality-gates.md).
+  New React SPA templates generated through this workflow set `qualityStandard: 1` and follow
+  [template quality gates](../../test-template/references/quality-gates.md) through the repository-local
+  `test-template` skill.
   Every template uses per-page desktop/mobile pairs in `responsivePreviews`.
   Keep `previewImages` on the existing SPA entries as a deprecated fallback for released consumers; new entries use only `responsivePreviews`.
   Add solution publication metadata when needed.

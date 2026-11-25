@@ -103,7 +103,7 @@ requires its own ALM plan and approval gates. If the contributor chooses to conf
 follow that skill separately and journal every write.
 
 Keep the clone's `docs/alm-plan.html`, `docs/.alm-plan-data.json`, and `docs/alm/alm-plan-context.json` with the disposable
-verification evidence. Summarize candidate counts and dispositions in the add-template executive summary and PR
+verification evidence. Summarize candidate counts and dispositions in the test result and PR
 validation notes, but do not copy environment-specific ALM files into the authored template.
 
 ## Remediation and reruns

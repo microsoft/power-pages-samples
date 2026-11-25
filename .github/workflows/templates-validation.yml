@@ -30,7 +30,7 @@ jobs:
           node-version: "20"
 
       - name: Run template tests
-        run: node --test templates/scripts/code-site.test.js templates/scripts/create-template.test.js templates/scripts/dataverse-solution.test.js templates/scripts/list-quality-variants.test.js templates/scripts/seed-data.test.js templates/scripts/validate-templates.test.js templates/scripts/write-design-review.test.js templates/scripts/write-quality-manifest.test.js templates/scripts/supplier-invoice-postbuild.test.js templates/scripts/supplier-account.test.js
+        run: node --test templates/scripts/code-site.test.js templates/scripts/create-template.test.js templates/scripts/dataverse-solution.test.js templates/scripts/inspect-template.test.js templates/scripts/list-quality-variants.test.js templates/scripts/seed-data.test.js templates/scripts/validate-templates.test.js templates/scripts/write-design-review.test.js templates/scripts/write-quality-manifest.test.js templates/scripts/supplier-invoice-postbuild.test.js templates/scripts/supplier-account.test.js
 
       - name: Validate templates manifest
         run: node templates/scripts/validate-templates.js

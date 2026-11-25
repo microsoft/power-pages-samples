@@ -30,6 +30,10 @@ Custom templates additionally require representative Dataverse seed data; platfo
 may use local fixture data but must not ship `solutions/` or `seed-data/`.
 The validator rejects missing, failing, or stale evidence, and template CI runs each declared
 quality-standard variant automatically.
+Use the repository-local `test-template` skill to validate either an integrated family or an independently authored
+template project. It discovers React, Angular, Vue, Astro, generic package-based SPA, and PAC-downloaded non-SPA
+projects, then runs the checks supported by that project without substituting package managers or inventing evidence.
+`add-template` invokes `test-template` for local, platform, and clean-consumer phases.
 The schema for the catalog is [`schemas/templates-manifest.schema.json`](schemas/templates-manifest.schema.json).
 
 The current create-site consumer clones repository templates, so every repository-artifact variant must include a real

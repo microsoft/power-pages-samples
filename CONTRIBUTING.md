@@ -44,7 +44,9 @@ Templates live under `templates/`.
 They are installable starting points, not learning examples.
 Use `samples/` when the contribution teaches a technique, pattern, or API.
 Use `templates/` when the contribution is meant to be imported as a reusable Power Pages site.
-Agents that support repository skills can use [add-template](.claude/skills/add-template/SKILL.md) to guide a template contribution.
+Agents that support repository skills can use [add-template](.claude/skills/add-template/SKILL.md) to guide a template
+contribution. Use [test-template](.claude/skills/test-template/SKILL.md) to validate an existing template independently,
+including templates authored outside the add-template workflow.
 
 The template catalog is `templates/manifest.json`.
 Each entry must match `templates/schemas/templates-manifest.schema.json`.
@@ -68,9 +70,10 @@ To contribute a template:
 7. For `custom`, unpack each supporting solution under `templates/spa/<family>/solutions/<solution-unique-name>/`. The folder name must match `Other/Solution.xml`. For `platform-only`, omit `solutions/` and `seed-data/`.
 8. Append or update the template family entry in `templates/manifest.json`.
 9. Add the variant under `variants.<framework>`.
-10. Run `node templates/scripts/validate-templates.js`.
-11. Run `node site/build.mjs`. The [templates site](https://microsoft.github.io/power-pages-samples/) reads `templates/manifest.json`, so the new template appears there without other changes. See [site/README.md](site/README.md).
-12. Open a pull request and follow the existing CLA bot instructions.
+10. Run the repository-local `test-template` skill against the family root and resolve every required local/repository check.
+11. Run `node templates/scripts/validate-templates.js`.
+12. Run `node site/build.mjs`. The [templates site](https://microsoft.github.io/power-pages-samples/) reads `templates/manifest.json`, so the new template appears there without other changes. See [site/README.md](site/README.md).
+13. Open a pull request and follow the existing CLA bot instructions.
 
 Supporting solutions must be independently importable.
 Do not add dependencies between sibling solutions in the same template family.

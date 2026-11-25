@@ -18,46 +18,41 @@ compatibility: Requires a checkout of microsoft/power-pages-samples. PAC CLI, Az
 2. Plan the website experience, pages, states, data scope, permissions, dependencies, and representative fixture/seed records together without selecting or modifying an environment.
    For a React SPA, write the approved intent as a temporary JSON spec outside the repository and run `node templates/scripts/create-template.js --spec <spec.json> --output <draft-parent>`.
    Implement the full local website experience and include the existing Power Pages attribution badge. The scaffolder and implementation must not fabricate solution metadata or `.powerpages-site`.
-3. For a new React SPA, set `qualityStandard: 1`, create the required `docs/`, test, and report structure, and follow [template quality gates](references/quality-gates.md).
+3. For a new React SPA, set `qualityStandard: 1` and create the required `docs/`, test, and report structure described by
+   [template quality gates](../test-template/references/quality-gates.md).
    Use representative non-sensitive local data derived from the approved scope; do not require production names or records.
-   Run unit, build, functional Playwright, and [automated accessibility](references/automated-accessibility.md) locally until they pass.
-4. Capture real local previews by following [SPA previews](references/spa-previews.md) for a framework variant or [non-SPA previews](references/non-spa-previews.md) for Liquid.
-   If a prerequisite, browser, or viewport is blocked, retain the local work and report what is missing; do not invent images or claim completion.
-5. Before any environment selection or write, run the repository-local [exceptional-web-design](../exceptional-web-design/SKILL.md) review using the desktop/mobile previews, accessibility summary, and current source.
-   Fix every critical gate and every category below 3, regenerate affected previews and accessibility evidence, and repeat for at most three rounds.
-   Write the final source-bound scorecard with `node templates/scripts/write-design-review.js`.
-   The local design gate passes only when all ten categories score 3 or 4, total score is 30-40, every critical gate passes, and every declared route has desktop/mobile evidence.
-6. Run the remaining local gates, including CodeQL, source-digest refresh, and focused quality validation. Do not select a Power Platform environment or create Dataverse/Power Pages records until steps 2-6 all pass.
-7. After every local design and quality gate passes, complete the [template review handoff](references/template-review-handoff.md).
+   Invoke the repository-local `test-template` skill with `<draft-family-root> local`. It owns framework discovery,
+   dependency restore, unit/build/functional checks, [automated accessibility](../test-template/references/automated-accessibility.md),
+   real [SPA](../test-template/references/spa-previews.md) or
+   [non-SPA](../test-template/references/non-spa-previews.md) previews, exceptional-design review, CodeQL, digest
+   freshness, and the local test report. Fix and rerun until every required local check passes.
+   Do not select a Power Platform environment or create Dataverse/Power Pages records until `test-template` local passes.
+4. After every local design and quality gate passes, complete the [template review handoff](references/template-review-handoff.md).
    Give the contributor a verified loopback preview URL when the site can run locally and direct links to the responsive preview evidence as a fallback.
    Present the fixed executive summary of the experience, checks, evidence freshness, limitations, and exact next environment stages.
    Ask whether to proceed, revise the template locally, or stop and preserve the draft. Do not select an environment or plan a write until the contributor explicitly chooses to proceed.
-8. Only after the contributor approves the review handoff, ask them to select an environment and obtain explicit approval for each applicable write:
+5. Only after the contributor approves the review handoff, ask them to select an environment and obtain explicit approval for each applicable write:
    - For **platform tables only**, skip custom solution and seed stages.
    - For **platform plus custom tables**, follow [Dataverse solution automation](references/dataverse-solution-automation.md), then [seed data automation](references/seed-data-automation.md).
    - For both modes, follow [inactive code-site automation](references/code-site-automation.md) without activating or assigning a public URL.
    Complete the applicable solution, seed data, website artifacts, documentation, manifest entry, and catalog integration using [template artifacts](references/template-artifacts.md).
-9. After authoritative platform artifacts exist, run the source permissions gate in
-   [platform-aware validation](references/platform-aware-validation.md): invoke the existing Power Pages
-   `audit-permissions` skill and fix every major issue before repository/consumer acceptance.
-10. Complete [end-to-end verification](references/end-to-end-verification.md) against this authored revision.
-   On the disposable clean consumer clone, invoke the existing Power Pages `security-review` skill with the
-   **Code & config** goal and report every failure; its consolidated review includes the consumer-clone permissions
-   audit. Also invoke the existing `plan-alm` skill to identify credential-style and environment-specific site settings.
-   Do not run `configure-env-variables` automatically and do not copy clone-specific ALM plan artifacts into the
-   authored template package.
-   Fix and repeat the consumer path until a full clean pass finds no gaps.
-   After activation, invoke `security-review` again with the **Release readiness** goal and fix or explicitly disposition
-   its findings before accepting the live consumer path.
+6. After authoritative platform artifacts and repository integration exist, invoke `test-template` with
+   `<template-family-root> local` again and then `<template-family-root> platform`.
+   The local rerun validates the final solution/seed/package/catalog revision. The platform phase owns the authored-site
+   permissions gate in [platform-aware validation](../test-template/references/platform-aware-validation.md).
+   Fix and repeat until both phases pass.
+7. Complete [end-to-end verification](references/end-to-end-verification.md) against this authored revision by invoking
+   `test-template` with `<template-family-root> consumer`.
+   `test-template` owns the clean create-site consumer path, Code & config security review, consumer permissions,
+   `plan-alm` environment-variable classification, separately approved activation, live `test-site`, deployed
+   accessibility, Release readiness security review, and its final test report.
+   Fix and repeat the consumer phase from a clean target until a full pass finds no gaps.
    If access, prerequisites, or consent block verification, report the blocker and leave the work incomplete.
-11. Run the extension-free workflow in [automated accessibility](references/automated-accessibility.md) against the tested local app and final deployed site.
-   Fix and repeat until every declared route, state, and viewport has zero axe-core violations, then generate self-contained HTML with Microsoft's `accessibility-insights-report` package and a deterministic summary under `website-code/docs/a11y-reports/`.
-   Report the result as 100% of declared automated scans passed; never describe automated scans as proof of full WCAG compliance.
-12. After verification passes, summarize the changes and validation.
+8. After `test-template` reports a complete pass, summarize the changes and validation.
    Ask for explicit approval before creating a pull request.
    If approved, create the pull request and report its URL.
    If declined, leave the work local and explain how to continue later.
-13. After a pull request is created, offer the contributor the optional [verification cleanup](references/verification-cleanup.md).
+9. After a pull request is created, offer the contributor the optional [verification cleanup](references/verification-cleanup.md).
    Preserve the verification environment by default. Delete only the exact solution, seed records, website records, and
    reversible environment-setting changes created by this verification run, and only after a separate destructive plan
    and approval hash are reviewed. Cleanup is not required for completion or PR review.
