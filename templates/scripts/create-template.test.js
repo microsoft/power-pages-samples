@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { spawnSync } = require("node:child_process");
 const test = require("node:test");
 
 const { scaffoldTemplate, validateSpec } = require("./create-template");
@@ -66,9 +67,11 @@ test("creates a canonical React template draft without fabricated platform artif
     "variants/react/website-code/src/App.tsx",
     "variants/react/website-code/src/assets/PowerPages_scalable.svg",
     "variants/react/website-code/src/components/PowerPagesBadge.tsx",
+    "variants/react/website-code/src/routes.json",
     "variants/react/website-code/src/vite-env.d.ts",
     "variants/react/website-code/tests/accessibility.spec.ts",
-    "variants/react/website-code/tests/previews.spec.ts"
+    "variants/react/website-code/tests/previews.spec.ts",
+    "variants/react/website-code/tests/routes.test.mjs"
   ]) {
     assert(fs.existsSync(path.join(target, relativePath)), `${relativePath} should exist`);
   }
@@ -102,6 +105,8 @@ test("creates a canonical React template draft without fabricated platform artif
   assert.equal(packageJson.dependencies["react-dom"], "^18.3.1");
   assert.equal(packageJson.devDependencies["@axe-core/playwright"], "4.11.0");
   assert.equal(packageJson.devDependencies["accessibility-insights-report"], "7.7.0");
+  assert.equal(packageJson.devDependencies.vitest, undefined);
+  assert.equal(packageJson.scripts.test, "node --test tests/*.test.mjs");
   assert.match(packageJson.scripts.quality, /^npm test/);
   assert.equal(
     fs.readFileSync(path.join(target, "variants/react/website-code/.npmrc"), "utf8"),
@@ -114,6 +119,13 @@ test("creates a canonical React template draft without fabricated platform artif
   );
   assert.match(badgeSource, /<div className="powered-badge"/);
   assert.doesNotMatch(badgeSource, /<aside/);
+
+  const routeTest = spawnSync(
+    process.execPath,
+    ["--test", path.join(target, "variants/react/website-code/tests/routes.test.mjs")],
+    { encoding: "utf8" }
+  );
+  assert.equal(routeTest.status, 0, routeTest.stderr || routeTest.stdout);
 });
 
 test("rejects unsafe, incomplete, and duplicate scaffold input", () => {

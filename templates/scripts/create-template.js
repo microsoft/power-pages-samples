@@ -161,7 +161,6 @@ function scaffoldTemplate({ spec, outputDirectory }) {
   writeFile(target, "variants/react/website-code/index.html", renderIndex(spec));
   writeFile(target, "variants/react/website-code/tsconfig.json", json(tsconfig()));
   writeFile(target, "variants/react/website-code/vite.config.ts", viteConfig());
-  writeFile(target, "variants/react/website-code/vitest.config.ts", vitestConfig());
   writeFile(target, "variants/react/website-code/playwright.config.ts", playwrightConfig());
   writeFile(
     target,
@@ -178,6 +177,11 @@ function scaffoldTemplate({ spec, outputDirectory }) {
     target,
     "variants/react/website-code/src/vite-env.d.ts",
     "/// <reference types=\"vite/client\" />\n"
+  );
+  writeFile(
+    target,
+    "variants/react/website-code/src/routes.json",
+    json(spec.routes)
   );
   writeFile(target, "variants/react/website-code/src/routes.ts", routesSource(spec));
   writeFile(target, "variants/react/website-code/src/App.tsx", appSource(spec));
@@ -207,7 +211,7 @@ function scaffoldTemplate({ spec, outputDirectory }) {
     ),
     path.join(websiteCode, "src", "assets", "PowerPages_scalable.svg")
   );
-  writeFile(target, "variants/react/website-code/tests/routes.test.ts", routeUnitTest());
+  writeFile(target, "variants/react/website-code/tests/routes.test.mjs", routeUnitTest());
   writeFile(target, "variants/react/website-code/tests/smoke.spec.ts", smokeTest());
   writeFile(
     target,
@@ -292,7 +296,7 @@ function packageManifest(spec) {
     type: "module",
     scripts: {
       dev: "vite",
-      test: "vitest run",
+      test: "node --test tests/*.test.mjs",
       build: "tsc -b && vite build",
       preview: "vite preview",
       previews: "playwright test tests/previews.spec.ts",
@@ -315,8 +319,7 @@ function packageManifest(spec) {
       "@vitejs/plugin-react": "^4.3.0",
       "accessibility-insights-report": "7.7.0",
       typescript: "~5.7.0",
-      vite: "^6.4.4",
-      vitest: "^3.2.4"
+      vite: "^6.4.4"
     }
   };
 }
@@ -359,6 +362,7 @@ function tsconfig() {
       forceConsistentCasingInFileNames: true,
       module: "ESNext",
       moduleResolution: "Bundler",
+      resolveJsonModule: true,
       isolatedModules: true,
       noEmit: true,
       jsx: "react-jsx"
@@ -367,7 +371,6 @@ function tsconfig() {
       "src",
       "tests",
       "vite.config.ts",
-      "vitest.config.ts",
       "playwright.config.ts"
     ]
   };
@@ -381,15 +384,6 @@ export default defineConfig({
   plugins: [react()],
   server: { host: "127.0.0.1", port: 4173 },
   preview: { host: "127.0.0.1", port: 4173 }
-});
-`;
-}
-
-function vitestConfig() {
-  return `import { defineConfig } from "vitest/config";
-
-export default defineConfig({
-  test: { include: ["tests/**/*.test.ts"] }
 });
 `;
 }
@@ -464,7 +458,14 @@ createRoot(document.getElementById("root")!).render(
 }
 
 function routesSource(spec) {
-  return `export const routes = ${JSON.stringify(spec.routes, null, 2)} as const;
+  return `import routeData from "./routes.json";
+
+export const routes = routeData as readonly {
+  id: string;
+  path: string;
+  displayName: string;
+  summary: string;
+}[];
 
 export type TemplateRoute = (typeof routes)[number];
 `;
@@ -602,14 +603,17 @@ function powerPagesBadgeCss() {
 }
 
 function routeUnitTest() {
-  return `import { describe, expect, it } from "vitest";
-import { routes } from "../src/routes";
+  return `import assert from "node:assert/strict";
+import fs from "node:fs";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
 
-describe("route contract", () => {
-  it("uses unique ids and paths", () => {
-    expect(new Set(routes.map((route) => route.id)).size).toBe(routes.length);
-    expect(new Set(routes.map((route) => route.path)).size).toBe(routes.length);
-  });
+const routesPath = fileURLToPath(new URL("../src/routes.json", import.meta.url));
+const routes = JSON.parse(fs.readFileSync(routesPath, "utf8"));
+
+test("route contract uses unique ids and paths", () => {
+  assert.equal(new Set(routes.map((route) => route.id)).size, routes.length);
+  assert.equal(new Set(routes.map((route) => route.path)).size, routes.length);
 });
 `;
 }
