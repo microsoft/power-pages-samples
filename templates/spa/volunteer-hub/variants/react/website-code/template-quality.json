@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "templateId": "volunteer-hub",
+  "framework": "react",
+  "dataModel": "custom",
+  "routes": [
+    {
+      "id": "home",
+      "path": "/",
+      "displayName": "Volunteer opportunities"
+    }
+  ],
+  "viewports": [
+    "desktop",
+    "mobile"
+  ]
+}

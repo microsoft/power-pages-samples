@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "generator": "accessibility-insights-report",
+  "generatorVersion": "7.7.0",
+  "engine": "axe-core",
+  "engineVersion": "4.11.4",
+  "score": 100,
+  "totalViolations": 0,
+  "scans": [
+    {
+      "routeId": "home",
+      "viewport": "desktop",
+      "violations": 0,
+      "passes": 42,
+      "incomplete": 0,
+      "incompleteRules": [],
+      "report": "automated-home-desktop.html",
+      "sha256": "c7324c73314dbb299139f279a97945cba6f5fdd4fc83dbdc40e187cd6875f144"
+    },
+    {
+      "routeId": "home",
+      "viewport": "mobile",
+      "violations": 0,
+      "passes": 42,
+      "incomplete": 0,
+      "incompleteRules": [],
+      "report": "automated-home-mobile.html",
+      "sha256": "4b5a12c4739a2811999f44d76c04e67f323e6afd89c349393985343eb6b2010e"
+    }
+  ]
+}

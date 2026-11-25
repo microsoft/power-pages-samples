@@ -1,0 +1,4 @@
+description: Allowed fields for vol_opportunity Web API access
+id: 566cce84-f7c0-4d0f-9d9a-078e1d56a7f6
+name: Webapi/vol_opportunity/fields
+value: "_vol_organizationid_value,vol_OrganizationId,vol_category,vol_commitment,vol_featured,vol_opportunityid,vol_place,vol_slug,vol_summary,vol_title"

@@ -1,0 +1,4 @@
+description: 'The amount of time the Authentication/LoginThrottling/MaxInvaildAttemptsFromIPAddress are to be within before the IP address has to wait Authentication/LoginThrottling/IpAddressTimeoutTimeSpan. Default: 00:03:00 (3 mins)'
+id: d0646692-9175-4c52-9ade-60608cdb2dcb
+name: Authentication/LoginThrottling/MaxAttemptsTimeLimitTimeSpan
+value: 00:03:00

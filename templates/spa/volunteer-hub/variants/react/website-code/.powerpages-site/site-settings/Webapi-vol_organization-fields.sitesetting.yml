@@ -1,0 +1,4 @@
+description: Allowed fields for vol_organization Web API access
+id: 0aec15e7-097b-418c-a30c-8685091c6397
+name: Webapi/vol_organization/fields
+value: "vol_description,vol_focus,vol_name,vol_organizationid,vol_slug"

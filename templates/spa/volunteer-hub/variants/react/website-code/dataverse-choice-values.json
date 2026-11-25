@@ -1,0 +1,10 @@
+{
+  "tables": {
+    "vol_opportunity": {
+      "vol_featured": {
+        "Featured": 1,
+        "Standard": 0
+      }
+    }
+  }
+}

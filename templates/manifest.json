@@ -145,6 +145,50 @@
       }
     },
     {
+      "id": "volunteer-hub",
+      "displayName": "Volunteer Hub",
+      "description": "An accessible Power Pages SPA template for discovering fictional volunteer opportunities and community organizations.",
+      "kind": "spa",
+      "dataModel": "custom",
+      "qualityStandard": 1,
+      "keywords": [
+        "volunteer",
+        "community",
+        "opportunities",
+        "nonprofit",
+        "catalog"
+      ],
+      "audience": [
+        "makers",
+        "developers"
+      ],
+      "previewImages": [
+        "spa/volunteer-hub/previews/desktop-home.png"
+      ],
+      "responsivePreviews": [
+        {
+          "id": "home",
+          "displayName": "Volunteer opportunities",
+          "desktop": "spa/volunteer-hub/previews/desktop-home.png",
+          "mobile": "spa/volunteer-hub/previews/mobile-home.png"
+        }
+      ],
+      "seedDataPath": "spa/volunteer-hub/seed-data/data.json",
+      "requiredDataverseLanguages": [
+        1033
+      ],
+      "author": "Microsoft",
+      "solutions": [
+        {
+          "uniqueName": "VolunteerHub",
+          "publishChanges": true
+        }
+      ],
+      "variants": {
+        "react": {}
+      }
+    },
+    {
       "id": "starter-layout-1",
       "displayName": "Starter Layout 1",
       "description": "This versatile template provides a basic, multipage navigation framework and simple building blocks for you to customize any way you want. Just click on a section or image to customize it.",

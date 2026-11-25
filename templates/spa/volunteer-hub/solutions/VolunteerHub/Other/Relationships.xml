@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EntityRelationships xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <EntityRelationship Name="lk_vol_opportunity_createdby" />
+  <EntityRelationship Name="lk_vol_opportunity_modifiedby" />
+  <EntityRelationship Name="lk_vol_organization_createdby" />
+  <EntityRelationship Name="lk_vol_organization_modifiedby" />
+  <EntityRelationship Name="organization_vol_opportunity" />
+  <EntityRelationship Name="organization_vol_organization" />
+  <EntityRelationship Name="vol_OrganizationOpportunities" />
+</EntityRelationships>

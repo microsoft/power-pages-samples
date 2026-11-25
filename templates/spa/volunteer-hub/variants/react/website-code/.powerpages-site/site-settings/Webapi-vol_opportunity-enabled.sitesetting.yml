@@ -1,0 +1,4 @@
+description: Enable Web API access for vol_opportunity table
+id: a27049b8-b949-4e8b-9363-77141a8300a5
+name: Webapi/vol_opportunity/enabled
+value: true

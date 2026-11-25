@@ -1,0 +1,130 @@
+{
+  "rounds": 2,
+  "verdict": "crafted",
+  "totalScore": 34,
+  "brief": {
+    "audience": "External visitors looking for clear, approachable ways to volunteer.",
+    "job": "Search fictional opportunities by activity, place, organization, and focus area.",
+    "primaryAction": "Explore opportunities.",
+    "principalDoubt": "Whether the opportunity expectations and organizations are clear enough to choose where to help.",
+    "proof": "Eight complete fictional opportunities, three fictional organizations, visible time and place requirements, and explicit sample-content labels.",
+    "thesis": "Optimistic civic energy expressed through warm paper, bold green actions, colorful community categories, and a simple shared-path illustration.",
+    "signatureMoment": "The arched hero illustration turns two abstract people and a shared green path into the phrase Together starts here."
+  },
+  "categories": [
+    {
+      "number": 1,
+      "name": "First impression and clarity",
+      "score": 3,
+      "evidence": "Home desktop/mobile names the public volunteer-directory purpose, presents Explore opportunities as the sole primary action, and immediately shows sample counts and fictional-content context."
+    },
+    {
+      "number": 2,
+      "name": "Attention and hierarchy",
+      "score": 4,
+      "evidence": "The oversized civic headline and arched Together starts here illustration create one coordinated focal point, followed by a clear promise band, finder, results, and closing panel at both widths."
+    },
+    {
+      "number": 3,
+      "name": "Cognitive fluency and usability",
+      "score": 3,
+      "evidence": "The catalog uses one search field, one focus-area selector, live result count, stable card anatomy, visible empty state, and direct time/place labels."
+    },
+    {
+      "number": 4,
+      "name": "Narrative and page flow",
+      "score": 3,
+      "evidence": "The single page moves from motivation to proof, expectations, discovery controls, complete opportunities, and a practical customization handoff."
+    },
+    {
+      "number": 5,
+      "name": "Copy and value communication",
+      "score": 4,
+      "evidence": "Headlines, opportunity summaries, commitment labels, locations, organization names, search guidance, and fictional-content boundaries are concrete and consistent."
+    },
+    {
+      "number": 6,
+      "name": "Trust and proof",
+      "score": 3,
+      "evidence": "The hero, proof counters, promise band, cards, closing panel, and footer clearly distinguish fictional sample content while showing complete expectations for eight opportunities."
+    },
+    {
+      "number": 7,
+      "name": "Brand and visual coherence",
+      "score": 4,
+      "evidence": "Warm paper, forest green, civic blue/coral/gold, Georgia display type, Segoe UI body type, organization medallions, rounded cards, and the shared-path motif form one coherent system."
+    },
+    {
+      "number": 8,
+      "name": "Responsive and accessible design",
+      "score": 4,
+      "evidence": "Desktop/mobile evidence preserves hierarchy and card readability; two declared axe scans pass at score 100 with zero violations and zero incomplete checks, with focus and reduced-motion handling present."
+    },
+    {
+      "number": 9,
+      "name": "Interaction and motion craft",
+      "score": 3,
+      "evidence": "Search/filter/result/empty states are functional; buttons and cards have focus, hover, pressed, and reduced-motion behavior without delaying reading."
+    },
+    {
+      "number": 10,
+      "name": "Detail and memorable finish",
+      "score": 3,
+      "evidence": "The arched hero, geometric people, proof rules, category ribbons, compact metadata, closing panel, and footer-integrated attribution remain aligned and overlap-free at both widths."
+    }
+  ],
+  "criticalGates": [
+    {
+      "name": "Clear offering and primary CTA",
+      "status": "pass",
+      "evidence": "The first screen identifies a volunteer opportunity directory and makes Explore opportunities the single primary action."
+    },
+    {
+      "name": "Single first-impression focal point",
+      "status": "pass",
+      "evidence": "The headline and adjacent illustration operate as one hero composition; supporting copy, action, and counters are subordinate."
+    },
+    {
+      "name": "Accessible primary flow",
+      "status": "pass",
+      "evidence": "Desktop/mobile axe scans pass with zero violations and incomplete checks; search, select, links, focus indicators, contrast, and live result changes are accessible."
+    },
+    {
+      "name": "Honest proof and representation",
+      "status": "pass",
+      "evidence": "Organizations, opportunities, and counts are repeatedly identified as fictional sample content and do not imply a live program."
+    },
+    {
+      "name": "Working mobile layout",
+      "status": "pass",
+      "evidence": "The mobile capture shows no overlap, clipping, horizontal overflow, or inaccessible primary action across hero, filters, eight cards, closing panel, and footer."
+    },
+    {
+      "name": "Verified font loading",
+      "status": "pass",
+      "evidence": "The design uses installed system font stacks with declared weights and no synthetic or remote-font dependency."
+    },
+    {
+      "name": "Specific and coherent visual identity",
+      "status": "pass",
+      "evidence": "The civic palette, path illustration, organization marks, opportunity ribbons, and optimistic copy make the page specific to community volunteering."
+    }
+  ],
+  "routes": [
+    {
+      "id": "home",
+      "viewports": [
+        "desktop",
+        "mobile"
+      ],
+      "evidence": [
+        "previews/desktop-home.png",
+        "previews/mobile-home.png"
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "skill": "exceptional-web-design",
+  "mode": "rendered",
+  "sourceDigest": "eaba93083017ecbd28c2f9a9d8f72c9a0af73dff3de6c72bb40f2771c964541f"
+}

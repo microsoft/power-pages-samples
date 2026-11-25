@@ -1,0 +1,7 @@
+{
+  "$schema": "https://www.schemastore.org/powerpages.config.json",
+  "siteName": "Volunteer Hub",
+  "compiledPath": "dist",
+  "defaultLandingPage": "index.html",
+  "includeSource": true
+}

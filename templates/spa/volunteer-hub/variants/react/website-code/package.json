@@ -1,0 +1,32 @@
+{
+  "name": "volunteer-hub",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "test": "node --test tests/routes.test.mjs",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "previews": "playwright test tests/previews.spec.ts",
+    "test:e2e": "playwright test tests/smoke.spec.ts",
+    "test:a11y": "node scripts/prepare-a11y-reports.mjs && playwright test tests/accessibility.spec.ts && node scripts/build-a11y-summary.mjs",
+    "quality": "npm test && npm run build && npm run test:e2e && npm run test:a11y"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.2"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.11.0",
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.20",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.3.0",
+    "accessibility-insights-report": "7.7.0",
+    "typescript": "~5.7.0",
+    "vite": "^6.4.4"
+  }
+}

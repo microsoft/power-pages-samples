@@ -1,0 +1,4 @@
+description: Enable Web API access for vol_organization table
+id: bd394031-50e9-44f7-9e61-91badebe2de6
+name: Webapi/vol_organization/enabled
+value: true

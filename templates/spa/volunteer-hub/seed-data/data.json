@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "notes": [
+    "All organizations and opportunities are fictional.",
+    "Stable GUIDs support repeatable consumer verification.",
+    "Import organizations before opportunities so lookup targets exist."
+  ],
+  "tables": {
+    "organizations": {
+      "logicalName": "vol_organization",
+      "entitySet": "vol_organizations",
+      "idColumn": "vol_organizationid",
+      "records": [
+        {
+          "vol_organizationid": "10000000-0000-4000-8000-000000000001",
+          "vol_name": "Harbor Community Kitchen",
+          "vol_slug": "harbor-community-kitchen",
+          "vol_focus": "Food security",
+          "vol_description": "A fictional neighborhood kitchen connecting volunteers with meal preparation and delivery programs."
+        },
+        {
+          "vol_organizationid": "10000000-0000-4000-8000-000000000002",
+          "vol_name": "Greenway Neighbors",
+          "vol_slug": "greenway-neighbors",
+          "vol_focus": "Environment",
+          "vol_description": "A fictional volunteer network caring for shared gardens, trails, and public green spaces."
+        },
+        {
+          "vol_organizationid": "10000000-0000-4000-8000-000000000003",
+          "vol_name": "Open Book Collective",
+          "vol_slug": "open-book-collective",
+          "vol_focus": "Learning",
+          "vol_description": "A fictional literacy collective supporting readers, tutors, and community learning events."
+        }
+      ]
+    },
+    "opportunities": {
+      "logicalName": "vol_opportunity",
+      "entitySet": "vol_opportunities",
+      "idColumn": "vol_opportunityid",
+      "records": [
+        {
+          "vol_opportunityid": "20000000-0000-4000-8000-000000000001",
+          "vol_OrganizationId@odata.bind": "/vol_organizations(10000000-0000-4000-8000-000000000001)",
+          "vol_title": "Weekend meal preparation",
+          "vol_slug": "weekend-meal-preparation",
+          "vol_category": "Food support",
+          "vol_place": "Harbor District",
+          "vol_commitment": "3 hours on Saturday",
+          "vol_summary": "Prepare and package nourishing meals alongside an experienced kitchen team.",
+          "vol_featured": true
+        },
+        {
+          "vol_opportunityid": "20000000-0000-4000-8000-000000000002",
+          "vol_OrganizationId@odata.bind": "/vol_organizations(10000000-0000-4000-8000-000000000001)",
+          "vol_title": "Neighborhood meal delivery",
+          "vol_slug": "neighborhood-meal-delivery",
+          "vol_category": "Food support",
+          "vol_place": "North Market",
+          "vol_commitment": "2 hours every other week",
+          "vol_summary": "Deliver prepared meals and friendly check-ins to fictional neighborhood residents.",
+          "vol_featured": false
+        },
+        {
+          "vol_opportunityid": "20000000-0000-4000-8000-000000000003",
+          "vol_OrganizationId@odata.bind": "/vol_organizations(10000000-0000-4000-8000-000000000002)",
+          "vol_title": "Community garden morning",
+          "vol_slug": "community-garden-morning",
+          "vol_category": "Environment",
+          "vol_place": "Riverside Garden",
+          "vol_commitment": "2 hours monthly",
+          "vol_summary": "Plant, weed, and maintain shared growing beds with neighbors of all experience levels.",
+          "vol_featured": true
+        },
+        {
+          "vol_opportunityid": "20000000-0000-4000-8000-000000000004",
+          "vol_OrganizationId@odata.bind": "/vol_organizations(10000000-0000-4000-8000-000000000002)",
+          "vol_title": "Trail welcome team",
+          "vol_slug": "trail-welcome-team",
+          "vol_category": "Environment",
+          "vol_place": "Greenway Loop",
+          "vol_commitment": "One Sunday morning",
+          "vol_summary": "Welcome trail visitors, share route information, and record maintenance observations.",
+          "vol_featured": false
+        },
+        {
+          "vol_opportunityid": "20000000-0000-4000-8000-000000000005",
+          "vol_OrganizationId@odata.bind": "/vol_organizations(10000000-0000-4000-8000-000000000002)",
+          "vol_title": "Seasonal litter survey",
+          "vol_slug": "seasonal-litter-survey",
+          "vol_category": "Environment",
+          "vol_place": "East Creek",
+          "vol_commitment": "90 minutes quarterly",
+          "vol_summary": "Join a guided survey that helps the fictional network plan future cleanup days.",
+          "vol_featured": false
+        },
+        {
+          "vol_opportunityid": "20000000-0000-4000-8000-000000000006",
+          "vol_OrganizationId@odata.bind": "/vol_organizations(10000000-0000-4000-8000-000000000003)",
+          "vol_title": "After-school reading partner",
+          "vol_slug": "after-school-reading-partner",
+          "vol_category": "Learning",
+          "vol_place": "Central Library",
+          "vol_commitment": "1 hour weekly for 8 weeks",
+          "vol_summary": "Read with a learner using prepared activities and support from a program coordinator.",
+          "vol_featured": true
+        },
+        {
+          "vol_opportunityid": "20000000-0000-4000-8000-000000000007",
+          "vol_OrganizationId@odata.bind": "/vol_organizations(10000000-0000-4000-8000-000000000003)",
+          "vol_title": "Book drive sorting day",
+          "vol_slug": "book-drive-sorting-day",
+          "vol_category": "Learning",
+          "vol_place": "South Commons",
+          "vol_commitment": "One 3-hour shift",
+          "vol_summary": "Sort donated books by reading level and prepare fictional community library bundles.",
+          "vol_featured": false
+        },
+        {
+          "vol_opportunityid": "20000000-0000-4000-8000-000000000008",
+          "vol_OrganizationId@odata.bind": "/vol_organizations(10000000-0000-4000-8000-000000000003)",
+          "vol_title": "Conversation club host",
+          "vol_slug": "conversation-club-host",
+          "vol_category": "Learning",
+          "vol_place": "Online",
+          "vol_commitment": "45 minutes twice monthly",
+          "vol_summary": "Facilitate a welcoming online conversation using provided prompts and activities.",
+          "vol_featured": false
+        }
+      ]
+    }
+  }
+}
