@@ -2,6 +2,9 @@
 
 Use the variant's documented development command and prerequisites to start its server.
 Check that it is ready, then inspect the actual pages in a browser at desktop and mobile viewport sizes.
+Use a 1440×1000 desktop viewport for full-screen desktop evidence. Capture with `fullPage: true` so long pages retain
+their complete vertical content while preserving the full desktop width. Use the framework's declared mobile device
+profile for mobile evidence.
 For each page, capture real PNG screenshots under `templates/spa/<id>/previews/` named `desktop-<page-id>.png` and `mobile-<page-id>.png`.
 List both paths with the page ID and display name in the manifest's `responsivePreviews`.
 Keep `previewImages` on existing SPA manifest entries as a deprecated desktop-image fallback for released consumers; new entries do not add it.
