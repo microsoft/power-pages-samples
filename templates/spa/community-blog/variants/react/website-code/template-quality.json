@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "templateId": "community-blog",
+  "framework": "react",
+  "dataModel": "custom",
+  "routes": [
+    {
+      "id": "home",
+      "path": "/",
+      "displayName": "Home"
+    },
+    {
+      "id": "articles",
+      "path": "/articles",
+      "displayName": "Articles"
+    },
+    {
+      "id": "article",
+      "path": "/articles/designing-readable-guides",
+      "displayName": "Article"
+    },
+    {
+      "id": "authors",
+      "path": "/authors",
+      "displayName": "Authors"
+    },
+    {
+      "id": "author",
+      "path": "/authors/maya-chen",
+      "displayName": "Author profile"
+    }
+  ],
+  "viewports": [
+    "desktop",
+    "mobile"
+  ]
+}

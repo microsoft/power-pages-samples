@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "notes": [
+    "All authors, categories, and articles are fictional.",
+    "Stable GUIDs support repeatable consumer verification.",
+    "Import authors and categories before posts so lookup targets exist."
+  ],
+  "tables": {
+    "authors": {
+      "logicalName": "blog_author",
+      "entitySet": "blog_authors",
+      "idColumn": "blog_authorid",
+      "records": [
+        {
+          "blog_authorid": "10000000-0000-4000-8000-000000000001",
+          "blog_name": "Maya Chen",
+          "blog_slug": "maya-chen",
+          "blog_role": "Design systems editor",
+          "blog_bio": "Maya writes about making complex services easier to understand and use."
+        },
+        {
+          "blog_authorid": "10000000-0000-4000-8000-000000000002",
+          "blog_name": "Julian Brooks",
+          "blog_slug": "julian-brooks",
+          "blog_role": "Community correspondent",
+          "blog_bio": "Julian documents the people and small decisions that strengthen local communities."
+        },
+        {
+          "blog_authorid": "10000000-0000-4000-8000-000000000003",
+          "blog_name": "Amina Yusuf",
+          "blog_slug": "amina-yusuf",
+          "blog_role": "Accessibility editor",
+          "blog_bio": "Amina shares practical approaches to inclusive content, research, and digital publishing."
+        }
+      ]
+    },
+    "categories": {
+      "logicalName": "blog_category",
+      "entitySet": "blog_categories",
+      "idColumn": "blog_categoryid",
+      "records": [
+        {
+          "blog_categoryid": "20000000-0000-4000-8000-000000000001",
+          "blog_name": "Design systems",
+          "blog_slug": "design-systems",
+          "blog_description": "Patterns and practices for clear, consistent digital services."
+        },
+        {
+          "blog_categoryid": "20000000-0000-4000-8000-000000000002",
+          "blog_name": "Accessibility",
+          "blog_slug": "accessibility",
+          "blog_description": "Practical guidance for inclusive content and experiences."
+        },
+        {
+          "blog_categoryid": "20000000-0000-4000-8000-000000000003",
+          "blog_name": "Community",
+          "blog_slug": "community",
+          "blog_description": "Stories about participation, trust, and shared spaces."
+        },
+        {
+          "blog_categoryid": "20000000-0000-4000-8000-000000000004",
+          "blog_name": "Field notes",
+          "blog_slug": "field-notes",
+          "blog_description": "Short observations and lessons from work in progress."
+        }
+      ]
+    },
+    "posts": {
+      "logicalName": "blog_post",
+      "entitySet": "blog_posts",
+      "idColumn": "blog_postid",
+      "records": [
+        {
+          "blog_postid": "30000000-0000-4000-8000-000000000001",
+          "blog_AuthorId@odata.bind": "/blog_authors(10000000-0000-4000-8000-000000000001)",
+          "blog_CategoryId@odata.bind": "/blog_categories(20000000-0000-4000-8000-000000000001)",
+          "blog_title": "Designing guides people can actually read",
+          "blog_slug": "designing-readable-guides",
+          "blog_excerpt": "A practical method for turning dense service knowledge into calm, useful guidance.",
+          "blog_body": "Readable guidance begins with a clear promise. Name the job a reader is trying to finish, remove background that does not support that job, and use headings that work as a map. Examples should answer the question directly before adding nuance.",
+          "blog_publishedon": "2026-10-03T09:00:00Z",
+          "blog_readminutes": 6,
+          "blog_featured": true
+        },
+        {
+          "blog_postid": "30000000-0000-4000-8000-000000000002",
+          "blog_AuthorId@odata.bind": "/blog_authors(10000000-0000-4000-8000-000000000003)",
+          "blog_CategoryId@odata.bind": "/blog_categories(20000000-0000-4000-8000-000000000002)",
+          "blog_title": "A better accessibility review starts with the task",
+          "blog_slug": "accessibility-review-starts-with-task",
+          "blog_excerpt": "Why reviewing the complete reader journey catches problems that isolated components miss.",
+          "blog_body": "Start with the task a reader needs to complete and follow it from entry to outcome. Keyboard order, clear labels, useful errors, and readable content work together. A component can pass in isolation while the full journey remains confusing.",
+          "blog_publishedon": "2026-10-08T09:00:00Z",
+          "blog_readminutes": 5,
+          "blog_featured": true
+        },
+        {
+          "blog_postid": "30000000-0000-4000-8000-000000000003",
+          "blog_AuthorId@odata.bind": "/blog_authors(10000000-0000-4000-8000-000000000002)",
+          "blog_CategoryId@odata.bind": "/blog_categories(20000000-0000-4000-8000-000000000003)",
+          "blog_title": "The quiet infrastructure of a welcoming event",
+          "blog_slug": "welcoming-event-infrastructure",
+          "blog_excerpt": "Small operational choices can make participation feel considered rather than improvised.",
+          "blog_body": "A welcoming event is built before anyone arrives. Share the schedule early, explain what support is available, and make it easy to ask a question privately. These details turn an invitation into a practical path to participation.",
+          "blog_publishedon": "2026-10-12T09:00:00Z",
+          "blog_readminutes": 4,
+          "blog_featured": false
+        },
+        {
+          "blog_postid": "30000000-0000-4000-8000-000000000004",
+          "blog_AuthorId@odata.bind": "/blog_authors(10000000-0000-4000-8000-000000000001)",
+          "blog_CategoryId@odata.bind": "/blog_categories(20000000-0000-4000-8000-000000000001)",
+          "blog_title": "Tokens are decisions, not just variables",
+          "blog_slug": "tokens-are-decisions",
+          "blog_excerpt": "A useful token system records why a visual choice exists and where it should change.",
+          "blog_body": "A token earns its place when it communicates a reusable decision. Name roles rather than colors, document contrast expectations, and keep the number of exceptions small. The result is a system that helps teams make coherent changes.",
+          "blog_publishedon": "2026-10-18T09:00:00Z",
+          "blog_readminutes": 7,
+          "blog_featured": false
+        },
+        {
+          "blog_postid": "30000000-0000-4000-8000-000000000005",
+          "blog_AuthorId@odata.bind": "/blog_authors(10000000-0000-4000-8000-000000000003)",
+          "blog_CategoryId@odata.bind": "/blog_categories(20000000-0000-4000-8000-000000000002)",
+          "blog_title": "Writing useful alternative text",
+          "blog_slug": "writing-useful-alternative-text",
+          "blog_excerpt": "Describe the information an image contributes, not every visible detail.",
+          "blog_body": "Alternative text should preserve the reason an image is present. Describe the relevant information in the surrounding context and leave decorative images empty. The best wording is usually shorter than a visual inventory.",
+          "blog_publishedon": "2026-10-22T09:00:00Z",
+          "blog_readminutes": 4,
+          "blog_featured": false
+        },
+        {
+          "blog_postid": "30000000-0000-4000-8000-000000000006",
+          "blog_AuthorId@odata.bind": "/blog_authors(10000000-0000-4000-8000-000000000002)",
+          "blog_CategoryId@odata.bind": "/blog_categories(20000000-0000-4000-8000-000000000003)",
+          "blog_title": "Listening sessions need a visible next step",
+          "blog_slug": "listening-sessions-next-step",
+          "blog_excerpt": "Closing the feedback loop is part of the session, not a follow-up detail.",
+          "blog_body": "People need to know what happens after they share their experience. Explain how notes will be used, when an update will appear, and what cannot change. A visible next step makes participation more credible.",
+          "blog_publishedon": "2026-10-27T09:00:00Z",
+          "blog_readminutes": 5,
+          "blog_featured": false
+        },
+        {
+          "blog_postid": "30000000-0000-4000-8000-000000000007",
+          "blog_AuthorId@odata.bind": "/blog_authors(10000000-0000-4000-8000-000000000001)",
+          "blog_CategoryId@odata.bind": "/blog_categories(20000000-0000-4000-8000-000000000004)",
+          "blog_title": "Field note: start the critique at the first screen",
+          "blog_slug": "field-note-first-screen",
+          "blog_excerpt": "If the first screen is unclear, polishing the rest of the page cannot repair the experience.",
+          "blog_body": "Review the first screen before refining the complete page. It should identify the offering, orient the reader, provide honest proof, and make the next action obvious. Fixing that foundation improves every section that follows.",
+          "blog_publishedon": "2026-11-02T09:00:00Z",
+          "blog_readminutes": 3,
+          "blog_featured": false
+        },
+        {
+          "blog_postid": "30000000-0000-4000-8000-000000000008",
+          "blog_AuthorId@odata.bind": "/blog_authors(10000000-0000-4000-8000-000000000003)",
+          "blog_CategoryId@odata.bind": "/blog_categories(20000000-0000-4000-8000-000000000004)",
+          "blog_title": "Field note: test the words at narrow widths",
+          "blog_slug": "field-note-narrow-widths",
+          "blog_excerpt": "Content expansion and small screens reveal assumptions hidden by spacious layouts.",
+          "blog_body": "Test real headings, labels, and errors at narrow widths. Text should wrap without covering controls or losing hierarchy. A resilient layout treats longer wording as normal rather than exceptional.",
+          "blog_publishedon": "2026-11-08T09:00:00Z",
+          "blog_readminutes": 3,
+          "blog_featured": false
+        }
+      ]
+    }
+  }
+}
